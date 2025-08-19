@@ -1,10 +1,5 @@
 """Integration tests for complete setup workflow."""
 
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-
 # We'll import these once we implement the tests
 # from ha_ingestor.config import get_settings
 # from ha_ingestor.utils.logging import setup_default_logging

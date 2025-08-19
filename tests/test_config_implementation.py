@@ -1,10 +1,5 @@
 """Tests for the actual configuration implementation."""
 
-import os
-import pytest
-from unittest.mock import patch
-from pydantic import ValidationError
-
 # We'll import these once the config module is created
 # from ha_ingestor.config import Settings
 

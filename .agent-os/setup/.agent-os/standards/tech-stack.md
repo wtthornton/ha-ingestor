@@ -29,16 +29,16 @@ Global tech stack defaults for the Home Assistant → Time‑Series Ingestion pl
 - **Home Assistant Integration:** MQTT discovery; Home Assistant WebSocket/Event API as supplemental source
 
 ### Datastores
-- **Time-Series DB:** **InfluxDB 2.7+ (OSS or Cloud)**  
-  - Buckets by tenant/environment.  
-  - **Retention:** Raw 30–90 days.  
-  - **Downsampling:** Flux or Tasks to 1m/5m/1h rollups (kept 12–24 months).  
-  - **Cardinality control:** device_id + measurement + field normalization; avoid unbounded tag values.  
-- **Relational DB:** **PostgreSQL 17+ (Managed)**  
-  - Schemas: `core` (users, orgs, devices), `billing`, `iam`, `ops`.  
-  - Use **pg_partman** or native partitioning for heavy event tables if needed.  
-  - **Extensions:** `uuid-ossp`, `pgcrypto`, `citext`.  
-  - **Backups:** daily + PITR; quarterly restore tests.  
+- **Time-Series DB:** **InfluxDB 2.7+ (OSS or Cloud)**
+  - Buckets by tenant/environment.
+  - **Retention:** Raw 30–90 days.
+  - **Downsampling:** Flux or Tasks to 1m/5m/1h rollups (kept 12–24 months).
+  - **Cardinality control:** device_id + measurement + field normalization; avoid unbounded tag values.
+- **Relational DB:** **PostgreSQL 17+ (Managed)**
+  - Schemas: `core` (users, orgs, devices), `billing`, `iam`, `ops`.
+  - Use **pg_partman** or native partitioning for heavy event tables if needed.
+  - **Extensions:** `uuid-ossp`, `pgcrypto`, `citext`.
+  - **Backups:** daily + PITR; quarterly restore tests.
 
 ### Application / API Services
 - **Framework:** **FastAPI 0.115+**
@@ -94,9 +94,9 @@ Global tech stack defaults for the Home Assistant → Time‑Series Ingestion pl
   3. **Security:** Dependabot, CodeQL, Trivy image scan, license checks
   4. **Build:** container images; generate SBOM (Syft); sign with Cosign
   5. **Deploy:** Auto to **staging** on push; manual approval to **production** on `main`
-- **Environments:**  
-  - **Production:** `main`  
-  - **Staging:** `staging`  
+- **Environments:**
+  - **Production:** `main`
+  - **Staging:** `staging`
   - **Preview:** ephemeral per PR (optional)
 
 ---

@@ -187,7 +187,7 @@ async def test_home_assistant_ws():
         await websocket.send(json.dumps(auth_msg))
         response = await websocket.recv()
         print(f'Auth: {response}')
-        
+
         # Subscribe to events
         subscribe_msg = {
             'id': 1,
@@ -196,7 +196,7 @@ async def test_home_assistant_ws():
         await websocket.send(json.dumps(subscribe_msg))
         response = await websocket.recv()
         print(f'Subscribe: {response}')
-        
+
         # Listen for events
         print("Listening for events...")
         for i in range(10):  # Listen for 10 events

@@ -1,8 +1,5 @@
 """Tests for environment template loading and validation."""
 
-import os
-import tempfile
-import pytest
 from pathlib import Path
 
 # We'll import these once we implement the tests
@@ -18,9 +15,9 @@ class TestEnvironmentTemplate:
 
     def test_env_example_file_content(self):
         """Test that .env.example file has required content."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check for required sections
         assert "# Home Assistant MQTT Configuration" in content
         assert "# Home Assistant WebSocket Configuration" in content
@@ -30,47 +27,45 @@ class TestEnvironmentTemplate:
 
     def test_env_example_has_required_variables(self):
         """Test that .env.example has all required variables."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check for required variables
         required_vars = [
             "HA_MQTT_HOST",
-            "HA_WS_URL", 
+            "HA_WS_URL",
             "HA_WS_TOKEN",
             "INFLUXDB_URL",
             "INFLUXDB_TOKEN",
-            "INFLUXDB_ORG"
+            "INFLUXDB_ORG",
         ]
-        
+
         for var in required_vars:
             assert var in content, f"Required variable {var} not found in .env.example"
 
     def test_env_example_has_optional_variables(self):
         """Test that .env.example has optional variables with defaults."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check for optional variables
-        optional_vars = [
-            "HA_MQTT_PORT",
-            "LOG_LEVEL",
-            "LOG_FORMAT",
-            "SERVICE_PORT"
-        ]
-        
+        optional_vars = ["HA_MQTT_PORT", "LOG_LEVEL", "LOG_FORMAT", "SERVICE_PORT"]
+
         for var in optional_vars:
             assert var in content, f"Optional variable {var} not found in .env.example"
 
     def test_env_example_has_documentation(self):
         """Test that .env.example has clear documentation."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check for documentation comments
         assert "# Copy this file to .env and fill in your specific values" in content
         assert "# Home Assistant instance URL" in content
-        assert "# MQTT broker (typically runs on same network as Home Assistant)" in content
+        assert (
+            "# MQTT broker (typically runs on same network as Home Assistant)"
+            in content
+        )
 
 
 class TestEnvironmentTemplateUsage:
@@ -97,23 +92,25 @@ class TestEnvironmentTemplateDocumentation:
 
     def test_variable_descriptions(self):
         """Test that variables have clear descriptions."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check that variables have descriptive comments
-        lines = content.split('\n')
+        lines = content.split("\n")
         for i, line in enumerate(lines):
-            if line.startswith(('HA_', 'INFLUXDB_', 'LOG_', 'SERVICE_')):
+            if line.startswith(("HA_", "INFLUXDB_", "LOG_", "SERVICE_")):
                 # Variable line should have a comment above it
                 if i > 0:
-                    prev_line = lines[i-1].strip()
-                    assert prev_line.startswith('#'), f"Variable {line} missing description comment"
+                    prev_line = lines[i - 1].strip()
+                    assert prev_line.startswith(
+                        "#"
+                    ), f"Variable {line} missing description comment"
 
     def test_format_examples(self):
         """Test that variables have format examples where needed."""
-        with open(".env.example", "r") as f:
+        with open(".env.example") as f:
             content = f.read()
-            
+
         # Check for format examples in comments
         assert "ws://" in content or "wss://" in content  # WebSocket URL format
         assert "http://" in content or "https://" in content  # InfluxDB URL format

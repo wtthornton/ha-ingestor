@@ -1,9 +1,5 @@
 """Tests for logging system."""
 
-import logging
-import pytest
-from unittest.mock import patch, MagicMock
-
 # We'll import these once the logging module is created
 # from ha_ingestor.utils.logging import setup_logging, get_logger
 

@@ -1,8 +1,8 @@
 """Configuration management for Home Assistant Activity Ingestor."""
 
 import logging
-from typing import Optional, Union
-from pydantic import Field, field_validator, HttpUrl, AnyUrl
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,11 +27,11 @@ class Settings(BaseSettings):
         le=65535,
         description="Home Assistant MQTT broker port",
     )
-    ha_mqtt_username: Optional[str] = Field(
+    ha_mqtt_username: str | None = Field(
         default=None,
         description="MQTT broker username (if authentication is required)",
     )
-    ha_mqtt_password: Optional[str] = Field(
+    ha_mqtt_password: str | None = Field(
         default=None,
         description="MQTT broker password (if authentication is required)",
     )
@@ -48,9 +48,11 @@ class Settings(BaseSettings):
 
     # Home Assistant WebSocket Configuration
     ha_ws_url: str = Field(
+        default="ws://localhost:8123/api/websocket",
         description="Home Assistant WebSocket API URL",
     )
     ha_ws_token: str = Field(
+        default="",
         description="Home Assistant long-lived access token",
     )
     ha_ws_heartbeat_interval: int = Field(
@@ -61,13 +63,16 @@ class Settings(BaseSettings):
     )
 
     # InfluxDB Configuration
-    influxdb_url: HttpUrl = Field(
+    influxdb_url: str = Field(
+        default="http://localhost:8086",
         description="InfluxDB server URL",
     )
     influxdb_token: str = Field(
+        default="",
         description="InfluxDB authentication token",
     )
     influxdb_org: str = Field(
+        default="my-org",
         description="InfluxDB organization name",
     )
     influxdb_bucket: str = Field(
@@ -146,7 +151,7 @@ class Settings(BaseSettings):
         default="json",
         description="Log format (json, console)",
     )
-    log_file: Optional[str] = Field(
+    log_file: str | None = Field(
         default=None,
         description="Log file path (if None, logs to console)",
     )
@@ -173,6 +178,90 @@ class Settings(BaseSettings):
         ge=1,
         le=65535,
         description="Port to bind the service to",
+    )
+
+    # Monitoring Configuration
+    monitoring_enabled: bool = Field(
+        default=True,
+        description="Enable enhanced monitoring and metrics collection",
+    )
+    monitoring_interval: float = Field(
+        default=30.0,
+        ge=5.0,
+        le=300.0,
+        description="Monitoring interval in seconds",
+    )
+    enable_system_metrics: bool = Field(
+        default=True,
+        description="Enable system resource utilization monitoring",
+    )
+    enable_performance_metrics: bool = Field(
+        default=True,
+        description="Enable performance-specific metrics collection",
+    )
+    enable_business_metrics: bool = Field(
+        default=True,
+        description="Enable business metrics for event processing",
+    )
+    enable_prometheus_integration: bool = Field(
+        default=True,
+        description="Enable Prometheus metrics integration",
+    )
+    metrics_sync_interval: float = Field(
+        default=10.0,
+        ge=1.0,
+        le=60.0,
+        description="Metrics synchronization interval in seconds",
+    )
+
+    # Alerting Configuration
+    alerting_enabled: bool = Field(
+        default=True,
+        description="Enable alerting system",
+    )
+    alerting_check_interval: float = Field(
+        default=15.0,
+        ge=5.0,
+        le=300.0,
+        description="Alerting check interval in seconds",
+    )
+    alerting_history_retention_days: int = Field(
+        default=30,
+        ge=1,
+        le=365,
+        description="Number of days to retain alert history",
+    )
+    enable_email_alerts: bool = Field(
+        default=False,
+        description="Enable email-based alert notifications",
+    )
+    enable_webhook_alerts: bool = Field(
+        default=True,
+        description="Enable webhook-based alert notifications",
+    )
+    enable_slack_alerts: bool = Field(
+        default=False,
+        description="Enable Slack-based alert notifications",
+    )
+    enable_discord_alerts: bool = Field(
+        default=False,
+        description="Enable Discord-based alert notifications",
+    )
+    enable_pagerduty_alerts: bool = Field(
+        default=False,
+        description="Enable PagerDuty-based alert notifications",
+    )
+    alert_cooldown_minutes: int = Field(
+        default=15,
+        ge=1,
+        le=1440,
+        description="Minimum time between repeated alerts in minutes",
+    )
+    alert_aggregation_window_minutes: int = Field(
+        default=5,
+        ge=1,
+        le=60,
+        description="Time window for aggregating similar alerts in minutes",
     )
 
     @field_validator("log_level")
@@ -231,33 +320,40 @@ class Settings(BaseSettings):
         """Validate WebSocket URL format."""
         if not v or not v.strip():
             raise ValueError("WebSocket URL cannot be empty")
-        
+
         v = v.strip()
         if not (v.startswith("ws://") or v.startswith("wss://")):
             raise ValueError("WebSocket URL must start with 'ws://' or 'wss://'")
-        
+
         return v
 
     def get_log_level(self) -> int:
         """Get the logging level as an integer."""
-        return getattr(logging, self.log_level)
+        level = getattr(logging, self.log_level)
+        if not isinstance(level, int):
+            raise ValueError(f"Invalid log level: {self.log_level}")
+        return level
 
     def is_mqtt_authenticated(self) -> bool:
         """Check if MQTT authentication is configured."""
         return bool(self.ha_mqtt_username and self.ha_mqtt_password)
 
-    def get_mqtt_auth_dict(self) -> Optional[dict]:
+    def get_mqtt_auth_dict(self) -> dict[str, str] | None:
         """Get MQTT authentication dictionary if configured."""
         if self.is_mqtt_authenticated():
-            return {
-                "username": self.ha_mqtt_username,
-                "password": self.ha_mqtt_password,
-            }
+            # We know these are not None because is_mqtt_authenticated() checks for them
+            username = self.ha_mqtt_username
+            password = self.ha_mqtt_password
+            if username is not None and password is not None:
+                return {
+                    "username": username,
+                    "password": password,
+                }
         return None
 
 
 # Global settings instance (lazy-loaded)
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:

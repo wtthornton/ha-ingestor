@@ -1,8 +1,8 @@
 # Production Readiness Spec
 
-**Created:** 2024-12-20  
-**Phase:** 3  
-**Effort:** ~2-3 weeks  
+**Created:** 2024-12-20
+**Phase:** 3
+**Effort:** ~2-3 weeks
 **Status:** In Progress
 
 ## Overview

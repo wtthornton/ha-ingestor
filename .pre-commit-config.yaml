@@ -13,7 +13,7 @@ repos:
     rev: 24.1.1
     hooks:
       - id: black
-        language_version: python3.12
+        language_version: python3.13
         args: [--line-length=88]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -21,21 +21,14 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
-        language_version: python3.12
+        language_version: python3.13
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
         args: [--ignore-missing-imports]
-        language_version: python3.12
-
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: [--profile=black, --line-length=88]
+        language_version: python3.13
 
   - repo: local
     hooks:

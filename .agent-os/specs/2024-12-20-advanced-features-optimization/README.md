@@ -1,8 +1,8 @@
 # Advanced Features and Optimization Spec
 
-**Created:** 2024-12-20  
-**Phase:** 4  
-**Effort:** ~3-4 weeks  
+**Created:** 2024-12-20
+**Phase:** 4
+**Effort:** ~3-4 weeks
 **Status:** Planning
 
 ## Overview

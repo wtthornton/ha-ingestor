@@ -49,7 +49,7 @@ class MQTTEvent(BaseModel):
     state: str
     attributes: Optional[Dict[str, Any]]
     source: Literal["mqtt"] = "mqtt"
-    
+
     @field_validator("topic")
     @classmethod
     def validate_topic(cls, v: str) -> str
@@ -67,7 +67,7 @@ class WebSocketEvent(BaseModel):
     data: Dict[str, Any]
     timestamp: datetime
     source: Literal["websocket"] = "websocket"
-    
+
     @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v: str) -> str
@@ -83,7 +83,7 @@ class InfluxDBPoint(BaseModel):
     tags: Dict[str, str]
     fields: Dict[str, Any]
     timestamp: datetime
-    
+
     @field_validator("measurement")
     @classmethod
     def validate_measurement(cls, v: str) -> str

@@ -1,7 +1,7 @@
 # Phase 4: Advanced Features and Optimization - Testing Strategy
 
-**Created:** 2024-12-20  
-**Phase:** 4  
+**Created:** 2024-12-20
+**Phase:** 4
 **Status:** Planning
 
 ## Testing Overview
@@ -71,7 +71,7 @@ class TestDomainFilter:
         filter = DomainFilter(domains=["light", "switch"])
         event = Event(domain="light", entity_id="light.living_room")
         assert filter.should_process(event) is True
-    
+
     def test_domain_filter_rejects_non_matching_domain(self):
         filter = DomainFilter(domains=["light", "switch"])
         event = Event(domain="sensor", entity_id="sensor.temperature")
@@ -110,10 +110,10 @@ class TestFilterChainIntegration:
             AttributeFilter(attribute="state", value="on")
         ]
         chain = FilterChain(filters)
-        
-        event = Event(domain="light", entity_id="light.living_room", 
+
+        event = Event(domain="light", entity_id="light.living_room",
                      attributes={"state": "on"})
-        
+
         result = await chain.process_event(event)
         assert result is not None
         assert result.domain == "light"
@@ -129,13 +129,13 @@ class TestTransformationPipeline:
             ValueTransformation("value_field", lambda x: x * 2)
         ]
         pipeline = TransformationPipeline(rules)
-        
+
         event = Event(data={
             "old_field": "test",
             "numeric_field": "42",
             "value_field": 5
         })
-        
+
         result = await pipeline.transform(event)
         assert "new_field" in result.data
         assert isinstance(result.data["numeric_field"], float)
@@ -161,12 +161,12 @@ class TestBaselinePerformance:
         # Test with current expected load
         events = generate_test_events(1000)
         filter = DomainFilter(domains=["light", "switch"])
-        
+
         start_time = time.time()
         for event in events:
             await filter.should_process(event)
         end_time = time.time()
-        
+
         total_time = end_time - start_time
         avg_time = total_time / len(events)
         assert avg_time < 0.1  # 100ms per event
@@ -179,12 +179,12 @@ class TestScalability:
         # Test with 10x expected load
         events = generate_test_events(10000)
         filter = DomainFilter(domains=["light", "switch"])
-        
+
         start_time = time.time()
         for event in events:
             await filter.should_process(event)
         end_time = time.time()
-        
+
         total_time = end_time - start_time
         # Should still maintain performance
         assert total_time < 10.0  # 10 seconds for 10k events
@@ -199,15 +199,15 @@ class TestResourceExhaustion:
         # Test memory usage with large datasets
         events = generate_test_events(100000)
         filter = DomainFilter(domains=["light", "switch"])
-        
+
         initial_memory = psutil.Process().memory_info().rss
-        
+
         for event in events:
             await filter.should_process(event)
-        
+
         final_memory = psutil.Process().memory_info().rss
         memory_increase = final_memory - initial_memory
-        
+
         # Memory increase should be reasonable
         assert memory_increase < 100 * 1024 * 1024  # 100MB
 ```
@@ -232,25 +232,25 @@ class TestCompleteMQTTFlow:
         filter_chain = FilterChain([DomainFilter(domains=["light"])])
         transformation_engine = TransformationEngine([])
         influxdb_writer = InfluxDBWriter()
-        
+
         # Start all components
         await mqtt_client.connect()
         await influxdb_writer.connect()
-        
+
         # Send test message
         test_message = "homeassistant/light/living_room/state"
         test_payload = '{"state": "on", "brightness": 255}'
-        
+
         await mqtt_client.publish(test_message, test_payload)
-        
+
         # Wait for processing
         await asyncio.sleep(1)
-        
+
         # Verify data in InfluxDB
         query_result = await influxdb_writer.query(
             'from(bucket:"ha_events") |> range(start: -1m)'
         )
-        
+
         assert len(query_result) > 0
         # Verify data structure and content
 ```
@@ -262,21 +262,21 @@ class TestErrorRecovery:
         # Setup system
         system = HAIngestorSystem()
         await system.start()
-        
+
         # Simulate InfluxDB failure
         await system.influxdb_writer.disconnect()
-        
+
         # Send events (should queue up)
         events = generate_test_events(100)
         for event in events:
             await system.process_event(event)
-        
+
         # Restore InfluxDB connection
         await system.influxdb_writer.connect()
-        
+
         # Wait for queue processing
         await asyncio.sleep(5)
-        
+
         # Verify all events were processed
         processed_count = await system.get_processed_event_count()
         assert processed_count == 100
@@ -299,14 +299,14 @@ class TestErrorRecovery:
 class TestInputValidation:
     def test_malicious_mqtt_payload_rejected(self):
         filter = DomainFilter(domains=["light"])
-        
+
         # Test with potentially malicious payload
         malicious_payload = '{"domain": "light", "entity_id": "light.test", "data": {"__class__": "os.system", "args": "rm -rf /"}}'
-        
+
         # Should not crash or execute malicious code
         event = Event.from_mqtt_message("test/topic", malicious_payload, time.time())
         result = filter.should_process(event)
-        
+
         # Should either reject or safely process
         assert result is not None or result is False
 ```
@@ -327,18 +327,18 @@ class TestDataGenerator:
     def generate_test_events(self, count: int) -> List[Event]:
         events = []
         domains = ["light", "switch", "sensor", "climate", "media_player"]
-        
+
         for i in range(count):
             domain = random.choice(domains)
             entity_id = f"{domain}.test_{i}"
-            
+
             if domain == "light":
                 attributes = {"state": random.choice(["on", "off"]), "brightness": random.randint(0, 255)}
             elif domain == "sensor":
                 attributes = {"state": str(random.uniform(20, 30)), "unit_of_measurement": "°C"}
             else:
                 attributes = {"state": "unknown"}
-            
+
             event = Event(
                 domain=domain,
                 entity_id=entity_id,
@@ -346,7 +346,7 @@ class TestDataGenerator:
                 timestamp=time.time() + i
             )
             events.append(event)
-        
+
         return events
 ```
 
@@ -357,12 +357,12 @@ class MockInfluxDBWriter:
     def __init__(self):
         self.written_points = []
         self.connected = True
-    
+
     async def write_point(self, point):
         if not self.connected:
             raise ConnectionError("Mock connection failed")
         self.written_points.append(point)
-    
+
     async def query(self, query_string):
         # Return mock query results
         return [{"_time": "2024-01-01T00:00:00Z", "_value": 1}]
@@ -388,32 +388,32 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.12'
-    
+
     - name: Install dependencies
       run: |
         pip install poetry
         poetry install
-    
+
     - name: Run unit tests
       run: |
         poetry run pytest tests/unit/ --cov=ha_ingestor --cov-report=xml
-    
+
     - name: Run integration tests
       run: |
         poetry run pytest tests/integration/
-    
+
     - name: Run performance tests
       run: |
         poetry run pytest tests/performance/
-    
+
     - name: Check coverage
       run: |
         poetry run coverage report --fail-under=90
