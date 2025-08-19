@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  ha-ingestor:
+    build: .
+    container_name: ha-ingestor
+    ports:
+      - "8000:8000"  # Health check endpoints
+    environment:
+      # Home Assistant MQTT settings
+      - HA_MQTT_HOST=mqtt-broker
+      - HA_MQTT_PORT=1883
+      - HA_MQTT_CLIENT_ID=ha-ingestor-dev
+      - HA_MQTT_USERNAME=mqtt_user
+      - HA_MQTT_PASSWORD=mqtt_password
+      
+      # Home Assistant WebSocket settings
+      - HA_WS_URL=http://home-assistant:8123/api/websocket
+      - HA_WS_TOKEN=your_ha_token_here
+      
+      # InfluxDB settings
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=your_influxdb_token_here
+      - INFLUXDB_ORG=your_org
+      - INFLUXDB_BUCKET=ha_events
+      
+      # Service settings
+      - LOG_LEVEL=INFO
+      - HEALTH_CHECK_PORT=8000
+      - METRICS_ENABLED=true
+      
+      # Batch processing settings
+      - INFLUXDB_BATCH_SIZE=100
+      - INFLUXDB_BATCH_TIMEOUT=5.0
+      - INFLUXDB_MAX_RETRY_ATTEMPTS=5
+      - INFLUXDB_RETRY_DELAY=1.0
+      - INFLUXDB_RETRY_BACKOFF=2.0
+      - INFLUXDB_RETRY_JITTER=0.1
+      
+      # Connection settings
+      - MQTT_MAX_RECONNECT_ATTEMPTS=10
+      - MQTT_INITIAL_RECONNECT_DELAY=1.0
+      - MQTT_MAX_RECONNECT_DELAY=300.0
+      - MQTT_RECONNECT_BACKOFF_MULTIPLIER=2.0
+      - MQTT_RECONNECT_JITTER=0.1
+      
+      # WebSocket settings
+      - HA_WS_HEARTBEAT_INTERVAL=30
+      
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      - mqtt-broker
+      - influxdb
+      - home-assistant
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"  # MQTT
+      - "9001:9001"  # WebSocket
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=myorg
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha_events
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=your_influxdb_token_here
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    restart: unless-stopped
+
+  home-assistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: home-assistant
+    ports:
+      - "8123:8123"
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./homeassistant:/config
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  influxdb_data:
+  prometheus_data:
+  grafana_data:

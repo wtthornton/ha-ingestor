@@ -1,0 +1,19 @@
+# Development
+
+Handle general development tasks following the project's standards and best practices.
+
+Refer to the following files for guidance:
+- General code style: @.agent-os/standards/code-style.md
+- Python style guide: @.agent-os/standards/code-style/python-style.md
+- Best practices: @.agent-os/standards/best-practices.md
+- Tech stack: @.agent-os/product/tech-stack.md
+- Project roadmap: @.agent-os/product/roadmap.md
+
+## Key Guidelines
+- Follow the established project architecture and patterns
+- Use the technology stack specified in the tech stack document
+- Implement proper error handling and logging
+- Write comprehensive tests for new functionality
+- Update documentation when making significant changes
+- Follow the project's code style and formatting rules
+- Use the established monitoring and observability patterns

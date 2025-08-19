@@ -1,0 +1,19 @@
+# Python Development
+
+Handle Python development tasks following the project's Python style guide and best practices.
+
+Refer to the following files for guidance:
+- Python style guide: @.agent-os/standards/code-style/python-style.md
+- General code style: @.agent-os/standards/code-style.md
+- Best practices: @.agent-os/standards/best-practices.md
+- Tech stack: @.agent-os/product/tech-stack.md
+
+## Key Guidelines
+- Use Python 3.12+ features and async-first architecture
+- Follow PEP 8 with project-specific overrides (4 spaces, 88 char line length)
+- Use type hints throughout the codebase
+- Implement proper error handling with custom exceptions
+- Use Pydantic for data validation and configuration
+- Write comprehensive tests with pytest
+- Use structured logging with structlog
+- Follow the project's established patterns and architecture
