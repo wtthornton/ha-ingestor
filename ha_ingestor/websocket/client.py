@@ -249,9 +249,18 @@ class WebSocketClient:
     async def _authenticate(self) -> bool:
         """Authenticate with Home Assistant WebSocket API."""
         try:
+            # Wait for initial auth_required message
+            initial_response = await self._receive_message()
+            if not initial_response or initial_response.get("type") != "auth_required":
+                self.logger.error(
+                    "Expected auth_required message", response=initial_response
+                )
+                return False
+
+            self.logger.info("Received auth_required, proceeding with authentication")
+
             # Send authentication message
             auth_message = {"type": "auth", "access_token": self.config.ha_ws_token}
-
             await self._send_message(auth_message)
 
             # Wait for authentication response

@@ -190,9 +190,7 @@ class SchemaTransformer(Transformer):
 
         return optimized_point
 
-    def _get_optimized_measurement(
-        self, event: MQTTEvent | WebSocketEvent
-    ) -> str:
+    def _get_optimized_measurement(self, event: MQTTEvent | WebSocketEvent) -> str:
         """Get optimized measurement name for the event.
 
         Args:

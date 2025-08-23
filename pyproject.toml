@@ -30,6 +30,7 @@ asyncio-mqtt = "^0.16.0"
 aiohttp = "^3.9.0"
 tenacity = "^8.2.0"
 psutil = "^7.0.0"
+aiofiles = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

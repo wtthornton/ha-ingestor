@@ -264,6 +264,47 @@ class Settings(BaseSettings):
         description="Time window for aggregating similar alerts in minutes",
     )
 
+    # Advanced MQTT Features (disabled by default for deployment)
+    mqtt_enable_pattern_matching: bool = False  # Disabled for deployment
+    mqtt_max_patterns: int = 100
+    mqtt_pattern_cache_size: int = 1000
+    mqtt_enable_dynamic_subscriptions: bool = False  # Disabled for deployment
+    mqtt_subscription_timeout: int = 300
+    mqtt_enable_topic_optimization: bool = False  # Disabled for deployment
+    mqtt_topic_optimization_interval: int = 60
+
+    # MQTT Performance Configuration
+    mqtt_max_reconnect_attempts: int = Field(
+        default=10,
+        ge=1,
+        le=50,
+        description="Maximum number of MQTT reconnection attempts",
+    )
+    mqtt_initial_reconnect_delay: float = Field(
+        default=1.0,
+        ge=0.1,
+        le=10.0,
+        description="Initial MQTT reconnection delay in seconds",
+    )
+    mqtt_max_reconnect_delay: float = Field(
+        default=300.0,
+        ge=60.0,
+        le=1800.0,
+        description="Maximum MQTT reconnection delay in seconds",
+    )
+    mqtt_reconnect_backoff_multiplier: float = Field(
+        default=2.0,
+        ge=1.1,
+        le=5.0,
+        description="MQTT reconnection backoff multiplier",
+    )
+    mqtt_reconnect_jitter: float = Field(
+        default=0.1,
+        ge=0.0,
+        le=0.5,
+        description="MQTT reconnection jitter factor (0-0.5)",
+    )
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:

@@ -1,0 +1,213 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🔒 Security & Automation Control",
+    "tags": ["security", "automation", "access"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {"from": "now-12h", "to": "now"},
+    "panels": [
+      {
+        "id": 1,
+        "title": "🚨 Security Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"binary_sensor\" and (contains(value: r[\"entity_id\"], set: \"door\") or contains(value: r[\"entity_id\"], set: \"motion\") or contains(value: r[\"entity_id\"], set: \"window\")))\n  |> filter(fn: (r) => r[\"state\"] == \"on\")\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "displayName": "Active Sensors",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 3},
+                {"color": "red", "value": 10}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "🔐 Access Events",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"domain\"] == \"lock\" or (r[\"domain\"] == \"binary_sensor\" and contains(value: r[\"entity_id\"], set: \"door\")))\n  |> filter(fn: (r) => r[\"event_type\"] == \"state_changed\")\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "displayName": "24h Access Events",
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "🤖 Automation Success Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"automation_triggered\")\n  |> count()\n  |> map(fn: (r) => ({r with _value: r._value / (r._value + 1.0) * 100.0}))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 80},
+                {"color": "green", "value": 95}
+              ]
+            },
+            "displayName": "Success Rate"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "🚪 Door/Window Status",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"domain\"] == \"binary_sensor\" and (contains(value: r[\"entity_id\"], set: \"door\") or contains(value: r[\"entity_id\"], set: \"window\")))\n  |> group(columns: [\"entity_id\"])\n  |> last()\n  |> keep(columns: [\"entity_id\", \"state\", \"_time\"])",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background"
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "🤖 Automation Performance Timeline",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 18, "x": 0, "y": 8},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -12h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"automation_triggered\")\n  |> aggregateWindow(every: 30m, fn: count, createEmpty: false)\n  |> group(columns: [\"entity_id\"])",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "🔍 Motion Detection Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"domain\"] == \"binary_sensor\" and contains(value: r[\"entity_id\"], set: \"motion\"))\n  |> filter(fn: (r) => r[\"state\"] == \"on\")\n  |> aggregateWindow(every: 1h, fn: count, createEmpty: false)\n  |> group(columns: [\"entity_id\"])",
+          "refId": "A"
+        }],
+        "options": {
+          "calculate": true,
+          "yAxis": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "🔐 Lock Status Overview",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 16},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"lock\")\n  |> group(columns: [\"entity_id\"])\n  |> last()\n  |> filter(fn: (r) => r[\"state\"] == \"locked\")\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "displayName": "Locked Doors",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "⚠️ Security Alerts",
+        "type": "logs",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"domain\"] == \"binary_sensor\" and (contains(value: r[\"entity_id\"], set: \"motion\") or contains(value: r[\"entity_id\"], set: \"door\")))\n  |> filter(fn: (r) => r[\"state\"] == \"on\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 50)",
+          "refId": "A"
+        }]
+      },
+      {
+        "id": 9,
+        "title": "📊 Automation Trigger Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"automation_triggered\")\n  |> group(columns: [\"entity_id\"])\n  |> count()",
+          "refId": "A"
+        }],
+        "options": {
+          "pieType": "donut",
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 10,
+        "title": "🕐 Activity by Hour",
+        "type": "bargauge",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 24},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"domain\"] == \"binary_sensor\" and contains(value: r[\"entity_id\"], set: \"motion\"))\n  |> filter(fn: (r) => r[\"state\"] == \"on\")\n  |> aggregateWindow(every: 1h, fn: count, createEmpty: false)",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-BlPu"},
+            "unit": "short"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        }
+      },
+      {
+        "id": 11,
+        "title": "🎯 Top Triggered Automations",
+        "type": "table",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 24},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"automation_triggered\")\n  |> group(columns: [\"entity_id\"])\n  |> count()\n  |> sort(columns: [\"_value\"], desc: true)\n  |> limit(n: 10)",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

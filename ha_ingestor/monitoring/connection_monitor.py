@@ -4,7 +4,7 @@ import asyncio
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -117,12 +117,14 @@ class ConnectionMonitor:
             service_name: Name of the service to monitor
             health_check: Function that returns connection health
         """
-        self._connections[service_name] = ConnectionHealth(
+        # Create connection health record
+        connection_health = ConnectionHealth(
             service_name=service_name,
             status=ConnectionStatus.DISCONNECTED,
-            last_check=datetime.utcnow(),
+            last_check=datetime.now(UTC),
             response_time_ms=0.0,
         )
+        self._connections[service_name] = connection_health
         self._health_checks[service_name] = health_check
 
         self.logger.info("Added connection to monitor", service=service_name)
@@ -213,7 +215,7 @@ class ConnectionMonitor:
 
             # Update connection health
             connection = self._connections[service_name]
-            connection.last_check = datetime.utcnow()
+            connection.last_check = datetime.now(UTC)
             connection.response_time_ms = response_time
             connection.metrics.update_latency(response_time)
 
@@ -237,7 +239,7 @@ class ConnectionMonitor:
 
             # Update connection health with error
             connection = self._connections[service_name]
-            connection.last_check = datetime.utcnow()
+            connection.last_check = datetime.now(UTC)
             connection.response_time_ms = response_time
             connection.status = ConnectionStatus.FAILING
             connection.error_message = error_message
@@ -296,7 +298,7 @@ class ConnectionMonitor:
             return
 
         connection = self._connections[service_name]
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         if event_type == "connect":
             connection.status = ConnectionStatus.CONNECTED

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -53,7 +53,7 @@ class ServiceHealth:
     def update_uptime(self) -> None:
         """Update service uptime."""
         if self.start_time:
-            self.uptime_seconds = (datetime.utcnow() - self.start_time).total_seconds()
+            self.uptime_seconds = (datetime.now(UTC) - self.start_time).total_seconds()
 
 
 class HealthTracker:
@@ -138,15 +138,15 @@ class HealthTracker:
 
         # Handle status-specific logic
         if status == ServiceStatus.STARTING:
-            service.start_time = datetime.utcnow()
+            service.start_time = datetime.now(UTC)
             service.uptime_seconds = 0.0
             service.error_count = 0
             service.warning_count = 0
 
         elif status == ServiceStatus.RUNNING:
             if service.start_time is None:
-                service.start_time = datetime.utcnow()
-            service.last_heartbeat = datetime.utcnow()
+                service.start_time = datetime.now(UTC)
+            service.last_heartbeat = datetime.now(UTC)
 
         elif status == ServiceStatus.ERROR:
             service.error_count += 1
@@ -193,7 +193,7 @@ class HealthTracker:
             return
 
         service = self._services[service_name]
-        service.last_heartbeat = datetime.utcnow()
+        service.last_heartbeat = datetime.now(UTC)
         service.update_uptime()
 
         # Update metrics
@@ -366,7 +366,7 @@ class HealthTracker:
 
     async def _check_heartbeat_timeouts(self) -> None:
         """Check for services with stale heartbeats."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         for service_name, service in self._services.items():
             if service.last_heartbeat and service.status == ServiceStatus.RUNNING:

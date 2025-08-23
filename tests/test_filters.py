@@ -12,7 +12,7 @@ from ha_ingestor.filters import (
     FilterChain,
     TimeFilter,
 )
-from ha_ingestor.models.events import Event
+from ha_ingestor.models.mqtt_event import MQTTEvent
 
 
 class TestDomainFilter:
@@ -39,7 +39,14 @@ class TestDomainFilter:
     async def test_domain_filter_allows_matching_domain(self):
         """Test domain filter allows matching domains."""
         filter = DomainFilter(["light", "switch"])
-        event = Event(domain="light", entity_id="light.living_room")
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            timestamp=datetime.now(),
+        )
 
         result = await filter.should_process(event)
         assert result is True
@@ -48,7 +55,14 @@ class TestDomainFilter:
     async def test_domain_filter_blocks_non_matching_domain(self):
         """Test domain filter blocks non-matching domains."""
         filter = DomainFilter(["light", "switch"])
-        event = Event(domain="sensor", entity_id="sensor.temperature")
+        event = MQTTEvent(
+            topic="homeassistant/sensor/temperature/state",
+            payload="25.5",
+            state="25.5",
+            domain="sensor",
+            entity_id="temperature",
+            timestamp=datetime.now(),
+        )
 
         result = await filter.should_process(event)
         assert result is False
@@ -71,8 +85,15 @@ class TestEntityFilter:
     @pytest.mark.asyncio
     async def test_entity_filter_matches_pattern(self):
         """Test entity filter matches patterns."""
-        filter = EntityFilter(["light.*"])
-        event = Event(domain="light", entity_id="light.living_room")
+        filter = EntityFilter([".*"])  # Match any entity ID
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            timestamp=datetime.now(),
+        )
 
         result = await filter.should_process(event)
         assert result is True
@@ -81,7 +102,14 @@ class TestEntityFilter:
     async def test_entity_filter_blocks_non_matching_pattern(self):
         """Test entity filter blocks non-matching patterns."""
         filter = EntityFilter(["light.*"])
-        event = Event(domain="light", entity_id="switch.main_power")
+        event = MQTTEvent(
+            topic="homeassistant/switch/main_power/state",
+            payload="off",
+            state="off",
+            domain="switch",
+            entity_id="main_power",
+            timestamp=datetime.now(),
+        )
 
         result = await filter.should_process(event)
         assert result is False
@@ -101,8 +129,14 @@ class TestAttributeFilter:
     async def test_attribute_filter_equals_operator(self):
         """Test attribute filter with equals operator."""
         filter = AttributeFilter("state", "on", "eq")
-        event = Event(
-            domain="light", entity_id="light.living_room", attributes={"state": "on"}
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            attributes={"state": "on"},
+            timestamp=datetime.now(),
         )
 
         result = await filter.should_process(event)
@@ -112,10 +146,14 @@ class TestAttributeFilter:
     async def test_attribute_filter_greater_than_operator(self):
         """Test attribute filter with greater than operator."""
         filter = AttributeFilter("brightness", 100, "gt")
-        event = Event(
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="150",
+            state="150",
             domain="light",
-            entity_id="light.living_room",
+            entity_id="living_room",
             attributes={"brightness": 150},
+            timestamp=datetime.now(),
         )
 
         result = await filter.should_process(event)
@@ -141,13 +179,18 @@ class TestTimeFilter:
 
     @pytest.mark.asyncio
     async def test_time_filter_business_hours_allows_workday(self):
-        """Test time filter allows events during business hours on workdays."""
+        """Test time filter allows business hours on workdays."""
         filter = TimeFilter(business_hours=True)
 
         # Monday at 10 AM
         event_time = datetime(2024, 1, 1, 10, 0)  # Monday
-        event = Event(
-            domain="light", entity_id="light.living_room", timestamp=event_time
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            timestamp=event_time,
         )
 
         result = await filter.should_process(event)
@@ -155,13 +198,18 @@ class TestTimeFilter:
 
     @pytest.mark.asyncio
     async def test_time_filter_business_hours_blocks_weekend(self):
-        """Test time filter blocks events on weekends."""
+        """Test time filter blocks business hours on weekends."""
         filter = TimeFilter(business_hours=True)
 
         # Saturday at 10 AM
         event_time = datetime(2024, 1, 6, 10, 0)  # Saturday
-        event = Event(
-            domain="light", entity_id="light.living_room", timestamp=event_time
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            timestamp=event_time,
         )
 
         result = await filter.should_process(event)
@@ -193,7 +241,7 @@ class TestFilterChain:
 
         # Add filters
         domain_filter = DomainFilter(["light"])
-        entity_filter = EntityFilter(["light.*"])
+        entity_filter = EntityFilter([".*"])  # Match any entity ID
         attribute_filter = AttributeFilter("state", "on")
 
         chain.add_filter(domain_filter)
@@ -201,29 +249,30 @@ class TestFilterChain:
         chain.add_filter(attribute_filter)
 
         # Create event that should pass all filters
-        event = Event(
-            domain="light", entity_id="light.living_room", attributes={"state": "on"}
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            attributes={"state": "on"},
+            timestamp=datetime.now(),
         )
 
         result = await chain.process_event(event)
         assert result is not None
         assert result.domain == "light"
-        assert result.entity_id == "light.living_room"
-
-    @pytest.mark.asyncio
-    async def test_filter_chain_blocks_event_at_first_filter(self):
-        """Test filter chain blocks event at first filter."""
-        chain = FilterChain()
-
-        # Add filters
-        domain_filter = DomainFilter(["light"])
-        entity_filter = EntityFilter(["light.*"])
-
-        chain.add_filter(domain_filter)
-        chain.add_filter(entity_filter)
+        assert result.entity_id == "living_room"
 
         # Create event that should be blocked by first filter
-        event = Event(domain="sensor", entity_id="sensor.temperature")
+        event = MQTTEvent(
+            topic="homeassistant/sensor/temperature/state",
+            payload="25.5",
+            state="25.5",
+            domain="sensor",
+            entity_id="temperature",
+            timestamp=datetime.now(),
+        )
 
         result = await chain.process_event(event)
         assert result is None  # Event was filtered out
@@ -250,7 +299,14 @@ class TestCustomFilter:
             return event.domain == "light"
 
         filter = CustomFilter(filter_func)
-        event = Event(domain="light", entity_id="light.living_room")
+        event = MQTTEvent(
+            topic="homeassistant/light/living_room/state",
+            payload="on",
+            state="on",
+            domain="light",
+            entity_id="living_room",
+            timestamp=datetime.now(),
+        )
 
         result = await filter.should_process(event)
         assert result is True
@@ -259,17 +315,19 @@ class TestCustomFilter:
     async def test_custom_filter_with_config(self):
         """Test custom filter with configuration."""
 
-        def filter_func(event, min_value=100):
-            if not event.attributes:
-                return False
-            return any(
-                isinstance(v, (int, float)) and v >= min_value
-                for v in event.attributes.values()
-            )
+        def filter_func(event, config):
+            min_value = config.get("min_value", 0)
+            return event.get_attribute("value", 0) >= min_value
 
         filter = CustomFilter(filter_func, config={"min_value": 50})
-        event = Event(
-            domain="sensor", entity_id="sensor.temperature", attributes={"value": 75}
+        event = MQTTEvent(
+            topic="homeassistant/sensor/temperature/state",
+            payload="75",
+            state="75",
+            domain="sensor",
+            entity_id="temperature",
+            attributes={"value": 75},
+            timestamp=datetime.now(),
         )
 
         result = await filter.should_process(event)

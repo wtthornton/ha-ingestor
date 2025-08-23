@@ -1,0 +1,238 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🌱 Energy & Environment Monitoring",
+    "tags": ["energy", "environment", "sustainability"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "1m",
+    "time": {"from": "now-24h", "to": "now"},
+    "panels": [
+      {
+        "id": 1,
+        "title": "⚡ Current Power Usage",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"W\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> sum()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "watt",
+            "min": 0,
+            "max": 5000,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 2000},
+                {"color": "red", "value": 4000}
+              ]
+            },
+            "displayName": "Total Power"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "🌡️ Temperature Overview",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"°C\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> mean()\n  |> yield(name: \"avg\")",
+            "refId": "A"
+          },
+          {
+            "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"°C\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> max()\n  |> yield(name: \"max\")",
+            "refId": "B"
+          },
+          {
+            "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"°C\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> min()\n  |> yield(name: \"min\")",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "blue", "value": null},
+                {"color": "green", "value": 18},
+                {"color": "yellow", "value": 25},
+                {"color": "red", "value": 30}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "💧 Humidity Levels",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"%\")\n  |> filter(fn: (r) => contains(value: r[\"entity_id\"], set: \"humidity\"))\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> mean()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 30},
+                {"color": "green", "value": 40},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 80}
+              ]
+            },
+            "displayName": "Avg Humidity"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "🌤️ Weather Impact",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"weather\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> last()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "displayName": "Current Weather"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "🌡️ Temperature Distribution Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 4},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"°C\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)\n  |> group(columns: [\"entity_id\"])",
+          "refId": "A"
+        }],
+        "options": {
+          "calculate": true,
+          "yAxis": {
+            "unit": "celsius"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "💡 Energy Consumption by Device",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"kWh\" or r[\"unit_of_measurement\"] == \"W\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> group(columns: [\"entity_id\"])\n  |> sum()",
+          "refId": "A"
+        }],
+        "options": {
+          "pieType": "donut",
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "📊 Daily Energy Trend",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"W\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)\n  |> sum(column: \"_value\")",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-GrYlRd"},
+            "unit": "watt",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "🌿 Environmental Quality Score",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 20},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\")\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"°C\" or r[\"unit_of_measurement\"] == \"%\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> mean()\n  |> map(fn: (r) => ({r with _value: if r._value > 20.0 and r._value < 25.0 then 100.0 else 50.0}))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 60},
+                {"color": "green", "value": 80}
+              ]
+            },
+            "displayName": "Quality Score"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "💰 Estimated Energy Cost",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 20},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"kWh\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value) * 0.12}))\n  |> sum()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 15}
+              ]
+            },
+            "displayName": "Daily Cost"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "🌱 Carbon Footprint",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 20},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"kWh\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value) * 0.4}))\n  |> sum()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kg",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 25}
+              ]
+            },
+            "displayName": "CO2 kg/day"
+          }
+        }
+      }
+    ]
+  }
+}

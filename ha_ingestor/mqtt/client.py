@@ -1,8 +1,9 @@
 """MQTT client for Home Assistant integration."""
 
 import asyncio
+import queue
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import paho.mqtt.client as mqtt
@@ -11,6 +12,7 @@ from paho.mqtt.enums import CallbackAPIVersion
 from ..config import get_settings
 from ..utils.logging import get_logger
 from ..utils.retry import mqtt_circuit_breaker, mqtt_retry, with_circuit_breaker
+from .topic_patterns import TopicPattern, TopicPatternManager, TopicSubscription
 
 
 class MQTTClient:
@@ -58,11 +60,35 @@ class MQTTClient:
         # Topic subscriptions
         self._subscribed_topics: list[str] = []
 
+        # Initialize advanced topic pattern features only if enabled
+        if self.config.mqtt_enable_pattern_matching:
+            self._topic_pattern_manager = TopicPatternManager()
+            self.logger.info("Advanced MQTT topic pattern matching enabled")
+        else:
+            self._topic_pattern_manager = None
+            self.logger.info(
+                "Advanced MQTT topic pattern matching disabled (deployment mode)"
+            )
+        self._dynamic_subscriptions: dict[str, TopicSubscription] = {}
+        self._subscription_callbacks: dict[str, Callable] = {}
+
         # Message handler callback
         self._message_handler: Callable[[str, str, datetime], None] | None = None
 
+        # Message queue for async processing
+        self._message_queue: queue.Queue | None = None
+
         # Event loop for async operations
         self._loop: asyncio.AbstractEventLoop | None = None
+
+        # Performance metrics
+        self._metrics = {
+            "messages_received": 0,
+            "messages_processed": 0,
+            "pattern_matches": 0,
+            "subscription_creates": 0,
+            "subscription_removes": 0,
+        }
 
     @with_circuit_breaker(mqtt_circuit_breaker)
     @mqtt_retry
@@ -205,11 +231,189 @@ class MQTTClient:
             self.logger.error("Error subscribing to topics", error=str(e))
             return False
 
+    async def subscribe_with_pattern(
+        self,
+        pattern: str,
+        callback: Callable | None = None,
+        qos: int = 1,
+        filters: dict[str, Any] | None = None,
+    ) -> str:
+        """Subscribe to a topic pattern with enhanced filtering and routing.
+
+        Args:
+            pattern: The topic pattern to subscribe to (supports MQTT wildcards + and #)
+            callback: Optional callback function for messages matching this pattern
+            qos: Quality of service level
+            filters: Optional message filters (topic_regex, payload_regex, etc.)
+
+        Returns:
+            Subscription ID for management
+        """
+        try:
+            # Validate callback if provided
+            if callback is not None and not callable(callback):
+                raise ValueError("Callback must be callable")
+
+            # Create topic pattern if it doesn't exist
+            topic_pattern = TopicPattern(
+                pattern=pattern,
+                description=f"Dynamic subscription to {pattern}",
+                priority=1,
+                enabled=True,
+                filters=filters or {},
+            )
+
+            # Add pattern to manager
+            if self._topic_pattern_manager:
+                if not self._topic_pattern_manager.add_pattern(topic_pattern):
+                    # Pattern already exists, update it
+                    existing_pattern = self._topic_pattern_manager.pattern_index.get(
+                        pattern
+                    )
+                    if existing_pattern:
+                        existing_pattern.filters.update(filters or {})
+                else:
+                    self.logger.warning(
+                        "Pattern already exists, updating it", pattern=pattern
+                    )
+
+            # Create subscription
+            subscription_id = self._topic_pattern_manager.subscribe_to_pattern(
+                pattern, callback, qos, filters
+            )
+
+            # Store callback for message routing
+            if callback:
+                self._subscription_callbacks[subscription_id] = callback
+
+            # Subscribe to the actual MQTT topic if not already subscribed
+            if pattern not in self._subscribed_topics:
+                await self.subscribe([pattern])
+
+            self._metrics["subscription_creates"] += 1
+            self.logger.info(
+                "Created pattern subscription",
+                subscription_id=subscription_id,
+                pattern=pattern,
+            )
+
+            return subscription_id
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to create pattern subscription", pattern=pattern, error=str(e)
+            )
+            raise
+
+    async def unsubscribe_from_pattern(self, subscription_id: str) -> bool:
+        """Unsubscribe from a topic pattern.
+
+        Args:
+            subscription_id: The subscription ID to remove
+
+        Returns:
+            True if unsubscribed successfully, False otherwise
+        """
+        try:
+            # Get the pattern before removing the subscription
+            subscription = self._topic_pattern_manager.subscriptions.get(
+                subscription_id
+            )
+            if not subscription:
+                return False
+
+            pattern = subscription.topic
+
+            # Remove from pattern manager
+            success = self._topic_pattern_manager.unsubscribe_from_pattern(
+                subscription_id
+            )
+
+            if success:
+                # Remove callback
+                if subscription_id in self._subscription_callbacks:
+                    del self._subscription_callbacks[subscription_id]
+
+                # Check if this was the last subscription for this pattern
+                # If no more subscriptions for this pattern, remove the pattern
+                if pattern not in self._topic_pattern_manager.subscription_patterns:
+                    self._topic_pattern_manager.remove_pattern(pattern)
+
+                self._metrics["subscription_removes"] += 1
+                self.logger.info(
+                    "Removed pattern subscription", subscription_id=subscription_id
+                )
+
+            return success
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to remove pattern subscription",
+                subscription_id=subscription_id,
+                error=str(e),
+            )
+            return False
+
+    def add_topic_pattern(self, pattern: TopicPattern) -> bool:
+        """Add a custom topic pattern for advanced matching.
+
+        Args:
+            pattern: The topic pattern to add
+
+        Returns:
+            True if pattern was added successfully, False otherwise
+        """
+        if self._topic_pattern_manager:
+            return self._topic_pattern_manager.add_pattern(pattern)
+        return False
+
+    def remove_topic_pattern(self, pattern_str: str) -> bool:
+        """Remove a custom topic pattern.
+
+        Args:
+            pattern_str: The pattern string to remove
+
+        Returns:
+            True if pattern was removed successfully, False otherwise
+        """
+        if self._topic_pattern_manager:
+            return self._topic_pattern_manager.remove_pattern(pattern_str)
+        return False
+
+    def get_topic_patterns(self) -> list[TopicPattern]:
+        """Get all registered topic patterns.
+
+        Returns:
+            List of all topic patterns
+        """
+        if self._topic_pattern_manager:
+            return self._topic_pattern_manager.patterns.copy()
+        return []
+
+    def get_optimized_subscriptions(self, topics: list[str]) -> list[str]:
+        """Get optimized list of subscriptions for a set of topics.
+
+        Args:
+            topics: List of topics to optimize subscriptions for
+
+        Returns:
+            Optimized list of subscription patterns
+        """
+        if self._topic_pattern_manager:
+            return self._topic_pattern_manager.get_optimized_subscriptions(topics)
+        return []
+
     async def start_listening(self) -> None:
         """Start listening for MQTT messages."""
         if not self._connected:
             self.logger.error("Cannot start listening: not connected")
             return
+
+        # Initialize message queue and start message processing
+        self._message_queue = queue.Queue(maxsize=1000)
+        self._message_processing_task = asyncio.create_task(
+            self._process_message_queue()
+        )
 
         # Subscribe to default Home Assistant topics
         default_topics = [
@@ -233,6 +437,27 @@ class MQTTClient:
             return
 
         try:
+            # Stop message processing task
+            if (
+                hasattr(self, "_message_processing_task")
+                and self._message_processing_task
+            ):
+                self._message_processing_task.cancel()
+                try:
+                    await self._message_processing_task
+                except asyncio.CancelledError:
+                    pass
+                self._message_processing_task = None
+
+            # Clear message queue
+            if self._message_queue:
+                while not self._message_queue.empty():
+                    try:
+                        self._message_queue.get_nowait()
+                    except queue.Empty:
+                        break
+                self._message_queue = None
+
             # Unsubscribe from all topics
             for topic in self._subscribed_topics:
                 if self.client:
@@ -276,19 +501,76 @@ class MQTTClient:
             timestamp: Message timestamp
         """
         try:
-            if self._message_handler:
-                # Call the message handler
-                if asyncio.iscoroutinefunction(self._message_handler):
-                    await self._message_handler(topic, payload, timestamp)
-                else:
-                    self._message_handler(topic, payload, timestamp)
-            else:
-                self.logger.debug(
-                    "No message handler set", topic=topic, payload=payload
+            self._metrics["messages_received"] += 1
+
+            # Route message through pattern manager for dynamic subscriptions
+            routes = []
+            if self._topic_pattern_manager:
+                routes = self._topic_pattern_manager.route_message(
+                    topic, payload, timestamp=timestamp
                 )
+
+            # Execute callbacks for matching patterns
+            for subscription_id, callback in routes:
+                try:
+                    if asyncio.iscoroutinefunction(callback):
+                        await callback(topic, payload, timestamp)
+                    else:
+                        callback(topic, payload, timestamp)
+
+                    # Update subscription metrics
+                    if (
+                        self._topic_pattern_manager
+                        and subscription_id in self._topic_pattern_manager.subscriptions
+                    ):
+                        sub = self._topic_pattern_manager.subscriptions[subscription_id]
+                        sub.message_count += 1
+                        sub.last_message_time = __import__("time").time()
+
+                except Exception as e:
+                    self.logger.error(
+                        "Error in subscription callback",
+                        subscription_id=subscription_id,
+                        error=str(e),
+                    )
+
+            # Call the main message handler if set
+            if self._message_handler:
+                try:
+                    if asyncio.iscoroutinefunction(self._message_handler):
+                        await self._message_handler(topic, payload, timestamp)
+                    else:
+                        self._message_handler(topic, payload, timestamp)
+                except Exception as e:
+                    self.logger.error("Error in main message handler", error=str(e))
+
+            self._metrics["messages_processed"] += 1
+            self._metrics["pattern_matches"] += len(routes)
 
         except Exception as e:
             self.logger.error("Error handling MQTT message", topic=topic, error=str(e))
+
+    async def _process_message_queue(self) -> None:
+        """Process messages from the queue asynchronously."""
+        while True:
+            try:
+                # Get message from queue with timeout
+                message = await asyncio.get_event_loop().run_in_executor(
+                    None, self._message_queue.get, 1.0
+                )
+
+                if message:
+                    topic, payload, timestamp = message
+                    await self._handle_message(topic, payload, timestamp)
+
+            except queue.Empty:
+                # No messages in queue, continue
+                continue
+            except asyncio.CancelledError:
+                self.logger.debug("Message processing task cancelled")
+                break
+            except Exception as e:
+                self.logger.error("Error processing message from queue", error=str(e))
 
     async def _start_reconnection(self) -> None:
         """Start the reconnection process with backoff strategy."""
@@ -490,30 +772,48 @@ class MQTTClient:
                 "Failed to connect to MQTT broker", reason_code=reason_code
             )
 
-    def _on_disconnect(
-        self, client: Any, userdata: Any, reason_code: int, properties: Any = None
-    ) -> None:
+    def _on_disconnect(self, client: Any, userdata: Any, *args, **kwargs) -> None:
         """Called when disconnected from MQTT broker."""
+        # Extract reason_code from args for compatibility with different paho-mqtt versions
+        reason_code = args[0] if args else 0
+
         self._connected = False
         self.logger.info("Disconnected from MQTT broker", reason_code=reason_code)
 
         # Attempt reconnection if not intentionally disconnecting
         if not self._disconnecting and reason_code != 0:
-            asyncio.create_task(self._start_reconnection())
+            try:
+                # Check if there's a running event loop
+                loop = asyncio.get_running_loop()
+                asyncio.create_task(self._start_reconnection())
+            except RuntimeError:
+                # No running event loop, schedule the reconnection for later
+                self.logger.debug("No running event loop, scheduling reconnection")
 
     def _on_message(self, client: Any, userdata: Any, msg: Any) -> None:
         """Called when a message is received."""
         try:
             topic = msg.topic
             payload = msg.payload.decode("utf-8")
-            timestamp = datetime.utcnow()
+            timestamp = datetime.now(UTC)
 
             self.logger.debug(
                 "Received MQTT message", topic=topic, payload=payload, qos=msg.qos
             )
 
-            # Handle message asynchronously
-            asyncio.create_task(self._handle_message(topic, payload, timestamp))
+            # Queue message for async processing
+            if self._message_queue:
+                try:
+                    self._message_queue.put_nowait((topic, payload, timestamp))
+                except queue.Full:
+                    self.logger.warning(
+                        "Message queue full, dropping message", topic=topic
+                    )
+            else:
+                # Fallback: log the message
+                self.logger.info(
+                    "Message received (no handler)", topic=topic, payload=payload
+                )
 
         except Exception as e:
             self.logger.error("Error processing MQTT message", error=str(e))
@@ -539,3 +839,38 @@ class MQTTClient:
             self.logger.info("MQTT client notice", message=buf)
         else:
             self.logger.debug("MQTT client log", message=buf)
+
+    def get_metrics(self) -> dict[str, Any]:
+        """Get performance metrics for the MQTT client.
+
+        Returns:
+            Dictionary of performance metrics
+        """
+        metrics_dict = {
+            **self._metrics,
+            "subscribed_topics": len(self._subscribed_topics),
+            "total_patterns": 0,
+            "total_subscriptions": 0,
+            "dynamic_subscriptions": len(self._dynamic_subscriptions),
+            "pattern_subscriptions": 0,
+        }
+
+        if self._topic_pattern_manager:
+            pattern_metrics = self._topic_pattern_manager.get_metrics()
+            metrics_dict.update(pattern_metrics)
+            metrics_dict["total_patterns"] = pattern_metrics.get("total_patterns", 0)
+            metrics_dict["total_subscriptions"] = pattern_metrics.get(
+                "total_subscriptions", 0
+            )
+            metrics_dict["pattern_subscriptions"] = pattern_metrics.get(
+                "total_subscriptions", 0
+            )
+
+        return metrics_dict
+
+    def clear_metrics(self) -> None:
+        """Clear performance metrics."""
+        for key in self._metrics:
+            self._metrics[key] = 0
+        if self._topic_pattern_manager:
+            self._topic_pattern_manager.clear_metrics()

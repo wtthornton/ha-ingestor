@@ -162,7 +162,12 @@ class TestMetricsCollector:
 
         metric = collector.registry.get_metric("ha_ingestor_events_deduplicated_total")
         assert len(metric.values) == 2
-        assert metric.values[-1].value == 2.0
+        # Check that we have two separate increment records
+        assert metric.values[0].value == 1.0
+        assert metric.values[1].value == 1.0
+        # Total count should be sum of all values
+        total_count = sum(val.value for val in metric.values)
+        assert total_count == 2.0
 
     def test_record_pipeline_queue_size(self):
         """Test pipeline queue size metrics recording."""
@@ -229,16 +234,31 @@ class TestMetricsCollector:
         """Test error metrics recording."""
         collector = MetricsCollector()
 
-        collector.record_error("general")
-        collector.record_error("connection")
+        collector.record_error("general", "error")
+        collector.record_error("connection", "warning")
 
         general_errors = collector.registry.get_metric("ha_ingestor_errors_total")
-        assert general_errors.values[-1].value == 2.0
+        # Check that we have two separate increment records
+        assert len(general_errors.values) == 2
+        # Total count should be sum of all values
+        total_count = sum(val.value for val in general_errors.values)
+        assert total_count == 2.0
 
-        connection_errors = collector.registry.get_metric(
-            "ha_ingestor_connection_errors_total"
+        # Check category-specific errors
+        category_errors = collector.registry.get_metric(
+            "ha_ingestor_errors_by_category_total"
         )
-        assert connection_errors.values[-1].value == 1.0
+        assert len(category_errors.values) == 2
+        total_category_count = sum(val.value for val in category_errors.values)
+        assert total_category_count == 2.0
+
+        # Check severity-specific errors
+        severity_errors = collector.registry.get_metric(
+            "ha_ingestor_errors_by_severity_total"
+        )
+        assert len(severity_errors.values) == 2
+        total_severity_count = sum(val.value for val in severity_errors.values)
+        assert total_severity_count == 2.0
 
     def test_update_uptime(self):
         """Test uptime metric update."""

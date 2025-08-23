@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: ha_events
+    user: admin
+    secureJsonData:
+      password: Rom24aedslas!@
+    jsonData:
+      version: Flux
+      organization: myorg
+      defaultBucket: ha_events
+      tlsSkipVerify: true

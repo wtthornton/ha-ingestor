@@ -195,8 +195,11 @@ async def main() -> int:
         logger.info("Connecting to InfluxDB...")
         influxdb_connected = await influxdb_writer.connect()
 
-        if mqtt_connected and websocket_connected and influxdb_connected:
-            logger.info("✅ All services connected successfully")
+        # For deployment mode, allow running with just MQTT and InfluxDB
+        if mqtt_connected and influxdb_connected:
+            logger.info("✅ Core services connected successfully (MQTT + InfluxDB)")
+            if not websocket_connected:
+                logger.warning("⚠️ WebSocket connection failed, continuing without it")
 
             # Create InfluxDB bucket if it doesn't exist
             logger.info("Ensuring InfluxDB bucket exists...")
@@ -316,11 +319,11 @@ async def main() -> int:
 
                 logger.info("✅ All services disconnected")
         else:
-            logger.error("❌ Failed to connect to one or more services")
+            logger.error(
+                "❌ Failed to connect to core services (MQTT and InfluxDB required)"
+            )
             if not mqtt_connected:
                 logger.error("MQTT connection failed")
-            if not websocket_connected:
-                logger.error("WebSocket connection failed")
             if not influxdb_connected:
                 logger.error("InfluxDB connection failed")
             return 1

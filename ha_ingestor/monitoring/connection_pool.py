@@ -5,7 +5,7 @@ import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
@@ -45,12 +45,14 @@ class PooledConnection(Generic[T]):
 
     def is_expired(self, max_idle_time: float) -> bool:
         """Check if connection has been idle too long."""
-        idle_time = (datetime.utcnow() - self.last_used).total_seconds()
+
+        idle_time = (datetime.now(UTC) - self.last_used).total_seconds()
         return idle_time > max_idle_time
 
     def mark_used(self) -> None:
         """Mark connection as used."""
-        self.last_used = datetime.utcnow()
+
+        self.last_used = datetime.now(UTC)
         self.use_count += 1
         if self.state == ConnectionState.IDLE:
             self.state = ConnectionState.ACTIVE

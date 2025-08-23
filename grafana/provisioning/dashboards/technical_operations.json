@@ -1,0 +1,175 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🔧 Home Assistant Technical Operations",
+    "tags": ["technical", "operations", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "15s",
+    "time": {"from": "now-4h", "to": "now"},
+    "panels": [
+      {
+        "id": 1,
+        "title": "🚨 Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/ and contains(value: r[\"state\"], set: \"error\"))\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 20}
+              ]
+            },
+            "displayName": "Errors/Hour"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "📊 Data Ingestion Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> count()\n  |> map(fn: (r) => ({r with _value: r._value * 12.0}))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "short",
+            "displayName": "Events/Hour"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "🔄 Service Uptime",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> aggregateWindow(every: 1h, fn: count, createEmpty: false)\n  |> count()\n  |> map(fn: (r) => ({r with _value: r._value / 24.0 * 100.0}))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "unit": "percent",
+            "displayName": "Uptime %"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "📡 MQTT vs WebSocket Events",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "query": "from(bucket: \"ha_events\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r[\"source\"] == \"mqtt\")\n  |> aggregateWindow(every: 5m, fn: count, createEmpty: false)\n  |> yield(name: \"MQTT\")",
+            "refId": "A"
+          },
+          {
+            "query": "from(bucket: \"ha_events\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r[\"source\"] == \"websocket\")\n  |> aggregateWindow(every: 5m, fn: count, createEmpty: false)\n  |> yield(name: \"WebSocket\")",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "🏠 Domain Performance",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> group(columns: [\"domain\"])\n  |> count()\n  |> sort(columns: [\"_value\"], desc: true)",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background"
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "🔍 Event Type Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> group(columns: [\"event_type\"])\n  |> count()",
+          "refId": "A"
+        }],
+        "options": {
+          "pieType": "donut",
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "⚡ Processing Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> aggregateWindow(every: 10m, fn: count, createEmpty: false)\n  |> derivative(unit: 1m, nonNegative: true)",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-GrYlRd"},
+            "unit": "short",
+            "displayName": "Events/min"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "🔧 System Resource Usage",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> count()\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0 * 100.0}))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            },
+            "displayName": "Load %"
+          }
+        }
+      }
+    ]
+  }
+}

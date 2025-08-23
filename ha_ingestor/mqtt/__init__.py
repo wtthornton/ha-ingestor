@@ -1,5 +1,11 @@
-"""MQTT client module for Home Assistant integration."""
+"""MQTT client and topic pattern management for Home Assistant integration."""
 
 from .client import MQTTClient
+from .topic_patterns import TopicPattern, TopicPatternManager, TopicSubscription
 
-__all__ = ["MQTTClient"]
+__all__ = [
+    "MQTTClient",
+    "TopicPattern",
+    "TopicSubscription",
+    "TopicPatternManager",
+]

@@ -1,0 +1,178 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🏠 Home Assistant Executive Overview",
+    "tags": ["executive", "overview", "kpi"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {"from": "now-24h", "to": "now"},
+    "panels": [
+      {
+        "id": 1,
+        "title": "🔄 System Health Score",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 0, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "green", "value": 50}
+              ]
+            },
+            "unit": "short",
+            "displayName": "Events/5min"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "📊 Active Devices",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 3, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> group(columns: [\"entity_id\"])\n  |> distinct(column: \"entity_id\")\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "short",
+            "displayName": "Total Devices"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "⚡ Automations Triggered",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"automation_triggered\")\n  |> count()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "blue", "value": null}
+              ]
+            },
+            "unit": "short",
+            "displayName": "24h Total"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "🌡️ Average Temperature",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"domain\"] == \"sensor\" and r[\"unit_of_measurement\"] == \"°C\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> mean()",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "blue", "value": null},
+                {"color": "green", "value": 18},
+                {"color": "yellow", "value": 25},
+                {"color": "red", "value": 30}
+              ]
+            },
+            "unit": "celsius",
+            "displayName": "Avg Temp"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "📈 Activity Timeline (24h)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> aggregateWindow(every: 1h, fn: count, createEmpty: false)\n  |> group(columns: [\"domain\"])\n  |> yield(name: \"activity\")",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "🏠 Domain Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 4},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> group(columns: [\"domain\"])\n  |> count()\n  |> group()",
+          "refId": "A"
+        }],
+        "options": {
+          "pieType": "donut",
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "🔥 Top Active Entities",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 4},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> group(columns: [\"entity_id\", \"domain\"])\n  |> count()\n  |> sort(columns: [\"_value\"], desc: true)\n  |> limit(n: 10)",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "⚠️ Recent System Events",
+        "type": "logs",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"event_type\"] == \"system_log_event\" or r[\"domain\"] == \"binary_sensor\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 50)",
+          "refId": "A"
+        }]
+      },
+      {
+        "id": 9,
+        "title": "💡 Energy & Power Overview",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 12},
+        "targets": [{
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r[\"unit_of_measurement\"] == \"W\" or r[\"unit_of_measurement\"] == \"kWh\")\n  |> filter(fn: (r) => r[\"_field\"] == \"state\")\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)\n  |> group(columns: [\"entity_id\"])",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "watt"
+          }
+        }
+      }
+    ]
+  }
+}

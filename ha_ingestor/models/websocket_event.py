@@ -57,11 +57,11 @@ class WebSocketEvent(Event):
         if not v.strip():
             raise ValueError("Entity ID cannot be empty if provided")
 
-        # Entity ID should be lowercase with underscores
+        # Entity ID should be lowercase with underscores and dots (Home Assistant format)
         entity_id = v.strip().lower()
-        if not re.match(r"^[a-z0-9_]+$", entity_id):
+        if not re.match(r"^[a-z0-9_.]+$", entity_id):
             raise ValueError(
-                "Entity ID must contain only lowercase letters, numbers, and underscores"
+                "Entity ID must contain only lowercase letters, numbers, underscores, and dots"
             )
 
         return entity_id

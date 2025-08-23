@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  ha-ingestor:
+    build: .
+    container_name: ha-ingestor
+    ports:
+      - "8000:8000"
+    environment:
+      # Home Assistant MQTT settings
+      - HA_MQTT_HOST=mqtt-broker
+      - HA_MQTT_PORT=1883
+      - HA_MQTT_CLIENT_ID=ha-ingestor-production
+      - HA_MQTT_USERNAME=tapphousemqtt
+      - HA_MQTT_PASSWORD=Rom24aedslas!@
+
+      # Home Assistant WebSocket settings (Production)
+      - HA_WS_URL=ws://192.168.1.86:8123/api/websocket
+      - HA_WS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI1YWQ3ZWIzNWVlZTA0YjJhOTU5ZmUyNGNmYjUxMjA5ZSIsImlhdCI6MTc1NTk4MTM2MiwiZXhwIjoyMDcxMzQxMzYyfQ.k5K-vzi0xS1JCx_1qL2dOoIXbWuRiAfyFmtUF-2PeBY
+
+      # InfluxDB settings
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=Rom24aedslas!@
+      - INFLUXDB_ORG=myorg
+      - INFLUXDB_BUCKET=ha_events
+
+      # Service settings
+      - LOG_LEVEL=INFO
+      - HEALTH_CHECK_PORT=8000
+      - METRICS_ENABLED=true
+
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      - mqtt-broker
+      - influxdb
+    restart: unless-stopped
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=myorg
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha_events
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=Rom24aedslas!@
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    restart: unless-stopped
+
+volumes:
+  influxdb_data:

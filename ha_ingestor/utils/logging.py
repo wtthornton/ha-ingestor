@@ -6,7 +6,7 @@ import sys
 import uuid
 from collections.abc import Callable
 from contextvars import ContextVar
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -261,11 +261,11 @@ def log_function_call(
 
             logger.debug(f"Calling {func_name}", **log_data)
 
-            start_time = datetime.utcnow()
+            start_time = datetime.now(UTC)
 
             try:
                 result = func(*args, **func_kwargs)
-                duration = (datetime.utcnow() - start_time).total_seconds()
+                duration = (datetime.now(UTC) - start_time).total_seconds()
 
                 # Log successful completion
                 completion_data = {
@@ -283,7 +283,7 @@ def log_function_call(
                 return result
 
             except Exception as e:
-                duration = (datetime.utcnow() - start_time).total_seconds()
+                duration = (datetime.now(UTC) - start_time).total_seconds()
 
                 # Log error with enhanced context
                 error_data = {
