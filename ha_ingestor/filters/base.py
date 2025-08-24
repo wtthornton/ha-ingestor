@@ -1,4 +1,39 @@
-"""Base filter classes and filter chain implementation."""
+"""
+Base filter classes and filter chain implementation.
+
+AI ASSISTANT CONTEXT:
+This module provides the base classes and infrastructure for the filtering system.
+All filters in ha_ingestor/filters/ inherit from these base classes.
+
+Key patterns used:
+- Abstract base class (ABC) for filter interface
+- Async filter processing with caching
+- Metrics collection for performance monitoring
+- Filter chain composition and execution
+- Result caching for performance optimization
+
+Common modifications:
+- Add new filter types by inheriting from Filter or BaseFilter
+- Modify filter chain execution logic
+- Enhance caching strategies
+- Add new metrics collection
+- Modify filter result handling
+
+Related files:
+- ha_ingestor/filters/domain_filter.py: Domain-based filtering
+- ha_ingestor/filters/entity_filter.py: Entity-based filtering
+- ha_ingestor/filters/attribute_filter.py: Attribute-based filtering
+- ha_ingestor/filters/time_filter.py: Time-based filtering
+- ha_ingestor/filters/performance.py: Performance monitoring filters
+
+Filter Implementation Pattern:
+1. Inherit from Filter or BaseFilter
+2. Implement should_process() method
+3. Optionally implement transform() method
+4. Add configuration parameters in __init__
+5. Use self.logger for logging
+6. Record metrics using self._metrics_collector
+"""
 
 import asyncio
 from abc import ABC, abstractmethod

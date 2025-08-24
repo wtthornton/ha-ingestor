@@ -1,6 +1,6 @@
 """Alert dashboard for web-based alert management."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -312,7 +312,7 @@ class AlertDashboard:
 
                 return {
                     "status": "healthy" if is_healthy else "unhealthy",
-                    "timestamp": datetime.now(datetime.UTC).isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "details": {
                         "manager_running": stats["manager"]["is_running"],
                         "notification_channels": len(

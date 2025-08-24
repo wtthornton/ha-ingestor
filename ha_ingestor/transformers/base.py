@@ -1,4 +1,41 @@
-"""Base classes for the data transformation system."""
+"""
+Base classes for the data transformation system.
+
+AI ASSISTANT CONTEXT:
+This module provides the base classes and infrastructure for the data transformation system.
+All transformers in ha_ingestor/transformers/ inherit from these base classes.
+
+Key patterns used:
+- Abstract base class (ABC) for transformer interface
+- Pydantic models for transformation rule configuration
+- Enum-based transformation type classification
+- Metrics collection for performance monitoring
+- Rule-based transformation application
+- Chain-based transformation execution
+
+Common modifications:
+- Add new transformer types by inheriting from Transformer
+- Modify transformation rule configuration
+- Enhance transformation chain logic
+- Add new transformation types to TransformationType enum
+- Modify metrics collection and monitoring
+
+Related files:
+- ha_ingestor/transformers/field_mapper.py: Field mapping transformations
+- ha_ingestor/transformers/type_converter.py: Type conversion transformations
+- ha_ingestor/transformers/custom_transformer.py: Custom function transformations
+- ha_ingestor/transformers/rule_engine.py: Rule-based transformation engine
+- ha_ingestor/transformers/schema_transformer.py: Schema transformation logic
+
+Transformer Implementation Pattern:
+1. Inherit from Transformer
+2. Implement transform() method
+3. Optionally implement should_apply() method
+4. Add configuration parameters in __init__
+5. Use self.logger for logging
+6. Update self.metrics for performance tracking
+7. Return TransformationResult with success status and data
+"""
 
 import time
 from abc import ABC, abstractmethod

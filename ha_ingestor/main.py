@@ -1,4 +1,31 @@
-"""Main application entry point for Home Assistant Activity Ingestor."""
+"""
+Main application entry point for Home Assistant Activity Ingestor.
+
+AI ASSISTANT CONTEXT:
+This is the main entry point for the ha-ingestor service. It orchestrates:
+- MQTT and WebSocket message handling
+- Event processing pipeline
+- InfluxDB storage operations
+- Health monitoring and metrics collection
+
+Key patterns used:
+- Async event handlers with error decorators
+- Pipeline-based event processing
+- Structured logging with context
+- Error handling with retry logic
+
+Common modifications:
+- Add new message handlers
+- Modify event processing logic
+- Add new storage backends
+- Enhance monitoring and metrics
+
+Related files:
+- ha_ingestor/pipeline.py: Main processing pipeline
+- ha_ingestor/config.py: Configuration management
+- ha_ingestor/mqtt/: MQTT client implementation
+- ha_ingestor/websocket/: WebSocket client implementation
+"""
 
 import asyncio
 import sys

@@ -412,10 +412,10 @@ class ConnectionMonitor:
         Returns:
             Dictionary with connection summary
         """
-        summary = {
+        summary: dict[str, Any] = {
             "overall_status": self.get_overall_health_status().value,
-            "healthy_connections": 0,
             "total_connections": len(self._connections),
+            "healthy_connections": 0,
             "connections": {},
         }
 

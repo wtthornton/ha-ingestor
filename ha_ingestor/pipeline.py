@@ -1,4 +1,33 @@
-"""Event processing pipeline for Home Assistant data ingestion."""
+"""
+Event processing pipeline for Home Assistant data ingestion.
+
+AI ASSISTANT CONTEXT:
+This is the core event processing pipeline that handles:
+- Event deduplication and routing
+- Filter and transformer application
+- Batch processing and storage
+- Performance monitoring and statistics
+
+Key patterns used:
+- Pipeline pattern with configurable stages
+- Event deduplication with time-based windows
+- Batch processing for performance optimization
+- Async queue-based processing
+- Statistics collection and monitoring
+
+Common modifications:
+- Add new filter types in ha_ingestor/filters/
+- Add new transformer types in ha_ingestor/transformers/
+- Modify event routing logic
+- Enhance performance monitoring
+- Add new storage handlers
+
+Related files:
+- ha_ingestor/filters/: Filter implementations
+- ha_ingestor/transformers/: Transformer implementations
+- ha_ingestor/models/: Event data models
+- ha_ingestor/metrics/: Performance metrics collection
+"""
 
 import asyncio
 import hashlib

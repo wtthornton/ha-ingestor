@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..utils.logging import get_logger
@@ -490,8 +490,8 @@ class DashboardManager:
     def get_comprehensive_summary(self) -> dict[str, Any]:
         """Get a comprehensive summary of all dashboard components."""
         try:
-            summary = {
-                "timestamp": datetime.utcnow().isoformat(),
+            summary: dict[str, Any] = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": self.get_dashboard_status().__dict__,
                 "performance_dashboard": self.performance_dashboard.get_dashboard_summary(),
                 "operational_dashboard": self.operational_dashboard.get_operational_summary(),
@@ -509,8 +509,12 @@ class DashboardManager:
             }
 
             # Convert datetime objects to ISO format
-            summary["status"]["timestamp"] = summary["status"]["timestamp"].isoformat()
-            summary["status"]["uptime"] = summary["status"]["uptime"].total_seconds()
+            status_dict = summary["status"]
+            if isinstance(status_dict, dict):
+                if "timestamp" in status_dict and hasattr(status_dict["timestamp"], "isoformat"):
+                    status_dict["timestamp"] = status_dict["timestamp"].isoformat()
+                if "uptime" in status_dict and hasattr(status_dict["uptime"], "total_seconds"):
+                    status_dict["uptime"] = status_dict["uptime"].total_seconds()
 
             return summary
 

@@ -515,7 +515,7 @@ class HealthTracker:
         Returns:
             Dictionary with health summary
         """
-        summary = {
+        summary: dict[str, Any] = {
             "overall_status": self.get_overall_health_status().value,
             "healthy_services": 0,
             "total_services": len(self._services),

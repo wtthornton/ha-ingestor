@@ -229,7 +229,7 @@ class AnomalyDetector:
         baseline_stats: dict[str, float],
     ) -> list[AnomalyPoint]:
         """Detect anomalies using Z-score method."""
-        anomalies = []
+        anomalies: list[AnomalyPoint] = []
         mean = baseline_stats["mean"]
         std_dev = baseline_stats["std_dev"]
 
@@ -275,7 +275,7 @@ class AnomalyDetector:
         baseline_stats: dict[str, float],
     ) -> list[AnomalyPoint]:
         """Detect anomalies using Interquartile Range (IQR) method."""
-        anomalies = []
+        anomalies: list[AnomalyPoint] = []
         q1 = baseline_stats["q1"]
         q3 = baseline_stats["q3"]
         iqr = baseline_stats["iqr"]
@@ -329,8 +329,8 @@ class AnomalyDetector:
         values: list[float],
         baseline_stats: dict[str, float],
     ) -> list[AnomalyPoint]:
-        """Detect changes in trend direction."""
-        anomalies = []
+        """Detect trend changes and reversals."""
+        anomalies: list[AnomalyPoint] = []
 
         if len(values) < 10:
             return anomalies
@@ -500,8 +500,8 @@ class AnomalyDetector:
             anomalies = [a for a in anomalies if a.timestamp >= cutoff_time]
 
         # Count by type and severity
-        type_counts = {}
-        severity_counts = {}
+        type_counts: dict[str, int] = {}
+        severity_counts: dict[str, int] = {}
 
         for anomaly in anomalies:
             # Count by type

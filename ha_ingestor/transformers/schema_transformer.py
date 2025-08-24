@@ -120,7 +120,7 @@ class SchemaTransformer(Transformer):
                 optimized_point = self._transform_event(data)
                 return TransformationResult(
                     success=True,
-                    data=optimized_point,
+                    data=optimized_point.model_dump(),
                     metadata={
                         "transformer": self.name,
                         "original_type": type(data).__name__,
@@ -214,7 +214,8 @@ class SchemaTransformer(Transformer):
             else:
                 return f"ha_{event.event_type}"
 
-        return "ha_events"
+        # This should never be reached since event is always MQTTEvent or WebSocketEvent
+        raise ValueError(f"Unsupported event type: {type(event).__name__}")
 
     def _generate_optimized_tags(
         self, event: MQTTEvent | WebSocketEvent
@@ -329,7 +330,7 @@ class SchemaTransformer(Transformer):
         Returns:
             Optimized fields dictionary
         """
-        fields = {}
+        fields: dict[str, Any] = {}
 
         if isinstance(event, MQTTEvent):
             # Core state information
@@ -500,7 +501,7 @@ class SchemaTransformer(Transformer):
         if not self.field_optimization:
             return attributes
 
-        optimized = {}
+        optimized: dict[str, Any] = {}
         for key, value in attributes.items():
             if isinstance(value, (int, float, bool)):
                 optimized[key] = value
@@ -590,7 +591,7 @@ class SchemaTransformer(Transformer):
         if not self.field_optimization:
             return data
 
-        optimized = {}
+        optimized: dict[str, Any] = {}
         for key, value in data.items():
             if isinstance(value, (int, float, bool)):
                 optimized[key] = value
@@ -649,8 +650,8 @@ class SchemaTransformer(Transformer):
             return "mqtt"
         elif isinstance(event, WebSocketEvent):
             return "websocket"
-        else:
-            return "unknown"
+        # This should never be reached since event is always MQTTEvent or WebSocketEvent
+        raise ValueError(f"Unsupported event type: {type(event).__name__}")
 
     def _calculate_storage_savings(
         self,

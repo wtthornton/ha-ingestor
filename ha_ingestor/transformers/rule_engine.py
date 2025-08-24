@@ -1,6 +1,6 @@
 """Rule engine for managing and executing transformation rules."""
 
-from typing import Any
+from typing import Any, Union
 
 import structlog
 
@@ -337,7 +337,7 @@ class TransformationRuleEngine:
 
     def get_engine_metrics(self) -> dict[str, Any]:
         """Get comprehensive metrics for the rule engine."""
-        metrics = {
+        metrics: dict[str, Union[int, dict[str, Any]]] = {
             "total_rules": len(self.rules),
             "enabled_rules": len(self.get_enabled_rules()),
             "total_transformers": len(self.transformers),
@@ -349,17 +349,23 @@ class TransformationRuleEngine:
 
         # Count rules by type
         for rule_type in TransformationType:
-            metrics["rules_by_type"][rule_type.value] = len(
-                self.get_rules_by_type(rule_type)
-            )
+            rules_by_type_dict = metrics["rules_by_type"]
+            if isinstance(rules_by_type_dict, dict):
+                rules_by_type_dict[rule_type.value] = len(
+                    self.get_rules_by_type(rule_type)
+                )
 
         # Collect transformer metrics
         for name, transformer in self.transformers.items():
-            metrics["transformer_metrics"][name] = transformer.get_metrics()
+            transformer_metrics_dict = metrics["transformer_metrics"]
+            if isinstance(transformer_metrics_dict, dict):
+                transformer_metrics_dict[name] = transformer.get_metrics()
 
         # Collect chain metrics
         for name, chain in self.chains.items():
-            metrics["chain_metrics"][name] = chain.get_metrics()
+            chain_metrics_dict = metrics["chain_metrics"]
+            if isinstance(chain_metrics_dict, dict):
+                chain_metrics_dict[name] = chain.get_metrics()
 
         return metrics
 
@@ -375,7 +381,7 @@ class TransformationRuleEngine:
 
     def export_configuration(self) -> dict[str, Any]:
         """Export the current rule engine configuration."""
-        config = {
+        config: dict[str, Union[str, list, dict[str, Any]]] = {
             "engine_name": self.name,
             "rules": [rule.dict() for rule in self.rules],
             "chains": {},
@@ -383,9 +389,11 @@ class TransformationRuleEngine:
 
         # Export chain configurations
         for chain_name, chain in self.chains.items():
-            config["chains"][chain_name] = {
-                "transformers": [t.name for t in chain.transformers]
-            }
+            chains_dict = config["chains"]
+            if isinstance(chains_dict, dict):
+                chains_dict[chain_name] = {
+                    "transformers": [t.name for t in chain.transformers]
+                }
 
         return config
 

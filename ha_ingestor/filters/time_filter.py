@@ -135,7 +135,7 @@ class TimeFilter(Filter):
         """
         if isinstance(timestamp, datetime):
             return timestamp
-        elif isinstance(timestamp, int | float):
+        elif isinstance(timestamp, int | float):  # noqa: B007
             # Assume Unix timestamp
             return datetime.fromtimestamp(timestamp)
         elif isinstance(timestamp, str):

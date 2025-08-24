@@ -1,0 +1,294 @@
+# InfluxDB Schema Examples for ha-ingestor
+# AI ASSISTANT CONTEXT: Use these examples when designing InfluxDB schemas and retention policies
+
+## Measurement Schema Examples
+
+measurements:
+  # 1. Sensor Data Schema
+  sensor_data:
+    description: "Home Assistant sensor measurements"
+    tags:
+      - entity_id          # Unique entity identifier
+      - domain            # Entity domain (sensor, binary_sensor, etc.)
+      - device_class      # Device classification
+      - friendly_name     # Human-readable name
+      - location          # Physical location
+      - room              # Room identifier
+      - floor             # Floor number
+      - zone              # Zone identifier
+    fields:
+      - value             # Primary sensor value
+      - unit_of_measurement  # Unit of measurement
+      - accuracy          # Measurement accuracy
+      - battery_level     # Battery level (if applicable)
+      - signal_strength   # Signal strength (if applicable)
+    retention_policy: "sensor_data_retention"
+    downsampling:
+      enabled: true
+      intervals: ["1m", "5m", "1h", "1d"]
+
+  # 2. Binary Sensor Schema
+  binary_sensor_data:
+    description: "Home Assistant binary sensor states"
+    tags:
+      - entity_id
+      - domain
+      - device_class
+      - friendly_name
+      - location
+      - room
+      - floor
+      - zone
+      - state_category    # on/off, motion/no_motion, etc.
+    fields:
+      - state             # Boolean state (true/false)
+      - last_triggered    # Last trigger timestamp
+      - trigger_count     # Number of triggers
+      - battery_level     # Battery level
+    retention_policy: "binary_sensor_retention"
+    downsampling:
+      enabled: true
+      intervals: ["1m", "5m", "1h"]
+
+  # 3. Switch/Device Control Schema
+  device_control:
+    description: "Home Assistant device control events"
+    tags:
+      - entity_id
+      - domain
+      - device_class
+      - friendly_name
+      - location
+      - room
+      - floor
+      - zone
+      - control_type      # switch, light, climate, etc.
+    fields:
+      - state             # Current state
+      - previous_state    # Previous state
+      - command           # Command issued
+      - user_id          # User who issued command
+      - automation_id     # Automation that triggered change
+      - response_time     # Response time in milliseconds
+    retention_policy: "device_control_retention"
+    downsampling:
+      enabled: false      # Keep all control events
+
+  # 4. Climate/HVAC Schema
+  climate_data:
+    description: "Home Assistant climate system data"
+    tags:
+      - entity_id
+      - domain
+      - device_class
+      - friendly_name
+      - location
+      - room
+      - floor
+      - zone
+      - hvac_mode        # heat, cool, auto, off
+      - hvac_action      # heating, cooling, idle
+    fields:
+      - current_temperature      # Current temperature
+      - target_temperature      # Target temperature
+      - humidity               # Current humidity
+      - target_humidity        # Target humidity
+      - fan_mode               # Fan mode
+      - swing_mode             # Swing mode
+      - energy_usage           # Energy consumption
+      - runtime                # Runtime in minutes
+    retention_policy: "climate_data_retention"
+    downsampling:
+      enabled: true
+      intervals: ["1m", "5m", "1h"]
+
+  # 5. Energy Monitoring Schema
+  energy_usage:
+    description: "Home Assistant energy consumption data"
+    tags:
+      - entity_id
+      - domain
+      - device_class
+      - friendly_name
+      - location
+      - room
+      - floor
+      - zone
+      - energy_source     # electricity, gas, water
+      - meter_type        # consumption, production, return
+    fields:
+      - power              # Instantaneous power (W)
+      - energy            # Cumulative energy (kWh)
+      - voltage           # Voltage (V)
+      - current           # Current (A)
+      - power_factor      # Power factor
+      - frequency         # Frequency (Hz)
+      - cost              # Cost in currency
+      - efficiency        # Efficiency percentage
+    retention_policy: "energy_usage_retention"
+    downsampling:
+      enabled: true
+      intervals: ["1m", "5m", "1h", "1d", "1mo"]
+
+## Retention Policy Examples
+
+retention_policies:
+  # 1. High-Frequency Data Retention
+  high_frequency_retention:
+    duration: "7d"           # Keep raw data for 7 days
+    replication: 1            # Single copy
+    shard_duration: "1h"     # Shard every hour
+    hot_duration: "1d"       # Hot data for 1 day
+    warm_duration: "7d"      # Warm data for 7 days
+    cold_duration: "30d"     # Cold data for 30 days
+    downsampling:
+      - interval: "1m"       # 1-minute averages
+        duration: "7d"
+      - interval: "5m"       # 5-minute averages
+        duration: "30d"
+      - interval: "1h"       # 1-hour averages
+        duration: "1y"
+
+  # 2. Medium-Frequency Data Retention
+  medium_frequency_retention:
+    duration: "30d"          # Keep raw data for 30 days
+    replication: 1
+    shard_duration: "6h"     # Shard every 6 hours
+    hot_duration: "7d"       # Hot data for 7 days
+    warm_duration: "30d"     # Warm data for 30 days
+    cold_duration: "90d"     # Cold data for 90 days
+    downsampling:
+      - interval: "5m"       # 5-minute averages
+        duration: "30d"
+      - interval: "1h"       # 1-hour averages
+        duration: "1y"
+      - interval: "1d"       # Daily averages
+        duration: "5y"
+
+  # 3. Low-Frequency Data Retention
+  low_frequency_retention:
+    duration: "90d"          # Keep raw data for 90 days
+    replication: 1
+    shard_duration: "1d"     # Shard every day
+    hot_duration: "30d"      # Hot data for 30 days
+    warm_duration: "90d"     # Warm data for 90 days
+    cold_duration: "1y"      # Cold data for 1 year
+    downsampling:
+      - interval: "1h"       # 1-hour averages
+        duration: "1y"
+      - interval: "1d"       # Daily averages
+        duration: "5y"
+      - interval: "1mo"      # Monthly averages
+        duration: "10y"
+
+## Continuous Query Examples
+
+continuous_queries:
+  # 1. Sensor Data Downsampling
+  sensor_data_1m:
+    measurement: "sensor_data"
+    interval: "1m"
+    fields:
+      - "mean(value) as value"
+      - "min(value) as min_value"
+      - "max(value) as max_value"
+      - "count(*) as sample_count"
+    group_by: ["entity_id", "domain", "device_class", "location", "room"]
+    retention_policy: "sensor_data_retention"
+
+  sensor_data_5m:
+    measurement: "sensor_data"
+    interval: "5m"
+    fields:
+      - "mean(value) as value"
+      - "min(value) as min_value"
+      - "max(value) as max_value"
+      - "stddev(value) as stddev_value"
+      - "count(*) as sample_count"
+    group_by: ["entity_id", "domain", "device_class", "location", "room"]
+    retention_policy: "sensor_data_retention"
+
+  # 2. Energy Usage Aggregation
+  energy_usage_hourly:
+    measurement: "energy_usage"
+    interval: "1h"
+    fields:
+      - "sum(energy) as total_energy"
+      - "mean(power) as avg_power"
+      - "max(power) as peak_power"
+      - "min(power) as min_power"
+      - "sum(cost) as total_cost"
+    group_by: ["entity_id", "energy_source", "location", "room"]
+    retention_policy: "energy_usage_retention"
+
+  energy_usage_daily:
+    measurement: "energy_usage"
+    interval: "1d"
+    fields:
+      - "sum(energy) as daily_energy"
+      - "mean(power) as daily_avg_power"
+      - "max(power) as daily_peak_power"
+      - "sum(cost) as daily_cost"
+      - "count(*) as measurement_count"
+    group_by: ["entity_id", "energy_source", "location", "room"]
+    retention_policy: "energy_usage_retention"
+
+## Bucket Organization
+
+buckets:
+  # 1. Environment-Based Buckets
+  development:
+    description: "Development environment data"
+    retention_policy: "dev_retention"
+    schema_type: "implicit"
+
+  staging:
+    description: "Staging environment data"
+    retention_policy: "staging_retention"
+    schema_type: "implicit"
+
+  production:
+    description: "Production environment data"
+    retention_policy: "production_retention"
+    schema_type: "implicit"
+
+  # 2. Data Type-Based Buckets
+  raw_data:
+    description: "Raw sensor and event data"
+    retention_policy: "raw_data_retention"
+    schema_type: "implicit"
+
+  aggregated_data:
+    description: "Downsampled and aggregated data"
+    retention_policy: "aggregated_data_retention"
+    schema_type: "implicit"
+
+  metrics_data:
+    description: "System metrics and performance data"
+    retention_policy: "metrics_data_retention"
+    schema_type: "implicit"
+
+## Schema Validation Rules
+
+schema_validation:
+  # 1. Tag Cardinality Limits
+  max_tag_values:
+    entity_id: 10000        # Maximum unique entity IDs
+    location: 100           # Maximum unique locations
+    room: 50                # Maximum unique rooms
+    device_class: 100       # Maximum unique device classes
+
+  # 2. Field Type Validation
+  field_types:
+    value: "float"          # Numeric sensor values
+    state: "string"         # State strings
+    timestamp: "timestamp"  # Timestamps
+    cost: "float"           # Cost values
+    battery_level: "integer" # Battery levels (0-100)
+
+  # 3. Required Fields
+  required_fields:
+    - entity_id
+    - timestamp
+    - value
+    - domain

@@ -1,8 +1,9 @@
 """Trend analysis for performance metrics."""
 
 import statistics
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import Any
 
 from ..utils.logging import get_logger
@@ -21,7 +22,7 @@ class TrendPoint:
 
 @dataclass
 class TrendAnalysis:
-    """Result of trend analysis for a metric."""
+    """Result of a trend analysis."""
 
     metric_name: str
     trend_direction: str  # up, down, stable
@@ -32,8 +33,8 @@ class TrendAnalysis:
     data_points: int
     time_range: timedelta
     analysis_time: datetime
-    predictions: list[tuple[datetime, float]] = None
-    metadata: dict[str, Any] = None
+    predictions: list[tuple[datetime, float]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class TrendAnalyzer:
@@ -75,7 +76,7 @@ class TrendAnalyzer:
 
             # Apply time range filter if specified
             if time_range:
-                cutoff_time = datetime.utcnow() - time_range
+                cutoff_time = datetime.now(timezone.utc) - time_range
                 sorted_data = [
                     (ts, val) for ts, val in sorted_data if ts >= cutoff_time
                 ]
@@ -113,7 +114,7 @@ class TrendAnalyzer:
                 r_squared=trend_stats["r_squared"],
                 data_points=len(values),
                 time_range=timestamps[-1] - timestamps[0],
-                analysis_time=datetime.utcnow(),
+                analysis_time=datetime.now(timezone.utc),
                 predictions=predictions,
                 metadata={
                     "mean": trend_stats["mean"],

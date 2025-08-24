@@ -86,7 +86,7 @@ class OptimizedInfluxDBPoint(BaseModel):
         if not isinstance(v, dict):
             raise ValueError("Fields must be a dictionary")
 
-        validated_fields = {}
+        validated_fields: dict[str, Any] = {}
         for key, value in v.items():
             if not isinstance(key, str):
                 raise ValueError("Field keys must be strings")
@@ -327,14 +327,14 @@ class OptimizedTagManager:
 class OptimizedFieldManager:
     """Manages field optimization and type standardization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize field manager."""
         self.field_type_mappings: dict[str, str] = {}
         self.field_compression_stats: dict[str, int] = {}
 
     def optimize_fields(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Optimize fields for better performance and storage efficiency."""
-        optimized_fields = {}
+        optimized_fields: dict[str, Any] = {}
 
         for key, value in fields.items():
             optimized_key = self._optimize_field_key(key)

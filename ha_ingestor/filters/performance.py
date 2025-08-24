@@ -220,16 +220,14 @@ class FilterProfiler:
         return self.chain_profiles.copy()
 
     def get_performance_summary(self) -> dict[str, Any]:
-        """Get a summary of all performance metrics.
+        """Get a comprehensive performance summary.
 
         Returns:
-            Dictionary with performance summary
+            Dictionary with performance metrics
         """
-        if not self.chain_profiles:
-            return {"message": "No filter chains profiled yet"}
-
-        summary = {
+        summary: dict[str, Any] = {
             "total_chains": len(self.chain_profiles),
+            "profiling_enabled": self.enabled,
             "uptime_seconds": time.time() - self._start_time,
             "chains": {},
         }

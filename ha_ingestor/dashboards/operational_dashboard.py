@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
@@ -405,14 +405,14 @@ class OperationalDashboard:
     def get_operational_summary(self) -> dict[str, Any]:
         """Get a comprehensive operational summary."""
         summary = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "system_overview": self.get_system_overview(),
             "service_health": self.get_service_health(),
             "connection_health": self.get_connection_health(),
             "dashboard_status": {
                 "monitoring_active": self._refresh_task is not None
                 and not self._refresh_task.done(),
-                "last_update": datetime.utcnow().isoformat(),
+                "last_update": datetime.now(timezone.utc).isoformat(),
                 "health_check_interval": self.health_check_interval,
                 "connection_check_interval": self.connection_check_interval,
                 "overview_update_interval": self.overview_update_interval,
@@ -427,10 +427,10 @@ class OperationalDashboard:
             return {
                 "total_services": 0,
                 "status_distribution": {},
-                "last_updated": datetime.utcnow().isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
 
-        status_counts = {}
+        status_counts: dict[str, int] = {}
         for health in self.service_health.values():
             status = health.status.value
             status_counts[status] = status_counts.get(status, 0) + 1
@@ -438,7 +438,7 @@ class OperationalDashboard:
         return {
             "total_services": len(self.service_health),
             "status_distribution": status_counts,
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
     def get_connection_status_summary(self) -> dict[str, Any]:
@@ -447,10 +447,10 @@ class OperationalDashboard:
             return {
                 "total_connections": 0,
                 "status_distribution": {},
-                "last_updated": datetime.utcnow().isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
 
-        status_counts = {}
+        status_counts: dict[str, int] = {}
         for conn in self.connection_health.values():
             status = conn.status.value
             status_counts[status] = status_counts.get(status, 0) + 1
@@ -458,7 +458,7 @@ class OperationalDashboard:
         return {
             "total_connections": len(self.connection_health),
             "status_distribution": status_counts,
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
     async def force_refresh(self) -> None:

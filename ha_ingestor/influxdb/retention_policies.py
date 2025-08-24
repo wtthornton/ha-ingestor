@@ -6,7 +6,7 @@ and archival strategies for the optimized InfluxDB schema.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
@@ -57,7 +57,7 @@ class RetentionPolicy:
     compression_algorithm: str = "gzip"
     compression_threshold: int = 1024  # bytes
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate and set default values."""
         if self.duration == RetentionPeriod.REAL_TIME:
             self.compression_level = CompressionLevel.NONE
@@ -99,7 +99,7 @@ class RetentionPolicyManager:
         )
 
         # Last cleanup time
-        self.last_cleanup = datetime.utcnow()
+        self.last_cleanup = datetime.now(timezone.utc)
 
         # Statistics
         self.cleanup_stats = {
@@ -372,15 +372,15 @@ class RetentionPolicyManager:
             cleanup_results = self._perform_cleanup()
 
             # Update statistics
-            cleanup_duration = (datetime.utcnow() - start_time).total_seconds()
+            cleanup_duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             self.cleanup_stats["total_cleanups"] += 1
             self.cleanup_stats["last_cleanup_duration"] = cleanup_duration
             self.last_cleanup = current_time
 
             self.logger.info(
-                "Data cleanup completed",
-                duration_seconds=cleanup_duration,
-                results=cleanup_results,
+                f"Data cleanup completed in {cleanup_duration:.2f} seconds, "
+                f"processed {cleanup_results['policies_processed']} policies, "
+                f"removed {cleanup_results['data_points_removed']} data points"
             )
 
             return {
@@ -407,7 +407,7 @@ class RetentionPolicyManager:
         # This would integrate with InfluxDB to actually remove expired data
         # For now, we'll simulate the cleanup process
 
-        cleanup_results = {
+        cleanup_results: dict[str, Any] = {
             "policies_processed": 0,
             "data_points_removed": 0,
             "storage_freed_bytes": 0,

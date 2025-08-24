@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 
 class DataPattern(Enum):
@@ -195,7 +195,7 @@ class HomeAssistantDataGenerator:
 
         # Generate events based on pattern
         pattern_generator = self.pattern_generators[self.config.pattern]
-        event_times = pattern_generator(start_time)
+        event_times = list(pattern_generator(start_time))  # Convert Iterator to list for indexing
 
         # Generate events for each timestamp
         for i, event_time in enumerate(event_times[: self.config.total_events]):
@@ -396,27 +396,27 @@ class HomeAssistantDataGenerator:
 
         # Generate realistic sensor values
         if sensor_type == "temperature":
-            value = round(random.uniform(15.0, 30.0), 1)
+            value: Union[float, str] = round(random.uniform(15.0, 30.0), 1)
             unit = "°C"
             device_class = "temperature"
         elif sensor_type == "humidity":
-            value = round(random.uniform(30.0, 80.0), 1)
+            value: Union[float, str] = round(random.uniform(30.0, 80.0), 1)
             unit = "%"
             device_class = "humidity"
         elif sensor_type == "pressure":
-            value = round(random.uniform(990.0, 1030.0), 1)
+            value: Union[float, str] = round(random.uniform(990.0, 1030.0), 1)
             unit = "hPa"
             device_class = "pressure"
         elif sensor_type == "battery":
-            value = random.randint(0, 100)
+            value: Union[float, str] = random.randint(0, 100)
             unit = "%"
             device_class = "battery"
         elif sensor_type in ["motion", "door", "window"]:
-            value = random.choice(["on", "off"])
+            value: Union[float, str] = random.choice(["on", "off"])
             unit = None
             device_class = sensor_type
         else:
-            value = round(random.uniform(0.0, 100.0), 2)
+            value: Union[float, str] = round(random.uniform(0.0, 100.0), 2)
             unit = "units"
             device_class = "measurement"
 
@@ -436,7 +436,7 @@ class HomeAssistantDataGenerator:
                 attributes["source_timestamp"] = (
                     timestamp - timedelta(seconds=random.randint(1, 60))
                 ).isoformat()
-                attributes["accuracy"] = random.randint(1, 5)
+                attributes["accuracy"] = int(random.randint(1, 5))
 
         topic = f"homeassistant/sensor/{entity_id.split('.')[1]}/state"
         payload = {"state": value, "attributes": attributes}
@@ -468,7 +468,7 @@ class HomeAssistantDataGenerator:
         service = random.choice(services[domain])
 
         # Generate service data
-        service_data = {}
+        service_data: dict[str, Union[str, int, None]] = {}
         target_entity = None
 
         if domain in self.entities:
@@ -615,7 +615,7 @@ class HomeAssistantDataGenerator:
         Returns:
             Dataset statistics
         """
-        stats = {
+        stats: dict[str, Union[int, dict[str, int]]] = {
             "total_events": len(events),
             "event_types": {},
             "domains": {},
@@ -641,12 +641,16 @@ class HomeAssistantDataGenerator:
         # Count event types and domains
         for event in events:
             event_type = event.get("type", "unknown")
-            stats["event_types"][event_type] = (
-                stats["event_types"].get(event_type, 0) + 1
-            )
+            event_types_dict = stats["event_types"]
+            if isinstance(event_types_dict, dict):
+                event_types_dict[event_type] = (
+                    event_types_dict.get(event_type, 0) + 1
+                )
 
             domain = event.get("domain", "unknown")
-            stats["domains"][domain] = stats["domains"].get(domain, 0) + 1
+            domains_dict = stats["domains"]
+            if isinstance(domains_dict, dict):
+                domains_dict[domain] = domains_dict.get(domain, 0) + 1
 
         return stats
 

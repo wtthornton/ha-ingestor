@@ -1,4 +1,35 @@
-"""Configuration management for Home Assistant Activity Ingestor."""
+"""
+Configuration management for Home Assistant Activity Ingestor.
+
+AI ASSISTANT CONTEXT:
+This module manages all configuration settings for the ha-ingestor service.
+It uses Pydantic for validation and environment variable management.
+
+Key patterns used:
+- Pydantic BaseSettings for configuration management
+- Environment variable overrides with validation
+- Field validation with constraints and descriptions
+- Configuration grouping by service (MQTT, WebSocket, InfluxDB, etc.)
+
+Common modifications:
+- Add new configuration options for new features
+- Modify validation rules for existing fields
+- Add new configuration sections for new services
+- Update default values and constraints
+
+Related files:
+- .env: Environment variable template
+- env.example: Example environment configuration
+- ha_ingestor/main.py: Main application that uses these settings
+- ha_ingestor/mqtt/: MQTT client that uses MQTT settings
+- ha_ingestor/websocket/: WebSocket client that uses WebSocket settings
+- ha_ingestor/influxdb/: InfluxDB client that uses InfluxDB settings
+
+Environment Variables:
+- All settings can be overridden via environment variables
+- Use UPPER_SNAKE_CASE for environment variable names
+- Example: HA_MQTT_HOST overrides ha_mqtt_host
+"""
 
 import logging
 
