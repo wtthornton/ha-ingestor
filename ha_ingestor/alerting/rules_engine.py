@@ -43,8 +43,8 @@ class AlertRule:
     cooldown_minutes: int = 15
     notification_channels: list[str] = field(default_factory=list)
     tags: dict[str, str] = field(default_factory=dict)
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(datetime.UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(datetime.UTC))
 
     def __post_init__(self) -> None:
         """Validate alert rule configuration."""
@@ -63,7 +63,7 @@ class AlertRule:
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(datetime.UTC)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert alert rule to dictionary."""
@@ -116,18 +116,18 @@ class AlertInstance:
     def acknowledge(self) -> None:
         """Mark alert as acknowledged."""
         self.status = AlertStatus.ACKNOWLEDGED
-        self.acknowledged_at = datetime.utcnow()
+        self.acknowledged_at = datetime.now(datetime.UTC)
 
     def resolve(self) -> None:
         """Mark alert as resolved."""
         self.status = AlertStatus.RESOLVED
-        self.resolved_at = datetime.utcnow()
+        self.resolved_at = datetime.now(datetime.UTC)
 
     def is_expired(self) -> bool:
         """Check if alert has expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(datetime.UTC) > self.expires_at
 
     def to_dict(self) -> dict[str, Any]:
         """Convert alert instance to dictionary."""
@@ -234,10 +234,10 @@ class AlertRulesEngine:
             except re.error:
                 return False
         elif operator == "in":
-            return field_value in value if isinstance(value, (list, tuple)) else False
+            return field_value in value if isinstance(value, list | tuple) else False
         elif operator == "not_in":
             return (
-                field_value not in value if isinstance(value, (list, tuple)) else False
+                field_value not in value if isinstance(value, list | tuple) else False
             )
         elif operator == "exists":
             # For exists, we check if the field exists in the data, regardless of its value
@@ -297,7 +297,7 @@ class AlertRulesEngine:
 
         self.evaluation_count += 1
         self.last_evaluation_time = time.time() - start_time
-        self.last_check_time = datetime.utcnow()
+        self.last_check_time = datetime.now(datetime.UTC)
 
         return triggered_alerts
 
@@ -309,20 +309,22 @@ class AlertRulesEngine:
         last_alert = self.active_alerts[rule.name]
         cooldown_delta = timedelta(minutes=rule.cooldown_minutes)
 
-        return datetime.utcnow() - last_alert.triggered_at > cooldown_delta
+        return datetime.now(datetime.UTC) - last_alert.triggered_at > cooldown_delta
 
     def _create_alert_instance(
         self, rule: AlertRule, data: dict[str, Any]
     ) -> AlertInstance:
         """Create a new alert instance."""
         # Create expiration time
-        expires_at = datetime.utcnow() + timedelta(minutes=rule.time_window_minutes)
+        expires_at = datetime.now(datetime.UTC) + timedelta(
+            minutes=rule.time_window_minutes
+        )
 
         # Create context with relevant data
         context = {
             "data": data,
             "rule": rule.to_dict(),
-            "evaluation_time": datetime.utcnow().isoformat(),
+            "evaluation_time": datetime.now(datetime.UTC).isoformat(),
         }
 
         # Create message
@@ -335,7 +337,7 @@ class AlertRulesEngine:
             severity=rule.severity,
             status=AlertStatus.ACTIVE,
             message=message,
-            triggered_at=datetime.utcnow(),
+            triggered_at=datetime.now(datetime.UTC),
             expires_at=expires_at,
             context=context,
             tags=rule.tags.copy(),
@@ -367,7 +369,6 @@ class AlertRulesEngine:
     def cleanup_expired_alerts(self) -> int:
         """Clean up expired alerts and return count of cleaned alerts."""
         cleaned_count = 0
-        current_time = datetime.utcnow()
 
         # Check active alerts
         expired_active = [

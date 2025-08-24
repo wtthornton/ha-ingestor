@@ -604,11 +604,11 @@ class InfluxDBWriter:
                 # Keep tags with high variability (likely important for cardinality)
                 elif (
                     len(
-                        set(
+                        {
                             p.tags.get(key, "")
                             for p in points
                             if p.measurement == point.measurement
-                        )
+                        }
                     )
                     > 1
                 ):
@@ -740,7 +740,7 @@ class InfluxDBWriter:
 
         # Sort each group by timestamp
         optimized_points = []
-        for measurement, group_points in measurement_groups.items():
+        for _measurement, group_points in measurement_groups.items():
             # Sort points within each measurement group
             group_points.sort(key=lambda p: p.timestamp)
             optimized_points.extend(group_points)

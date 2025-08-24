@@ -135,21 +135,23 @@ class TimeFilter(Filter):
         """
         if isinstance(timestamp, datetime):
             return timestamp
-        elif isinstance(timestamp, (int, float)):
+        elif isinstance(timestamp, int | float):
             # Assume Unix timestamp
             return datetime.fromtimestamp(timestamp)
         elif isinstance(timestamp, str):
             # Try to parse ISO format
             try:
                 return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            except ValueError:
+            except ValueError:  # noqa: B904 - Intentionally not chaining exception
                 # Try other common formats
                 for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
                     try:
                         return datetime.strptime(timestamp, fmt)
-                    except ValueError:
+                    except (
+                        ValueError
+                    ):  # noqa: B904 - Intentionally not chaining exception
                         continue
-                raise ValueError(f"Unable to parse timestamp: {timestamp}")
+                raise ValueError(f"Unable to parse timestamp: {timestamp}") from None
         else:
             raise ValueError(f"Unsupported timestamp type: {type(timestamp)}")
 
@@ -210,7 +212,7 @@ class TimeFilter(Filter):
                 total_ranges=len(self.time_ranges),
             )
             return True
-        except ValueError:
+        except ValueError:  # noqa: B904 - Intentionally not chaining exception
             return False
 
     def add_day_of_week(self, day: int) -> None:

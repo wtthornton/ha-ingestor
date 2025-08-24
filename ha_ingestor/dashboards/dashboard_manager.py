@@ -222,9 +222,6 @@ class DashboardManager:
                         # Convert to format expected by anomaly detector
                         data_points = [(m.timestamp, m.value) for m in history]
 
-                        # Get current value
-                        current_value = history[-1].value if history else 0.0
-
                         # Detect anomalies
                         anomaly_result = self.anomaly_detector.detect_anomalies(
                             metric_name, data_points

@@ -236,7 +236,7 @@ class AnomalyDetector:
         if std_dev == 0:
             return anomalies
 
-        for i, (timestamp, value) in enumerate(zip(timestamps, values, strict=False)):
+        for _i, (timestamp, value) in enumerate(zip(timestamps, values, strict=False)):
             z_score = abs(value - mean) / std_dev
 
             if z_score > self.z_score_threshold:
@@ -283,7 +283,7 @@ class AnomalyDetector:
         lower_bound = q1 - (self.iqr_multiplier * iqr)
         upper_bound = q3 + (self.iqr_multiplier * iqr)
 
-        for i, (timestamp, value) in enumerate(zip(timestamps, values, strict=False)):
+        for _i, (timestamp, value) in enumerate(zip(timestamps, values, strict=False)):
             if value < lower_bound or value > upper_bound:
                 # Determine anomaly type
                 if value > upper_bound:

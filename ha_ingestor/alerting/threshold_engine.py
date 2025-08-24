@@ -70,7 +70,7 @@ class DataPoint:
 
     def __post_init__(self) -> None:
         """Validate data point."""
-        if not isinstance(self.value, (int, float)):
+        if not isinstance(self.value, int | float):
             raise ValueError("value must be numeric")
 
 
@@ -98,7 +98,7 @@ class ThresholdEngine:
     ) -> None:
         """Add a data point for threshold evaluation."""
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = datetime.now(datetime.UTC)
 
         if metadata is None:
             metadata = {}
@@ -211,7 +211,9 @@ class ThresholdEngine:
         if field_path not in self.data_history:
             return []
 
-        cutoff_time = datetime.utcnow() - timedelta(minutes=time_window_minutes)
+        cutoff_time = datetime.now(datetime.UTC) - timedelta(
+            minutes=time_window_minutes
+        )
 
         relevant_points = [
             point
@@ -346,7 +348,9 @@ class ThresholdEngine:
 
     def _cleanup_old_data(self) -> None:
         """Clean up old data points to prevent memory bloat."""
-        cutoff_time = datetime.utcnow() - timedelta(hours=24)  # Keep 24 hours of data
+        cutoff_time = datetime.now(datetime.UTC) - timedelta(
+            hours=24
+        )  # Keep 24 hours of data
 
         for field_path in list(self.data_history.keys()):
             original_count = len(self.data_history[field_path])

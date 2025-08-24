@@ -139,7 +139,7 @@ class HealthServer:
                 self.logger.error("Health check failed", error=str(e))
                 raise HTTPException(
                     status_code=500, detail=f"Health check failed: {str(e)}"
-                )
+                ) from e
 
         # Readiness endpoint
         @app.get("/ready")
@@ -177,7 +177,7 @@ class HealthServer:
                 self.logger.error("Readiness check failed", error=str(e))
                 raise HTTPException(
                     status_code=500, detail=f"Readiness check failed: {str(e)}"
-                )
+                ) from e
 
         # Metrics endpoint for Prometheus metrics
         @app.get("/metrics")
@@ -198,7 +198,9 @@ class HealthServer:
 
             except Exception as e:
                 self.logger.error("Metrics endpoint failed", error=str(e))
-                raise HTTPException(status_code=500, detail=f"Metrics failed: {str(e)}")
+                raise HTTPException(
+                    status_code=500, detail=f"Metrics failed: {str(e)}"
+                ) from e
 
         # Dependency health endpoint
         @app.get("/health/dependencies")
@@ -231,7 +233,7 @@ class HealthServer:
                 self.logger.error("Dependencies health check failed", error=str(e))
                 raise HTTPException(
                     status_code=500, detail=f"Dependencies health failed: {str(e)}"
-                )
+                ) from e
 
         # Individual dependency health endpoint
         @app.get("/health/dependencies/{dependency_name}")
@@ -262,7 +264,7 @@ class HealthServer:
                 )
                 raise HTTPException(
                     status_code=500, detail=f"Health check failed: {str(e)}"
-                )
+                ) from e
 
         # Root endpoint
         @app.get("/")

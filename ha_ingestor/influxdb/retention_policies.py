@@ -414,7 +414,7 @@ class RetentionPolicyManager:
             "errors": [],
         }
 
-        for policy_name, policy in self.policies.items():
+        for policy_name, _policy in self.policies.items():
             try:
                 # Simulate cleanup for each policy
                 cleanup_results["policies_processed"] += 1

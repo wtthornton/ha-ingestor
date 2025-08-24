@@ -132,7 +132,7 @@ class HealthChecker:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         health_status: dict[str, DependencyHealth] = {}
-        for i, (name, result) in enumerate(
+        for _i, (name, result) in enumerate(
             zip(self._dependencies.keys(), results, strict=False)
         ):
             if isinstance(result, Exception):

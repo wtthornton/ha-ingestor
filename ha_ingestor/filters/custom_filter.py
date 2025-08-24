@@ -215,9 +215,9 @@ def example_high_value_filter(event: Event, min_value: float = 100.0) -> bool:
         return False
 
     # Look for numeric attributes
-    for key, value in event.attributes.items():
+    for _key, value in event.attributes.items():
         try:
-            if isinstance(value, (int, float)) and value >= min_value:
+            if isinstance(value, int | float) and value >= min_value:
                 return True
         except (TypeError, ValueError):
             continue

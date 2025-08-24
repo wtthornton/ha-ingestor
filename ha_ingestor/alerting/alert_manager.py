@@ -72,15 +72,15 @@ class AlertAggregator:
             "aggregation_window_minutes", 5
         )
         self.alert_groups: dict[str, list[AlertInstance]] = {}
-        self.last_cleanup = datetime.utcnow()
+        self.last_cleanup = datetime.now(datetime.UTC)
 
     def should_aggregate(self, alert: AlertInstance) -> bool:
         """Check if an alert should be aggregated with existing ones."""
-        current_time = datetime.utcnow()
+        current_time = datetime.now(datetime.UTC)
         cutoff_time = current_time - timedelta(minutes=self.aggregation_window_minutes)
 
         # Check if we have similar alerts within the aggregation window
-        for group_key, alerts in self.alert_groups.items():
+        for _group_key, alerts in self.alert_groups.items():
             if self._is_similar_alert(alert, alerts[0]):
                 # Check if any alert in the group is within the window
                 recent_alerts = [a for a in alerts if a.triggered_at >= cutoff_time]
@@ -99,16 +99,16 @@ class AlertAggregator:
         self.alert_groups[group_key].append(alert)
 
         # Cleanup old groups periodically
-        if datetime.utcnow() - self.last_cleanup > timedelta(minutes=10):
+        if datetime.now(datetime.UTC) - self.last_cleanup > timedelta(minutes=10):
             self._cleanup_old_groups()
 
     def get_aggregated_alerts(self) -> list[AlertInstance]:
         """Get alerts that should trigger notifications (aggregated)."""
         aggregated = []
-        current_time = datetime.utcnow()
+        current_time = datetime.now(datetime.UTC)
         cutoff_time = current_time - timedelta(minutes=self.aggregation_window_minutes)
 
-        for group_key, alerts in self.alert_groups.items():
+        for _group_key, alerts in self.alert_groups.items():
             # Get the most recent alert in each group
             recent_alerts = [a for a in alerts if a.triggered_at >= cutoff_time]
             if recent_alerts:
@@ -131,7 +131,7 @@ class AlertAggregator:
 
     def _cleanup_old_groups(self) -> None:
         """Remove old alert groups."""
-        cutoff_time = datetime.utcnow() - timedelta(hours=1)
+        cutoff_time = datetime.now(datetime.UTC) - timedelta(hours=1)
 
         for group_key in list(self.alert_groups.keys()):
             # Remove groups with no recent alerts
@@ -142,7 +142,7 @@ class AlertAggregator:
             if not recent_alerts:
                 del self.alert_groups[group_key]
 
-        self.last_cleanup = datetime.utcnow()
+        self.last_cleanup = datetime.now(datetime.UTC)
 
 
 class AlertManager:
@@ -173,7 +173,7 @@ class AlertManager:
         # Performance tracking
         self.total_alerts_processed = 0
         self.total_notifications_sent = 0
-        self.last_check_time = datetime.utcnow()
+        self.last_check_time = datetime.now(datetime.UTC)
 
         # Initialize notification channels
         self._initialize_notification_channels()
@@ -291,7 +291,7 @@ class AlertManager:
             for alert in aggregated_alerts:
                 await self._send_notifications(alert)
 
-            self.last_check_time = datetime.utcnow()
+            self.last_check_time = datetime.now(datetime.UTC)
 
         except Exception as e:
             self.logger.error(f"Error checking alerts: {e}")
@@ -377,7 +377,7 @@ class AlertManager:
                 event_data["attributes"], dict
             ):
                 for attr_name, attr_value in event_data["attributes"].items():
-                    if isinstance(attr_value, (int, float)):
+                    if isinstance(attr_value, int | float):
                         field_path = f"attributes.{attr_name}"
                         self.threshold_engine.add_data_point(
                             field_path,
@@ -442,7 +442,9 @@ class AlertManager:
             return
 
         # Remove oldest entries
-        cutoff_time = datetime.utcnow() - timedelta(minutes=self.max_history_size)
+        cutoff_time = datetime.now(datetime.UTC) - timedelta(
+            minutes=self.max_history_size
+        )
         self.alert_history = [
             entry for entry in self.alert_history if entry.triggered_at >= cutoff_time
         ]

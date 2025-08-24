@@ -174,19 +174,19 @@ class AttributeFilter(Filter):
             )
 
         elif self.operator == "in":
-            if not isinstance(filter_value, (list, tuple, set)):
+            if not isinstance(filter_value, list | tuple | set):
                 filter_value = [filter_value]
             return attribute_value in filter_value
 
         elif self.operator == "nin":
-            if not isinstance(filter_value, (list, tuple, set)):
+            if not isinstance(filter_value, list | tuple | set):
                 filter_value = [filter_value]
             return attribute_value not in filter_value
 
         elif self.operator == "contains":
             if isinstance(attribute_value, str) and isinstance(filter_value, str):
                 return filter_value.lower() in attribute_value.lower()
-            elif isinstance(attribute_value, (list, tuple, set)):
+            elif isinstance(attribute_value, list | tuple | set):
                 return filter_value in attribute_value
             return False
 

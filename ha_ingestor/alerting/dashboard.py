@@ -94,7 +94,7 @@ class AlertDashboard:
                 return [rule.to_dict() for rule in rules]
             except Exception as e:
                 self.logger.error(f"Error getting alert rules: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.post("/api/rules")
         async def create_alert_rule(rule_data: AlertRuleCreate) -> dict[str, Any]:
@@ -107,7 +107,7 @@ class AlertDashboard:
                     raise HTTPException(
                         status_code=400,
                         detail=f"Invalid severity: {rule_data.severity}",
-                    )
+                    ) from None
 
                 # Create rule
                 rule = AlertRule(
@@ -134,7 +134,7 @@ class AlertDashboard:
 
             except Exception as e:
                 self.logger.error(f"Error creating alert rule: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.put("/api/rules/{rule_name}")
         async def update_alert_rule(
@@ -161,7 +161,7 @@ class AlertDashboard:
                         raise HTTPException(
                             status_code=400,
                             detail=f"Invalid severity: {rule_data.severity}",
-                        )
+                        ) from None
 
                 if rule_data.enabled is not None:
                     existing_rule.enabled = rule_data.enabled
@@ -202,7 +202,7 @@ class AlertDashboard:
                 raise
             except Exception as e:
                 self.logger.error(f"Error updating alert rule: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.delete("/api/rules/{rule_name}")
         async def delete_alert_rule(rule_name: str) -> dict[str, Any]:
@@ -224,7 +224,7 @@ class AlertDashboard:
                 raise
             except Exception as e:
                 self.logger.error(f"Error deleting alert rule: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.get("/api/active")
         async def get_active_alerts() -> list[dict[str, Any]]:
@@ -234,7 +234,7 @@ class AlertDashboard:
                 return [alert.to_dict() for alert in alerts]
             except Exception as e:
                 self.logger.error(f"Error getting active alerts: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.get("/api/history")
         async def get_alert_history(limit: int = 100) -> list[dict[str, Any]]:
@@ -244,7 +244,7 @@ class AlertDashboard:
                 return [entry.to_dict() for entry in history]
             except Exception as e:
                 self.logger.error(f"Error getting alert history: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.post("/api/actions")
         async def perform_alert_action(action_data: AlertAction) -> dict[str, Any]:
@@ -287,7 +287,7 @@ class AlertDashboard:
                 raise
             except Exception as e:
                 self.logger.error(f"Error performing alert action: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.get("/api/statistics")
         async def get_alert_statistics() -> dict[str, Any]:
@@ -296,7 +296,7 @@ class AlertDashboard:
                 return self.alert_manager.get_statistics()
             except Exception as e:
                 self.logger.error(f"Error getting alert statistics: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.router.get("/api/health")
         async def get_alert_health() -> dict[str, Any]:
@@ -312,7 +312,7 @@ class AlertDashboard:
 
                 return {
                     "status": "healthy" if is_healthy else "unhealthy",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(datetime.UTC).isoformat(),
                     "details": {
                         "manager_running": stats["manager"]["is_running"],
                         "notification_channels": len(
