@@ -4,11 +4,16 @@
 
 This index provides AI assistants with immediate access to all key files, patterns, and implementation details in the ha-ingestor project.
 
+### **🚀 Context7 Integration (Start Here!)**
+- **`.agent-os/instructions/quick-start.md`** - 5-minute Context7 setup guide
+- **`.agent-os/instructions/ai-development.md`** - Complete AI development instructions
+- **`.agent-os/instructions/context7-integration.md`** - Full Context7 integration guide
+
 ## 📚 **Documentation Files (Read First)**
 
 ### **Essential Context Files**
 - **`PROJECT_OVERVIEW.md`** - Complete project overview and architecture
-- **`PROJECT_CONTEXT.md`** - Detailed architecture and design patterns  
+- **`PROJECT_CONTEXT.md`** - Detailed architecture and design patterns
 - **`DEVELOPMENT_PATTERNS.md`** - Established coding patterns and best practices
 - **`AI_ASSISTANT_GUIDE.md`** - Quick reference with code templates
 - **`TROUBLESHOOTING_GUIDE.md`** - Common issues and solutions
