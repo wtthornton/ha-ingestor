@@ -9,8 +9,8 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, UTC
-from typing import Any, Union
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import aiofiles  # type: ignore
 
@@ -163,7 +163,7 @@ class DataExtractor:
         Returns:
             Statistics dictionary
         """
-                # This would query InfluxDB for actual statistics
+        # This would query InfluxDB for actual statistics
         # For testing, use much smaller numbers to make tests fast
         stats = {
             "total_records": 100 + hash(measurement) % 200,  # Much smaller for testing
@@ -197,7 +197,7 @@ class DataTransformer:
         """
         self.logger = logger or logging.getLogger(__name__)
         self.schema_transformer = SchemaTransformer("migration_transformer", {})
-        self.transformation_stats: dict[str, Union[int, list[float]]] = {
+        self.transformation_stats: dict[str, int | list[float]] = {
             "total_transformed": 0,
             "transformation_errors": 0,
             "optimization_scores": [],
@@ -232,15 +232,21 @@ class DataTransformer:
                         "measurement": optimized_point.get("measurement", "unknown"),
                         "tags": optimized_point.get("tags", {}),
                         "fields": optimized_point.get("fields", {}),
-                        "timestamp": optimized_point.get("timestamp", datetime.now(UTC)),
+                        "timestamp": optimized_point.get(
+                            "timestamp", datetime.now(UTC)
+                        ),
                         "metadata": optimized_point.get("metadata", {}),
                     }
                     transformed_records.append(transformed_record)
                     success_count += 1
 
                     # Track optimization score
-                    optimization_score = optimized_point.get("metadata", {}).get("optimization_score", 0.0)
-                    optimization_scores = self.transformation_stats["optimization_scores"]
+                    optimization_score = optimized_point.get("metadata", {}).get(
+                        "optimization_score", 0.0
+                    )
+                    optimization_scores = self.transformation_stats[
+                        "optimization_scores"
+                    ]
                     if isinstance(optimization_scores, list):
                         optimization_scores.append(optimization_score)
                 else:
@@ -266,12 +272,16 @@ class DataTransformer:
         # Update global stats
         total_transformed = self.transformation_stats["total_transformed"]
         transformation_errors = self.transformation_stats["transformation_errors"]
-        
+
         if isinstance(total_transformed, int):
-            self.transformation_stats["total_transformed"] = total_transformed + success_count
-        
+            self.transformation_stats["total_transformed"] = (
+                total_transformed + success_count
+            )
+
         if isinstance(transformation_errors, int):
-            self.transformation_stats["transformation_errors"] = transformation_errors + error_count
+            self.transformation_stats["transformation_errors"] = (
+                transformation_errors + error_count
+            )
 
         self.logger.info(
             f"Transformed batch {batch.batch_id}: {success_count} success, {error_count} errors"
@@ -332,19 +342,33 @@ class DataTransformer:
 
         total_transformed = self.transformation_stats["total_transformed"]
         transformation_errors = self.transformation_stats["transformation_errors"]
-        
-        if isinstance(total_transformed, int) and isinstance(transformation_errors, int):
+
+        if isinstance(total_transformed, int) and isinstance(
+            transformation_errors, int
+        ):
             error_rate = transformation_errors / max(1, total_transformed)
         else:
             error_rate = 0.0
 
         return {
-            "total_transformed": total_transformed if isinstance(total_transformed, int) else 0,
-            "transformation_errors": transformation_errors if isinstance(transformation_errors, int) else 0,
+            "total_transformed": (
+                total_transformed if isinstance(total_transformed, int) else 0
+            ),
+            "transformation_errors": (
+                transformation_errors if isinstance(transformation_errors, int) else 0
+            ),
             "error_rate": error_rate,
             "average_optimization_score": avg_score,
-            "min_optimization_score": min(optimization_scores, default=0.0) if isinstance(optimization_scores, list) else 0.0,
-            "max_optimization_score": max(optimization_scores, default=0.0) if isinstance(optimization_scores, list) else 0.0,
+            "min_optimization_score": (
+                min(optimization_scores, default=0.0)
+                if isinstance(optimization_scores, list)
+                else 0.0
+            ),
+            "max_optimization_score": (
+                max(optimization_scores, default=0.0)
+                if isinstance(optimization_scores, list)
+                else 0.0
+            ),
         }
 
 
@@ -470,7 +494,7 @@ class DataValidator:
         Returns:
             Validation results
         """
-        validation_results: dict[str, Union[str, bool, float, list[str]]] = {
+        validation_results: dict[str, str | bool | float | list[str]] = {
             "batch_id": original_batch.batch_id,
             "record_count_match": len(original_batch.records)
             == len(migrated_batch.records),
@@ -505,9 +529,7 @@ class DataValidator:
                 else:
                     validation_errors = validation_results["validation_errors"]
                     if isinstance(validation_errors, list):
-                        validation_errors.append(
-                            f"Record {i} consistency check failed"
-                        )
+                        validation_errors.append(f"Record {i} consistency check failed")
 
             # Calculate consistency score
             if total_records > 0:
@@ -517,9 +539,7 @@ class DataValidator:
 
             consistency_score = validation_results["consistency_score"]
             if isinstance(consistency_score, (int, float)):
-                validation_results["data_consistency"] = (
-                    consistency_score > 0.95
-                )
+                validation_results["data_consistency"] = consistency_score > 0.95
 
             # Update stats
             self.validation_stats["total_validated"] += total_records
@@ -542,9 +562,7 @@ class DataValidator:
         except Exception as e:
             validation_errors = validation_results["validation_errors"]
             if isinstance(validation_errors, list):
-                validation_errors.append(
-                    f"Validation failed: {str(e)}"
-                )
+                validation_errors.append(f"Validation failed: {str(e)}")
             validation_results["data_consistency"] = False
             self.validation_stats["validation_errors"] += 1
             self.logger.error(f"Batch validation failed: {e}")

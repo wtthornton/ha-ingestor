@@ -22,18 +22,24 @@ class TopicPattern:
     enabled: bool = True
     regex_pattern: Pattern[str] | None = None
     filters: dict[str, Any] = field(default_factory=dict)
-    
+
     # Advanced wildcard features
     pattern_type: str = "mqtt"  # "mqtt", "regex", "advanced"
-    advanced_wildcards: dict[str, str] = field(default_factory=dict)  # Custom wildcard definitions
-    topic_aliases: list[str] = field(default_factory=list)  # Alternative topic representations
-    validation_rules: dict[str, Any] = field(default_factory=dict)  # Custom validation rules
+    advanced_wildcards: dict[str, str] = field(
+        default_factory=dict
+    )  # Custom wildcard definitions
+    topic_aliases: list[str] = field(
+        default_factory=list
+    )  # Alternative topic representations
+    validation_rules: dict[str, Any] = field(
+        default_factory=dict
+    )  # Custom validation rules
 
     def __post_init__(self) -> None:
         """Compile regex pattern if not already compiled."""
         # Initialize logger
         self.logger = get_logger(__name__)
-        
+
         if self.regex_pattern is None:
             self.regex_pattern = self._compile_pattern()
 
@@ -95,7 +101,7 @@ class TopicPattern:
             # Basic regex validation
             if not self._validate_regex_pattern(self.pattern):
                 raise ValueError("Invalid regex pattern format")
-            
+
             # Compile the regex pattern
             return re.compile(self.pattern, re.IGNORECASE)
         except re.error as e:
@@ -104,30 +110,32 @@ class TopicPattern:
     def _compile_advanced_pattern(self) -> Pattern[str]:
         """Compile advanced wildcard pattern with custom definitions."""
         regex_str = self.pattern
-        
+
         # Debug logging
         self.logger.debug(f"Compiling advanced pattern: {self.pattern}")
-        self.logger.debug(f"Available custom wildcards: {list(self.advanced_wildcards.keys())}")
-        
+        self.logger.debug(
+            f"Available custom wildcards: {list(self.advanced_wildcards.keys())}"
+        )
+
         # Apply custom wildcard definitions first
         for wildcard, replacement in self.advanced_wildcards.items():
             if wildcard in regex_str:
                 self.logger.debug(f"Replacing wildcard {wildcard} with {replacement}")
                 regex_str = regex_str.replace(wildcard, replacement)
-        
+
         self.logger.debug(f"After custom wildcard replacement: {regex_str}")
-        
+
         # Apply advanced MQTT-like wildcards
         regex_str = self._apply_advanced_wildcards(regex_str)
-        
+
         self.logger.debug(f"After advanced wildcard processing: {regex_str}")
-        
+
         # Validate the resulting pattern
         self.logger.debug(f"Final regex pattern to validate: {regex_str}")
         if not self._validate_advanced_pattern(regex_str):
             self.logger.error(f"Advanced pattern validation failed for: {regex_str}")
             raise ValueError("Advanced pattern validation failed")
-        
+
         # Compile the final regex
         try:
             compiled = re.compile(regex_str, re.IGNORECASE)
@@ -143,28 +151,28 @@ class TopicPattern:
         if "**" in pattern:
             # ** matches multiple levels with depth limit
             pattern = pattern.replace("**", "[^/]*(?:/[^/]*)*")
-        
+
         # Optional level wildcard
         if "?" in pattern:
             # ? makes the previous level optional
             pattern = re.sub(r"([^/]+)\?", r"(\1)?", pattern)
-        
+
         # Range wildcard
         if "{" in pattern and "}" in pattern:
             # {a,b,c} matches any of the specified values
             pattern = re.sub(r"\{([^}]+)\}", r"(\1)", pattern)
             pattern = pattern.replace(",", "|")
-        
+
         # Numeric wildcard
         if "\\d" in pattern:
             # \d matches numeric values
             pattern = pattern.replace("\\d", r"\d+")
-        
+
         # Alphanumeric wildcard
         if "\\w" in pattern:
             # \w matches alphanumeric values
             pattern = pattern.replace("\\w", r"\w+")
-        
+
         return pattern
 
     def _validate_mqtt_pattern(self, pattern: str) -> bool:
@@ -194,7 +202,7 @@ class TopicPattern:
         """Validate regex pattern format."""
         if not pattern:
             return False
-        
+
         try:
             re.compile(pattern)
             return True
@@ -205,7 +213,7 @@ class TopicPattern:
         """Validate advanced wildcard pattern format."""
         if not pattern:
             return False
-        
+
         try:
             re.compile(pattern)
             return True
@@ -267,7 +275,7 @@ class TopicPatternManager:
         # Pattern storage
         self.patterns: list[TopicPattern] = []
         self.pattern_index: dict[str, TopicPattern] = {}
-        
+
         # Advanced pattern features
         self.custom_wildcards: dict[str, str] = {}
         self.topic_aliases: dict[str, list[str]] = {}
@@ -285,7 +293,9 @@ class TopicPatternManager:
         self._pattern_match_cache: dict[str, list[TopicPattern]] = {}
         self._cache_hits: int = 0
         self._cache_misses: int = 0
-        self._cache_size_limit: int = getattr(config, "mqtt_pattern_cache_size", 1000) if config else 1000
+        self._cache_size_limit: int = (
+            getattr(config, "mqtt_pattern_cache_size", 1000) if config else 1000
+        )
 
         # Performance metrics
         self.metrics = {
@@ -305,7 +315,7 @@ class TopicPatternManager:
         # Performance monitoring
         self._performance_history: list[dict[str, Any]] = []
         self._max_history_size: int = 100
-        
+
         # Initialize default advanced wildcards
         self._initialize_default_wildcards()
 
@@ -316,34 +326,34 @@ class TopicPatternManager:
             "\\device": r"[^/]+device[^/]*",  # Matches device-related topics
             "\\entity": r"[^/]+entity[^/]*",  # Matches entity-related topics
             "\\state": r"state|status|value",  # Matches state-related attributes
-            "\\numeric": r"\d+(?:\.\d+)?",    # Matches numeric values
-            "\\hex": r"[0-9a-fA-F]+",         # Matches hexadecimal values
+            "\\numeric": r"\d+(?:\.\d+)?",  # Matches numeric values
+            "\\hex": r"[0-9a-fA-F]+",  # Matches hexadecimal values
             "\\uuid": r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",  # UUID format
         }
 
     def add_custom_wildcard(self, wildcard: str, regex_pattern: str) -> bool:
         """Add a custom wildcard definition.
-        
+
         Args:
             wildcard: The wildcard symbol (e.g., "\\sensor")
             regex_pattern: The regex pattern to replace it with
-            
+
         Returns:
             True if wildcard was added successfully, False otherwise
         """
         try:
             if not wildcard.startswith("\\"):
                 raise ValueError("Custom wildcards must start with \\")
-            
+
             # Validate the regex pattern
             re.compile(regex_pattern)
-            
+
             self.custom_wildcards[wildcard] = regex_pattern
             self.logger.info(f"Added custom wildcard: {wildcard} -> {regex_pattern}")
-            
+
             # Recompile patterns that use this wildcard
             self._recompile_affected_patterns(wildcard)
-            
+
             return True
         except Exception as e:
             self.logger.error(f"Failed to add custom wildcard {wildcard}: {e}")
@@ -351,21 +361,21 @@ class TopicPatternManager:
 
     def add_topic_alias(self, alias: str, topics: list[str]) -> bool:
         """Add a topic alias for complex pattern matching.
-        
+
         Args:
             alias: The alias name
             topics: List of actual topics this alias represents
-            
+
         Returns:
             True if alias was added successfully, False otherwise
         """
         try:
             if not alias or not topics:
                 raise ValueError("Alias and topics cannot be empty")
-            
+
             self.topic_aliases[alias] = topics.copy()
             self.logger.info(f"Added topic alias: {alias} -> {topics}")
-            
+
             return True
         except Exception as e:
             self.logger.error(f"Failed to add topic alias {alias}: {e}")
@@ -373,26 +383,28 @@ class TopicPatternManager:
 
     def create_pattern_group(self, group_name: str, patterns: list[str]) -> bool:
         """Create a group of related patterns for easier management.
-        
+
         Args:
             group_name: Name of the pattern group
             patterns: List of pattern strings to include in the group
-            
+
         Returns:
             True if group was created successfully, False otherwise
         """
         try:
             if not group_name or not patterns:
                 raise ValueError("Group name and patterns cannot be empty")
-            
+
             # Validate all patterns in the group
             for pattern_str in patterns:
                 if not self._validate_pattern_string(pattern_str):
                     raise ValueError(f"Invalid pattern in group: {pattern_str}")
-            
+
             self.pattern_groups[group_name] = patterns.copy()
-            self.logger.info(f"Created pattern group: {group_name} with {len(patterns)} patterns")
-            
+            self.logger.info(
+                f"Created pattern group: {group_name} with {len(patterns)} patterns"
+            )
+
             return True
         except Exception as e:
             self.logger.error(f"Failed to create pattern group {group_name}: {e}")
@@ -410,11 +422,11 @@ class TopicPatternManager:
     def _recompile_affected_patterns(self, wildcard: str) -> None:
         """Recompile patterns that use a specific wildcard."""
         affected_patterns = []
-        
+
         for pattern in self.patterns:
             if wildcard in pattern.pattern:
                 affected_patterns.append(pattern)
-        
+
         for pattern in affected_patterns:
             try:
                 pattern.regex_pattern = pattern._compile_pattern()
@@ -553,13 +565,13 @@ class TopicPatternManager:
                 if pattern.matches(topic):
                     matching_patterns.append(pattern)
                     self.metrics["pattern_matches"] += 1
-                    
+
                     # Track advanced pattern types
                     if pattern.pattern_type == "regex":
                         self.metrics["regex_pattern_matches"] += 1
                     elif pattern.pattern_type == "advanced":
                         self.metrics["advanced_pattern_matches"] += 1
-                    
+
                     self.logger.debug(
                         f"Pattern '{pattern.pattern}' matches topic '{topic}'"
                     )
@@ -583,29 +595,29 @@ class TopicPatternManager:
 
     def find_patterns_by_group(self, group_name: str) -> list[TopicPattern]:
         """Find all patterns that belong to a specific group.
-        
+
         Args:
             group_name: Name of the pattern group
-            
+
         Returns:
             List of patterns in the group
         """
         if group_name not in self.pattern_groups:
             return []
-        
+
         group_patterns = []
         for pattern_str in self.pattern_groups[group_name]:
             if pattern_str in self.pattern_index:
                 group_patterns.append(self.pattern_index[pattern_str])
-        
+
         return group_patterns
 
     def find_patterns_by_type(self, pattern_type: str) -> list[TopicPattern]:
         """Find all patterns of a specific type.
-        
+
         Args:
             pattern_type: Type of patterns to find ("mqtt", "regex", "advanced")
-            
+
         Returns:
             List of patterns of the specified type
         """
@@ -613,7 +625,7 @@ class TopicPatternManager:
 
     def get_pattern_statistics(self) -> dict[str, Any]:
         """Get comprehensive statistics about all patterns.
-        
+
         Returns:
             Dictionary containing pattern statistics
         """
@@ -626,27 +638,27 @@ class TopicPatternManager:
             "topic_aliases": len(self.topic_aliases),
             "pattern_groups": len(self.pattern_groups),
         }
-        
+
         # Count patterns by type
         for pattern in self.patterns:
             pattern_type = pattern.pattern_type
             if pattern_type not in stats["patterns_by_type"]:
                 stats["patterns_by_type"][pattern_type] = 0
             stats["patterns_by_type"][pattern_type] += 1
-            
+
             # Count patterns by priority
             priority = pattern.priority
             if priority not in stats["patterns_by_priority"]:
                 stats["patterns_by_priority"][priority] = 0
             stats["patterns_by_priority"][priority] += 1
-            
+
             # Count wildcard usage
             for wildcard in ["+", "#", "**", "?", "{", "}", "\\d", "\\w"]:
                 if wildcard in pattern.pattern:
                     if wildcard not in stats["wildcard_usage"]:
                         stats["wildcard_usage"][wildcard] = 0
                     stats["wildcard_usage"][wildcard] += 1
-        
+
         return stats
 
     def subscribe_to_pattern(
@@ -789,36 +801,54 @@ class TopicPatternManager:
 
         # Find matching patterns
         matching_patterns = self.find_matching_patterns(topic)
-        
+
         # Debug logging
-        self.logger.debug(f"Route message: Found {len(matching_patterns)} matching patterns for topic '{topic}'")
+        self.logger.debug(
+            f"Route message: Found {len(matching_patterns)} matching patterns for topic '{topic}'"
+        )
         for pattern in matching_patterns:
             self.logger.debug(f"Route message: Processing pattern '{pattern.pattern}'")
-            
+
             # Find subscriptions for this pattern
             if pattern.pattern in self.subscription_patterns:
                 subscription_ids = self.subscription_patterns[pattern.pattern]
-                self.logger.debug(f"Route message: Found {len(subscription_ids)} subscriptions for pattern '{pattern.pattern}': {subscription_ids}")
-                
+                self.logger.debug(
+                    f"Route message: Found {len(subscription_ids)} subscriptions for pattern '{pattern.pattern}': {subscription_ids}"
+                )
+
                 for subscription_id in subscription_ids:
                     subscription = self.subscriptions.get(subscription_id)
-                    self.logger.debug(f"Route message: Subscription {subscription_id}: {subscription}")
-                    
+                    self.logger.debug(
+                        f"Route message: Subscription {subscription_id}: {subscription}"
+                    )
+
                     if subscription and subscription.callback:
-                        self.logger.debug(f"Route message: Applying filters for subscription {subscription_id}")
+                        self.logger.debug(
+                            f"Route message: Applying filters for subscription {subscription_id}"
+                        )
                         # Apply filters if any
                         if self._apply_filters(
                             subscription.filters, topic, payload, **kwargs
                         ):
-                            self.logger.debug(f"Route message: Filters passed, adding route for subscription {subscription_id}")
+                            self.logger.debug(
+                                f"Route message: Filters passed, adding route for subscription {subscription_id}"
+                            )
                             routes.append((subscription_id, subscription.callback))
                         else:
-                            self.logger.debug(f"Route message: Filters failed for subscription {subscription_id}")
+                            self.logger.debug(
+                                f"Route message: Filters failed for subscription {subscription_id}"
+                            )
                     else:
-                        self.logger.debug(f"Route message: Subscription {subscription_id} missing or has no callback")
+                        self.logger.debug(
+                            f"Route message: Subscription {subscription_id} missing or has no callback"
+                        )
             else:
-                self.logger.debug(f"Route message: No subscriptions found for pattern '{pattern.pattern}'")
-                self.logger.debug(f"Route message: Available subscription patterns: {list(self.subscription_patterns.keys())}")
+                self.logger.debug(
+                    f"Route message: No subscriptions found for pattern '{pattern.pattern}'"
+                )
+                self.logger.debug(
+                    f"Route message: Available subscription patterns: {list(self.subscription_patterns.keys())}"
+                )
 
         # Also check for direct topic subscriptions (for backward compatibility)
         if topic in self.subscription_patterns:
@@ -884,7 +914,9 @@ class TopicPatternManager:
                     if not topic.endswith(filter_value):
                         return False
                 # Home Assistant specific filters
-                elif filter_key == "min_value" and isinstance(filter_value, (int, float)):
+                elif filter_key == "min_value" and isinstance(
+                    filter_value, (int, float)
+                ):
                     try:
                         payload_data = json.loads(payload)
                         if "value" in payload_data:
@@ -893,7 +925,9 @@ class TopicPatternManager:
                     except (json.JSONDecodeError, KeyError, TypeError):
                         # If we can't parse the payload or find the value, reject
                         return False
-                elif filter_key == "max_value" and isinstance(filter_value, (int, float)):
+                elif filter_key == "max_value" and isinstance(
+                    filter_value, (int, float)
+                ):
                     try:
                         payload_data = json.loads(payload)
                         if "value" in payload_data:
@@ -1159,41 +1193,41 @@ class TopicPatternManager:
             # Basic validation checks
             if not pattern_str or not isinstance(pattern_str, str):
                 return False
-            
+
             # Check for empty segments (consecutive slashes)
-            if '//' in pattern_str:
+            if "//" in pattern_str:
                 return False
-            
+
             # Check for leading/trailing slashes
-            if pattern_str.startswith('/') or pattern_str.endswith('/'):
+            if pattern_str.startswith("/") or pattern_str.endswith("/"):
                 return False
-            
+
             # Check for valid Home Assistant topic structure
-            parts = pattern_str.split('/')
+            parts = pattern_str.split("/")
             if len(parts) < 2:
                 return False
-            
+
             # Special handling for regex patterns
-            if '[' in pattern_str and ']' in pattern_str:
+            if "[" in pattern_str and "]" in pattern_str:
                 # This is likely a regex pattern, be more permissive
                 if len(parts) > 10:  # Allow deeper regex patterns
                     return False
                 # For regex patterns, don't enforce the homeassistant prefix requirement
                 return True
-            
+
             # First part should be 'homeassistant' for HA topics (for non-regex patterns)
-            if parts[0] != 'homeassistant':
+            if parts[0] != "homeassistant":
                 return False
-            
+
             # Check for reasonable topic depth (max 8 levels for advanced HA topics)
             if len(parts) > 8:
                 return False
-            
+
             # Check for reasonable segment lengths
             for part in parts:
                 if len(part) > 100:  # Max segment length
                     return False
-            
+
             # Try to create a TopicPattern to validate regex compilation
             TopicPattern(pattern=pattern_str)
             return True
@@ -1222,7 +1256,9 @@ class TopicPatternManager:
             "pattern_types": {
                 "mqtt": len([p for p in self.patterns if p.pattern_type == "mqtt"]),
                 "regex": len([p for p in self.patterns if p.pattern_type == "regex"]),
-                "advanced": len([p for p in self.patterns if p.pattern_type == "advanced"]),
+                "advanced": len(
+                    [p for p in self.patterns if p.pattern_type == "advanced"]
+                ),
             },
             "priority_distribution": {
                 "high": len([p for p in self.patterns if p.priority >= 3]),

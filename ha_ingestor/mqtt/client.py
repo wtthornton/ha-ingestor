@@ -64,15 +64,15 @@ class MQTTClient:
         if self.config.mqtt_enable_pattern_matching:
             self._topic_pattern_manager = TopicPatternManager(self.config)
             self.logger.info("Advanced MQTT topic pattern matching enabled")
-            
+
             # Initialize advanced features if enabled
             if getattr(self.config, "mqtt_enable_advanced_wildcards", False):
                 self._initialize_advanced_wildcards()
                 self.logger.info("Advanced wildcard patterns enabled")
-            
+
             if getattr(self.config, "mqtt_enable_regex_patterns", False):
                 self.logger.info("Regex-based topic patterns enabled")
-                
+
         else:
             self._topic_pattern_manager = None
             self.logger.info(
@@ -103,7 +103,7 @@ class MQTTClient:
         """Initialize advanced wildcard patterns for Home Assistant topics."""
         if not self._topic_pattern_manager:
             return
-            
+
         try:
             # Add Home Assistant specific wildcards
             ha_wildcards = {
@@ -116,15 +116,15 @@ class MQTTClient:
                 "\\ha_boolean": r"true|false|on|off|yes|no|1|0",
                 "\\ha_timestamp": r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?",
             }
-            
+
             for wildcard, pattern in ha_wildcards.items():
                 self._topic_pattern_manager.add_custom_wildcard(wildcard, pattern)
-                
+
             # Create common pattern groups
             self._create_pattern_groups()
-            
+
             self.logger.info("Advanced wildcards initialized successfully")
-            
+
         except Exception as e:
             self.logger.error(f"Failed to initialize advanced wildcards: {e}")
 
@@ -132,7 +132,7 @@ class MQTTClient:
         """Create common pattern groups for Home Assistant topics."""
         if not self._topic_pattern_manager:
             return
-            
+
         try:
             # Sensor patterns group
             sensor_patterns = [
@@ -142,7 +142,7 @@ class MQTTClient:
                 "homeassistant/binary_sensor/+/+/attributes",
             ]
             self._topic_pattern_manager.create_pattern_group("sensors", sensor_patterns)
-            
+
             # Device patterns group
             device_patterns = [
                 "homeassistant/+/+/+/state",
@@ -151,7 +151,7 @@ class MQTTClient:
                 "homeassistant/+/+/+/discovery",
             ]
             self._topic_pattern_manager.create_pattern_group("devices", device_patterns)
-            
+
             # System patterns group
             system_patterns = [
                 "homeassistant/status",
@@ -159,79 +159,91 @@ class MQTTClient:
                 "homeassistant/+/+/+/+/+/+",
             ]
             self._topic_pattern_manager.create_pattern_group("system", system_patterns)
-            
+
             self.logger.info("Pattern groups created successfully")
-            
+
         except Exception as e:
             self.logger.error(f"Failed to create pattern groups: {e}")
 
-    def add_advanced_pattern(self, pattern: str, pattern_type: str = "mqtt", priority: int = 1, description: str = "") -> bool:
+    def add_advanced_pattern(
+        self,
+        pattern: str,
+        pattern_type: str = "mqtt",
+        priority: int = 1,
+        description: str = "",
+    ) -> bool:
         """Add an advanced topic pattern with enhanced features.
-        
+
         Args:
             pattern: The topic pattern string
             pattern_type: Type of pattern ("mqtt", "regex", "advanced")
             priority: Pattern priority (higher = more important)
             description: Description of the pattern
-            
+
         Returns:
             True if pattern was added successfully, False otherwise
         """
         if not self._topic_pattern_manager:
             self.logger.warning("Advanced pattern matching is disabled")
             return False
-            
+
         try:
             from .topic_patterns import TopicPattern
-            
+
             # Create the pattern
             topic_pattern = TopicPattern(
                 pattern=pattern,
                 pattern_type=pattern_type,
                 priority=priority,
                 description=description,
-                enabled=True
+                enabled=True,
             )
-            
+
             # For advanced patterns, set the custom wildcards before adding to manager
             if pattern_type == "advanced":
                 self.logger.debug(f"Setting advanced wildcards for pattern: {pattern}")
-                self.logger.debug(f"Available wildcards: {list(self._topic_pattern_manager.custom_wildcards.keys())}")
-                topic_pattern.set_advanced_wildcards(self._topic_pattern_manager.custom_wildcards)
-                self.logger.debug(f"Pattern wildcards after setting: {list(topic_pattern.advanced_wildcards.keys())}")
-            
+                self.logger.debug(
+                    f"Available wildcards: {list(self._topic_pattern_manager.custom_wildcards.keys())}"
+                )
+                topic_pattern.set_advanced_wildcards(
+                    self._topic_pattern_manager.custom_wildcards
+                )
+                self.logger.debug(
+                    f"Pattern wildcards after setting: {list(topic_pattern.advanced_wildcards.keys())}"
+                )
+
             # Add to the manager
             success = self._topic_pattern_manager.add_pattern(topic_pattern)
             if success:
                 self.logger.info(f"Added {pattern_type} pattern: {pattern}")
                 self._metrics["subscription_creates"] += 1
-                
+
             return success
-            
+
         except Exception as e:
             self.logger.error(f"Failed to add advanced pattern {pattern}: {e}")
             return False
 
     def get_pattern_statistics(self) -> dict[str, Any]:
         """Get statistics about topic patterns and matching performance.
-        
+
         Returns:
             Dictionary containing pattern statistics
         """
         if not self._topic_pattern_manager:
             return {"error": "Advanced pattern matching is disabled"}
-            
+
         try:
             # Get pattern statistics (which already includes metrics)
             stats = self._topic_pattern_manager.get_pattern_statistics()
-            
+
             # Add MQTT client specific metrics that don't conflict
             for key, value in self._metrics.items():
                 if key not in stats:  # Only add if not already present
                     stats[key] = value
-                    
+
             return stats
-            
+
         except Exception as e:
             self.logger.error(f"Failed to get pattern statistics: {e}")
             return {"error": str(e)}

@@ -71,9 +71,11 @@ class InfluxDBWriter:
         self._compression = self.config.influxdb_compression.lower()
         self._compression_level = self.config.influxdb_compression_level
         self._optimize_batches = self.config.influxdb_optimize_batches
-        
+
         # Schema optimization
-        self._schema_optimization_enabled = self.config.influxdb_schema_optimization_enabled
+        self._schema_optimization_enabled = (
+            self.config.influxdb_schema_optimization_enabled
+        )
         self._schema_analysis_interval = self.config.influxdb_schema_analysis_interval
         self._last_schema_analysis = None
 
@@ -124,23 +126,25 @@ class InfluxDBWriter:
         """Analyze current schema for optimization opportunities."""
         if not self._schema_optimization_enabled:
             return {"status": "disabled", "reason": "Schema optimization is disabled"}
-        
+
         if self._last_schema_analysis is not None:
-            time_since_analysis = (datetime.utcnow() - self._last_schema_analysis).total_seconds()
+            time_since_analysis = (
+                datetime.utcnow() - self._last_schema_analysis
+            ).total_seconds()
             if time_since_analysis < self._schema_analysis_interval:
                 return {
-                    "status": "skipped", 
-                    "reason": f"Analysis interval not reached ({time_since_analysis:.1f}s < {self._schema_analysis_interval}s)"
+                    "status": "skipped",
+                    "reason": f"Analysis interval not reached ({time_since_analysis:.1f}s < {self._schema_analysis_interval}s)",
                 }
-        
+
         try:
             # Analyze pending points for schema patterns
             if not self._pending_points:
                 return {"status": "no_data", "reason": "No pending points to analyze"}
-            
+
             # Import schema optimizer
             from ..models.optimized_schema import SchemaOptimizer
-            
+
             # Create schema optimizer with current configuration
             schema_config = {
                 "max_tag_cardinality": self.config.influxdb_max_tag_cardinality,
@@ -149,26 +153,32 @@ class InfluxDBWriter:
                 "auto_schema_evolution": self.config.influxdb_auto_schema_evolution,
                 "schema_analysis_interval": self.config.influxdb_schema_analysis_interval,
             }
-            
+
             schema_optimizer = SchemaOptimizer(schema_config)
-            
+
             # Analyze schema patterns
-            analysis_result = schema_optimizer.analyze_schema_evolution(self._pending_points)
-            
+            analysis_result = schema_optimizer.analyze_schema_evolution(
+                self._pending_points
+            )
+
             # Update analysis timestamp
             self._last_schema_analysis = datetime.utcnow()
-            
+
             # Log analysis results
             if analysis_result.get("status") != "skipped":
                 self.logger.info(
                     "Schema analysis completed",
                     points_analyzed=analysis_result.get("points_analyzed", 0),
-                    optimization_suggestions=len(analysis_result.get("optimization_suggestions", [])),
-                    evolution_recommendations=len(analysis_result.get("evolution_recommendations", []))
+                    optimization_suggestions=len(
+                        analysis_result.get("optimization_suggestions", [])
+                    ),
+                    evolution_recommendations=len(
+                        analysis_result.get("evolution_recommendations", [])
+                    ),
                 )
-            
+
             return analysis_result
-            
+
         except Exception as e:
             self.logger.error(f"Schema analysis failed: {e}")
             return {"status": "error", "error": str(e)}

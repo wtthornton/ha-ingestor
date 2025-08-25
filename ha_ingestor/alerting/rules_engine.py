@@ -322,9 +322,7 @@ class AlertRulesEngine:
     ) -> AlertInstance:
         """Create a new alert instance."""
         # Create expiration time
-        expires_at = datetime.now(UTC) + timedelta(
-            minutes=rule.time_window_minutes
-        )
+        expires_at = datetime.now(UTC) + timedelta(minutes=rule.time_window_minutes)
 
         # Create context with relevant data
         context = {

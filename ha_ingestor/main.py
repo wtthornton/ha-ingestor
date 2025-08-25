@@ -245,10 +245,13 @@ async def main() -> int:
             logger.info("Starting health server...")
             health_server = HealthServer(host="0.0.0.0", port=8000)
             health_server.create_app()
-            
+
             # Start health server in background
             import threading
-            health_thread = threading.Thread(target=health_server.start_sync, daemon=True)
+
+            health_thread = threading.Thread(
+                target=health_server.start_sync, daemon=True
+            )
             health_thread.start()
             logger.info("✅ Health server started on port 8000")
 

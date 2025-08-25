@@ -461,9 +461,7 @@ class AlertManager:
             return
 
         # Remove oldest entries
-        cutoff_time = datetime.now(UTC) - timedelta(
-            minutes=self.max_history_size
-        )
+        cutoff_time = datetime.now(UTC) - timedelta(minutes=self.max_history_size)
         self.alert_history = [
             entry for entry in self.alert_history if entry.triggered_at >= cutoff_time
         ]

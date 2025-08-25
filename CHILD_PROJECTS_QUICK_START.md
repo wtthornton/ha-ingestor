@@ -25,17 +25,17 @@ def test_ha_ingestor():
         # Health check
         health = requests.get("http://localhost:8000/health").json()
         print(f"✅ HA-Ingestor Status: {health['status']} (v{health['version']})")
-        
+
         # Service info
         info = requests.get("http://localhost:8000/").json()
         print(f"✅ Service: {info['service']}")
-        
+
         # Dependencies
         deps = requests.get("http://localhost:8000/ready").json()
         print(f"✅ Ready: {deps['ready']}")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Integration failed: {e}")
         return False
@@ -57,41 +57,41 @@ class QuickHAIngestorClient:
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        
+
     def start(self):
         """Start receiving enhanced events"""
         self.client.connect("localhost", 1883)
         self.client.loop_start()
-        
+
     def on_connect(self, client, userdata, flags, rc):
         print("✅ Connected to HA-Ingestor MQTT")
         # Subscribe to enhanced events
         client.subscribe("ha-ingestor/enhanced/#")
-        
+
     def on_message(self, client, userdata, msg):
         try:
             event = json.loads(msg.payload.decode())
             self.process_event(event)
         except Exception as e:
             print(f"Error processing event: {e}")
-            
+
     def process_event(self, event):
         """Process enhanced event with quality validation"""
         if event.get('validation_status') == 'validated':
             print(f"📊 Processing: {event['domain']}.{event['entity_id']}")
             print(f"   Quality Score: {event.get('quality_score', 'N/A')}")
             print(f"   Device: {event.get('attributes', {}).get('device_class', 'Unknown')}")
-            
+
             # Your business logic here
             self.analyze_event(event)
-            
+
     def analyze_event(self, event):
         """Add your custom analysis logic here"""
         # Example: Track temperature sensors
         if event['domain'] == 'sensor' and 'temperature' in event['entity_id']:
             temp = event.get('attributes', {}).get('unit_of_measurement', '')
             print(f"🌡️  Temperature event: {event['entity_id']} - {temp}")
-            
+
         # Example: Track automation triggers
         elif event['domain'] == 'automation':
             print(f"🤖 Automation: {event['entity_id']} - {event['event_type']}")
@@ -136,15 +136,15 @@ import requests
 class HAIngestorAPI:
     def __init__(self, base_url="http://localhost:8000"):
         self.base_url = base_url
-        
+
     def get_health(self):
         """Quick health check"""
         return requests.get(f"{self.base_url}/health").json()
-        
+
     def get_metrics(self):
         """Get Prometheus metrics"""
         return requests.get(f"{self.base_url}/metrics").text
-        
+
     def get_dependencies(self):
         """Check dependency health"""
         return requests.get(f"{self.base_url}/health/dependencies").json()
@@ -167,7 +167,7 @@ class HAIngestorData:
             token="your-token-here",
             org="your-org-here"
         )
-        
+
     def get_recent_events(self, hours=1):
         """Get recent validated events"""
         query = f'''
@@ -177,10 +177,10 @@ class HAIngestorData:
             |> filter(fn: (r) => r["validation_status"] == "validated")
             |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
-        
+
         result = self.client.query_api().query(query)
         return self._to_dataframe(result)
-        
+
     def _to_dataframe(self, result):
         """Convert query result to DataFrame"""
         data = []
@@ -271,32 +271,32 @@ class MonitoringDashboard:
         self.api = HAIngestorAPI()
         self.event_count = 0
         self.last_check = time.time()
-        
+
     def start_monitoring(self):
         """Start real-time monitoring"""
         print("📊 Starting HA-Ingestor monitoring dashboard...")
-        
+
         while True:
             try:
                 self.update_dashboard()
                 time.sleep(30)  # Update every 30 seconds
-                
+
             except KeyboardInterrupt:
                 print("\n👋 Stopping dashboard")
                 break
-                
+
     def update_dashboard(self):
         """Update dashboard with current status"""
         # Get health status
         health = self.api.get_health()
-        
+
         # Get metrics
         metrics = self.api.get_metrics()
-        
+
         # Parse key metrics
         events_processed = self._parse_metric(metrics, "ha_ingestor_events_processed_total")
         errors_total = self._parse_metric(metrics, "ha_ingestor_errors_total")
-        
+
         # Display dashboard
         print(f"\n{'='*50}")
         print(f"📊 HA-Ingestor Dashboard - {datetime.now().strftime('%H:%M:%S')}")
@@ -306,13 +306,13 @@ class MonitoringDashboard:
         print(f"📈 Events Processed: {events_processed}")
         print(f"❌ Total Errors: {errors_total}")
         print(f"🎯 Success Rate: {self._calculate_success_rate(events_processed, errors_total):.1f}%")
-        
+
     def _parse_metric(self, metrics_text, metric_name):
         """Parse Prometheus metric value"""
         import re
         match = re.search(f'{metric_name} (\\d+)', metrics_text)
         return int(match.group(1)) if match else 0
-        
+
     def _calculate_success_rate(self, total, errors):
         """Calculate success rate percentage"""
         if total == 0:
@@ -329,38 +329,38 @@ dashboard.start_monitoring()
 class DataQualityMonitor:
     def __init__(self):
         self.api = HAIngestorAPI()
-        
+
     def check_quality(self):
         """Check current data quality metrics"""
         try:
             # Get quality metrics
             metrics = self.api.get_metrics()
-            
+
             # Parse quality-related metrics
             total_events = self._parse_metric(metrics, "ha_ingestor_events_processed_total")
             failed_events = self._parse_metric(metrics, "ha_ingestor_events_failed_total")
             duplicate_events = self._parse_metric(metrics, "ha_ingestor_events_deduplicated_total")
-            
+
             # Calculate quality metrics
             success_rate = ((total_events - failed_events) / total_events * 100) if total_events > 0 else 0
             duplicate_rate = (duplicate_events / total_events * 100) if total_events > 0 else 0
-            
+
             # Display quality report
             print(f"\n🔍 Data Quality Report")
             print(f"   Total Events: {total_events}")
             print(f"   Success Rate: {success_rate:.1f}%")
             print(f"   Failed Events: {failed_events}")
             print(f"   Duplicate Rate: {duplicate_rate:.1f}%")
-            
+
             # Quality alerts
             if success_rate < 95:
                 print("⚠️  Warning: Success rate below 95%")
             if duplicate_rate > 10:
                 print("⚠️  Warning: Duplicate rate above 10%")
-                
+
         except Exception as e:
             print(f"❌ Error checking quality: {e}")
-            
+
     def _parse_metric(self, metrics_text, metric_name):
         """Parse Prometheus metric value"""
         import re
@@ -377,33 +377,33 @@ monitor.check_quality()
 class EventAnalytics:
     def __init__(self):
         self.data = HAIngestorData()
-        
+
     def analyze_events(self, hours=24):
         """Analyze events from the last N hours"""
         print(f"📊 Analyzing events from last {hours} hours...")
-        
+
         # Get events
         events = self.data.get_recent_events(hours=hours)
-        
+
         if events.empty:
             print("No events found")
             return
-            
+
         # Basic statistics
         print(f"📈 Total Events: {len(events)}")
-        
+
         # Domain breakdown
         if 'domain' in events.columns:
             domain_counts = events['domain'].value_counts()
             print(f"\n🏷️  Events by Domain:")
             for domain, count in domain_counts.head(10).items():
                 print(f"   {domain}: {count}")
-                
+
         # Quality analysis
         if 'quality_score' in events.columns:
             avg_quality = events['quality_score'].mean()
             print(f"\n🎯 Average Quality Score: {avg_quality:.2f}")
-            
+
         # Time analysis
         if '_time' in events.columns:
             events['_time'] = pd.to_datetime(events['_time'])
@@ -455,7 +455,7 @@ services:
       - INFLUXDB_URL=http://influxdb:8086
     depends_on:
       - ha-ingestor
-      
+
   ha-ingestor:
     image: ha-ingestor:latest
     ports:

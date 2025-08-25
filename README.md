@@ -146,13 +146,13 @@ influxdb:
       "response_time_ms": 0.0057
     },
     "websocket": {
-      "status": "healthy", 
+      "status": "healthy",
       "message": "WebSocket connection is healthy",
       "response_time_ms": 0.0032
     },
     "influxdb": {
       "status": "healthy",
-      "message": "InfluxDB connection is healthy", 
+      "message": "InfluxDB connection is healthy",
       "response_time_ms": 0.0089
     }
   }
@@ -186,7 +186,7 @@ MQTT_PORT=1883
 MQTT_USERNAME=your_username
 MQTT_PASSWORD=your_password
 
-# WebSocket Configuration  
+# WebSocket Configuration
 WEBSOCKET_URL=ws://localhost:8123/api/websocket
 WEBSOCKET_EVENTS=state_changed,automation_triggered
 
@@ -210,7 +210,7 @@ data_quality:
   deduplication_window: 300  # seconds
   validation_strict: true
   max_retries: 3
-  
+
 # Performance Tuning
 performance:
   batch_size: 1000
@@ -244,7 +244,7 @@ pytest tests/test_data_export.py
 
 ### **Test Coverage**
 - **Enhanced Data Collection**: ✅ All tests passing
-- **Data Quality & Validation**: ✅ All tests passing  
+- **Data Quality & Validation**: ✅ All tests passing
 - **Context Enrichment**: ✅ All tests passing
 - **Flexible Data Export**: ✅ All tests passing
 
@@ -289,7 +289,7 @@ curl http://localhost:8000/health
 # Check MQTT connection
 docker exec ha-ingestor python -c "from ha_ingestor.mqtt.client import MQTTClient; print('MQTT client loaded')"
 
-# Check WebSocket connection  
+# Check WebSocket connection
 docker exec ha-ingestor python -c "from ha_ingestor.websocket.client import WebSocketClient; print('WebSocket client loaded')"
 
 # Verify event subscriptions

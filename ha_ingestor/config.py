@@ -93,11 +93,10 @@ class Settings(BaseSettings):
         le=300,
         description="WebSocket heartbeat interval in seconds",
     )
-    
+
     # WebSocket Event Filtering Configuration
     ws_enable_event_filtering: bool = Field(
-        default=True,
-        description="Enable advanced WebSocket event type filtering"
+        default=True, description="Enable advanced WebSocket event type filtering"
     )
     ws_default_event_types: list[str] = Field(
         default=[
@@ -108,27 +107,24 @@ class Settings(BaseSettings):
             "component_loaded",
             "user_updated",
             "device_registry_updated",
-            "entity_registry_updated"
+            "entity_registry_updated",
         ],
-        description="Default Home Assistant event types to subscribe to"
+        description="Default Home Assistant event types to subscribe to",
     )
     ws_event_filter_rules: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Advanced event filtering rules and patterns"
+        default_factory=dict, description="Advanced event filtering rules and patterns"
     )
     ws_enable_event_patterns: bool = Field(
-        default=False,
-        description="Enable regex-based event type pattern matching"
+        default=False, description="Enable regex-based event type pattern matching"
     )
     ws_event_cache_size: int = Field(
         default=1000,
         ge=100,
         le=10000,
-        description="Event filtering cache size for performance"
+        description="Event filtering cache size for performance",
     )
     ws_enable_event_statistics: bool = Field(
-        default=True,
-        description="Enable event type statistics and monitoring"
+        default=True, description="Enable event type statistics and monitoring"
     )
 
     # InfluxDB Configuration
@@ -374,69 +370,64 @@ class Settings(BaseSettings):
     # Advanced MQTT Features (disabled by default for deployment)
     mqtt_enable_pattern_matching: bool = Field(
         default=False,
-        description="Enable advanced MQTT topic pattern matching and wildcards"
+        description="Enable advanced MQTT topic pattern matching and wildcards",
     )
     mqtt_max_patterns: int = Field(
         default=100,
         ge=10,
         le=1000,
-        description="Maximum number of topic patterns that can be registered"
+        description="Maximum number of topic patterns that can be registered",
     )
     mqtt_pattern_cache_size: int = Field(
         default=1000,
         ge=100,
         le=10000,
-        description="Maximum size of pattern matching cache for performance"
+        description="Maximum size of pattern matching cache for performance",
     )
     mqtt_enable_dynamic_subscriptions: bool = Field(
-        default=False,
-        description="Enable dynamic topic subscription management"
+        default=False, description="Enable dynamic topic subscription management"
     )
     mqtt_subscription_timeout: int = Field(
         default=300,
         ge=60,
         le=3600,
-        description="Timeout for dynamic subscriptions in seconds"
+        description="Timeout for dynamic subscriptions in seconds",
     )
     mqtt_enable_topic_optimization: bool = Field(
-        default=False,
-        description="Enable automatic topic subscription optimization"
+        default=False, description="Enable automatic topic subscription optimization"
     )
     mqtt_topic_optimization_interval: int = Field(
         default=60,
         ge=30,
         le=300,
-        description="Interval for topic optimization in seconds"
+        description="Interval for topic optimization in seconds",
     )
-    
+
     # Advanced MQTT Wildcard and Pattern Features
     mqtt_enable_advanced_wildcards: bool = Field(
         default=False,
-        description="Enable advanced wildcard patterns beyond standard MQTT + and #"
+        description="Enable advanced wildcard patterns beyond standard MQTT + and #",
     )
     mqtt_enable_regex_patterns: bool = Field(
-        default=False,
-        description="Enable regex-based topic pattern matching"
+        default=False, description="Enable regex-based topic pattern matching"
     )
     mqtt_enable_topic_aliases: bool = Field(
-        default=False,
-        description="Enable topic aliases for complex pattern matching"
+        default=False, description="Enable topic aliases for complex pattern matching"
     )
     mqtt_max_wildcard_depth: int = Field(
         default=5,
         ge=1,
         le=10,
-        description="Maximum depth for multi-level wildcard patterns"
+        description="Maximum depth for multi-level wildcard patterns",
     )
     mqtt_enable_pattern_validation: bool = Field(
-        default=True,
-        description="Enable strict validation of topic patterns"
+        default=True, description="Enable strict validation of topic patterns"
     )
     mqtt_pattern_priority_levels: int = Field(
         default=10,
         ge=5,
         le=100,
-        description="Number of priority levels for topic patterns"
+        description="Number of priority levels for topic patterns",
     )
 
     # MQTT Performance Configuration

@@ -4,7 +4,7 @@ This module tests the migration system, including data extraction, transformatio
 loading, and validation components.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 
@@ -481,15 +481,16 @@ class TestMigrationRunner:
         # Run migration with limited scope for testing
         # Add timeout to prevent hanging
         import asyncio
+
         try:
             result = await asyncio.wait_for(
                 runner.run_full_migration(
                     measurements=["ha_light"],
                     validate_percentage=0.1,  # Validate 10% for testing
                 ),
-                timeout=30.0  # 30 second timeout
+                timeout=30.0,  # 30 second timeout
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail("Migration test timed out after 30 seconds")
 
         assert "migration_id" in result

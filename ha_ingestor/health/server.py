@@ -10,10 +10,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from ..metrics import get_metrics_collector
+import ha_ingestor
+
 from ..utils.logging import add_log_context, get_logger, set_correlation_id
 from .checks import HealthStatus, create_default_health_checker
-import ha_ingestor
 
 
 class HealthServer:
@@ -190,12 +190,12 @@ class HealthServer:
             """
             try:
                 from ..metrics import get_metrics_collector
-                
+
                 metrics_collector = get_metrics_collector()
                 metrics_text = metrics_collector.export_prometheus_metrics()
-                
+
                 return PlainTextResponse(content=metrics_text, media_type="text/plain")
-                
+
             except Exception as e:
                 self.logger.error("Metrics collection failed", error=str(e))
                 # Return basic metrics even if collection fails

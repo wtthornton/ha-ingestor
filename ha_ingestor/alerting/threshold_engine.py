@@ -212,9 +212,7 @@ class ThresholdEngine:
             return []
 
         # Filter points within the time window
-        cutoff_time = datetime.now(UTC) - timedelta(
-            minutes=time_window_minutes
-        )
+        cutoff_time = datetime.now(UTC) - timedelta(minutes=time_window_minutes)
 
         relevant_points = [
             point
@@ -349,9 +347,7 @@ class ThresholdEngine:
 
     def _cleanup_old_data(self) -> None:
         """Clean up old data points to prevent memory bloat."""
-        cutoff_time = datetime.now(UTC) - timedelta(
-            hours=24
-        )  # Keep 24 hours of data
+        cutoff_time = datetime.now(UTC) - timedelta(hours=24)  # Keep 24 hours of data
 
         for field_path in list(self.data_history.keys()):
             original_count = len(self.data_history[field_path])

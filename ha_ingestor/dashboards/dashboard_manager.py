@@ -8,12 +8,10 @@ from typing import Any
 from ..utils.logging import get_logger
 from .anomaly_detector import AnomalyDetector
 from .operational_dashboard import OperationalDashboard
-from .performance_dashboard import PerformanceDashboard
 from .performance_alert_dashboard import (
     PerformanceAlertDashboard,
-    get_performance_alert_dashboard,
-    set_performance_alert_dashboard,
 )
+from .performance_dashboard import PerformanceDashboard
 from .retention_dashboard import RetentionDashboard
 from .schema_optimization_dashboard import SchemaOptimizationDashboard
 from .trend_analyzer import TrendAnalyzer
@@ -116,7 +114,7 @@ class DashboardManager:
         )
 
         self.schema_optimization_dashboard = SchemaOptimizationDashboard()
-        
+
         self.performance_alert_dashboard = PerformanceAlertDashboard(
             {
                 "refresh_interval": self.config.performance_alert_refresh_interval,
@@ -362,11 +360,17 @@ class DashboardManager:
                 if dashboard_name == "overview":
                     return await self.performance_alert_dashboard.get_dashboard_data()
                 elif dashboard_name == "active_alerts":
-                    return await self.performance_alert_dashboard._get_active_alerts_summary()
+                    return (
+                        await self.performance_alert_dashboard._get_active_alerts_summary()
+                    )
                 elif dashboard_name == "alert_history":
-                    return await self.performance_alert_dashboard._get_alert_history_summary()
+                    return (
+                        await self.performance_alert_dashboard._get_alert_history_summary()
+                    )
                 elif dashboard_name == "statistics":
-                    return await self.performance_alert_dashboard._get_alert_statistics()
+                    return (
+                        await self.performance_alert_dashboard._get_alert_statistics()
+                    )
                 elif dashboard_name == "recommendations":
                     return await self.performance_alert_dashboard._get_recommendations()
                 else:
@@ -535,7 +539,9 @@ class DashboardManager:
         )
         retention_status = (
             "running"
-            if self.is_running and self.config.enable_retention_management and self.retention_dashboard
+            if self.is_running
+            and self.config.enable_retention_management
+            and self.retention_dashboard
             else "stopped"
         )
 
@@ -583,7 +589,11 @@ class DashboardManager:
                 "anomaly_detector": self.anomaly_detector.get_detection_statistics(),
                 "schema_optimization_dashboard": await self.schema_optimization_dashboard.get_dashboard_data(),
                 "performance_alert_dashboard": await self.performance_alert_dashboard.get_dashboard_data(),
-                "retention_dashboard": await self.retention_dashboard.get_dashboard_data() if self.retention_dashboard else None,
+                "retention_dashboard": (
+                    await self.retention_dashboard.get_dashboard_data()
+                    if self.retention_dashboard
+                    else None
+                ),
                 "configuration": {
                     "performance_refresh_interval": self.config.performance_refresh_interval,
                     "trend_analysis_interval": self.config.trend_analysis_interval,
