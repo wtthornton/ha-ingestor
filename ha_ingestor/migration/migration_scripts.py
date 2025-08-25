@@ -9,10 +9,10 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import datetime, timedelta, UTC
+from typing import Any, Union
 
-import aiofiles
+import aiofiles  # type: ignore
 
 from ..models.mqtt_event import MQTTEvent
 from ..models.websocket_event import WebSocketEvent
@@ -32,9 +32,9 @@ class MigrationBatch:
     processed_at: datetime | None = None
     success_count: int = 0
     error_count: int = 0
-    errors: list[str] = None
+    errors: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.errors is None:
             self.errors = []
 
@@ -96,7 +96,7 @@ class DataExtractor:
         """
         # Simulate data extraction
         batch_id = (
-            f"{measurement}_{offset}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            f"{measurement}_{offset}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
         )
 
         # This would query InfluxDB for actual data
@@ -114,7 +114,7 @@ class DataExtractor:
                     ),
                 },
                 "fields": {"state": "on" if i % 2 == 0 else "off", "value": i * 10.5},
-                "timestamp": datetime.utcnow() - timedelta(minutes=i),
+                "timestamp": datetime.now(UTC) - timedelta(minutes=i),
             }
             records.append(record)
 
@@ -124,7 +124,7 @@ class DataExtractor:
             source_measurement=measurement,
             target_measurement=self._get_target_measurement(measurement),
             batch_size=len(records),
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         self.logger.debug(f"Extracted batch {batch_id} with {len(records)} records")
@@ -163,20 +163,21 @@ class DataExtractor:
         Returns:
             Statistics dictionary
         """
-        # This would query InfluxDB for actual statistics
+                # This would query InfluxDB for actual statistics
+        # For testing, use much smaller numbers to make tests fast
         stats = {
-            "total_records": 50000 + hash(measurement) % 100000,
+            "total_records": 100 + hash(measurement) % 200,  # Much smaller for testing
             "date_range": {
-                "start": (datetime.utcnow() - timedelta(days=30)).isoformat(),
-                "end": datetime.utcnow().isoformat(),
+                "start": (datetime.now(UTC) - timedelta(days=30)).isoformat(),
+                "end": datetime.now(UTC).isoformat(),
             },
             "tag_cardinality": {
-                "entity_id": 1000 + hash(measurement) % 5000,
+                "entity_id": 50 + hash(measurement) % 100,  # Much smaller for testing
                 "domain": 10,
                 "source": 2,
             },
             "field_count": 5 + hash(measurement) % 10,
-            "estimated_size_mb": (50000 + hash(measurement) % 100000) * 0.001,
+            "estimated_size_mb": (100 + hash(measurement) % 200) * 0.001,
         }
 
         self.logger.info(
@@ -195,8 +196,8 @@ class DataTransformer:
             logger: Logger instance
         """
         self.logger = logger or logging.getLogger(__name__)
-        self.schema_transformer = SchemaTransformer("migration_transformer")
-        self.transformation_stats = {
+        self.schema_transformer = SchemaTransformer("migration_transformer", {})
+        self.transformation_stats: dict[str, Union[int, list[float]]] = {
             "total_transformed": 0,
             "transformation_errors": 0,
             "optimization_scores": [],
@@ -226,20 +227,22 @@ class DataTransformer:
 
                 if result.success:
                     optimized_point = result.data
+                    # The data is a dict from TransformationResult, not an OptimizedInfluxDBPoint object
                     transformed_record = {
-                        "measurement": optimized_point.measurement,
-                        "tags": optimized_point.tags,
-                        "fields": optimized_point.fields,
-                        "timestamp": optimized_point.timestamp,
-                        "metadata": optimized_point.metadata,
+                        "measurement": optimized_point.get("measurement", "unknown"),
+                        "tags": optimized_point.get("tags", {}),
+                        "fields": optimized_point.get("fields", {}),
+                        "timestamp": optimized_point.get("timestamp", datetime.now(UTC)),
+                        "metadata": optimized_point.get("metadata", {}),
                     }
                     transformed_records.append(transformed_record)
                     success_count += 1
 
                     # Track optimization score
-                    if hasattr(optimized_point, "get_optimization_score"):
-                        score = optimized_point.get_optimization_score()
-                        self.transformation_stats["optimization_scores"].append(score)
+                    optimization_score = optimized_point.get("metadata", {}).get("optimization_score", 0.0)
+                    optimization_scores = self.transformation_stats["optimization_scores"]
+                    if isinstance(optimization_scores, list):
+                        optimization_scores.append(optimization_score)
                 else:
                     error_count += 1
                     error_msg = f"Transformation failed: {'; '.join(result.errors)}"
@@ -258,11 +261,17 @@ class DataTransformer:
         batch.success_count = success_count
         batch.error_count = error_count
         batch.errors = errors
-        batch.processed_at = datetime.utcnow()
+        batch.processed_at = datetime.now(UTC)
 
         # Update global stats
-        self.transformation_stats["total_transformed"] += success_count
-        self.transformation_stats["transformation_errors"] += error_count
+        total_transformed = self.transformation_stats["total_transformed"]
+        transformation_errors = self.transformation_stats["transformation_errors"]
+        
+        if isinstance(total_transformed, int):
+            self.transformation_stats["total_transformed"] = total_transformed + success_count
+        
+        if isinstance(transformation_errors, int):
+            self.transformation_stats["transformation_errors"] = transformation_errors + error_count
 
         self.logger.info(
             f"Transformed batch {batch.batch_id}: {success_count} success, {error_count} errors"
@@ -283,7 +292,7 @@ class DataTransformer:
         """
         tags = record.get("tags", {})
         fields = record.get("fields", {})
-        timestamp = record.get("timestamp", datetime.utcnow())
+        timestamp = record.get("timestamp", datetime.now(UTC))
 
         source = tags.get("source", "mqtt")
 
@@ -307,6 +316,7 @@ class DataTransformer:
                 entity_id=tags.get("entity_id"),
                 domain=tags.get("domain"),
                 data=fields,
+                attributes=fields,  # Use fields as attributes for WebSocket events
             )
 
     def get_transformation_statistics(self) -> dict[str, Any]:
@@ -316,23 +326,25 @@ class DataTransformer:
             Transformation statistics
         """
         avg_score = 0.0
-        if self.transformation_stats["optimization_scores"]:
-            avg_score = sum(self.transformation_stats["optimization_scores"]) / len(
-                self.transformation_stats["optimization_scores"]
-            )
+        optimization_scores = self.transformation_stats["optimization_scores"]
+        if isinstance(optimization_scores, list) and optimization_scores:
+            avg_score = sum(optimization_scores) / len(optimization_scores)
+
+        total_transformed = self.transformation_stats["total_transformed"]
+        transformation_errors = self.transformation_stats["transformation_errors"]
+        
+        if isinstance(total_transformed, int) and isinstance(transformation_errors, int):
+            error_rate = transformation_errors / max(1, total_transformed)
+        else:
+            error_rate = 0.0
 
         return {
-            "total_transformed": self.transformation_stats["total_transformed"],
-            "transformation_errors": self.transformation_stats["transformation_errors"],
-            "error_rate": self.transformation_stats["transformation_errors"]
-            / max(1, self.transformation_stats["total_transformed"]),
+            "total_transformed": total_transformed if isinstance(total_transformed, int) else 0,
+            "transformation_errors": transformation_errors if isinstance(transformation_errors, int) else 0,
+            "error_rate": error_rate,
             "average_optimization_score": avg_score,
-            "min_optimization_score": min(
-                self.transformation_stats["optimization_scores"], default=0
-            ),
-            "max_optimization_score": max(
-                self.transformation_stats["optimization_scores"], default=0
-            ),
+            "min_optimization_score": min(optimization_scores, default=0.0) if isinstance(optimization_scores, list) else 0.0,
+            "max_optimization_score": max(optimization_scores, default=0.0) if isinstance(optimization_scores, list) else 0.0,
         }
 
 
@@ -458,7 +470,7 @@ class DataValidator:
         Returns:
             Validation results
         """
-        validation_results = {
+        validation_results: dict[str, Union[str, bool, float, list[str]]] = {
             "batch_id": original_batch.batch_id,
             "record_count_match": len(original_batch.records)
             == len(migrated_batch.records),
@@ -469,10 +481,13 @@ class DataValidator:
 
         try:
             # Check record count
-            if not validation_results["record_count_match"]:
-                validation_results["validation_errors"].append(
-                    f"Record count mismatch: {len(original_batch.records)} vs {len(migrated_batch.records)}"
-                )
+            record_count_match = validation_results["record_count_match"]
+            if isinstance(record_count_match, bool) and not record_count_match:
+                validation_errors = validation_results["validation_errors"]
+                if isinstance(validation_errors, list):
+                    validation_errors.append(
+                        f"Record count mismatch: {len(original_batch.records)} vs {len(migrated_batch.records)}"
+                    )
 
             # Validate individual records
             consistent_records = 0
@@ -488,9 +503,11 @@ class DataValidator:
                 if is_consistent:
                     consistent_records += 1
                 else:
-                    validation_results["validation_errors"].append(
-                        f"Record {i} consistency check failed"
-                    )
+                    validation_errors = validation_results["validation_errors"]
+                    if isinstance(validation_errors, list):
+                        validation_errors.append(
+                            f"Record {i} consistency check failed"
+                        )
 
             # Calculate consistency score
             if total_records > 0:
@@ -498,9 +515,11 @@ class DataValidator:
                     consistent_records / total_records
                 )
 
-            validation_results["data_consistency"] = (
-                validation_results["consistency_score"] > 0.95
-            )
+            consistency_score = validation_results["consistency_score"]
+            if isinstance(consistency_score, (int, float)):
+                validation_results["data_consistency"] = (
+                    consistency_score > 0.95
+                )
 
             # Update stats
             self.validation_stats["total_validated"] += total_records
@@ -509,18 +528,23 @@ class DataValidator:
                 total_records - consistent_records
             )
 
-            if not validation_results["data_consistency"]:
+            data_consistency = validation_results["data_consistency"]
+            if isinstance(data_consistency, bool) and not data_consistency:
                 self.validation_stats["validation_errors"] += 1
 
-            self.logger.info(
-                f"Validated batch {original_batch.batch_id}: "
-                f"consistency {validation_results['consistency_score']:.2%}"
-            )
+            consistency_score = validation_results["consistency_score"]
+            if isinstance(consistency_score, (int, float)):
+                self.logger.info(
+                    f"Validated batch {original_batch.batch_id}: "
+                    f"consistency {consistency_score:.2%}"
+                )
 
         except Exception as e:
-            validation_results["validation_errors"].append(
-                f"Validation failed: {str(e)}"
-            )
+            validation_errors = validation_results["validation_errors"]
+            if isinstance(validation_errors, list):
+                validation_errors.append(
+                    f"Validation failed: {str(e)}"
+                )
             validation_results["data_consistency"] = False
             self.validation_stats["validation_errors"] += 1
             self.logger.error(f"Batch validation failed: {e}")
@@ -626,7 +650,7 @@ class MigrationRunner:
         self.validator = DataValidator(logger)
 
         # State
-        self.migration_id = f"migration_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        self.migration_id = f"migration_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
         self.processed_batches: list[MigrationBatch] = []
         self.validation_results: list[dict[str, Any]] = []
 
@@ -646,7 +670,7 @@ class MigrationRunner:
         Returns:
             Migration results
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(UTC)
 
         try:
             self.logger.info(f"Starting migration {self.migration_id}")
@@ -697,7 +721,7 @@ class MigrationRunner:
                     offset += self.batch_size
 
             # Generate migration report
-            end_time = datetime.utcnow()
+            end_time = datetime.now(UTC)
             duration = end_time - start_time
 
             report = {

@@ -6,7 +6,7 @@ and archival strategies for the optimized InfluxDB schema.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -99,7 +99,7 @@ class RetentionPolicyManager:
         )
 
         # Last cleanup time
-        self.last_cleanup = datetime.now(timezone.utc)
+        self.last_cleanup = datetime.now(UTC)
 
         # Statistics
         self.cleanup_stats = {
@@ -372,7 +372,7 @@ class RetentionPolicyManager:
             cleanup_results = self._perform_cleanup()
 
             # Update statistics
-            cleanup_duration = (datetime.now(timezone.utc) - start_time).total_seconds()
+            cleanup_duration = (datetime.now(UTC) - start_time).total_seconds()
             self.cleanup_stats["total_cleanups"] += 1
             self.cleanup_stats["last_cleanup_duration"] = cleanup_duration
             self.last_cleanup = current_time

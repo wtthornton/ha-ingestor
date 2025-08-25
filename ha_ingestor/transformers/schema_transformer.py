@@ -50,11 +50,17 @@ class SchemaTransformer(Transformer):
         safe_config = config or {}
         schema_config = {
             "max_tag_cardinality": safe_config.get("max_tag_cardinality", 10000),
-            "tag_compression_threshold": safe_config.get("tag_compression_threshold", 1000),
-            "field_compression_threshold": safe_config.get("field_compression_threshold", 256),
+            "tag_compression_threshold": safe_config.get(
+                "tag_compression_threshold", 1000
+            ),
+            "field_compression_threshold": safe_config.get(
+                "field_compression_threshold", 256
+            ),
             "type_optimization": safe_config.get("type_optimization", True),
             "auto_schema_evolution": safe_config.get("auto_schema_evolution", True),
-            "schema_analysis_interval": safe_config.get("schema_analysis_interval", 300.0),
+            "schema_analysis_interval": safe_config.get(
+                "schema_analysis_interval", 300.0
+            ),
         }
         self.schema_optimizer = SchemaOptimizer(schema_config)
 

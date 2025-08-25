@@ -62,7 +62,7 @@ class WebSocketClient:
 
         # Event loop for async operations
         self._loop: asyncio.AbstractEventLoop | None = None
-        
+
         # Event filtering system
         if getattr(self.config, "ws_enable_event_filtering", True):
             self._event_filter_manager = EventFilterManager(self.config)
@@ -201,7 +201,6 @@ class WebSocketClient:
             "service_called",
             "call_service",
             "fire_event",
-            
             # Device and integration events
             "device_registry_updated",
             "area_registry_updated",
@@ -209,14 +208,12 @@ class WebSocketClient:
             "integration_setup",
             "integration_reloaded",
             "integration_removed",
-            
             # User and system events
             "user_updated",
             "user_logged_in",
             "user_logged_out",
             "system_log_event",
             "logbook_entry",
-            
             # Configuration and setup events
             "config_entry_updated",
             "config_entry_reloaded",
@@ -224,7 +221,6 @@ class WebSocketClient:
             "scene_activated",
             "script_started",
             "script_finished",
-            
             # Generic event catch-all
             "event",
         ]
@@ -396,13 +392,19 @@ class WebSocketClient:
                     filtered_message = self._event_filter_manager.filter_event(message)
                     if filtered_message is None:
                         # Event was filtered out
-                        self.logger.debug("Event filtered out by rules", event=message.get("event", {}).get("event_type", ""))
+                        self.logger.debug(
+                            "Event filtered out by rules",
+                            event=message.get("event", {}).get("event_type", ""),
+                        )
                         return
                     elif filtered_message != message:
                         # Event was transformed
-                        self.logger.debug("Event transformed by filter rules", event=message.get("event", {}).get("event_type", ""))
+                        self.logger.debug(
+                            "Event transformed by filter rules",
+                            event=message.get("event", {}).get("event_type", ""),
+                        )
                         message = filtered_message
-                
+
                 # Handle event message
                 if self._message_handler:
                     if asyncio.iscoroutinefunction(self._message_handler):
@@ -532,57 +534,57 @@ class WebSocketClient:
         return message_id
 
     # Event Filtering Methods
-    
+
     def add_event_filter_rule(self, rule: EventFilterRule) -> bool:
         """Add a new event filter rule.
-        
+
         Args:
             rule: The event filter rule to add
-            
+
         Returns:
             True if rule was added successfully, False otherwise
         """
         if not self._event_filter_manager:
             self.logger.warning("Event filtering is disabled")
             return False
-            
+
         return self._event_filter_manager.add_rule(rule)
 
     def remove_event_filter_rule(self, rule_name: str) -> bool:
         """Remove an event filter rule.
-        
+
         Args:
             rule_name: Name of the rule to remove
-            
+
         Returns:
             True if rule was removed successfully, False otherwise
         """
         if not self._event_filter_manager:
             self.logger.warning("Event filtering is disabled")
             return False
-            
+
         return self._event_filter_manager.remove_rule(rule_name)
 
     def get_event_filter_statistics(self) -> dict[str, Any]:
         """Get event filtering statistics.
-        
+
         Returns:
             Dictionary containing event filtering statistics
         """
         if not self._event_filter_manager:
             return {"error": "Event filtering is disabled"}
-            
+
         return self._event_filter_manager.get_statistics()
 
     def get_event_filter_rules(self) -> list[dict[str, Any]]:
         """Get all event filter rules.
-        
+
         Returns:
             List of event filter rule dictionaries
         """
         if not self._event_filter_manager:
             return []
-            
+
         return self._event_filter_manager.get_rule_statistics()
 
     def clear_event_filter_statistics(self) -> None:
@@ -593,7 +595,7 @@ class WebSocketClient:
 
     def is_event_filtering_enabled(self) -> bool:
         """Check if event filtering is enabled.
-        
+
         Returns:
             True if event filtering is enabled, False otherwise
         """

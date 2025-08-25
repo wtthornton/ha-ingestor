@@ -2,13 +2,20 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from ..utils.logging import get_logger
 from .anomaly_detector import AnomalyDetector
 from .operational_dashboard import OperationalDashboard
 from .performance_dashboard import PerformanceDashboard
+from .performance_alert_dashboard import (
+    PerformanceAlertDashboard,
+    get_performance_alert_dashboard,
+    set_performance_alert_dashboard,
+)
+from .retention_dashboard import RetentionDashboard
+from .schema_optimization_dashboard import SchemaOptimizationDashboard
 from .trend_analyzer import TrendAnalyzer
 
 
@@ -35,6 +42,16 @@ class DashboardConfig:
     health_check_interval: int = 30  # seconds
     connection_check_interval: int = 15  # seconds
 
+    # Performance alert dashboard settings
+    performance_alert_refresh_interval: int = 30  # seconds
+    performance_alert_history_size: int = 1000
+    enable_performance_alerting: bool = True
+
+    # Retention dashboard settings
+    retention_dashboard_refresh_interval: int = 30  # seconds
+    retention_dashboard_history_size: int = 100
+    enable_retention_management: bool = True
+
     # General settings
     auto_start: bool = True
     enable_grafana_export: bool = True
@@ -52,6 +69,9 @@ class DashboardStatus:
     trend_analyzer: str
     anomaly_detector: str
     operational_dashboard: str
+    schema_optimization_dashboard: str
+    performance_alert_dashboard: str
+    retention_dashboard: str
     overall_status: str
     last_error: str | None
     uptime: timedelta
@@ -95,6 +115,19 @@ class DashboardManager:
             }
         )
 
+        self.schema_optimization_dashboard = SchemaOptimizationDashboard()
+        
+        self.performance_alert_dashboard = PerformanceAlertDashboard(
+            {
+                "refresh_interval": self.config.performance_alert_refresh_interval,
+                "max_history_display": self.config.performance_alert_history_size,
+                "enable_auto_refresh": self.config.enable_performance_alerting,
+            }
+        )
+
+        # Initialize retention dashboard (will be properly initialized when retention system is available)
+        self.retention_dashboard: RetentionDashboard | None = None
+
         # Manager state
         self.start_time = datetime.utcnow()
         self.is_running = False
@@ -125,6 +158,14 @@ class DashboardManager:
             if self.config.enable_operational_monitoring:
                 await self.operational_dashboard.start_monitoring()
 
+            # Start performance alert dashboard
+            if self.config.enable_performance_alerting:
+                await self.performance_alert_dashboard.start()
+
+            # Start retention dashboard if available
+            if self.config.enable_retention_management and self.retention_dashboard:
+                await self.retention_dashboard.start()
+
             self.is_running = True
             self.logger.info("Dashboard manager started successfully")
 
@@ -151,6 +192,13 @@ class DashboardManager:
             # Stop operational dashboard
             if self.config.enable_operational_monitoring:
                 await self.operational_dashboard.stop_monitoring()
+
+            # Stop performance alert dashboard
+            await self.performance_alert_dashboard.stop()
+
+            # Stop retention dashboard
+            if self.retention_dashboard:
+                await self.retention_dashboard.stop()
 
             self.is_running = False
             self.logger.info("Dashboard manager stopped successfully")
@@ -241,7 +289,7 @@ class DashboardManager:
                 self.logger.error(f"Error in anomaly detection loop: {e}")
                 await asyncio.sleep(120)  # Wait longer on error
 
-    def get_dashboard_data(
+    async def get_dashboard_data(
         self, dashboard_type: str, dashboard_name: str | None = None
     ) -> dict[str, Any] | None:
         """Get data from a specific dashboard."""
@@ -305,9 +353,24 @@ class DashboardManager:
 
                 return {
                     "anomaly_summaries": anomaly_summaries,
-                    "total_metrics_with_anomalies": len(anomaly_summaries),
+                    "total_metrics_with_anomaly": len(anomaly_summaries),
                     "detection_time": datetime.utcnow().isoformat(),
                 }
+
+            elif dashboard_type == "performance_alerts":
+                # Get performance alert dashboard data
+                if dashboard_name == "overview":
+                    return await self.performance_alert_dashboard.get_dashboard_data()
+                elif dashboard_name == "active_alerts":
+                    return await self.performance_alert_dashboard._get_active_alerts_summary()
+                elif dashboard_name == "alert_history":
+                    return await self.performance_alert_dashboard._get_alert_history_summary()
+                elif dashboard_name == "statistics":
+                    return await self.performance_alert_dashboard._get_alert_statistics()
+                elif dashboard_name == "recommendations":
+                    return await self.performance_alert_dashboard._get_recommendations()
+                else:
+                    return await self.performance_alert_dashboard.get_dashboard_data()
 
             else:
                 return {"error": f"Unknown dashboard type: {dashboard_type}"}
@@ -460,6 +523,21 @@ class DashboardManager:
             if self.is_running and self.config.enable_operational_monitoring
             else "stopped"
         )
+        schema_opt_status = (
+            "running"
+            if self.is_running and self.schema_optimization_dashboard
+            else "stopped"
+        )
+        perf_alert_status = (
+            "running"
+            if self.is_running and self.config.enable_performance_alerting
+            else "stopped"
+        )
+        retention_status = (
+            "running"
+            if self.is_running and self.config.enable_retention_management and self.retention_dashboard
+            else "stopped"
+        )
 
         # Determine overall status
         if self.is_running and all(
@@ -468,6 +546,9 @@ class DashboardManager:
                 trend_status == "running",
                 anomaly_status == "running",
                 ops_status == "running",
+                schema_opt_status == "running",
+                perf_alert_status == "running",
+                retention_status == "running",
             ]
         ):
             overall_status = "healthy"
@@ -482,38 +563,54 @@ class DashboardManager:
             trend_analyzer=trend_status,
             anomaly_detector=anomaly_status,
             operational_dashboard=ops_status,
+            schema_optimization_dashboard=schema_opt_status,
+            performance_alert_dashboard=perf_alert_status,
+            retention_dashboard=retention_status,
             overall_status=overall_status,
             last_error=self._last_error,
             uptime=uptime,
         )
 
-    def get_comprehensive_summary(self) -> dict[str, Any]:
+    async def get_comprehensive_summary(self) -> dict[str, Any]:
         """Get a comprehensive summary of all dashboard components."""
         try:
             summary: dict[str, Any] = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "status": self.get_dashboard_status().__dict__,
                 "performance_dashboard": self.performance_dashboard.get_dashboard_summary(),
                 "operational_dashboard": self.operational_dashboard.get_operational_summary(),
                 "trend_analyzer": self.trend_analyzer.get_analysis_statistics(),
                 "anomaly_detector": self.anomaly_detector.get_detection_statistics(),
+                "schema_optimization_dashboard": await self.schema_optimization_dashboard.get_dashboard_data(),
+                "performance_alert_dashboard": await self.performance_alert_dashboard.get_dashboard_data(),
+                "retention_dashboard": await self.retention_dashboard.get_dashboard_data() if self.retention_dashboard else None,
                 "configuration": {
                     "performance_refresh_interval": self.config.performance_refresh_interval,
                     "trend_analysis_interval": self.config.trend_analysis_interval,
                     "anomaly_detection_interval": self.config.anomaly_detection_interval,
                     "operational_refresh_interval": self.config.operational_refresh_interval,
+                    "performance_alert_refresh_interval": self.config.performance_alert_refresh_interval,
+                    "performance_alert_history_size": self.config.performance_alert_history_size,
+                    "retention_dashboard_refresh_interval": self.config.retention_dashboard_refresh_interval,
+                    "retention_dashboard_history_size": self.config.retention_dashboard_history_size,
                     "enable_trend_analysis": self.config.enable_trend_analysis,
                     "enable_anomaly_detection": self.config.enable_anomaly_detection,
                     "enable_operational_monitoring": self.config.enable_operational_monitoring,
+                    "enable_performance_alerting": self.config.enable_performance_alerting,
+                    "enable_retention_management": self.config.enable_retention_management,
                 },
             }
 
             # Convert datetime objects to ISO format
             status_dict = summary["status"]
             if isinstance(status_dict, dict):
-                if "timestamp" in status_dict and hasattr(status_dict["timestamp"], "isoformat"):
+                if "timestamp" in status_dict and hasattr(
+                    status_dict["timestamp"], "isoformat"
+                ):
                     status_dict["timestamp"] = status_dict["timestamp"].isoformat()
-                if "uptime" in status_dict and hasattr(status_dict["uptime"], "total_seconds"):
+                if "uptime" in status_dict and hasattr(
+                    status_dict["uptime"], "total_seconds"
+                ):
                     status_dict["uptime"] = status_dict["uptime"].total_seconds()
 
             return summary
@@ -558,6 +655,14 @@ class DashboardManager:
                     "health_check_interval": self.config.health_check_interval,
                     "connection_check_interval": self.config.connection_check_interval,
                     "overview_update_interval": self.config.operational_refresh_interval,
+                }
+            )
+
+            self.performance_alert_dashboard.config.update(
+                {
+                    "refresh_interval": self.config.performance_alert_refresh_interval,
+                    "max_history_display": self.config.performance_alert_history_size,
+                    "enable_auto_refresh": self.config.enable_performance_alerting,
                 }
             )
 

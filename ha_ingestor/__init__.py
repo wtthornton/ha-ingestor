@@ -1,10 +1,9 @@
-"""Home Assistant Activity Ingestor.
-
+﻿"""
 A production-grade Python service that ingests all relevant Home Assistant
 activity in real-time and writes it to InfluxDB.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 __author__ = "Your Name"
 __email__ = "your.email@example.com"
 

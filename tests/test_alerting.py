@@ -1,7 +1,7 @@
 """Tests for the alerting system."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -193,7 +193,7 @@ class TestAlertInstance:
 
         # Should be expired after time passes
         with patch("ha_ingestor.alerting.rules_engine.datetime") as mock_datetime:
-            mock_datetime.utcnow.return_value = now + timedelta(minutes=10)
+            mock_datetime.now.return_value = (now + timedelta(minutes=10)).replace(tzinfo=UTC)
             assert alert.is_expired()
 
 

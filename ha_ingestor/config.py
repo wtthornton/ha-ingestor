@@ -32,6 +32,7 @@ Environment Variables:
 """
 
 import logging
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -91,6 +92,43 @@ class Settings(BaseSettings):
         ge=5,
         le=300,
         description="WebSocket heartbeat interval in seconds",
+    )
+    
+    # WebSocket Event Filtering Configuration
+    ws_enable_event_filtering: bool = Field(
+        default=True,
+        description="Enable advanced WebSocket event type filtering"
+    )
+    ws_default_event_types: list[str] = Field(
+        default=[
+            "state_changed",
+            "event",
+            "service_registered",
+            "service_removed",
+            "component_loaded",
+            "user_updated",
+            "device_registry_updated",
+            "entity_registry_updated"
+        ],
+        description="Default Home Assistant event types to subscribe to"
+    )
+    ws_event_filter_rules: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Advanced event filtering rules and patterns"
+    )
+    ws_enable_event_patterns: bool = Field(
+        default=False,
+        description="Enable regex-based event type pattern matching"
+    )
+    ws_event_cache_size: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Event filtering cache size for performance"
+    )
+    ws_enable_event_statistics: bool = Field(
+        default=True,
+        description="Enable event type statistics and monitoring"
     )
 
     # InfluxDB Configuration
@@ -171,6 +209,44 @@ class Settings(BaseSettings):
     influxdb_optimize_batches: bool = Field(
         default=True,
         description="Enable batch optimization (deduplication, sorting, etc.)",
+    )
+
+    # Schema Optimization Configuration
+    influxdb_schema_optimization_enabled: bool = Field(
+        default=True,
+        description="Enable advanced InfluxDB schema optimization",
+    )
+    influxdb_max_tag_cardinality: int = Field(
+        default=10000,
+        ge=1000,
+        le=100000,
+        description="Maximum tag cardinality before optimization",
+    )
+    influxdb_tag_compression_threshold: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Tag value length threshold for compression",
+    )
+    influxdb_field_compression_threshold: int = Field(
+        default=256,
+        ge=64,
+        le=1024,
+        description="Field value length threshold for compression",
+    )
+    influxdb_measurement_consolidation: bool = Field(
+        default=True,
+        description="Enable measurement consolidation for better performance",
+    )
+    influxdb_auto_schema_evolution: bool = Field(
+        default=True,
+        description="Enable automatic schema evolution and optimization",
+    )
+    influxdb_schema_analysis_interval: float = Field(
+        default=300.0,  # 5 minutes
+        ge=60.0,
+        le=3600.0,
+        description="Schema analysis and optimization interval in seconds",
     )
 
     # Logging Configuration
@@ -296,13 +372,72 @@ class Settings(BaseSettings):
     )
 
     # Advanced MQTT Features (disabled by default for deployment)
-    mqtt_enable_pattern_matching: bool = False  # Disabled for deployment
-    mqtt_max_patterns: int = 100
-    mqtt_pattern_cache_size: int = 1000
-    mqtt_enable_dynamic_subscriptions: bool = False  # Disabled for deployment
-    mqtt_subscription_timeout: int = 300
-    mqtt_enable_topic_optimization: bool = False  # Disabled for deployment
-    mqtt_topic_optimization_interval: int = 60
+    mqtt_enable_pattern_matching: bool = Field(
+        default=False,
+        description="Enable advanced MQTT topic pattern matching and wildcards"
+    )
+    mqtt_max_patterns: int = Field(
+        default=100,
+        ge=10,
+        le=1000,
+        description="Maximum number of topic patterns that can be registered"
+    )
+    mqtt_pattern_cache_size: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Maximum size of pattern matching cache for performance"
+    )
+    mqtt_enable_dynamic_subscriptions: bool = Field(
+        default=False,
+        description="Enable dynamic topic subscription management"
+    )
+    mqtt_subscription_timeout: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="Timeout for dynamic subscriptions in seconds"
+    )
+    mqtt_enable_topic_optimization: bool = Field(
+        default=False,
+        description="Enable automatic topic subscription optimization"
+    )
+    mqtt_topic_optimization_interval: int = Field(
+        default=60,
+        ge=30,
+        le=300,
+        description="Interval for topic optimization in seconds"
+    )
+    
+    # Advanced MQTT Wildcard and Pattern Features
+    mqtt_enable_advanced_wildcards: bool = Field(
+        default=False,
+        description="Enable advanced wildcard patterns beyond standard MQTT + and #"
+    )
+    mqtt_enable_regex_patterns: bool = Field(
+        default=False,
+        description="Enable regex-based topic pattern matching"
+    )
+    mqtt_enable_topic_aliases: bool = Field(
+        default=False,
+        description="Enable topic aliases for complex pattern matching"
+    )
+    mqtt_max_wildcard_depth: int = Field(
+        default=5,
+        ge=1,
+        le=10,
+        description="Maximum depth for multi-level wildcard patterns"
+    )
+    mqtt_enable_pattern_validation: bool = Field(
+        default=True,
+        description="Enable strict validation of topic patterns"
+    )
+    mqtt_pattern_priority_levels: int = Field(
+        default=10,
+        ge=5,
+        le=100,
+        description="Number of priority levels for topic patterns"
+    )
 
     # MQTT Performance Configuration
     mqtt_max_reconnect_attempts: int = Field(
@@ -334,6 +469,56 @@ class Settings(BaseSettings):
         ge=0.0,
         le=0.5,
         description="MQTT reconnection jitter factor (0-0.5)",
+    )
+
+    # Data Retention and Cleanup Configuration
+    retention_enabled: bool = Field(
+        default=True,
+        description="Enable data retention and cleanup policies",
+    )
+    retention_cleanup_interval: int = Field(
+        default=3600,
+        ge=300,
+        le=86400,
+        description="Retention cleanup interval in seconds (5 minutes to 24 hours)",
+    )
+    retention_max_cleanup_duration: int = Field(
+        default=300,
+        ge=60,
+        le=1800,
+        description="Maximum duration for cleanup operations in seconds (1-30 minutes)",
+    )
+    retention_max_concurrent_jobs: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Maximum concurrent cleanup jobs",
+    )
+    retention_batch_size: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Batch size for cleanup operations",
+    )
+    retention_job_timeout: int = Field(
+        default=300,
+        ge=60,
+        le=1800,
+        description="Timeout for cleanup jobs in seconds (1-30 minutes)",
+    )
+    retention_retry_delay: int = Field(
+        default=60,
+        ge=30,
+        le=300,
+        description="Delay between retry attempts in seconds (30 seconds to 5 minutes)",
+    )
+    retention_enforce_immediately: bool = Field(
+        default=False,
+        description="Apply retention policies to existing data immediately",
+    )
+    retention_dry_run: bool = Field(
+        default=False,
+        description="Run retention cleanup in dry-run mode (no actual deletion)",
     )
 
     @field_validator("log_level")

@@ -88,7 +88,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # If using Mosquitto
    systemctl status mosquitto
-   
+
    # Check MQTT port
    netstat -tlnp | grep 1883
    ```
@@ -114,7 +114,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # If using Docker
    docker ps | grep influxdb
-   
+
    # Check InfluxDB port
    netstat -tlnp | grep 8086
    ```
@@ -174,7 +174,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Check memory usage
    ps aux | grep ha-ingestor
-   
+
    # Check system resources
    htop
    free -h
@@ -228,7 +228,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Check metrics endpoint
    curl http://localhost:8000/metrics
-   
+
    # Check filter execution times
    grep "filter.*duration" logs/ha-ingestor.log
    ```
@@ -244,7 +244,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Use Python profiler
    python -m cProfile -o profile.stats ha_ingestor/main.py
-   
+
    # Analyze profile
    python -c "import pstats; p = pstats.Stats('profile.stats'); p.sort_stats('cumulative').print_stats(20)"
    ```
@@ -298,10 +298,10 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Install dependencies
    poetry install
-   
+
    # Check installed packages
    poetry show
-   
+
    # Update dependencies
    poetry update
    ```
@@ -310,7 +310,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Check Python path
    python -c "import sys; print(sys.path)"
-   
+
    # Check if package is installed
    python -c "import ha_ingestor; print('Package found')"
    ```
@@ -319,7 +319,7 @@ python -c "from ha_ingestor.influxdb.writer import InfluxDBWriter; print('Influx
    ```bash
    # Activate virtual environment
    poetry shell
-   
+
    # Check Python location
    which python
    ```

@@ -175,7 +175,9 @@ class HealthChecker:
             Overall HealthStatus
         """
         if not self._last_checks:
-            return HealthStatus.UNKNOWN
+            # If no dependencies have been checked yet, assume healthy
+            # This is appropriate for services that are just starting up
+            return HealthStatus.HEALTHY
 
         statuses = [check.status for check in self._last_checks.values()]
 

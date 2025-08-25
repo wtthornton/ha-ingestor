@@ -76,5 +76,5 @@ CMD ["python", "-m", "ha_ingestor.main"]
 
 # Labels
 LABEL maintainer="ha-ingestor" \
-      version="0.1.0" \
+      version="0.3.0" \
       description="Production-grade Python service for ingesting Home Assistant activity to InfluxDB"

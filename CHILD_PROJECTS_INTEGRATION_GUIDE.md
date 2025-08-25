@@ -1,541 +1,764 @@
-# 🔗 Child Projects Integration Guide for HA-Ingestor
+# Child Projects Integration Guide - HA-Ingestor v0.3.0
 
-**Purpose**: This guide enables other child projects in the ha-cleanup ecosystem to integrate with and utilize HA-Ingestor for Home Assistant data processing and analytics.
+**Enhanced Data Ingestion & Preparation Layer for Home Assistant**
 
-## 🎯 **Overview**
+This guide provides comprehensive instructions for integrating child projects with HA-Ingestor v0.3.0, which now offers enhanced data collection, quality validation, and rich monitoring capabilities.
 
-HA-Ingestor is now **production-ready** and provides a centralized, type-safe data ingestion and transformation service for Home Assistant data. Other projects can leverage this service for:
+## 🚀 **What's New in v0.3.0 for Child Projects**
 
-- **Real-time data access** from Home Assistant
-- **Optimized data storage** in InfluxDB
-- **Advanced analytics** and data processing
-- **Unified data schema** across projects
+### **Enhanced Data Collection**
+- **Multi-domain event capture**: sensor, media_player, image, network, automation
+- **Comprehensive device attributes**: device_class, state_class, unit_of_measurement
+- **Performance metrics**: Network speeds, power consumption, lighting levels
+- **Context tracking**: User IDs, correlation IDs, timestamps, state history
 
-## 🚀 **Current Status**
+### **Advanced Data Quality & Validation**
+- **Schema validation**: Pydantic-based data integrity
+- **Duplicate detection**: Intelligent deduplication with configurable thresholds
+- **Error handling**: Comprehensive error recovery and logging
+- **Data enrichment**: Automatic metadata addition and context preservation
 
-### **Production Deployment**
-- ✅ **Status**: Fully operational in production
-- ✅ **Version**: v0.2.0 with Type-Safe Migration System
-- ✅ **Performance**: Production-optimized configuration
-- ✅ **Monitoring**: Comprehensive health and metrics
+### **Rich Monitoring & Observability**
+- **49+ Prometheus metrics** for comprehensive monitoring
+- **Real-time health checks** with dependency monitoring
+- **Performance analytics** including latency, throughput, and error rates
+- **Circuit breaker patterns** for resilience and fault tolerance
 
-### **Service Endpoints**
-- **Main Service**: http://localhost:8000
-- **Health Check**: http://localhost:8000/health
-- **Metrics**: http://localhost:8000/metrics
-- **InfluxDB**: http://localhost:8086
+## 🏗️ **Integration Architecture**
+
+### **Data Flow Overview**
+```
+Child Project → HA-Ingestor v0.3.0 → InfluxDB → Analytics/ML Systems
+     ↓              ↓                    ↓              ↓
+Data Sources   Enhanced Processing   Optimized Storage   Advanced Features
+     ↓              ↓                    ↓              ↓
+Raw Events    Quality Validation    Schema Optimization   Business Logic
+     ↓              ↓                    ↓              ↓
+MQTT/WS       Context Enrichment    Performance Metrics   Insights
+```
+
+### **Integration Points**
+1. **Data Ingestion**: MQTT and WebSocket event streaming
+2. **Data Processing**: Enhanced transformation and validation pipeline
+3. **Data Storage**: Optimized InfluxDB schema and storage
+4. **Data Export**: Multiple export formats and APIs
+5. **Monitoring**: Comprehensive health and performance metrics
 
 ## 🔌 **Integration Methods**
 
-### **Method 1: Direct API Integration**
+### **Method 1: Direct MQTT Integration**
 
-#### **Health Check Integration**
+#### **Subscribe to Enhanced Events**
+```python
+import paho.mqtt.client as mqtt
+import json
+
+class HAIngestorClient:
+    def __init__(self, broker="localhost", port=1883):
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+        self.client.connect(broker, port)
+        
+    def on_connect(self, client, userdata, flags, rc):
+        print("Connected to HA-Ingestor MQTT")
+        # Subscribe to enhanced events
+        client.subscribe("ha-ingestor/events/#")
+        client.subscribe("ha-ingestor/enhanced/#")
+        client.subscribe("ha-ingestor/validated/#")
+        
+    def on_message(self, client, userdata, msg):
+        try:
+            event = json.loads(msg.payload.decode())
+            self.process_enhanced_event(event)
+        except Exception as e:
+            print(f"Error processing event: {e}")
+            
+    def process_enhanced_event(self, event):
+        # Process enhanced event with quality validation
+        if event.get('validation_status') == 'validated':
+            print(f"Processing validated event: {event['entity_id']}")
+            # Your business logic here
+            self.analyze_event(event)
+            
+    def analyze_event(self, event):
+        # Access enhanced data fields
+        domain = event.get('domain')
+        entity_id = event.get('entity_id')
+        attributes = event.get('attributes', {})
+        context = event.get('context', {})
+        
+        # Enhanced attributes available in v0.3.0
+        device_class = attributes.get('device_class')
+        state_class = attributes.get('state_class')
+        unit_of_measurement = attributes.get('unit_of_measurement')
+        
+        # Context information
+        user_id = context.get('user_id')
+        correlation_id = context.get('correlation_id')
+        
+        print(f"Enhanced event: {domain}.{entity_id} - {device_class} - {unit_of_measurement}")
+
+# Usage
+client = HAIngestorClient()
+client.client.loop_forever()
+```
+
+#### **Enhanced Event Structure**
+```json
+{
+  "domain": "sensor",
+  "entity_id": "temperature_living_room",
+  "timestamp": "2025-08-25T14:30:00Z",
+  "event_type": "state_changed",
+  "attributes": {
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Living Room Temperature"
+  },
+  "context": {
+    "user_id": "user123",
+    "correlation_id": "corr-456",
+    "source": "websocket"
+  },
+  "validation_status": "validated",
+  "quality_score": 0.95,
+  "enrichment_data": {
+    "device_metadata": {
+      "manufacturer": "Generic",
+      "model": "Temperature Sensor",
+      "sw_version": "1.0.0"
+    },
+    "network_topology": {
+      "ip_address": "192.168.1.100",
+      "mac_address": "AA:BB:CC:DD:EE:FF"
+    }
+  }
+}
+```
+
+### **Method 2: REST API Integration**
+
+#### **Enhanced Health & Status API**
 ```python
 import requests
 import json
 
-def check_ha_ingestor_health():
-    """Check if HA-Ingestor is operational."""
-    try:
-        response = requests.get("http://localhost:8000/health")
-        if response.status_code == 200:
-            health_data = response.json()
-            return {
-                "status": "operational",
-                "service": health_data.get("service"),
-                "uptime": health_data.get("uptime_seconds"),
-                "version": health_data.get("version")
-            }
-        else:
-            return {"status": "unavailable", "error": f"HTTP {response.status_code}"}
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
+class HAIngestorAPI:
+    def __init__(self, base_url="http://localhost:8000"):
+        self.base_url = base_url
+        
+    def get_service_info(self):
+        """Get comprehensive service information"""
+        response = requests.get(f"{self.base_url}/")
+        return response.json()
+        
+    def get_health_status(self):
+        """Get detailed health status"""
+        response = requests.get(f"{self.base_url}/health")
+        return response.json()
+        
+    def get_dependencies_health(self):
+        """Get detailed dependency health"""
+        response = requests.get(f"{self.base_url}/health/dependencies")
+        return response.json()
+        
+    def get_metrics(self):
+        """Get Prometheus metrics"""
+        response = requests.get(f"{self.base_url}/metrics")
+        return response.text
+        
+    def get_readiness(self):
+        """Get service readiness status"""
+        response = requests.get(f"{self.base_url}/ready")
+        return response.json()
 
 # Usage
-health = check_ha_ingestor_health()
-print(f"HA-Ingestor Status: {health['status']}")
+api = HAIngestorAPI()
+
+# Check service status
+info = api.get_service_info()
+print(f"Service: {info['service']}")
+print(f"Version: {info['version']}")
+print(f"Status: {info['status']}")
+
+# Check health
+health = api.get_health_status()
+print(f"Health: {health['status']}")
+print(f"Uptime: {health['uptime_seconds']} seconds")
+
+# Check dependencies
+deps = api.get_dependencies_health()
+for dep_name, dep_info in deps['dependencies'].items():
+    print(f"{dep_name}: {dep_info['status']} - {dep_info['message']}")
 ```
 
-#### **Metrics Integration**
-```python
-import requests
-import re
+### **Method 3: InfluxDB Direct Access**
 
-def get_ha_ingestor_metrics():
-    """Retrieve HA-Ingestor performance metrics."""
-    try:
-        response = requests.get("http://localhost:8000/metrics")
-        if response.status_code == 200:
-            metrics_text = response.text
-            
-            # Parse key metrics
-            metrics = {}
-            
-            # Service status
-            if "ha_ingestor_up 1" in metrics_text:
-                metrics["service_status"] = "UP"
-            else:
-                metrics["service_status"] = "DOWN"
-            
-            # Event processing
-            event_match = re.search(r'ha_ingestor_events_processed_total (\d+)', metrics_text)
-            if event_match:
-                metrics["events_processed"] = int(event_match.group(1))
-            
-            # Error rate
-            error_match = re.search(r'ha_ingestor_errors_total (\d+)', metrics_text)
-            if error_match:
-                metrics["errors_total"] = int(error_match.group(1))
-            
-            return metrics
-        else:
-            return {"error": f"HTTP {response.status_code}"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# Usage
-metrics = get_ha_ingestor_metrics()
-print(f"Events Processed: {metrics.get('events_processed', 'Unknown')}")
-```
-
-### **Method 2: InfluxDB Direct Access**
-
-#### **Data Query Integration**
+#### **Enhanced Data Schema Access**
 ```python
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.flux_table import FluxTable
-from typing import List, Dict, Any
+import pandas as pd
 
-class HAIngestorDataClient:
-    """Client for accessing HA-Ingestor processed data from InfluxDB."""
-    
-    def __init__(self, url: str = "http://localhost:8086", 
-                 token: str = "Rom24aedslas!@", 
-                 org: str = "myorg", 
-                 bucket: str = "ha_events"):
+class HAIngestorDataAccess:
+    def __init__(self, url="http://localhost:8086", token="your-token", org="your-org"):
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.query_api = self.client.query_api()
-        self.bucket = bucket
-        self.org = org
-    
-    def get_recent_events(self, minutes: int = 60, entity_id: str = None) -> List[Dict[str, Any]]:
-        """Get recent events from HA-Ingestor."""
+        
+    def get_enhanced_events(self, bucket="ha_events", start_time="-1h"):
+        """Query enhanced events with quality validation"""
         query = f'''
-        from(bucket: "{self.bucket}")
-            |> range(start: -{minutes}m)
-            |> filter(fn: (r) => r["_measurement"] == "ha_entities")
-        '''
-        
-        if entity_id:
-            query += f'|> filter(fn: (r) => r["entity_id"] == "{entity_id}")'
-        
-        query += '''
+        from(bucket: "{bucket}")
+            |> range(start: {start_time})
+            |> filter(fn: (r) => r["_measurement"] == "ha_events")
+            |> filter(fn: (r) => r["validation_status"] == "validated")
             |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-            |> sort(columns: ["_time"])
         '''
         
-        try:
-            result = self.query_api.query(query)
-            events = []
-            
-            for table in result:
-                for record in table.records:
-                    event = {
-                        "timestamp": record.get_time(),
-                        "entity_id": record.values.get("entity_id"),
-                        "domain": record.values.get("domain"),
-                        "state": record.values.get("state"),
-                        "attributes": record.values.get("attributes", {}),
-                        "source": record.values.get("source")
-                    }
-                    events.append(event)
-            
-            return events
-        except Exception as e:
-            print(f"Error querying InfluxDB: {e}")
-            return []
-    
-    def get_entity_history(self, entity_id: str, hours: int = 24) -> List[Dict[str, Any]]:
-        """Get historical data for a specific entity."""
+        result = self.query_api.query(query)
+        return self._process_query_result(result)
+        
+    def get_quality_metrics(self, bucket="ha_events", start_time="-24h"):
+        """Query data quality metrics"""
         query = f'''
-        from(bucket: "{self.bucket}")
-            |> range(start: -{hours}h)
-            |> filter(fn: (r) => r["_measurement"] == "ha_entities")
-            |> filter(fn: (r) => r["entity_id"] == "{entity_id}")
+        from(bucket: "{bucket}")
+            |> range(start: {start_time})
+            |> filter(fn: (r) => r["_measurement"] == "data_quality")
             |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-            |> sort(columns: ["_time"])
         '''
         
-        try:
-            result = self.query_api.query(query)
-            history = []
-            
-            for table in result:
-                for record in table.records:
-                    history.append({
-                        "timestamp": record.get_time(),
-                        "state": record.values.get("state"),
-                        "attributes": record.values.get("attributes", {}),
-                        "source": record.values.get("source")
-                    })
-            
-            return history
-        except Exception as e:
-            print(f"Error querying entity history: {e}")
-            return []
-    
-    def close(self):
-        """Close the InfluxDB client."""
-        self.client.close()
+        result = self.query_api.query(query)
+        return self._process_query_result(result)
+        
+    def get_performance_metrics(self, bucket="ha_events", start_time="-1h"):
+        """Query performance metrics"""
+        query = f'''
+        from(bucket: "{bucket}")
+            |> range(start: {start_time})
+            |> filter(fn: (r) => r["_measurement"] == "performance")
+            |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        '''
+        
+        result = self.query_api.query(result)
+        return self._process_query_result(result)
+        
+    def _process_query_result(self, result):
+        """Convert query result to pandas DataFrame"""
+        data = []
+        for table in result:
+            for record in table.records:
+                data.append(record.values)
+                
+        if data:
+            df = pd.DataFrame(data)
+            return df
+        return pd.DataFrame()
 
-# Usage Example
-def example_usage():
-    client = HAIngestorDataClient()
-    
-    # Get recent events
-    recent_events = client.get_recent_events(minutes=30)
-    print(f"Recent events: {len(recent_events)}")
-    
-    # Get entity history
-    temp_history = client.get_entity_history("sensor.living_room_temperature", hours=6)
-    print(f"Temperature history: {len(temp_history)} records")
-    
-    client.close()
+# Usage
+data_access = HAIngestorDataAccess()
 
-if __name__ == "__main__":
-    example_usage()
+# Get validated events
+events = data_access.get_enhanced_events()
+print(f"Retrieved {len(events)} validated events")
+
+# Get quality metrics
+quality = data_access.get_quality_metrics()
+print(f"Quality metrics: {quality.columns.tolist()}")
+
+# Get performance metrics
+performance = data_access.get_performance_metrics()
+print(f"Performance metrics: {performance.columns.tolist()}")
 ```
 
-### **Method 3: Docker Compose Integration**
+## 📊 **Enhanced Data Models**
 
-#### **Add HA-Ingestor to Your Project**
-```yaml
-# In your project's docker-compose.yml
-version: '3.8'
-
-services:
-  your-service:
-    # Your service configuration
-    depends_on:
-      - ha-ingestor
-    environment:
-      - HA_INGESTOR_URL=http://ha-ingestor:8000
-      - INFLUXDB_URL=http://influxdb:8086
-
-  ha-ingestor:
-    image: ha-ingestor-ha-ingestor:latest
-    container_name: ha-ingestor
-    ports:
-      - "8000:8000"
-    environment:
-      - HA_WS_URL=ws://192.168.1.86:8123/api/websocket
-      - HA_WS_TOKEN=${HA_WS_TOKEN}
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=myorg
-      - INFLUXDB_BUCKET=ha_events
-    depends_on:
-      - influxdb
-    restart: unless-stopped
-
-  influxdb:
-    image: influxdb:2.7
-    container_name: influxdb
-    ports:
-      - "8086:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
-      - DOCKER_INFLUXDB_INIT_ORG=myorg
-      - DOCKER_INFLUXDB_INIT_BUCKET=ha_events
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
-    volumes:
-      - influxdb_data:/var/lib/influxdb2
-    restart: unless-stopped
-
-volumes:
-  influxdb_data:
-```
-
-## 📊 **Data Schema & Structure**
-
-### **Measurement: ha_entities**
-```json
-{
-  "measurement": "ha_entities",
-  "tags": {
-    "domain": "sensor",
-    "entity_id": "sensor.living_room_temperature",
-    "entity_type": "device",
-    "source": "mqtt",
-    "event_category": "state_change",
-    "entity_group": "living_room"
-  },
-  "fields": {
-    "state": "22.5",
-    "state_numeric": 22.5,
-    "attributes": "{\"unit_of_measurement\": \"°C\", \"friendly_name\": \"Living Room Temperature\"}",
-    "payload_size": 15,
-    "topic": "homeassistant/sensor/living_room_temperature/state",
-    "processing_timestamp": "2025-08-25T01:33:10.123456Z",
-    "original_timestamp": "2025-08-25T01:33:10.000000Z"
-  },
-  "timestamp": "2025-08-25T01:33:10.000000Z"
-}
-```
-
-### **Common Query Patterns**
+### **Event Quality Validation**
 ```python
-# Get all temperature sensors
-query = '''
-from(bucket: "ha_events")
-  |> range(start: -1h)
-  |> filter(fn: (r) => r["_measurement"] == "ha_entities")
-  |> filter(fn: (r) => r["domain"] == "sensor")
-  |> filter(fn: (r) => r["entity_id"] =~ /.*temperature.*/)
-'''
-
-# Get entity state changes
-query = '''
-from(bucket: "ha_events")
-  |> range(start: -1h)
-  |> filter(fn: (r) => r["_measurement"] == "ha_entities")
-  |> filter(fn: (r) => r["_field"] == "state")
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-'''
-```
-
-## 🔧 **Configuration & Environment Variables**
-
-### **Required Environment Variables**
-```bash
-# HA-Ingestor Service
-HA_INGESTOR_URL=http://localhost:8000
-HA_INGESTOR_HEALTH_ENDPOINT=/health
-HA_INGESTOR_METRICS_ENDPOINT=/metrics
-
-# InfluxDB Connection
-INFLUXDB_URL=http://localhost:8086
-INFLUXDB_TOKEN=your_token_here
-INFLUXDB_ORG=myorg
-INFLUXDB_BUCKET=ha_events
-
-# Home Assistant (if direct access needed)
-HA_WS_URL=ws://192.168.1.86:8123/api/websocket
-HA_WS_TOKEN=your_long_lived_token_here
-```
-
-### **Configuration File Example**
-```python
-# config.py
-import os
 from dataclasses import dataclass
+from typing import Dict, Any, Optional
+from datetime import datetime
 
 @dataclass
-class HAIngestorConfig:
-    """Configuration for HA-Ingestor integration."""
+class EnhancedEvent:
+    """Enhanced event model with quality validation"""
+    domain: str
+    entity_id: str
+    timestamp: datetime
+    event_type: str
+    attributes: Dict[str, Any]
     
-    # Service endpoints
-    service_url: str = os.getenv("HA_INGESTOR_URL", "http://localhost:8000")
-    health_endpoint: str = os.getenv("HA_INGESTOR_HEALTH_ENDPOINT", "/health")
-    metrics_endpoint: str = os.getenv("HA_INGESTOR_METRICS_ENDPOINT", "/metrics")
+    # Enhanced fields in v0.3.0
+    validation_status: str  # 'validated', 'failed', 'pending'
+    quality_score: float    # 0.0 to 1.0
+    enrichment_data: Dict[str, Any]
+    context: Dict[str, Any]
     
-    # InfluxDB
-    influxdb_url: str = os.getenv("INFLUXDB_URL", "http://localhost:8086")
-    influxdb_token: str = os.getenv("INFLUXDB_TOKEN", "")
-    influxdb_org: str = os.getenv("INFLUXDB_ORG", "myorg")
-    influxdb_bucket: str = os.getenv("INFLUXDB_BUCKET", "ha_events")
+    # Quality indicators
+    is_duplicate: bool = False
+    validation_errors: Optional[list] = None
+    processing_latency_ms: Optional[float] = None
     
-    # Connection settings
-    timeout: int = int(os.getenv("HA_INGESTOR_TIMEOUT", "30"))
-    retry_attempts: int = int(os.getenv("HA_INGESTOR_RETRY_ATTEMPTS", "3"))
+    def is_high_quality(self) -> bool:
+        """Check if event meets quality standards"""
+        return (
+            self.validation_status == 'validated' and
+            self.quality_score >= 0.8 and
+            not self.is_duplicate
+        )
     
-    def validate(self) -> bool:
-        """Validate configuration."""
-        required_fields = [
-            self.service_url,
-            self.influxdb_token,
-            self.influxdb_org,
-            self.influxdb_bucket
-        ]
-        return all(field for field in required_fields)
+    def get_device_info(self) -> Dict[str, Any]:
+        """Extract device information from enrichment data"""
+        return self.enrichment_data.get('device_metadata', {})
+    
+    def get_network_info(self) -> Dict[str, Any]:
+        """Extract network topology information"""
+        return self.enrichment_data.get('network_topology', {})
 
 # Usage
-config = HAIngestorConfig()
-if not config.validate():
-    raise ValueError("Invalid HA-Ingestor configuration")
+def process_enhanced_event(event_data: Dict[str, Any]):
+    event = EnhancedEvent(**event_data)
+    
+    if event.is_high_quality():
+        # Process high-quality event
+        device_info = event.get_device_info()
+        network_info = event.get_network_info()
+        
+        print(f"Processing high-quality event from {device_info.get('model', 'Unknown')}")
+        print(f"Network location: {network_info.get('ip_address', 'Unknown')}")
+        
+        # Your business logic here
+        analyze_event_quality(event)
+    else:
+        # Handle low-quality event
+        print(f"Low-quality event: {event.validation_errors}")
 ```
 
-## 🚨 **Error Handling & Resilience**
-
-### **Health Check Integration**
+### **Data Quality Metrics**
 ```python
-import time
-import requests
-from typing import Optional
-
-class HAIngestorHealthMonitor:
-    """Monitor HA-Ingestor service health."""
+@dataclass
+class DataQualityMetrics:
+    """Data quality metrics for monitoring"""
+    total_events: int
+    validated_events: int
+    failed_events: int
+    duplicate_events: int
+    average_quality_score: float
+    validation_success_rate: float
     
-    def __init__(self, service_url: str, check_interval: int = 30):
-        self.service_url = service_url
-        self.check_interval = check_interval
-        self.last_check = 0
-        self.last_status = "unknown"
+    @property
+    def quality_percentage(self) -> float:
+        """Calculate overall quality percentage"""
+        if self.total_events == 0:
+            return 0.0
+        return (self.validated_events / self.total_events) * 100
     
-    def is_healthy(self) -> bool:
-        """Check if HA-Ingestor is healthy."""
-        current_time = time.time()
-        
-        # Only check if enough time has passed
-        if current_time - self.last_check < self.check_interval:
-            return self.last_status == "operational"
-        
-        try:
-            response = requests.get(f"{self.service_url}/health", timeout=5)
-            if response.status_code == 200:
-                health_data = response.json()
-                self.last_status = "operational" if health_data.get("status") == "operational" else "unhealthy"
-            else:
-                self.last_status = "unhealthy"
-        except Exception:
-            self.last_status = "unhealthy"
-        
-        self.last_check = current_time
-        return self.last_status == "operational"
-    
-    def wait_for_healthy(self, timeout: int = 300) -> bool:
-        """Wait for HA-Ingestor to become healthy."""
-        start_time = time.time()
-        
-        while time.time() - start_time < timeout:
-            if self.is_healthy():
-                return True
-            time.sleep(5)
-        
-        return False
+    def get_quality_summary(self) -> str:
+        """Get human-readable quality summary"""
+        return (
+            f"Quality: {self.quality_percentage:.1f}% "
+            f"({self.validated_events}/{self.total_events} events) "
+            f"Score: {self.average_quality_score:.2f}"
+        )
 
 # Usage
-monitor = HAIngestorHealthMonitor("http://localhost:8000")
-if monitor.wait_for_healthy(timeout=60):
-    print("HA-Ingestor is healthy and ready!")
-else:
-    print("HA-Ingestor health check failed")
+def monitor_data_quality(api: HAIngestorAPI):
+    """Monitor data quality in real-time"""
+    try:
+        # Get quality metrics
+        metrics = api.get_metrics()
+        
+        # Parse Prometheus metrics for quality data
+        quality_data = parse_quality_metrics(metrics)
+        
+        # Create quality metrics object
+        quality = DataQualityMetrics(**quality_data)
+        
+        # Display quality summary
+        print(quality.get_quality_summary())
+        
+        # Alert if quality drops
+        if quality.quality_percentage < 90:
+            print("⚠️  Data quality below threshold!")
+            
+    except Exception as e:
+        print(f"Error monitoring data quality: {e}")
 ```
 
-## 📈 **Performance & Monitoring**
+## 🔍 **Monitoring & Observability**
 
-### **Integration Metrics**
+### **Real-Time Health Monitoring**
 ```python
 import time
 from typing import Dict, Any
 
-class HAIngestorMetrics:
-    """Collect and track HA-Ingestor integration metrics."""
-    
-    def __init__(self):
-        self.request_count = 0
-        self.error_count = 0
-        self.total_response_time = 0
-        self.start_time = time.time()
-    
-    def record_request(self, response_time: float, success: bool = True):
-        """Record a request metric."""
-        self.request_count += 1
-        self.total_response_time += response_time
+class HAIngestorMonitor:
+    def __init__(self, api: HAIngestorAPI, check_interval: int = 30):
+        self.api = api
+        self.check_interval = check_interval
+        self.health_history = []
         
-        if not success:
-            self.error_count += 1
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        """Get current metrics."""
-        uptime = time.time() - self.start_time
-        avg_response_time = self.total_response_time / self.request_count if self.request_count > 0 else 0
-        error_rate = (self.error_count / self.request_count * 100) if self.request_count > 0 else 0
+    def start_monitoring(self):
+        """Start continuous health monitoring"""
+        print("Starting HA-Ingestor health monitoring...")
         
+        while True:
+            try:
+                health_status = self.check_health()
+                self.health_history.append(health_status)
+                
+                # Display status
+                self.display_health_status(health_status)
+                
+                # Check for issues
+                self.check_for_issues(health_status)
+                
+                # Wait for next check
+                time.sleep(self.check_interval)
+                
+            except KeyboardInterrupt:
+                print("\nMonitoring stopped by user")
+                break
+            except Exception as e:
+                print(f"Monitoring error: {e}")
+                time.sleep(self.check_interval)
+    
+    def check_health(self) -> Dict[str, Any]:
+        """Check comprehensive health status"""
         return {
-            "uptime_seconds": uptime,
-            "total_requests": self.request_count,
-            "error_count": self.error_count,
-            "error_rate_percent": error_rate,
-            "avg_response_time_ms": avg_response_time * 1000,
-            "requests_per_second": self.request_count / uptime if uptime > 0 else 0
+            'timestamp': time.time(),
+            'service_info': self.api.get_service_info(),
+            'health': self.api.get_health_status(),
+            'dependencies': self.api.get_dependencies_health(),
+            'readiness': self.api.get_readiness()
         }
+    
+    def display_health_status(self, status: Dict[str, Any]):
+        """Display current health status"""
+        health = status['health']
+        deps = status['dependencies']
+        
+        print(f"\n[{time.strftime('%H:%M:%S')}] Health Check:")
+        print(f"  Service: {health['status']} (v{health['version']})")
+        print(f"  Uptime: {health['uptime_seconds']:.0f}s")
+        
+        # Display dependency status
+        for dep_name, dep_info in deps['dependencies'].items():
+            status_icon = "✅" if dep_info['status'] == 'healthy' else "❌"
+            print(f"  {dep_name}: {status_icon} {dep_info['status']}")
+    
+    def check_for_issues(self, status: Dict[str, Any]):
+        """Check for potential issues"""
+        health = status['health']
+        deps = status['dependencies']
+        
+        # Check service health
+        if health['status'] != 'healthy':
+            print("🚨 Service health issue detected!")
+            
+        # Check dependencies
+        for dep_name, dep_info in deps['dependencies'].items():
+            if dep_info['status'] != 'healthy':
+                print(f"🚨 Dependency issue: {dep_name} - {dep_info['message']}")
 
 # Usage
-metrics = HAIngestorMetrics()
-
-# Record metrics during operations
-start_time = time.time()
-try:
-    # Your HA-Ingestor operation here
-    response_time = time.time() - start_time
-    metrics.record_request(response_time, success=True)
-except Exception:
-    response_time = time.time() - start_time
-    metrics.record_request(response_time, success=False)
-
-# Get metrics
-current_metrics = metrics.get_metrics()
-print(f"Error Rate: {current_metrics['error_rate_percent']:.2f}%")
+api = HAIngestorAPI()
+monitor = HAIngestorMonitor(api, check_interval=30)
+monitor.start_monitoring()
 ```
 
-## 🔄 **Migration & Updates**
+### **Performance Metrics Dashboard**
+```python
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime, timedelta
 
-### **Version Compatibility**
-- **Current Version**: v0.2.0
-- **API Stability**: Stable (no breaking changes expected)
-- **Schema Evolution**: Backward compatible
-- **Update Process**: Rolling updates with zero downtime
+class PerformanceDashboard:
+    def __init__(self, data_access: HAIngestorDataAccess):
+        self.data_access = data_access
+        
+    def create_performance_chart(self, hours: int = 24):
+        """Create performance overview chart"""
+        # Get performance data
+        end_time = datetime.now()
+        start_time = end_time - timedelta(hours=hours)
+        
+        performance_data = self.data_access.get_performance_metrics(
+            start_time=start_time.isoformat()
+        )
+        
+        if performance_data.empty:
+            print("No performance data available")
+            return
+        
+        # Create chart
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        fig.suptitle(f'HA-Ingestor Performance Overview (Last {hours}h)')
+        
+        # Event processing rate
+        if 'events_per_second' in performance_data.columns:
+            axes[0, 0].plot(performance_data['_time'], performance_data['events_per_second'])
+            axes[0, 0].set_title('Events per Second')
+            axes[0, 0].set_ylabel('Events/sec')
+        
+        # Processing latency
+        if 'processing_latency_ms' in performance_data.columns:
+            axes[0, 1].plot(performance_data['_time'], performance_data['processing_latency_ms'])
+            axes[0, 1].set_title('Processing Latency')
+            axes[0, 1].set_ylabel('Latency (ms)')
+        
+        # Memory usage
+        if 'memory_usage_mb' in performance_data.columns:
+            axes[1, 0].plot(performance_data['_time'], performance_data['memory_usage_mb'])
+            axes[1, 0].set_title('Memory Usage')
+            axes[1, 0].set_ylabel('Memory (MB)')
+        
+        # Quality score
+        if 'quality_score' in performance_data.columns:
+            axes[1, 1].plot(performance_data['_time'], performance_data['quality_score'])
+            axes[1, 1].set_title('Data Quality Score')
+            axes[1, 1].set_ylabel('Score (0-1)')
+        
+        plt.tight_layout()
+        plt.show()
 
-### **Migration Checklist**
-- [ ] **Health Check**: Verify service is operational
-- [ ] **Configuration**: Update environment variables
-- [ ] **Testing**: Test integration endpoints
-- [ ] **Monitoring**: Set up health monitoring
-- [ ] **Documentation**: Update project documentation
-
-## 📚 **Resources & Support**
-
-### **Documentation**
-- **Production Summary**: `PRODUCTION_DEPLOYMENT_SUMMARY.md`
-- **Migration Guide**: `NEXT_STEPS_QUICK_START.md`
-- **Performance Guide**: `PERFORMANCE_MONITORING_ALERTING_GUIDE.md`
-- **Schema Guide**: `SCHEMA_OPTIMIZATION_GUIDE.md`
-
-### **Support Commands**
-```bash
-# Check service status
-docker-compose -f docker-compose.production.yml ps
-
-# View logs
-docker-compose -f docker-compose.production.yml logs ha-ingestor
-
-# Restart service
-docker-compose -f docker-compose.production.yml restart ha-ingestor
-
-# Check health
-curl http://localhost:8000/health
-
-# View metrics
-curl http://localhost:8000/metrics
+# Usage
+data_access = HAIngestorDataAccess()
+dashboard = PerformanceDashboard(data_access)
+dashboard.create_performance_chart(hours=24)
 ```
 
-### **Contact & Updates**
-- **Status Page**: Check health endpoints for real-time status
-- **Logs**: Monitor Docker logs for detailed information
-- **Metrics**: Use Prometheus metrics for performance insights
+## 🚀 **Integration Best Practices**
+
+### **1. Event Quality Validation**
+```python
+def validate_event_quality(event: Dict[str, Any]) -> bool:
+    """Validate event quality before processing"""
+    required_fields = ['domain', 'entity_id', 'timestamp', 'event_type']
+    
+    # Check required fields
+    for field in required_fields:
+        if field not in event:
+            return False
+    
+    # Check validation status
+    if event.get('validation_status') != 'validated':
+        return False
+    
+    # Check quality score
+    quality_score = event.get('quality_score', 0)
+    if quality_score < 0.8:
+        return False
+    
+    # Check for duplicates
+    if event.get('is_duplicate', False):
+        return False
+    
+    return True
+
+# Usage in your processing pipeline
+def process_events(events: List[Dict[str, Any]]):
+    """Process events with quality validation"""
+    for event in events:
+        if validate_event_quality(event):
+            # Process high-quality event
+            process_high_quality_event(event)
+        else:
+            # Handle low-quality event
+            handle_low_quality_event(event)
+```
+
+### **2. Error Handling & Resilience**
+```python
+import asyncio
+from typing import Optional
+
+class ResilientHAIngestorClient:
+    def __init__(self, api: HAIngestorAPI, max_retries: int = 3):
+        self.api = api
+        self.max_retries = max_retries
+        self.circuit_breaker_state = 'CLOSED'
+        self.failure_count = 0
+        
+    async def get_health_with_retry(self) -> Optional[Dict[str, Any]]:
+        """Get health status with retry logic"""
+        for attempt in range(self.max_retries):
+            try:
+                if self.circuit_breaker_state == 'OPEN':
+                    # Circuit breaker is open, wait before retry
+                    await asyncio.sleep(30)
+                    self.circuit_breaker_state = 'HALF_OPEN'
+                
+                result = self.api.get_health_status()
+                self.failure_count = 0
+                self.circuit_breaker_state = 'CLOSED'
+                return result
+                
+            except Exception as e:
+                self.failure_count += 1
+                print(f"Health check attempt {attempt + 1} failed: {e}")
+                
+                if self.failure_count >= 5:
+                    self.circuit_breaker_state = 'OPEN'
+                    print("Circuit breaker opened - too many failures")
+                
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+        
+        return None
+
+# Usage
+async def monitor_with_resilience():
+    api = HAIngestorAPI()
+    client = ResilientHAIngestorClient(api)
+    
+    while True:
+        health = await client.get_health_with_retry()
+        if health:
+            print(f"Health: {health['status']}")
+        else:
+            print("Health check failed")
+        
+        await asyncio.sleep(30)
+
+# Run monitoring
+asyncio.run(monitor_with_resilience())
+```
+
+### **3. Configuration Management**
+```python
+import os
+from typing import Dict, Any
+
+class HAIngestorConfig:
+    def __init__(self):
+        self.config = self._load_config()
+    
+    def _load_config(self) -> Dict[str, Any]:
+        """Load configuration from environment variables"""
+        return {
+            'ha_ingestor': {
+                'url': os.getenv('HA_INGESTOR_URL', 'http://localhost:8000'),
+                'mqtt_broker': os.getenv('HA_INGESTOR_MQTT_BROKER', 'localhost'),
+                'mqtt_port': int(os.getenv('HA_INGESTOR_MQTT_PORT', '1883')),
+                'influxdb_url': os.getenv('HA_INGESTOR_INFLUXDB_URL', 'http://localhost:8086'),
+                'influxdb_token': os.getenv('HA_INGESTOR_INFLUXDB_TOKEN'),
+                'influxdb_org': os.getenv('HA_INGESTOR_INFLUXDB_ORG'),
+                'influxdb_bucket': os.getenv('HA_INGESTOR_INFLUXDB_BUCKET', 'ha_events')
+            },
+            'quality': {
+                'min_quality_score': float(os.getenv('MIN_QUALITY_SCORE', '0.8')),
+                'enable_duplicate_detection': os.getenv('ENABLE_DUPLICATE_DETECTION', 'true').lower() == 'true',
+                'validation_timeout': int(os.getenv('VALIDATION_TIMEOUT', '30'))
+            },
+            'monitoring': {
+                'health_check_interval': int(os.getenv('HEALTH_CHECK_INTERVAL', '30')),
+                'metrics_collection': os.getenv('METRICS_COLLECTION', 'true').lower() == 'true',
+                'alert_threshold': float(os.getenv('ALERT_THRESHOLD', '0.9'))
+            }
+        }
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get configuration value using dot notation"""
+        keys = key.split('.')
+        value = self.config
+        
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+        
+        return value
+
+# Usage
+config = HAIngestorConfig()
+
+# Access configuration
+ha_url = config.get('ha_ingestor.url')
+min_quality = config.get('quality.min_quality_score')
+check_interval = config.get('monitoring.health_check_interval')
+
+print(f"HA-Ingestor URL: {ha_url}")
+print(f"Minimum quality score: {min_quality}")
+print(f"Health check interval: {check_interval}s")
+```
+
+## 📋 **Integration Checklist**
+
+### **Pre-Integration Setup**
+- [ ] **HA-Ingestor v0.3.0** deployed and operational
+- [ ] **Health endpoints** responding correctly
+- [ ] **Enhanced features** verified and working
+- [ ] **Data quality** metrics being collected
+- [ ] **Performance monitoring** active
+
+### **Integration Implementation**
+- [ ] **Event processing** pipeline configured
+- [ ] **Quality validation** logic implemented
+- [ ] **Error handling** and resilience added
+- [ ] **Monitoring integration** configured
+- [ ] **Configuration management** implemented
+
+### **Testing & Validation**
+- [ ] **Event quality** validation working
+- [ ] **Error scenarios** handled correctly
+- [ ] **Performance metrics** being collected
+- [ ] **Health monitoring** operational
+- [ ] **Integration tests** passing
+
+### **Production Deployment**
+- [ ] **Configuration** environment-specific
+- [ ] **Error handling** production-ready
+- [ ] **Monitoring** alerts configured
+- [ ] **Documentation** updated
+- [ ] **Team training** completed
+
+## 🎯 **Next Steps**
+
+### **Immediate Actions**
+1. **Review integration methods** and choose appropriate approach
+2. **Implement basic integration** using provided examples
+3. **Test with HA-Ingestor v0.3.0** to verify functionality
+4. **Configure monitoring** and alerting
+
+### **Short-term (1-2 weeks)**
+1. **Enhance error handling** and resilience
+2. **Implement advanced monitoring** and dashboards
+3. **Optimize performance** based on metrics
+4. **Document integration** patterns and best practices
+
+### **Long-term (1-3 months)**
+1. **Scale integration** to handle increased load
+2. **Implement advanced analytics** using enhanced data
+3. **Add machine learning** capabilities
+4. **Create comprehensive** monitoring and alerting
 
 ---
 
-## 🎉 **Getting Started**
+## **Support & Resources**
 
-1. **Verify HA-Ingestor is running**: Check health endpoint
-2. **Choose integration method**: API, InfluxDB, or Docker Compose
-3. **Configure environment**: Set required environment variables
-4. **Test integration**: Use provided examples
-5. **Monitor performance**: Set up health checks and metrics
-6. **Scale as needed**: Monitor usage and adjust configuration
+### **Documentation**
+- **README.md**: Complete project documentation
+- **CHANGELOG.md**: Version history and changes
+- **API Reference**: Endpoint documentation
+- **Configuration Guide**: Setup and tuning
 
-HA-Ingestor is now your centralized, production-ready data ingestion service for Home Assistant integration across all child projects!
+### **Examples & Code**
+- **Integration examples** in this guide
+- **Sample applications** in the examples directory
+- **Test cases** for validation and testing
+- **Configuration templates** for common scenarios
+
+### **Community & Support**
+- **GitHub Issues**: Bug reports and feature requests
+- **Discussions**: Community support and questions
+- **Documentation**: Comprehensive guides and references
+- **Examples**: Real-world integration examples
+
+---
+
+**HA-Ingestor v0.3.0 provides a robust foundation for building advanced Home Assistant analytics and automation systems. By following this integration guide, you can leverage the enhanced data collection, quality validation, and monitoring capabilities to create powerful, production-ready applications.**
+
+**For additional support or questions, please refer to the documentation or create an issue on GitHub.**

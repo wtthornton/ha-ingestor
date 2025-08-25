@@ -16,11 +16,11 @@ async def process_event(self, event: BaseEvent) -> Optional[InfluxDBPoint]:
         # Apply filters
         if not await self._apply_filters(event):
             return None
-            
+
         # Apply transformations
         point = await self._apply_transformations(event)
         return point
-        
+
     except Exception as e:
         logger.error(f"Error processing event {event.entity_id}: {e}")
         return None
@@ -47,18 +47,18 @@ class EventPipeline:
     def __init__(self, filters: List[BaseFilter], transformers: List[BaseTransformer]):
         self.filters = filters
         self.transformers = transformers
-        
+
     async def process_event(self, event: BaseEvent) -> Optional[InfluxDBPoint]:
         # Stage 1: Apply filters
         for filter_instance in self.filters:
             if not await filter_instance.filter(event):
                 return None
-                
+
         # Stage 2: Apply transformations
         current_data = event
         for transformer in self.transformers:
             current_data = await transformer.transform(current_data)
-            
+
         return current_data
 ```
 
@@ -116,12 +116,12 @@ from ha_ingestor.models.events import BaseEvent
 
 class DomainFilter(BaseFilter):
     """Filter events based on entity domain."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.include_domains = config.get("include_domains", [])
         self.exclude_domains = config.get("exclude_domains", [])
-        
+
     async def filter(self, event: BaseEvent) -> bool:
         """Filter logic implementation."""
         # Implementation here
@@ -154,7 +154,7 @@ from .time_filter import TimeFilter
 
 __all__ = [
     "BaseFilter",
-    "DomainFilter", 
+    "DomainFilter",
     "EntityFilter",
     "AttributeFilter",
     "TimeFilter"
@@ -180,17 +180,17 @@ from typing import List, Optional
 
 class FilterConfig(BaseModel):
     """Configuration for event filtering."""
-    
+
     enabled: bool = Field(default=True, description="Whether the filter is enabled")
     filter_type: str = Field(..., description="Type of filter to use")
     priority: int = Field(default=100, ge=0, le=1000, description="Filter priority")
-    
+
     class Config:
         extra = "forbid"  # Reject unknown fields
 
 class PipelineConfig(BaseModel):
     """Configuration for the event processing pipeline."""
-    
+
     filters: List[FilterConfig] = Field(default_factory=list)
     transformers: List[Dict[str, Any]] = Field(default_factory=list)
     batch_size: int = Field(default=100, gt=0, description="Batch size for processing")
@@ -256,15 +256,15 @@ class EventProcessor:
     def __init__(self, filters: List[BaseFilter], transformers: List[BaseTransformer]):
         self.filters = filters
         self.transformers = transformers
-        
+
     async def process_event(self, event: BaseEvent) -> Optional[InfluxDBPoint]:
         """Process a single event through the pipeline."""
         pass
-        
+
     def get_processing_stats(self) -> Dict[str, Union[int, float]]:
         """Get current processing statistics."""
         pass
-        
+
     async def shutdown(self, timeout: Optional[float] = None) -> None:
         """Shutdown the processor gracefully."""
         pass
@@ -285,28 +285,28 @@ class EventProcessor:
 class EventProcessor:
     """
     Processes Home Assistant events through a configurable pipeline.
-    
+
     This class implements the main event processing logic, applying filters
     and transformations before writing to InfluxDB.
-    
+
     Attributes:
         filters: List of filter instances to apply to events
         transformers: List of transformer instances to apply to events
         processed_count: Total number of events processed
         filtered_count: Total number of events filtered out
     """
-    
+
     async def process_event(self, event: BaseEvent) -> Optional[InfluxDBPoint]:
         """
         Process a single event through the pipeline.
-        
+
         Args:
             event: The Home Assistant event to process
-            
+
         Returns:
             InfluxDBPoint if event passes all filters and transformations,
             None if event is filtered out or processing fails
-            
+
         Raises:
             ProcessingError: If event processing fails
         """
@@ -370,10 +370,10 @@ def mock_filter() -> BaseFilter:
         def __init__(self, should_pass: bool = True):
             super().__init__({})
             self.should_pass = should_pass
-            
+
         async def filter(self, event: BaseEvent) -> bool:
             return self.should_pass
-            
+
     return MockFilter()
 
 # Usage in tests
@@ -403,12 +403,12 @@ async def test_domain_filter_include():
     """Test domain filter with include domains."""
     config = {"include_domains": ["sensor", "switch"]}
     filter_instance = DomainFilter(config)
-    
+
     # Test included domain
     event = BaseEvent(entity_id="sensor.temperature", domain="sensor")
     result = await filter_instance.filter(event)
     assert result is True
-    
+
     # Test excluded domain
     event = BaseEvent(entity_id="light.living_room", domain="light")
     result = await filter_instance.filter(event)
@@ -497,7 +497,7 @@ class EventProcessor:
     def __init__(self, name: str):
         self.name = name
         self.logger = logger.bind(processor_name=name)
-        
+
     async def process_event(self, event: BaseEvent) -> None:
         self.logger.info(
             "Processing event",
@@ -505,7 +505,7 @@ class EventProcessor:
             domain=event.domain,
             event_type="ingestion"
         )
-        
+
         try:
             # Process event
             result = await self._process(event)
@@ -571,19 +571,19 @@ class BatchProcessor:
         self.batch_timeout = batch_timeout
         self.current_batch: List[Any] = []
         self.last_batch_time = datetime.utcnow()
-        
+
     async def add_item(self, item: Any) -> bool:
         """Add item to batch. Returns True if batch is ready."""
         self.current_batch.append(item)
-        
+
         # Check if batch is ready
         batch_ready = (
             len(self.current_batch) >= self.batch_size or
             (datetime.utcnow() - self.last_batch_time).total_seconds() >= self.batch_timeout
         )
-        
+
         return batch_ready
-        
+
     def get_batch(self) -> List[Any]:
         """Get current batch and reset."""
         batch = self.current_batch.copy()
@@ -608,22 +608,22 @@ class ConnectionPool:
         self.max_connections = max_connections
         self.available_connections: List[Any] = []
         self.in_use_connections: Set[Any] = set()
-        
+
     async def get_connection(self) -> Any:
         """Get an available connection from the pool."""
         if self.available_connections:
             connection = self.available_connections.pop()
             self.in_use_connections.add(connection)
             return connection
-            
+
         if len(self.in_use_connections) < self.max_connections:
             connection = await self._create_connection()
             self.in_use_connections.add(connection)
             return connection
-            
+
         # Wait for a connection to become available
         return await self._wait_for_connection()
-        
+
     def return_connection(self, connection: Any) -> None:
         """Return a connection to the pool."""
         self.in_use_connections.discard(connection)

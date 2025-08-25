@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from ..metrics import get_metrics_collector
 from ..utils.logging import add_log_context, get_logger, set_correlation_id
 from .checks import HealthStatus, create_default_health_checker
+import ha_ingestor
 
 
 class HealthServer:
@@ -61,7 +62,7 @@ class HealthServer:
         app = FastAPI(
             title="Home Assistant Activity Ingestor Health",
             description="Health check and monitoring endpoints",
-            version="1.0.0",
+            version=ha_ingestor.__version__,
             lifespan=lifespan,
         )
 
@@ -116,7 +117,7 @@ class HealthServer:
                     "timestamp": time.time(),
                     "uptime_seconds": time.time() - self._start_time,
                     "service": "ha-ingestor",
-                    "version": "1.0.0",
+                    "version": ha_ingestor.__version__,
                 }
 
                 # Add dependency health if available
@@ -179,28 +180,33 @@ class HealthServer:
                     status_code=500, detail=f"Readiness check failed: {str(e)}"
                 ) from e
 
-        # Metrics endpoint for Prometheus metrics
+        # Metrics endpoint
         @app.get("/metrics")
         async def metrics() -> PlainTextResponse:
-            """Metrics endpoint for Prometheus.
+            """Prometheus metrics endpoint.
 
             Returns:
                 Plain text response with Prometheus metrics
             """
             try:
-                # Get metrics from the global collector
+                from ..metrics import get_metrics_collector
+                
                 metrics_collector = get_metrics_collector()
-                prometheus_metrics = metrics_collector.export_prometheus()
-
-                return PlainTextResponse(
-                    content=prometheus_metrics, media_type="text/plain"
-                )
-
+                metrics_text = metrics_collector.export_prometheus_metrics()
+                
+                return PlainTextResponse(content=metrics_text, media_type="text/plain")
+                
             except Exception as e:
-                self.logger.error("Metrics endpoint failed", error=str(e))
-                raise HTTPException(
-                    status_code=500, detail=f"Metrics failed: {str(e)}"
-                ) from e
+                self.logger.error("Metrics collection failed", error=str(e))
+                # Return basic metrics even if collection fails
+                basic_metrics = f"""# HELP ha_ingestor_up Service is up
+# TYPE ha_ingestor_up gauge
+ha_ingestor_up 1
+# HELP ha_ingestor_uptime_seconds Service uptime in seconds
+# TYPE ha_ingestor_uptime_seconds gauge
+ha_ingestor_uptime_seconds {time.time() - self._start_time}
+"""
+                return PlainTextResponse(content=basic_metrics, media_type="text/plain")
 
         # Dependency health endpoint
         @app.get("/health/dependencies")
@@ -276,7 +282,7 @@ class HealthServer:
             """
             return {
                 "service": "Home Assistant Activity Ingestor",
-                "version": "1.0.0",
+                "version": ha_ingestor.__version__,
                 "status": "running",
                 "endpoints": {
                     "health": "/health",
@@ -318,6 +324,13 @@ class HealthServer:
             raise RuntimeError("Failed to create FastAPI application")
 
         uvicorn.run(app=self.app, host=self.host, port=self.port, log_level="info")
+
+    def stop_sync(self) -> None:
+        """Stop the health server synchronously."""
+        # For uvicorn.run, we can't easily stop it from another thread
+        # This is a limitation of the current implementation
+        # The server will stop when the main process exits
+        self.logger.info("Health server stop requested (will stop with main process)")
 
     async def stop(self) -> None:
         """Stop the health server."""

@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Union
+from typing import Any
 
 
 class DataPattern(Enum):
@@ -195,7 +195,9 @@ class HomeAssistantDataGenerator:
 
         # Generate events based on pattern
         pattern_generator = self.pattern_generators[self.config.pattern]
-        event_times = list(pattern_generator(start_time))  # Convert Iterator to list for indexing
+        event_times = list(
+            pattern_generator(start_time)
+        )  # Convert Iterator to list for indexing
 
         # Generate events for each timestamp
         for i, event_time in enumerate(event_times[: self.config.total_events]):
@@ -396,27 +398,27 @@ class HomeAssistantDataGenerator:
 
         # Generate realistic sensor values
         if sensor_type == "temperature":
-            value: Union[float, str] = round(random.uniform(15.0, 30.0), 1)
+            value: float | str = round(random.uniform(15.0, 30.0), 1)
             unit = "°C"
             device_class = "temperature"
         elif sensor_type == "humidity":
-            value: Union[float, str] = round(random.uniform(30.0, 80.0), 1)
+            value: float | str = round(random.uniform(30.0, 80.0), 1)
             unit = "%"
             device_class = "humidity"
         elif sensor_type == "pressure":
-            value: Union[float, str] = round(random.uniform(990.0, 1030.0), 1)
+            value: float | str = round(random.uniform(990.0, 1030.0), 1)
             unit = "hPa"
             device_class = "pressure"
         elif sensor_type == "battery":
-            value: Union[float, str] = random.randint(0, 100)
+            value: float | str = random.randint(0, 100)
             unit = "%"
             device_class = "battery"
         elif sensor_type in ["motion", "door", "window"]:
-            value: Union[float, str] = random.choice(["on", "off"])
+            value: float | str = random.choice(["on", "off"])
             unit = None
             device_class = sensor_type
         else:
-            value: Union[float, str] = round(random.uniform(0.0, 100.0), 2)
+            value: float | str = round(random.uniform(0.0, 100.0), 2)
             unit = "units"
             device_class = "measurement"
 
@@ -468,7 +470,7 @@ class HomeAssistantDataGenerator:
         service = random.choice(services[domain])
 
         # Generate service data
-        service_data: dict[str, Union[str, int, None]] = {}
+        service_data: dict[str, str | int | None] = {}
         target_entity = None
 
         if domain in self.entities:
@@ -615,7 +617,7 @@ class HomeAssistantDataGenerator:
         Returns:
             Dataset statistics
         """
-        stats: dict[str, Union[int, dict[str, int]]] = {
+        stats: dict[str, int | dict[str, int]] = {
             "total_events": len(events),
             "event_types": {},
             "domains": {},
@@ -643,9 +645,7 @@ class HomeAssistantDataGenerator:
             event_type = event.get("type", "unknown")
             event_types_dict = stats["event_types"]
             if isinstance(event_types_dict, dict):
-                event_types_dict[event_type] = (
-                    event_types_dict.get(event_type, 0) + 1
-                )
+                event_types_dict[event_type] = event_types_dict.get(event_type, 0) + 1
 
             domain = event.get("domain", "unknown")
             domains_dict = stats["domains"]

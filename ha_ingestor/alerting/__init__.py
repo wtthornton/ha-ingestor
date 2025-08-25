@@ -11,6 +11,13 @@ from .notification_system import (
     SlackNotifier,
     WebhookNotifier,
 )
+from .performance_alerts import (
+    PerformanceAlertEngine,
+    PerformanceAlertInstance,
+    PerformanceAlertRule,
+    get_performance_alert_engine,
+    set_performance_alert_engine,
+)
 from .rules_engine import AlertRule, AlertRulesEngine, AlertSeverity, AlertStatus
 from .threshold_engine import ThresholdCondition, ThresholdEngine, ThresholdType
 
@@ -38,4 +45,10 @@ __all__ = [
     "AlertAggregator",
     # Dashboard
     "AlertDashboard",
+    # Performance alerting
+    "PerformanceAlertEngine",
+    "PerformanceAlertInstance",
+    "PerformanceAlertRule",
+    "get_performance_alert_engine",
+    "set_performance_alert_engine",
 ]

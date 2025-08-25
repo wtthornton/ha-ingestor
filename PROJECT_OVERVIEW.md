@@ -197,7 +197,7 @@ filters:
     enabled: true
     include_domains: ["sensor", "binary_sensor", "switch"]
     exclude_domains: ["device_tracker"]
-  
+
   entity_filter:
     enabled: true
     include_entities: ["sensor.temperature_living_room"]

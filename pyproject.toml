@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ha-ingestor"
-version = "0.1.0"
+version = "0.3.0"
 description = "Production-grade Python service for ingesting Home Assistant activity to InfluxDB"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
@@ -31,6 +31,8 @@ aiohttp = "^3.9.0"
 tenacity = "^8.2.0"
 psutil = "^7.0.0"
 aiofiles = "^24.1.0"
+fastapi = "^0.109.0"
+uvicorn = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

@@ -3,7 +3,7 @@
 import re
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -43,8 +43,8 @@ class AlertRule:
     cooldown_minutes: int = 15
     notification_channels: list[str] = field(default_factory=list)
     tags: dict[str, str] = field(default_factory=dict)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self) -> None:
         """Validate alert rule configuration."""
@@ -63,7 +63,7 @@ class AlertRule:
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert alert rule to dictionary."""
@@ -116,18 +116,24 @@ class AlertInstance:
     def acknowledge(self) -> None:
         """Mark alert as acknowledged."""
         self.status = AlertStatus.ACKNOWLEDGED
-        self.acknowledged_at = datetime.now(timezone.utc)
+        self.acknowledged_at = datetime.now(UTC)
 
     def resolve(self) -> None:
         """Mark alert as resolved."""
         self.status = AlertStatus.RESOLVED
-        self.resolved_at = datetime.now(timezone.utc)
+        self.resolved_at = datetime.now(UTC)
 
     def is_expired(self) -> bool:
         """Check if alert has expired."""
         if self.expires_at is None:
             return False
-        return datetime.now(timezone.utc) > self.expires_at
+        # Handle both timezone-aware and timezone-naive datetimes
+        now = datetime.now(UTC)
+        expires_at = self.expires_at
+        if expires_at.tzinfo is None:
+            # If expires_at is timezone-naive, assume UTC
+            expires_at = expires_at.replace(tzinfo=UTC)
+        return now > expires_at
 
     def to_dict(self) -> dict[str, Any]:
         """Convert alert instance to dictionary."""
@@ -157,7 +163,7 @@ class AlertRulesEngine:
         self.rules: dict[str, AlertRule] = {}
         self.active_alerts: dict[str, AlertInstance] = {}
         self.alert_history: list[AlertInstance] = []
-        self.last_check_time = datetime.now(timezone.utc)
+        self.last_check_time = datetime.now(UTC)
 
         # Performance tracking
         self.evaluation_count = 0
@@ -297,7 +303,7 @@ class AlertRulesEngine:
 
         self.evaluation_count += 1
         self.last_evaluation_time = time.time() - start_time
-        self.last_check_time = datetime.now(timezone.utc)
+        self.last_check_time = datetime.now(UTC)
 
         return triggered_alerts
 
@@ -309,14 +315,14 @@ class AlertRulesEngine:
         last_alert = self.active_alerts[rule.name]
         cooldown_delta = timedelta(minutes=rule.cooldown_minutes)
 
-        return datetime.now(timezone.utc) - last_alert.triggered_at > cooldown_delta
+        return datetime.now(UTC) - last_alert.triggered_at > cooldown_delta
 
     def _create_alert_instance(
         self, rule: AlertRule, data: dict[str, Any]
     ) -> AlertInstance:
         """Create a new alert instance."""
         # Create expiration time
-        expires_at = datetime.now(timezone.utc) + timedelta(
+        expires_at = datetime.now(UTC) + timedelta(
             minutes=rule.time_window_minutes
         )
 
@@ -324,7 +330,7 @@ class AlertRulesEngine:
         context = {
             "data": data,
             "rule": rule.to_dict(),
-            "evaluation_time": datetime.now(timezone.utc).isoformat(),
+            "evaluation_time": datetime.now(UTC).isoformat(),
         }
 
         # Create message
@@ -337,7 +343,7 @@ class AlertRulesEngine:
             severity=rule.severity,
             status=AlertStatus.ACTIVE,
             message=message,
-            triggered_at=datetime.now(timezone.utc),
+            triggered_at=datetime.now(UTC),
             expires_at=expires_at,
             context=context,
             tags=rule.tags.copy(),

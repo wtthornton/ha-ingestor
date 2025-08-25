@@ -7,11 +7,12 @@ performance monitoring during migration.
 
 import asyncio
 import json
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
+
+import structlog
 
 from ..influxdb.retention_policies import RetentionPolicyManager
 from ..models.optimized_schema import SchemaOptimizer
@@ -107,7 +108,7 @@ class SchemaMigrator:
     def __init__(
         self,
         config: MigrationConfig | None = None,
-        logger: logging.Logger | None = None,
+        logger: structlog.BoundLogger | None = None,
     ):
         """Initialize the schema migrator.
 
@@ -116,7 +117,7 @@ class SchemaMigrator:
             logger: Logger instance
         """
         self.config = config or MigrationConfig()
-        self.logger = logger or logging.getLogger(__name__)
+        self.logger = logger or structlog.get_logger(__name__)
 
         # Migration state
         self.current_phase = MigrationPhase.PREPARATION
@@ -125,7 +126,7 @@ class SchemaMigrator:
 
         # Components
         self.schema_optimizer = SchemaOptimizer()
-        self.schema_transformer = SchemaTransformer("migration_transformer")
+        self.schema_transformer = SchemaTransformer("migration_transformer", {})
         self.retention_manager = RetentionPolicyManager()
 
         # Migration tracking
@@ -631,7 +632,7 @@ class SchemaMigrator:
 
     def _get_error_summary(self) -> dict[str, Any]:
         """Get summary of migration errors."""
-        error_types = {}
+        error_types: dict[str, int] = {}
         for error in self.error_log:
             error_type = error["error_type"]
             error_types[error_type] = error_types.get(error_type, 0) + 1

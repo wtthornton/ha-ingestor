@@ -11,6 +11,13 @@ from .performance_monitor import (
     get_performance_monitor,
     set_performance_monitor,
 )
+from .load_testing import (
+    LoadTester,
+    LoadTestResult,
+    test_mqtt_ingestion_performance,
+    test_websocket_ingestion_performance,
+    test_influxdb_write_performance,
+)
 
 __all__ = [
     "ConnectionMonitor",
@@ -28,4 +35,9 @@ __all__ = [
     "BusinessMetrics",
     "get_performance_monitor",
     "set_performance_monitor",
+    "LoadTester",
+    "LoadTestResult",
+    "test_mqtt_ingestion_performance",
+    "test_websocket_ingestion_performance",
+    "test_influxdb_write_performance",
 ]

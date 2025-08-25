@@ -1,12 +1,10 @@
 """Tests for flexible data export system."""
 
-import pytest
 import json
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
-from typing import Any, Dict, List
 
-from ha_ingestor.models.events import Event
+import pytest
+
 from ha_ingestor.models.mqtt_event import MQTTEvent
 from ha_ingestor.models.websocket_event import WebSocketEvent
 
@@ -30,14 +28,14 @@ class TestDataExportAPI:
                         "state": "22.5",
                         "attributes": {
                             "unit_of_measurement": "°C",
-                            "friendly_name": "Living Room Temperature"
-                        }
+                            "friendly_name": "Living Room Temperature",
+                        },
                     }
                 ],
                 "total_count": 1,
                 "page": 1,
-                "per_page": 100
-            }
+                "per_page": 100,
+            },
         }
 
         # Verify response structure
@@ -71,7 +69,7 @@ class TestDataExportAPI:
                         "model": "B001",
                         "sw_version": "1.0.0",
                         "area_id": "area_001",
-                        "area_name": "Living Room"
+                        "area_name": "Living Room",
                     }
                 ],
                 "integrations": [
@@ -79,7 +77,7 @@ class TestDataExportAPI:
                         "domain": "hue",
                         "name": "Philips Hue",
                         "version": "2.0.0",
-                        "config_entry_id": "config_001"
+                        "config_entry_id": "config_001",
                     }
                 ],
                 "areas": [
@@ -87,10 +85,10 @@ class TestDataExportAPI:
                         "area_id": "area_001",
                         "name": "Living Room",
                         "parent_id": None,
-                        "level": 1
+                        "level": 1,
                     }
-                ]
-            }
+                ],
+            },
         }
 
         # Verify response structure
@@ -124,21 +122,17 @@ class TestDataExportAPI:
                         {
                             "error_type": "missing_required_field",
                             "count": 10,
-                            "percentage": 1.0
+                            "percentage": 1.0,
                         },
-                        {
-                            "error_type": "invalid_format",
-                            "count": 5,
-                            "percentage": 0.5
-                        }
-                    ]
+                        {"error_type": "invalid_format", "count": 5, "percentage": 0.5},
+                    ],
                 },
                 "enrichment_metrics": {
                     "enriched_events": 950,
                     "enrichment_success_rate": 95.0,
-                    "average_enrichment_time_ms": 45.2
-                }
-            }
+                    "average_enrichment_time_ms": 45.2,
+                },
+            },
         }
 
         # Verify response structure
@@ -171,8 +165,8 @@ class TestDataFormatting:
             event_type="state_changed",
             attributes={
                 "unit_of_measurement": "°C",
-                "friendly_name": "Living Room Temperature"
-            }
+                "friendly_name": "Living Room Temperature",
+            },
         )
 
         # Convert to export format
@@ -185,7 +179,7 @@ class TestDataFormatting:
             "state": event.state,
             "attributes": event.attributes,
             "export_format": "json",
-            "exported_at": datetime.now().isoformat()
+            "exported_at": datetime.now().isoformat(),
         }
 
         # Verify export format
@@ -218,7 +212,7 @@ class TestDataFormatting:
                 entity_id="temp1",
                 timestamp=datetime.now(),
                 event_type="state_changed",
-                attributes={"unit": "°C"}
+                attributes={"unit": "°C"},
             ),
             MQTTEvent(
                 topic="homeassistant/sensor/temp2/state",
@@ -228,12 +222,19 @@ class TestDataFormatting:
                 entity_id="temp2",
                 timestamp=datetime.now(),
                 event_type="state_changed",
-                attributes={"unit": "°C"}
-            )
+                attributes={"unit": "°C"},
+            ),
         ]
 
         # Convert to CSV format
-        csv_headers = ["timestamp", "domain", "entity_id", "event_type", "state", "unit"]
+        csv_headers = [
+            "timestamp",
+            "domain",
+            "entity_id",
+            "event_type",
+            "state",
+            "unit",
+        ]
         csv_rows = []
 
         for event in events:
@@ -243,7 +244,7 @@ class TestDataFormatting:
                 event.entity_id,
                 event.event_type,
                 event.state,
-                event.attributes.get("unit", "")
+                event.attributes.get("unit", ""),
             ]
             csv_rows.append(row)
 
@@ -267,13 +268,10 @@ class TestDataFormatting:
             data={
                 "entity_id": "automation.morning_routine",
                 "trigger": "time",
-                "trigger_time": "07:00:00"
+                "trigger_time": "07:00:00",
             },
             timestamp=datetime.now(),
-            attributes={
-                "trigger": "time",
-                "trigger_time": "07:00:00"
-            }
+            attributes={"trigger": "time", "trigger_time": "07:00:00"},
         )
 
         # Convert to XML format structure
@@ -286,8 +284,8 @@ class TestDataFormatting:
                 "event_type": event.event_type,
                 "attributes": {
                     "trigger": event.attributes["trigger"],
-                    "trigger_time": event.attributes["trigger_time"]
-                }
+                    "trigger_time": event.attributes["trigger_time"],
+                },
             }
         }
 
@@ -316,7 +314,7 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="temp",
                 timestamp=datetime.now(),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/switch/light/state",
@@ -325,7 +323,7 @@ class TestDataFiltering:
                 domain="switch",
                 entity_id="light",
                 timestamp=datetime.now(),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/binary_sensor/motion/state",
@@ -334,14 +332,16 @@ class TestDataFiltering:
                 domain="binary_sensor",
                 entity_id="motion",
                 timestamp=datetime.now(),
-                event_type="state_changed"
-            )
+                event_type="state_changed",
+            ),
         ]
 
         # Filter by sensor domain
         sensor_events = [event for event in events if event.domain == "sensor"]
         switch_events = [event for event in events if event.domain == "switch"]
-        binary_sensor_events = [event for event in events if event.domain == "binary_sensor"]
+        binary_sensor_events = [
+            event for event in events if event.domain == "binary_sensor"
+        ]
 
         # Verify filtering results
         assert len(sensor_events) == 1
@@ -363,7 +363,7 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="temp1",
                 timestamp=base_time - timedelta(hours=2),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/sensor/temp2/state",
@@ -372,7 +372,7 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="temp2",
                 timestamp=base_time - timedelta(hours=1),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/sensor/temp3/state",
@@ -381,8 +381,8 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="temp3",
                 timestamp=base_time,
-                event_type="state_changed"
-            )
+                event_type="state_changed",
+            ),
         ]
 
         # Filter by timestamp range (last 1.5 hours)
@@ -405,7 +405,7 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="living_room_temp",
                 timestamp=datetime.now(),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/sensor/bedroom_temp/state",
@@ -414,7 +414,7 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="bedroom_temp",
                 timestamp=datetime.now(),
-                event_type="state_changed"
+                event_type="state_changed",
             ),
             MQTTEvent(
                 topic="homeassistant/sensor/kitchen_temp/state",
@@ -423,13 +423,15 @@ class TestDataFiltering:
                 domain="sensor",
                 entity_id="kitchen_temp",
                 timestamp=datetime.now(),
-                event_type="state_changed"
-            )
+                event_type="state_changed",
+            ),
         ]
 
         # Filter by entity ID pattern (temperature sensors)
         temp_events = [event for event in events if "temp" in event.entity_id]
-        living_room_events = [event for event in events if "living_room" in event.entity_id]
+        living_room_events = [
+            event for event in events if "living_room" in event.entity_id
+        ]
 
         # Verify entity ID filtering
         assert len(temp_events) == 3
@@ -445,28 +447,34 @@ class TestDataFiltering:
                 entity_id="sensor.temperature",
                 domain="sensor",
                 data={"entity_id": "sensor.temperature"},
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             ),
             WebSocketEvent(
                 event_type="automation_triggered",
                 entity_id="automation.morning_routine",
                 domain="automation",
                 data={"entity_id": "automation.morning_routine"},
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             ),
             WebSocketEvent(
                 event_type="service_called",
                 entity_id="switch.light",
                 domain="switch",
                 data={"entity_id": "switch.light"},
-                timestamp=datetime.now()
-            )
+                timestamp=datetime.now(),
+            ),
         ]
 
         # Filter by event type
-        state_changed_events = [event for event in events if event.event_type == "state_changed"]
-        automation_events = [event for event in events if event.event_type == "automation_triggered"]
-        service_events = [event for event in events if event.event_type == "service_called"]
+        state_changed_events = [
+            event for event in events if event.event_type == "state_changed"
+        ]
+        automation_events = [
+            event for event in events if event.event_type == "automation_triggered"
+        ]
+        service_events = [
+            event for event in events if event.event_type == "service_called"
+        ]
 
         # Verify event type filtering
         assert len(state_changed_events) == 1
@@ -492,15 +500,15 @@ class TestDataPagination:
                 domain="sensor",
                 entity_id=f"temp_{i}",
                 timestamp=datetime.now() + timedelta(minutes=i),
-                event_type="state_changed"
+                event_type="state_changed",
             )
             events.append(event)
 
         # Test pagination parameters
         page_size = 10
         page_1 = events[:page_size]
-        page_2 = events[page_size:page_size * 2]
-        page_3 = events[page_size * 2:page_size * 3]
+        page_2 = events[page_size : page_size * 2]
+        page_3 = events[page_size * 2 : page_size * 3]
 
         # Verify pagination
         assert len(page_1) == 10
@@ -524,8 +532,8 @@ class TestDataPagination:
                     "has_next": True,
                     "has_prev": False,
                     "next_page": 2,
-                    "prev_page": None
-                }
+                    "prev_page": None,
+                },
             }
         }
 
@@ -555,15 +563,15 @@ class TestDataPagination:
                 domain="sensor",
                 entity_id=f"temp_{i}",
                 timestamp=base_time + timedelta(seconds=i),
-                event_type="state_changed"
+                event_type="state_changed",
             )
             events.append(event)
 
         # Test cursor-based pagination
         cursor_size = 20
         cursor_1 = events[:cursor_size]
-        cursor_2 = events[cursor_size:cursor_size * 2]
-        cursor_3 = events[cursor_size * 2:cursor_size * 3]
+        cursor_2 = events[cursor_size : cursor_size * 2]
+        cursor_3 = events[cursor_size * 2 : cursor_size * 3]
 
         # Verify cursor pagination
         assert len(cursor_1) == 20
@@ -589,11 +597,11 @@ class TestDataIntegration:
                     "domain": "sensor",
                     "entity_id": "temperature",
                     "event_type": "state_changed",
-                    "state": "22.5"
+                    "state": "22.5",
                 }
             ],
             "delivery_status": "pending",
-            "retry_count": 0
+            "retry_count": 0,
         }
 
         # Verify webhook payload structure
@@ -615,10 +623,10 @@ class TestDataIntegration:
                 "timestamp": "2024-01-01T12:00:00Z",
                 "event_count": 100,
                 "format": "json",
-                "compression": "gzip"
+                "compression": "gzip",
             },
             "qos": 1,
-            "retain": False
+            "retain": False,
         }
 
         # Verify MQTT payload structure
@@ -640,7 +648,7 @@ class TestDataIntegration:
             "destination": "/exports/events.json.gz",
             "schedule": "daily",
             "retention_days": 30,
-            "max_file_size_mb": 100
+            "max_file_size_mb": 100,
         }
 
         # Verify file export configuration
@@ -671,13 +679,15 @@ class TestExportPerformance:
                 domain="sensor",
                 entity_id=f"temp_{i}",
                 timestamp=datetime.now() + timedelta(seconds=i),
-                event_type="state_changed"
+                event_type="state_changed",
             )
             events.append(event)
 
         # Test bulk export processing
         batch_size = 1000
-        batches = [events[i:i + batch_size] for i in range(0, len(events), batch_size)]
+        batches = [
+            events[i : i + batch_size] for i in range(0, len(events), batch_size)
+        ]
 
         # Verify batch processing
         assert len(batches) == 10
@@ -695,7 +705,7 @@ class TestExportPerformance:
             "event_count": 1000,
             "events_per_second": 200,
             "memory_usage_mb": 45.2,
-            "cpu_usage_percent": 25.5
+            "cpu_usage_percent": 25.5,
         }
 
         # Verify export metrics
@@ -718,7 +728,7 @@ class TestExportPerformance:
                 "export_id": f"export_{i:03d}",
                 "format": "json",
                 "priority": "high" if i % 3 == 0 else "normal",
-                "status": "queued"
+                "status": "queued",
             }
             for i in range(10)
         ]
@@ -726,7 +736,9 @@ class TestExportPerformance:
         # Verify concurrent export handling
         assert len(concurrent_exports) == 10
         high_priority = [exp for exp in concurrent_exports if exp["priority"] == "high"]
-        normal_priority = [exp for exp in concurrent_exports if exp["priority"] == "normal"]
+        normal_priority = [
+            exp for exp in concurrent_exports if exp["priority"] == "normal"
+        ]
         assert len(high_priority) == 4  # Every 3rd export is high priority
         assert len(normal_priority) == 6
 
@@ -743,7 +755,7 @@ class TestExportSecurity:
             "authentication": "required",
             "auth_type": "bearer_token",
             "permissions": ["read:events"],
-            "rate_limit": "1000/hour"
+            "rate_limit": "1000/hour",
         }
 
         # Verify authentication requirements
@@ -764,7 +776,7 @@ class TestExportSecurity:
             "key_derivation": "PBKDF2",
             "key_size": 256,
             "iv_size": 12,
-            "tag_size": 16
+            "tag_size": 16,
         }
 
         # Verify encryption configuration
@@ -784,16 +796,9 @@ class TestExportSecurity:
         access_control = {
             "user_id": "user_001",
             "role": "analyst",
-            "permissions": [
-                "read:events",
-                "read:metadata",
-                "export:events"
-            ],
-            "restrictions": [
-                "no_delete_access",
-                "no_config_access"
-            ],
-            "data_scope": "department_only"
+            "permissions": ["read:events", "read:metadata", "export:events"],
+            "restrictions": ["no_delete_access", "no_config_access"],
+            "data_scope": "department_only",
         }
 
         # Verify access control

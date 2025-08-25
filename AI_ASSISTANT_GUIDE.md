@@ -23,11 +23,11 @@ from ha_ingestor.models.events import BaseEvent
 
 class CustomFilter(BaseFilter):
     """AI ASSISTANT CONTEXT: Custom filter for specific use case."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         # Initialize filter-specific configuration
-        
+
     async def filter(self, event: BaseEvent) -> bool:
         """Filter logic goes here."""
         # Implement your filtering logic
@@ -43,11 +43,11 @@ from ha_ingestor.models.influxdb_point import InfluxDBPoint
 
 class CustomTransformer(BaseTransformer):
     """AI ASSISTANT CONTEXT: Custom transformer for data modification."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         # Initialize transformer-specific configuration
-        
+
     async def transform(self, event: BaseEvent) -> InfluxDBPoint:
         """Transform event to InfluxDB point."""
         # Implement your transformation logic
@@ -67,12 +67,12 @@ from pydantic import BaseModel, Field
 
 class CustomEvent(BaseModel):
     """AI ASSISTANT CONTEXT: Custom event model."""
-    
+
     entity_id: str = Field(..., description="Entity identifier")
     value: Any = Field(..., description="Event value")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     attributes: Dict[str, Any] = Field(default_factory=dict)
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()
@@ -110,7 +110,7 @@ from typing import Dict, Any
 
 class CustomHealthCheck(HealthCheck):
     """AI ASSISTANT CONTEXT: Custom health check for service monitoring."""
-    
+
     async def check(self) -> Dict[str, Any]:
         """Perform health check."""
         try:
@@ -167,7 +167,7 @@ class Settings(BaseSettings):
         default="http://localhost:8080",
         description="Custom service URL"
     )
-    
+
     class Config:
         env_file = ".env"
 ```
@@ -185,10 +185,10 @@ async def test_custom_filter():
     """Test custom filter functionality."""
     config = {"enabled": True}
     filter_instance = CustomFilter(config)
-    
+
     # Create test event
     event = BaseEvent(entity_id="test.entity", value=42)
-    
+
     # Test filter
     result = await filter_instance.filter(event)
     assert result is True

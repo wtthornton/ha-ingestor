@@ -15,7 +15,7 @@ migration_config = {
     "rollback_threshold": 0.02,
     "enable_metrics": True,
     "enable_alerts": True,
-    "performance_monitoring": True
+    "performance_monitoring": True,
 }
 
 # Transformation Configuration
@@ -25,7 +25,7 @@ transformation_config = {
     "field_optimization": True,
     "compression_enabled": True,
     "batch_size": 1000,
-    "concurrent_workers": 8
+    "concurrent_workers": 8,
 }
 
 # Monitoring Configuration
@@ -33,5 +33,5 @@ monitoring_config = {
     "metrics_enabled": True,
     "health_check_interval": 30,
     "performance_tracking": True,
-    "alerting_enabled": True
+    "alerting_enabled": True,
 }

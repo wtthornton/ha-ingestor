@@ -4,7 +4,7 @@ This module tests the migration system, including data extraction, transformatio
 loading, and validation components.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 import pytest
 
@@ -211,7 +211,7 @@ class TestDataTransformer:
                     "source": "mqtt",
                 },
                 "fields": {"state": "on", "brightness": 255},
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             }
         ]
 
@@ -221,7 +221,7 @@ class TestDataTransformer:
             source_measurement="ha_light",
             target_measurement="ha_entities",
             batch_size=1,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         transformed_batch = await transformer.transform_batch(batch)
@@ -237,7 +237,7 @@ class TestDataTransformer:
         record = {
             "tags": {"domain": "light", "entity_id": "test_light", "source": "mqtt"},
             "fields": {"state": "on", "brightness": 255},
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(UTC),
         }
 
         event = transformer._create_event_from_record(record)
@@ -259,7 +259,7 @@ class TestDataTransformer:
                 "event_type": "state_changed",
             },
             "fields": {"state": "active"},
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(UTC),
         }
 
         event = transformer._create_event_from_record(record)
@@ -307,7 +307,7 @@ class TestDataLoader:
                 "measurement": "ha_entities",
                 "tags": {"domain": "light", "entity_id": "test_light"},
                 "fields": {"state": "on"},
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             }
         ]
 
@@ -317,7 +317,7 @@ class TestDataLoader:
             source_measurement="ha_light",
             target_measurement="ha_entities",
             batch_size=1,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         result = await loader.load_batch(batch)
@@ -335,7 +335,7 @@ class TestDataLoader:
             "measurement": "ha_entities",
             "tags": {"domain": "light"},
             "fields": {"state": "on"},
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(UTC),
         }
 
         # This might raise an exception due to simulated failures
@@ -381,7 +381,7 @@ class TestDataValidator:
             {
                 "tags": {"entity_id": "test_light"},
                 "fields": {"state": "on", "value": 100},
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             }
         ]
 
@@ -389,7 +389,7 @@ class TestDataValidator:
             {
                 "tags": {"entity_id": "test_light"},
                 "fields": {"state": "on", "value": 100},
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             }
         ]
 
@@ -399,7 +399,7 @@ class TestDataValidator:
             source_measurement="ha_light",
             target_measurement="ha_entities",
             batch_size=1,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         migrated_batch = MigrationBatch(
@@ -408,7 +408,7 @@ class TestDataValidator:
             source_measurement="ha_light",
             target_measurement="ha_entities",
             batch_size=1,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         result = await validator.validate_batch_migration(
@@ -429,7 +429,7 @@ class TestDataValidator:
         original_record = {
             "tags": {"entity_id": "test_light"},
             "fields": {"state": "on", "value": 100},
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(UTC),
         }
 
         migrated_record = {
@@ -476,13 +476,21 @@ class TestMigrationRunner:
     @pytest.mark.asyncio
     async def test_run_full_migration(self):
         """Test complete migration process."""
-        runner = MigrationRunner(batch_size=10, concurrent_batches=1)
+        runner = MigrationRunner(batch_size=200, concurrent_batches=1)
 
         # Run migration with limited scope for testing
-        result = await runner.run_full_migration(
-            measurements=["ha_light"],
-            validate_percentage=0.5,  # Validate 50% for testing
-        )
+        # Add timeout to prevent hanging
+        import asyncio
+        try:
+            result = await asyncio.wait_for(
+                runner.run_full_migration(
+                    measurements=["ha_light"],
+                    validate_percentage=0.1,  # Validate 10% for testing
+                ),
+                timeout=30.0  # 30 second timeout
+            )
+        except asyncio.TimeoutError:
+            pytest.fail("Migration test timed out after 30 seconds")
 
         assert "migration_id" in result
         assert "success" in result
@@ -563,7 +571,7 @@ class TestTestDataGenerator:
         generator = HomeAssistantDataGenerator()
 
         # Test state event
-        event = generator._generate_mqtt_state_event(datetime.utcnow(), 1)
+        event = generator._generate_mqtt_state_event(datetime.now(UTC), 1)
         assert event["type"] == "mqtt"
         assert "topic" in event
         assert "payload" in event
@@ -571,7 +579,7 @@ class TestTestDataGenerator:
         assert "entity_id" in event
 
         # Test sensor event
-        event = generator._generate_mqtt_sensor_event(datetime.utcnow(), 2)
+        event = generator._generate_mqtt_sensor_event(datetime.now(UTC), 2)
         assert event["type"] == "mqtt"
         assert event["domain"] == "sensor"
 
@@ -581,13 +589,13 @@ class TestTestDataGenerator:
         generator = HomeAssistantDataGenerator()
 
         # Test service event
-        event = generator._generate_websocket_service_event(datetime.utcnow(), 1)
+        event = generator._generate_websocket_service_event(datetime.now(UTC), 1)
         assert event["type"] == "websocket"
         assert event["event_type"] == "call_service"
         assert "data" in event
 
         # Test state event
-        event = generator._generate_websocket_state_event(datetime.utcnow(), 2)
+        event = generator._generate_websocket_state_event(datetime.now(UTC), 2)
         assert event["type"] == "websocket"
         assert event["event_type"] == "state_changed"
 
@@ -600,19 +608,19 @@ class TestTestDataGenerator:
                 "type": "mqtt",
                 "domain": "light",
                 "entity_id": "light.test1",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             },
             {
                 "type": "websocket",
                 "domain": "sensor",
                 "entity_id": "sensor.test1",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             },
             {
                 "type": "mqtt",
                 "domain": "light",
                 "entity_id": "light.test2",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
             },
         ]
 

@@ -1,11 +1,9 @@
 """Tests for context enrichment engine."""
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
-from typing import Any, Dict, List
 
-from ha_ingestor.models.events import Event
+import pytest
+
 from ha_ingestor.models.mqtt_event import MQTTEvent
 from ha_ingestor.models.websocket_event import WebSocketEvent
 
@@ -27,8 +25,8 @@ class TestDeviceMetadataEnrichment:
             attributes={
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
-                "friendly_name": "Living Room Temperature"
-            }
+                "friendly_name": "Living Room Temperature",
+            },
         )
 
         # Verify device capabilities are captured
@@ -46,14 +44,14 @@ class TestDeviceMetadataEnrichment:
                 "entity_id": "switch.living_room_light",
                 "manufacturer": "Philips Hue",
                 "model": "LCT001",
-                "sw_version": "1.0.0"
+                "sw_version": "1.0.0",
             },
             timestamp=datetime.now(),
             attributes={
                 "manufacturer": "Philips Hue",
                 "model": "LCT001",
-                "sw_version": "1.0.0"
-            }
+                "sw_version": "1.0.0",
+            },
         )
 
         # Verify manufacturer information is captured
@@ -70,13 +68,10 @@ class TestDeviceMetadataEnrichment:
             data={
                 "entity_id": "sensor.bedroom_temperature",
                 "area_id": "bedroom",
-                "area_name": "Master Bedroom"
+                "area_name": "Master Bedroom",
             },
             timestamp=datetime.now(),
-            attributes={
-                "area_id": "bedroom",
-                "area_name": "Master Bedroom"
-            }
+            attributes={"area_id": "bedroom", "area_name": "Master Bedroom"},
         )
 
         # Verify area information is captured
@@ -97,15 +92,15 @@ class TestIntegrationInformationEnrichment:
                 "domain": "hue",
                 "name": "Philips Hue",
                 "version": "2.0.0",
-                "config_entry_id": "abc123"
+                "config_entry_id": "abc123",
             },
             timestamp=datetime.now(),
             attributes={
                 "domain": "hue",
                 "name": "Philips Hue",
                 "version": "2.0.0",
-                "config_entry_id": "abc123"
-            }
+                "config_entry_id": "abc123",
+            },
         )
 
         # Verify integration information is captured
@@ -123,14 +118,14 @@ class TestIntegrationInformationEnrichment:
             data={
                 "domain": "zwave",
                 "name": "Z-Wave",
-                "reason": "configuration_changed"
+                "reason": "configuration_changed",
             },
             timestamp=datetime.now(),
             attributes={
                 "domain": "zwave",
                 "name": "Z-Wave",
-                "reason": "configuration_changed"
-            }
+                "reason": "configuration_changed",
+            },
         )
 
         # Verify reload information is captured
@@ -147,14 +142,14 @@ class TestIntegrationInformationEnrichment:
             data={
                 "domain": "old_integration",
                 "name": "Old Integration",
-                "removal_reason": "deprecated"
+                "removal_reason": "deprecated",
             },
             timestamp=datetime.now(),
             attributes={
                 "domain": "old_integration",
                 "name": "Old Integration",
-                "removal_reason": "deprecated"
-            }
+                "removal_reason": "deprecated",
+            },
         )
 
         # Verify removal information is captured
@@ -176,14 +171,14 @@ class TestNetworkTopologyEnrichment:
                 "entity_id": "switch.network_switch",
                 "connection_type": "wifi",
                 "ip_address": "192.168.1.100",
-                "mac_address": "AA:BB:CC:DD:EE:FF"
+                "mac_address": "AA:BB:CC:DD:EE:FF",
             },
             timestamp=datetime.now(),
             attributes={
                 "connection_type": "wifi",
                 "ip_address": "192.168.1.100",
-                "mac_address": "AA:BB:CC:DD:EE:FF"
-            }
+                "mac_address": "AA:BB:CC:DD:EE:FF",
+            },
         )
 
         # Verify network information is captured
@@ -200,13 +195,10 @@ class TestNetworkTopologyEnrichment:
             data={
                 "entity_id": "sensor.network_device",
                 "state": "unavailable",
-                "attributes": {"available": False, "last_seen": "2024-01-01T12:00:00Z"}
+                "attributes": {"available": False, "last_seen": "2024-01-01T12:00:00Z"},
             },
             timestamp=datetime.now(),
-            attributes={
-                "available": False,
-                "last_seen": "2024-01-01T12:00:00Z"
-            }
+            attributes={"available": False, "last_seen": "2024-01-01T12:00:00Z"},
         )
 
         # Verify availability information is captured
@@ -222,13 +214,10 @@ class TestNetworkTopologyEnrichment:
             data={
                 "entity_id": "switch.segmented_device",
                 "network_segment": "iot_vlan",
-                "subnet": "192.168.2.0/24"
+                "subnet": "192.168.2.0/24",
             },
             timestamp=datetime.now(),
-            attributes={
-                "network_segment": "iot_vlan",
-                "subnet": "192.168.2.0/24"
-            }
+            attributes={"network_segment": "iot_vlan", "subnet": "192.168.2.0/24"},
         )
 
         # Verify network segment information is captured
@@ -250,14 +239,14 @@ class TestEventContextEnrichment:
                 "service": "turn_on",
                 "user_id": "user123",
                 "source": "mobile_app",
-                "context_id": "context456"
+                "context_id": "context456",
             },
             timestamp=datetime.now(),
             attributes={
                 "user_id": "user123",
                 "source": "mobile_app",
-                "context_id": "context456"
-            }
+                "context_id": "context456",
+            },
         )
 
         # Verify user action context is captured
@@ -275,14 +264,14 @@ class TestEventContextEnrichment:
                 "entity_id": "automation.morning_routine",
                 "trigger": "time",
                 "trigger_time": "07:00:00",
-                "trigger_date": "2024-01-01"
+                "trigger_date": "2024-01-01",
             },
             timestamp=datetime.now(),
             attributes={
                 "trigger": "time",
                 "trigger_time": "07:00:00",
-                "trigger_date": "2024-01-01"
-            }
+                "trigger_date": "2024-01-01",
+            },
         )
 
         # Verify automation context is captured
@@ -299,13 +288,13 @@ class TestEventContextEnrichment:
             data={
                 "entity_id": "script.test_script",
                 "variables": {"test_var": "test_value"},
-                "execution_id": "exec789"
+                "execution_id": "exec789",
             },
             timestamp=datetime.now(),
             attributes={
                 "variables": {"test_var": "test_value"},
-                "execution_id": "exec789"
-            }
+                "execution_id": "exec789",
+            },
         )
 
         # Verify script context is captured
@@ -326,14 +315,14 @@ class TestRelationshipMappingEnrichment:
                 "entity_id": "sensor.temperature_1",
                 "device_id": "device123",
                 "area_id": "area456",
-                "config_entry_id": "config789"
+                "config_entry_id": "config789",
             },
             timestamp=datetime.now(),
             attributes={
                 "device_id": "device123",
                 "area_id": "area456",
-                "config_entry_id": "config789"
-            }
+                "config_entry_id": "config789",
+            },
         )
 
         # Verify relationship information is captured
@@ -351,14 +340,14 @@ class TestRelationshipMappingEnrichment:
                 "entity_id": "switch.hue_light",
                 "config_entries": ["config123"],
                 "connections": [["mac", "AA:BB:CC:DD:EE:FF"]],
-                "identifiers": [["hue", "light1"]]
+                "identifiers": [["hue", "light1"]],
             },
             timestamp=datetime.now(),
             attributes={
                 "config_entries": ["config123"],
                 "connections": [["mac", "AA:BB:CC:DD:EE:FF"]],
-                "identifiers": [["hue", "light1"]]
-            }
+                "identifiers": [["hue", "light1"]],
+            },
         )
 
         # Verify relationship information is captured
@@ -376,13 +365,10 @@ class TestRelationshipMappingEnrichment:
                 "area_id": "area.living_room",
                 "name": "Living Room",
                 "parent_id": "area.downstairs",
-                "level": 2
+                "level": 2,
             },
             timestamp=datetime.now(),
-            attributes={
-                "parent_id": "area.downstairs",
-                "level": 2
-            }
+            attributes={"parent_id": "area.downstairs", "level": 2},
         )
 
         # Verify hierarchy information is captured
@@ -397,7 +383,7 @@ class TestPerformanceTimingEnrichment:
         """Test that event processing timing is enriched."""
         start_time = datetime.now()
         processing_time = timedelta(milliseconds=150)
-        
+
         event = MQTTEvent(
             topic="homeassistant/sensor/temperature/state",
             payload='{"state": "22.5"}',
@@ -409,8 +395,8 @@ class TestPerformanceTimingEnrichment:
             attributes={
                 "processing_start": start_time.isoformat(),
                 "processing_duration_ms": 150,
-                "queue_position": 5
-            }
+                "queue_position": 5,
+            },
         )
 
         # Verify timing information is captured
@@ -429,14 +415,10 @@ class TestPerformanceTimingEnrichment:
                 "message": "System performance normal",
                 "cpu_usage": 25.5,
                 "memory_usage": 45.2,
-                "disk_usage": 30.1
+                "disk_usage": 30.1,
             },
             timestamp=datetime.now(),
-            attributes={
-                "cpu_usage": 25.5,
-                "memory_usage": 45.2,
-                "disk_usage": 30.1
-            }
+            attributes={"cpu_usage": 25.5, "memory_usage": 45.2, "disk_usage": 30.1},
         )
 
         # Verify performance metrics are captured
@@ -459,14 +441,14 @@ class TestErrorContextEnrichment:
                 "message": "Sensor failed to update",
                 "error_code": "E001",
                 "error_details": "Connection timeout",
-                "retry_count": 3
+                "retry_count": 3,
             },
             timestamp=datetime.now(),
             attributes={
                 "error_code": "E001",
                 "error_details": "Connection timeout",
-                "retry_count": 3
-            }
+                "retry_count": 3,
+            },
         )
 
         # Verify error context is captured
@@ -486,8 +468,8 @@ class TestErrorContextEnrichment:
             event_type="state_changed",
             attributes={
                 "validation_errors": ["Invalid state format", "Missing required field"],
-                "validation_level": "warning"
-            }
+                "validation_level": "warning",
+            },
         )
 
         # Verify validation error context is captured
@@ -502,7 +484,7 @@ class TestContextEnrichmentPerformance:
     def test_enrichment_latency_measurement(self):
         """Test that enrichment latency is measured."""
         start_time = datetime.now()
-        
+
         # Simulate enrichment process
         event = MQTTEvent(
             topic="homeassistant/sensor/test/state",
@@ -511,15 +493,19 @@ class TestContextEnrichmentPerformance:
             domain="sensor",
             entity_id="test",
             timestamp=start_time,
-            event_type="state_changed"
+            event_type="state_changed",
         )
-        
+
         # Add enrichment timing
         enrichment_duration = timedelta(milliseconds=50)
         event.attributes = {
             "enrichment_start": start_time.isoformat(),
             "enrichment_duration_ms": 50,
-            "enrichment_steps": ["device_lookup", "area_mapping", "relationship_building"]
+            "enrichment_steps": [
+                "device_lookup",
+                "area_mapping",
+                "relationship_building",
+            ],
         }
 
         # Verify enrichment performance metrics
@@ -531,7 +517,7 @@ class TestContextEnrichmentPerformance:
         """Test that high volume enrichment is handled efficiently."""
         events = []
         start_time = datetime.now()
-        
+
         # Create multiple events for batch enrichment
         for i in range(100):
             event = MQTTEvent(
@@ -541,10 +527,10 @@ class TestContextEnrichmentPerformance:
                 domain="sensor",
                 entity_id=f"test_{i}",
                 timestamp=start_time + timedelta(seconds=i),
-                event_type="state_changed"
+                event_type="state_changed",
             )
             events.append(event)
-        
+
         # Verify batch processing capability
         assert len(events) == 100
         assert all(isinstance(event, MQTTEvent) for event in events)
@@ -567,7 +553,7 @@ class TestContextEnrichmentCompleteness:
                 "trigger_state": "on",
                 "user_id": "user123",
                 "source": "mobile_app",
-                "context_id": "context456"
+                "context_id": "context456",
             },
             timestamp=datetime.now(),
             attributes={
@@ -578,8 +564,8 @@ class TestContextEnrichmentCompleteness:
                 "source": "mobile_app",
                 "context_id": "context456",
                 "enrichment_complete": True,
-                "context_layers": ["device", "area", "user", "automation", "network"]
-            }
+                "context_layers": ["device", "area", "user", "automation", "network"],
+            },
         )
 
         # Verify comprehensive context capture
@@ -594,9 +580,9 @@ class TestContextEnrichmentCompleteness:
         original_data = {
             "entity_id": "sensor.original",
             "state": "original_state",
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
         }
-        
+
         event = MQTTEvent(
             topic="homeassistant/sensor/original/state",
             payload='{"state": "original_state"}',
@@ -604,18 +590,18 @@ class TestContextEnrichmentCompleteness:
             domain="sensor",
             entity_id="original",
             timestamp=original_data["timestamp"],
-            event_type="state_changed"
+            event_type="state_changed",
         )
-        
+
         # Add enrichment without modifying original data
         event.attributes = {
             "original_entity_id": event.entity_id,
             "original_state": event.state,
             "original_timestamp": event.timestamp.isoformat(),
             "enriched_at": datetime.now().isoformat(),
-            "enrichment_version": "1.0.0"
+            "enrichment_version": "1.0.0",
         }
-        
+
         # Verify original data integrity
         assert event.attributes["original_entity_id"] == "original"
         assert event.attributes["original_state"] == "original_state"

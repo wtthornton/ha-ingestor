@@ -1,6 +1,6 @@
 """Rule engine for managing and executing transformation rules."""
 
-from typing import Any, Union
+from typing import Any
 
 import structlog
 
@@ -337,7 +337,7 @@ class TransformationRuleEngine:
 
     def get_engine_metrics(self) -> dict[str, Any]:
         """Get comprehensive metrics for the rule engine."""
-        metrics: dict[str, Union[int, dict[str, Any]]] = {
+        metrics: dict[str, int | dict[str, Any]] = {
             "total_rules": len(self.rules),
             "enabled_rules": len(self.get_enabled_rules()),
             "total_transformers": len(self.transformers),
@@ -381,7 +381,7 @@ class TransformationRuleEngine:
 
     def export_configuration(self) -> dict[str, Any]:
         """Export the current rule engine configuration."""
-        config: dict[str, Union[str, list, dict[str, Any]]] = {
+        config: dict[str, str | list | dict[str, Any]] = {
             "engine_name": self.name,
             "rules": [rule.dict() for rule in self.rules],
             "chains": {},

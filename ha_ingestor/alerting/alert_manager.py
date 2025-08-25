@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from ..utils.logging import get_logger
@@ -72,18 +72,25 @@ class AlertAggregator:
             "aggregation_window_minutes", 5
         )
         self.alert_groups: dict[str, list[AlertInstance]] = {}
-        self.last_cleanup = datetime.now(timezone.utc)
+        self.last_cleanup = datetime.now(UTC)
 
     def should_aggregate(self, alert: AlertInstance) -> bool:
         """Check if an alert should be aggregated with existing ones."""
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(UTC)
         cutoff_time = current_time - timedelta(minutes=self.aggregation_window_minutes)
 
         # Check if we have similar alerts within the aggregation window
         for _group_key, alerts in self.alert_groups.items():
             if self._is_similar_alert(alert, alerts[0]):
                 # Check if any alert in the group is within the window
-                recent_alerts = [a for a in alerts if a.triggered_at >= cutoff_time]
+                recent_alerts = []
+                for a in alerts:
+                    # Handle timezone-naive datetimes by assuming UTC
+                    triggered_at = a.triggered_at
+                    if triggered_at.tzinfo is None:
+                        triggered_at = triggered_at.replace(tzinfo=UTC)
+                    if triggered_at >= cutoff_time:
+                        recent_alerts.append(a)
                 if recent_alerts:
                     return True
 
@@ -99,18 +106,25 @@ class AlertAggregator:
         self.alert_groups[group_key].append(alert)
 
         # Cleanup old groups periodically
-        if datetime.now(timezone.utc) - self.last_cleanup > timedelta(minutes=10):
+        if datetime.now(UTC) - self.last_cleanup > timedelta(minutes=10):
             self._cleanup_old_groups()
 
     def get_aggregated_alerts(self) -> list[AlertInstance]:
         """Get alerts that should trigger notifications (aggregated)."""
         aggregated = []
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(UTC)
         cutoff_time = current_time - timedelta(minutes=self.aggregation_window_minutes)
 
         for _group_key, alerts in self.alert_groups.items():
             # Get the most recent alert in each group
-            recent_alerts = [a for a in alerts if a.triggered_at >= cutoff_time]
+            recent_alerts = []
+            for a in alerts:
+                # Handle timezone-naive datetimes by assuming UTC
+                triggered_at = a.triggered_at
+                if triggered_at.tzinfo is None:
+                    triggered_at = triggered_at.replace(tzinfo=UTC)
+                if triggered_at >= cutoff_time:
+                    recent_alerts.append(a)
             if recent_alerts:
                 # Use the highest severity alert in the group
                 highest_severity = max(recent_alerts, key=lambda x: x.severity.value)
@@ -131,18 +145,23 @@ class AlertAggregator:
 
     def _cleanup_old_groups(self) -> None:
         """Remove old alert groups."""
-        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        cutoff_time = datetime.now(UTC) - timedelta(hours=1)
 
         for group_key in list(self.alert_groups.keys()):
             # Remove groups with no recent alerts
-            recent_alerts = [
-                a for a in self.alert_groups[group_key] if a.triggered_at >= cutoff_time
-            ]
+            recent_alerts = []
+            for a in self.alert_groups[group_key]:
+                # Handle timezone-naive datetimes by assuming UTC
+                triggered_at = a.triggered_at
+                if triggered_at.tzinfo is None:
+                    triggered_at = triggered_at.replace(tzinfo=UTC)
+                if triggered_at >= cutoff_time:
+                    recent_alerts.append(a)
 
             if not recent_alerts:
                 del self.alert_groups[group_key]
 
-        self.last_cleanup = datetime.now(timezone.utc)
+        self.last_cleanup = datetime.now(UTC)
 
 
 class AlertManager:
@@ -173,7 +192,7 @@ class AlertManager:
         # Performance tracking
         self.total_alerts_processed = 0
         self.total_notifications_sent = 0
-        self.last_check_time = datetime.now(timezone.utc)
+        self.last_check_time = datetime.now(UTC)
 
         # Initialize notification channels
         self._initialize_notification_channels()
@@ -291,7 +310,7 @@ class AlertManager:
             for alert in aggregated_alerts:
                 await self._send_notifications(alert)
 
-            self.last_check_time = datetime.now(timezone.utc)
+            self.last_check_time = datetime.now(UTC)
 
         except Exception as e:
             self.logger.error(f"Error checking alerts: {e}")
@@ -442,7 +461,9 @@ class AlertManager:
             return
 
         # Remove oldest entries
-        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=self.max_history_size)
+        cutoff_time = datetime.now(UTC) - timedelta(
+            minutes=self.max_history_size
+        )
         self.alert_history = [
             entry for entry in self.alert_history if entry.triggered_at >= cutoff_time
         ]

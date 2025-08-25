@@ -33,6 +33,7 @@ from typing import Any
 
 # Import implemented components
 from .config import get_settings
+from .health import HealthServer
 from .influxdb import InfluxDBWriter
 from .metrics import get_metrics_collector
 from .models import InfluxDBPoint, MQTTEvent, WebSocketEvent
@@ -45,6 +46,7 @@ from .websocket import WebSocketClient
 # Global variables
 pipeline: EventProcessor | None = None
 influxdb_writer: InfluxDBWriter | None = None
+health_server: HealthServer | None = None
 
 
 @handle_error_decorator("mqtt_message_processing", "mqtt_handler", max_retries=2)
@@ -239,6 +241,17 @@ async def main() -> int:
             logger.info("Starting event processing pipeline...")
             await pipeline.start()
 
+            # Start health server
+            logger.info("Starting health server...")
+            health_server = HealthServer(host="0.0.0.0", port=8000)
+            health_server.create_app()
+            
+            # Start health server in background
+            import threading
+            health_thread = threading.Thread(target=health_server.start_sync, daemon=True)
+            health_thread.start()
+            logger.info("✅ Health server started on port 8000")
+
             # Start listening for messages
             await mqtt_client.start_listening()
             await websocket_client.start_listening()
@@ -334,6 +347,14 @@ async def main() -> int:
             finally:
                 # Cleanup
                 logger.info("Shutting down services...")
+
+                # Stop health server
+                if health_server:
+                    try:
+                        health_server.stop_sync()
+                        logger.info("✅ Health server stopped")
+                    except Exception as e:
+                        logger.warning("Failed to stop health server", error=str(e))
 
                 # Stop pipeline
                 if pipeline.is_running():

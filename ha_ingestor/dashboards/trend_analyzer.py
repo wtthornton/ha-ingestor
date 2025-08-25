@@ -2,8 +2,7 @@
 
 import statistics
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from enum import Enum
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from ..utils.logging import get_logger
@@ -76,7 +75,7 @@ class TrendAnalyzer:
 
             # Apply time range filter if specified
             if time_range:
-                cutoff_time = datetime.now(timezone.utc) - time_range
+                cutoff_time = datetime.now(UTC) - time_range
                 sorted_data = [
                     (ts, val) for ts, val in sorted_data if ts >= cutoff_time
                 ]
@@ -114,7 +113,7 @@ class TrendAnalyzer:
                 r_squared=trend_stats["r_squared"],
                 data_points=len(values),
                 time_range=timestamps[-1] - timestamps[0],
-                analysis_time=datetime.now(timezone.utc),
+                analysis_time=datetime.now(UTC),
                 predictions=predictions,
                 metadata={
                     "mean": trend_stats["mean"],
