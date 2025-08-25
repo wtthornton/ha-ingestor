@@ -45,8 +45,18 @@ class SchemaTransformer(Transformer):
         self.field_optimization = field_optimization
         self.compression_enabled = compression_enabled
 
-        # Initialize schema optimizer
-        self.schema_optimizer = SchemaOptimizer(config)
+        # Initialize schema optimizer with advanced configuration
+        # Ensure config is never None to avoid AttributeError
+        safe_config = config or {}
+        schema_config = {
+            "max_tag_cardinality": safe_config.get("max_tag_cardinality", 10000),
+            "tag_compression_threshold": safe_config.get("tag_compression_threshold", 1000),
+            "field_compression_threshold": safe_config.get("field_compression_threshold", 256),
+            "type_optimization": safe_config.get("type_optimization", True),
+            "auto_schema_evolution": safe_config.get("auto_schema_evolution", True),
+            "schema_analysis_interval": safe_config.get("schema_analysis_interval", 300.0),
+        }
+        self.schema_optimizer = SchemaOptimizer(schema_config)
 
         # Measurement mapping for consolidation
         self.measurement_mapping = {
@@ -204,7 +214,9 @@ class SchemaTransformer(Transformer):
             if self.measurement_consolidation:
                 return "ha_entities"
             else:
-                return f"ha_{event.domain}"
+                # Handle case where domain might be None
+                domain = event.domain or "unknown"
+                return f"ha_{domain}"
 
         elif isinstance(event, WebSocketEvent):
             # For WebSocket events, use consolidated measurement based on event type
