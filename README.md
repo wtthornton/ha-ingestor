@@ -72,6 +72,13 @@ Home Assistant → MQTT/WebSocket → HA-Ingestor → InfluxDB
 - **Performance metrics**: Real-time processing statistics
 - **Error tracking**: Comprehensive error categorization and reporting
 
+## 📚 **Documentation**
+
+- **[AGENT.md](AGENT.md)** - Comprehensive development standards and AI agent guidelines
+- **[TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)** - Common issues and solutions
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and configuration guide
+- **[CHANGELOG.md](CHANGELOG.md)** - Project version history
+
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
@@ -375,7 +382,9 @@ result = await processor.process_event(event)
 
 ## 🤝 **Contributing**
 
-### **Development Setup**
+For comprehensive development guidelines, coding standards, and AI agent assistance, see **[AGENT.md](AGENT.md)**.
+
+### **Quick Development Setup**
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -384,22 +393,13 @@ cd ha-ingestor
 # Install dependencies
 poetry install
 
-# Run pre-commit hooks
-pre-commit install
-
 # Run tests
-pytest
+poetry run pytest
 
 # Format code
-black ha_ingestor/
-ruff check ha_ingestor/
+poetry run black ha_ingestor/
+poetry run ruff check ha_ingestor/
 ```
-
-### **Code Standards**
-- **Type Hints**: Full type annotation required
-- **Documentation**: Comprehensive docstrings for all functions
-- **Testing**: Minimum 90% test coverage
-- **Formatting**: Black for code formatting, Ruff for linting
 
 ## 📄 **License**
 

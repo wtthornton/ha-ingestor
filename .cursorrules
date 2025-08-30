@@ -75,11 +75,11 @@ This is a production-grade Python service for ingesting Home Assistant activity 
 - Use appropriate data structures for performance
 - Monitor and log performance metrics
 
-## Context7 Integration
-- Follow instructions in `.agent-os/instructions/`
-- Adhere to standards in `.agent-os/standards/`
-- Reference tech stack from `.agent-os/product/tech-stack.md`
-- Use project roadmap from `.agent-os/product/roadmap.md`
+## Development Standards
+- Follow the established coding patterns in the project
+- Reference project documentation in the docs/ directory
+- Use established naming conventions and code structure
+- Follow the project's error handling and logging patterns
 
 ## Code Quality
 - Run pre-commit hooks before committing

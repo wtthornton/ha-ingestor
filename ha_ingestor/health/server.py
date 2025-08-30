@@ -3,7 +3,7 @@
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -14,6 +14,18 @@ import ha_ingestor
 
 from ..utils.logging import add_log_context, get_logger, set_correlation_id
 from .checks import HealthStatus, create_default_health_checker
+from ..models.api_models import (
+    TimeRange,
+    AggregationType,
+    EventFilter,
+    MetricsFilter,
+    ExportRequest,
+    QueryRequest,
+    EventsResponse,
+    MetricsResponse,
+    ExportResponse,
+    QueryResponse,
+)
 
 
 class HealthServer:
@@ -272,6 +284,124 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                     status_code=500, detail=f"Health check failed: {str(e)}"
                 ) from e
 
+        # API Data Access Endpoints
+        
+        @app.get("/api/events", response_model=EventsResponse)
+        async def get_events(
+            time_range: TimeRange = TimeRange.ONE_DAY,
+            domain: Optional[str] = None,
+            entity_id: Optional[str] = None,
+            event_type: Optional[str] = None,
+            limit: int = 100,
+            offset: int = 0,
+            sort_by: str = "_time",
+            sort_order: str = "desc"
+        ):
+            """Get filtered Home Assistant events from InfluxDB."""
+            try:
+                from ..api.data_access import get_data_access
+                
+                filter_params = EventFilter(
+                    time_range=time_range,
+                    domain=domain,
+                    entity_id=entity_id,
+                    event_type=event_type,
+                    limit=limit,
+                    offset=offset,
+                    sort_by=sort_by,
+                    sort_order=sort_order
+                )
+                
+                data_access = get_data_access()
+                events, total_count = await data_access.get_events(filter_params)
+                
+                # Calculate pagination info
+                page = (offset // limit) + 1
+                has_next = total_count > (offset + limit)
+                has_prev = offset > 0
+                
+                return EventsResponse(
+                    data=events,
+                    total_count=total_count,
+                    page=page,
+                    per_page=limit,
+                    has_next=has_next,
+                    has_prev=has_prev,
+                    time_range=time_range,
+                    filters_applied=filter_params.dict()
+                )
+                
+            except Exception as e:
+                self.logger.error("Failed to get events", error=str(e))
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get events: {str(e)}"
+                )
+
+        @app.get("/api/metrics", response_model=MetricsResponse)
+        async def get_metrics(
+            metric_type: str,
+            time_range: TimeRange = TimeRange.ONE_DAY,
+            aggregation: AggregationType = AggregationType.NONE,
+            domain: Optional[str] = None,
+            entity_id: Optional[str] = None
+        ):
+            """Get aggregated metrics from InfluxDB."""
+            try:
+                from ..api.data_access import get_data_access
+                
+                filter_params = MetricsFilter(
+                    metric_type=metric_type,
+                    time_range=time_range,
+                    aggregation=aggregation,
+                    domain=domain,
+                    entity_id=entity_id
+                )
+                
+                data_access = get_data_access()
+                metrics_response = await data_access.get_metrics(filter_params)
+                
+                return metrics_response
+                
+            except Exception as e:
+                self.logger.error("Failed to get metrics", error=str(e))
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get metrics: {str(e)}"
+                )
+
+        @app.post("/api/export", response_model=ExportResponse)
+        async def export_data(export_request: ExportRequest):
+            """Export data in various formats."""
+            try:
+                from ..api.data_access import get_data_access
+                
+                data_access = get_data_access()
+                export_response = await data_access.export_data(export_request)
+                
+                return export_response
+                
+            except Exception as e:
+                self.logger.error("Failed to export data", error=str(e))
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to export data: {str(e)}"
+                )
+
+        @app.post("/api/query", response_model=QueryResponse)
+        async def execute_custom_query(query_request: QueryRequest):
+            """Execute a custom Flux query (read-only, sanitized)."""
+            try:
+                from ..api.data_access import get_data_access
+                
+                data_access = get_data_access()
+                query_response = await data_access.execute_custom_query(query_request)
+                
+                return query_response
+                
+            except Exception as e:
+                self.logger.error("Failed to execute custom query", error=str(e))
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to execute custom query: {str(e)}"
+                )
+
         # Root endpoint
         @app.get("/")
         async def root() -> dict[str, Any]:
@@ -289,6 +419,12 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                     "ready": "/ready",
                     "metrics": "/metrics",
                     "dependencies": "/health/dependencies",
+                    "api": {
+                        "events": "/api/events",
+                        "metrics": "/api/metrics",
+                        "export": "/api/export",
+                        "query": "/api/query"
+                    }
                 },
                 "timestamp": time.time(),
             }
