@@ -1,0 +1,253 @@
+{
+  "id": null,
+  "title": "PROD: System Health & Performance Dashboard",
+  "tags": ["system-health", "performance-monitoring", "operational-metrics", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-24h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "System Uptime (Last 24h)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] != \"unavailable\" and r[\"state\"] != \"error\") |> count() |> map(fn: (r) => ({r with _value: (float(v: r._value) / 86400.0) * 100.0})) |> yield(name: \"Uptime %\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 90},
+              {"color": "green", "value": 99}
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "displayName": "Uptime %",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Data Processing Rate (Events/Minute)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> count() |> map(fn: (r) => ({r with _value: float(v: r._value) / 60.0})) |> yield(name: \"Events/Minute\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 100},
+              {"color": "green", "value": 500}
+            ]
+          },
+          "unit": "short",
+          "displayName": "Events/Min",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Error Rate (Last Hour)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] == \"unavailable\" or r[\"state\"] == \"error\") |> count() |> yield(name: \"Error Count\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 10},
+              {"color": "red", "value": 50}
+            ]
+          },
+          "unit": "short",
+          "displayName": "Errors/Hour",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "System Performance Trends (Last 24h)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Event Volume\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20,
+            "gradientMode": "scheme",
+            "spanNulls": false
+          },
+          "unit": "short"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Domain Performance Analysis (Last 24h)",
+      "type": "barchart",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> group(columns: [\"domain\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 15) |> yield(name: \"Domain Activity\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "fillOpacity": 80
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "System Health Summary (Last 24h)",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> group(columns: [\"domain\", \"source\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 15) |> yield(name: \"Health Metrics\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Event Count"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "domain"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Domain"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Source"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "Response Time Distribution (Last 24h)",
+      "type": "histogram",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Response Distribution\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "fillOpacity": 60
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "System Status Overview",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 12, "x": 12, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] == \"on\" or r[\"state\"] == \"home\") |> count() |> yield(name: \"Active Entities\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] == \"off\" or r[\"state\"] == \"not_home\") |> count() |> yield(name: \"Inactive Entities\")",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "short",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    }
+  ]
+}

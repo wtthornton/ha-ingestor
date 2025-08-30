@@ -1,0 +1,288 @@
+{
+  "id": null,
+  "title": "PROD: Home Occupancy & Security Dashboard",
+  "tags": ["home-occupancy", "security-monitoring", "presence-analytics", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-24h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Current Home Occupancy Status",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"device_tracker\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] == \"home\") |> count() |> yield(name: \"People Home\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 1},
+              {"color": "green", "value": 2}
+            ]
+          },
+          "unit": "short",
+          "displayName": "Current Occupancy",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Security Events (Last Hour)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] =~ /(binary_sensor|sensor)/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(motion|door|window|security).*/) |> count() |> yield(name: \"Security Events\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 5},
+              {"color": "red", "value": 15}
+            ]
+          },
+          "unit": "short",
+          "displayName": "Security Events",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Presence by Location (Last Hour)",
+      "type": "table",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"device_tracker\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> group(columns: [\"entity_id\", \"state\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> yield(name: \"Location Status\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Count"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "entity_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Entity ID"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "State"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "title": "Daily Occupancy Patterns (Last 7 Days)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"device_tracker\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] == \"home\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Hourly Occupancy\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20,
+            "gradientMode": "scheme"
+          },
+          "unit": "short"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Security Event Timeline (Last 24h)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] =~ /(binary_sensor|sensor)/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(motion|door|window|security).*/) |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Security Events\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "scheme"
+          },
+          "unit": "short"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Security Device Status (Last Hour)",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(motion|door|window|security|lock).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> group(columns: [\"entity_id\", \"state\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> yield(name: \"Security Devices\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Count"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "entity_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Entity ID"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "State"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "Occupancy by Time of Day (Last 7 Days)",
+      "type": "heatmap",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"device_tracker\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] == \"home\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Hourly Patterns\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"}
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Security Device Activity Summary",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*motion.*/) |> count() |> yield(name: \"Motion Events\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*door.*/) |> count() |> yield(name: \"Door Events\")",
+          "refId": "B"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*window.*/) |> count() |> yield(name: \"Window Events\")",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "short",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    }
+  ]
+}

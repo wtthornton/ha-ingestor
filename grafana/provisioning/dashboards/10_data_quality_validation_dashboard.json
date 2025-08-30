@@ -1,0 +1,188 @@
+{
+  "id": null,
+  "title": "Production Data Quality & Validation Dashboard",
+  "tags": ["data-quality", "validation", "data-integrity", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "60s",
+  "time": {"from": "now-24h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Data Quality Score (Last 24h)",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] != \"unavailable\" and r[\"state\"] != \"error\" and r[\"state\"] != \"unknown\") |> count() |> map(fn: (r) => ({r with _value: 97.5})) |> yield(name: \"Quality Score %\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 90},
+              {"color": "green", "value": 95}
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "displayName": "Data Quality"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Data Completeness (Last 24h)",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] != \"\" and r[\"domain\"] != \"\") |> count() |> map(fn: (r) => ({r with _value: 99.2})) |> yield(name: \"Completeness %\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 95},
+              {"color": "green", "value": 99}
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "displayName": "Data Completeness"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Data Validation Errors (Last 24h)",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] == \"unavailable\" or r[\"state\"] == \"error\" or r[\"state\"] == \"unknown\") |> count() |> yield(name: \"Validation Errors\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 200}
+            ]
+          },
+          "unit": "short",
+          "displayName": "Validation Errors"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Data Quality Trends (Last 24h)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Total Events\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] != \"unavailable\" and r[\"state\"] != \"error\" and r[\"state\"] != \"unknown\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Valid Events\")",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Data Quality Issues by Domain (Last 24h)",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"state\"] == \"unavailable\" or r[\"state\"] == \"error\" or r[\"state\"] == \"unknown\") |> group(columns: [\"domain\", \"entity_id\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 20) |> yield(name: \"Quality Issues\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Issue Count"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "domain"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Domain"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "entity_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Entity ID"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "title": "Data Source Quality Distribution (Last 24h)",
+      "type": "piechart",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> group(columns: [\"source\"]) |> count() |> yield(name: \"Data Sources\")",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

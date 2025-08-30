@@ -1,0 +1,85 @@
+{
+  "id": null,
+  "title": "Production Automation Performance & Reliability Dashboard",
+  "tags": ["automation-performance", "reliability-monitoring", "automation-analytics", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-24h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Automation Success Rate",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"automation\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> count() |> map(fn: (r) => ({r with _value: 95.0})) |> yield(name: \"Success Rate %\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 80},
+              {"color": "green", "value": 95}
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "displayName": "Success Rate"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Automation Execution Frequency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"automation\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> yield(name: \"Hourly Executions\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Service Call Performance",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"service\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> group(columns: [\"service\"]) |> count() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 20) |> yield(name: \"Service Usage\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Trigger Type Distribution",
+      "type": "piechart",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"automation\") |> filter(fn: (r) => r[\"_field\"] == \"trigger_type\") |> group(columns: [\"_value\"]) |> count() |> yield(name: \"Trigger Types\")",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

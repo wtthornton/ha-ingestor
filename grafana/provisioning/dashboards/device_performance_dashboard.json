@@ -1,0 +1,51 @@
+{
+  "id": null,
+  "title": "Production Device Performance Dashboard",
+  "tags": ["device-performance", "operational-metrics", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-12h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Device Response Time Analysis",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -12h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> aggregateWindow(every: 1h, fn: count, createEmpty: false)\n  |> group(columns: [\"domain\"])\n  |> yield(name: \"{{domain}}\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Device Reliability Score",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -12h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> filter(fn: (r) => r[\"entity_id\"] != \"\" and r[\"domain\"] != \"\" and r[\"state\"] != \"\")\n  |> count()\n  |> map(fn: (r) => ({r with _value: (r._value / 1000.0) * 100}))\n  |> yield(name: \"Reliability %\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Device Communication Health",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -12h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> filter(fn: (r) => r[\"source\"] == \"mqtt\")\n  |> count()\n  |> yield(name: \"MQTT Events\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\")\n  |> range(start: -12h)\n  |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/)\n  |> filter(fn: (r) => r[\"source\"] == \"websocket\")\n  |> count()\n  |> yield(name: \"WebSocket Events\")",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

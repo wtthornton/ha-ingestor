@@ -1,0 +1,86 @@
+{
+  "id": null,
+  "title": "Production Device Communication & Network Health Dashboard",
+  "tags": ["device-communication", "network-health", "connectivity-monitoring", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-12h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Communication Protocol Distribution",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"source\"] == \"mqtt\") |> count() |> yield(name: \"MQTT Events\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"source\"] == \"websocket\") |> count() |> yield(name: \"WebSocket Events\")",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 100},
+              {"color": "green", "value": 500}
+            ]
+          },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Device Response Time Trends",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -12h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> aggregateWindow(every: 15m, fn: count, createEmpty: false) |> group(columns: [\"domain\"]) |> yield(name: \"{{domain}}\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Connection Health by Device Type",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -12h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] =~ /(light|switch|sensor|climate)/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> group(columns: [\"domain\", \"entity_id\"]) |> mean() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 25) |> yield(name: \"Device Activity\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Network Latency Analysis",
+      "type": "heatmap",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -12h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"_field\"] == \"state\") |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> group(columns: [\"entity_id\"]) |> yield(name: \"{{entity_id}}\")",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "id": null,
+  "title": "PROD: Energy Management & Sustainability Dashboard",
+  "tags": ["energy-management", "sustainability", "power-monitoring", "home-assistant", "ha-ingestor", "production", "prod"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "60s",
+  "time": {"from": "now-7d", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Current Energy Consumption (W)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> last() |> yield(name: \"Current Power\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 2000},
+              {"color": "red", "value": 5000}
+            ]
+          },
+          "unit": "watt",
+          "displayName": "Current Power (W)",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Daily Energy Trend (Last 7 Days)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> yield(name: \"Hourly Power\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20,
+            "gradientMode": "scheme"
+          },
+          "unit": "watt"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Energy Consumption by Device (Last 24h)",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> group(columns: [\"entity_id\"]) |> mean() |> sort(columns: [\"_value\"], desc: true) |> limit(n: 20) |> yield(name: \"Device Power\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Power (W)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "entity_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Device"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "title": "Solar Generation vs Consumption (Last 7 Days)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(solar|pv|generation).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> yield(name: \"Solar Generation\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> yield(name: \"Consumption\")",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20,
+            "gradientMode": "scheme"
+          },
+          "unit": "watt"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Energy Efficiency Metrics (Last 24h)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 24, "x": 0, "y": 16},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> mean() |> yield(name: \"Avg Power\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> max() |> yield(name: \"Peak Power\")",
+          "refId": "B"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -24h) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> min() |> yield(name: \"Min Power\")",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "watt",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Energy Consumption by Time of Day (Last 7 Days)",
+      "type": "heatmap",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"domain\"] == \"sensor\") |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1h, fn: mean, createEmpty: false) |> yield(name: \"Hourly Energy\")",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"}
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Sustainability Score (Last 7 Days)",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "targets": [
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(solar|pv|generation).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1d, fn: sum, createEmpty: false) |> sum() |> yield(name: \"Solar Generation\")",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"ha_events\") |> range(start: -7d) |> filter(fn: (r) => r[\"_measurement\"] =~ /ha_/) |> filter(fn: (r) => r[\"entity_id\"] =~ /.*(power|energy|watt).*/) |> filter(fn: (r) => r[\"_field\"] == \"state\") |> filter(fn: (r) => r[\"state\"] =~ /^[0-9.]+$/) |> map(fn: (r) => ({r with _value: float(v: r.state)})) |> aggregateWindow(every: 1d, fn: sum, createEmpty: false) |> sum() |> yield(name: \"Total Consumption\")",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "watt",
+          "custom": {
+            "displayMode": "color-background"
+          }
+        }
+      }
+    }
+  ]
+}
