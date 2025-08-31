@@ -35,6 +35,7 @@ class EnhancedMetricsCollector:
         # Auto-sync task
         self._sync_task: asyncio.Task | None = None
         self._running = False
+        self._start_time = time.time()
 
         self.logger.info(
             "Enhanced metrics collector initialized",
@@ -416,6 +417,58 @@ class EnhancedMetricsCollector:
         except Exception as e:
             self.logger.error("Failed to export Prometheus metrics", error=str(e))
             return ""
+
+    def get_all_metrics(self) -> dict[str, Any]:
+        """Get all metrics in a structured format.
+
+        Returns:
+            Dictionary with all metrics data
+        """
+        try:
+            metrics = {}
+
+            # Get basic metrics
+            metrics["ha_ingestor_up"] = 1
+            metrics["ha_ingestor_uptime_seconds"] = time.time() - getattr(
+                self, "_start_time", time.time()
+            )
+
+            # Get registry metrics if available
+            if self.registry:
+                try:
+                    registry_metrics = self.registry.get_all_metrics()
+                    for name, metric in registry_metrics.items():
+                        metrics[name] = (
+                            metric.value if hasattr(metric, "value") else str(metric)
+                        )
+                except AttributeError:
+                    # Fallback to metrics summary if get_all_metrics doesn't exist
+                    registry_summary = self.registry.get_metrics_summary()
+                    if isinstance(registry_summary, dict):
+                        metrics.update(registry_summary)
+
+            # Get Prometheus metrics if available
+            if self.prometheus_collector:
+                try:
+                    prometheus_metrics = self.prometheus_collector.get_metrics_summary()
+                    metrics.update(prometheus_metrics)
+                except Exception:
+                    pass
+
+            # Add timestamp
+            metrics["timestamp"] = time.time()
+
+            return metrics
+
+        except Exception as e:
+            self.logger.error("Failed to get all metrics", error=str(e))
+            return {
+                "ha_ingestor_up": 1,
+                "ha_ingestor_uptime_seconds": time.time()
+                - getattr(self, "_start_time", time.time()),
+                "timestamp": time.time(),
+                "error": "Failed to get metrics",
+            }
 
     def get_health_status(self) -> dict[str, Any]:
         """Get health status of the enhanced metrics collector.
