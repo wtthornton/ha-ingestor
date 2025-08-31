@@ -385,7 +385,7 @@ result = await processor.process_event(event)
 
 ## 🤝 **Contributing**
 
-For comprehensive development guidelines, coding standards, and AI agent assistance, see **[AGENT.md](AGENT.md)**.
+For comprehensive development guidelines, coding standards, and AI agent assistance, see **[AGENT.md](docs/development/AGENT.md)**.
 
 ### **Quick Development Setup**
 ```bash

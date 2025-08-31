@@ -8,8 +8,8 @@ class TestPackageImports:
         """Test that the main package can be imported."""
         import ha_ingestor
 
-        assert ha_ingestor.__version__ == "0.1.0"
-        assert ha_ingestor.__author__ == "Your Name"
+        assert ha_ingestor.__version__ == "0.3.0"
+        assert ha_ingestor.__author__ == "HA-Ingestor Team"
         assert ha_ingestor.__email__ == "your.email@example.com"
 
     def test_main_module_import(self):
@@ -22,10 +22,10 @@ class TestPackageImports:
         """Test that all expected modules exist."""
         import ha_ingestor
 
-        # Check that all expected modules exist
-        assert hasattr(ha_ingestor, "mqtt")
-        assert hasattr(ha_ingestor, "websocket")
-        assert hasattr(ha_ingestor, "influxdb")
+        # Check that all expected modules exist (new structure)
+        assert hasattr(ha_ingestor, "core")
+        assert hasattr(ha_ingestor, "services") 
+        assert hasattr(ha_ingestor, "interfaces")
         assert hasattr(ha_ingestor, "models")
         assert hasattr(ha_ingestor, "utils")
 
@@ -54,7 +54,7 @@ class TestPackageFunctionality:
         import ha_ingestor
 
         # This test will be more comprehensive once we have proper version management
-        assert ha_ingestor.__version__ == "0.1.0"
+        assert ha_ingestor.__version__ == "0.3.0"
 
     def test_package_metadata(self):
         """Test that package metadata is properly set."""
@@ -73,10 +73,10 @@ class TestPackageFunctionality:
         assert ha_ingestor.__doc__ is not None
         assert len(ha_ingestor.__doc__.strip()) > 0
 
-        # Check module docstrings
-        assert ha_ingestor.mqtt.__doc__ is not None
-        assert ha_ingestor.websocket.__doc__ is not None
-        assert ha_ingestor.influxdb.__doc__ is not None
+        # Check module docstrings (new structure)
+        assert ha_ingestor.core.__doc__ is not None
+        assert ha_ingestor.services.__doc__ is not None
+        assert ha_ingestor.models.__doc__ is not None
         assert ha_ingestor.models.__doc__ is not None
         assert ha_ingestor.utils.__doc__ is not None
 
@@ -95,12 +95,12 @@ class TestPackageStructure:
         """Test that the package has all required files."""
         import os
 
-        # Check that key files exist
+        # Check that key files exist (new structure)
         assert os.path.exists("ha_ingestor/__init__.py")
         assert os.path.exists("ha_ingestor/main.py")
-        assert os.path.exists("ha_ingestor/mqtt/__init__.py")
-        assert os.path.exists("ha_ingestor/websocket/__init__.py")
-        assert os.path.exists("ha_ingestor/influxdb/__init__.py")
+        assert os.path.exists("ha_ingestor/core/__init__.py")
+        assert os.path.exists("ha_ingestor/services/__init__.py")
+        assert os.path.exists("ha_ingestor/interfaces/__init__.py")
         assert os.path.exists("ha_ingestor/models/__init__.py")
         assert os.path.exists("ha_ingestor/utils/__init__.py")
 

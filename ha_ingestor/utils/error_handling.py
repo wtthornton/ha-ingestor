@@ -12,6 +12,14 @@ from .logging import get_logger
 logger = get_logger(__name__)
 
 
+class CircuitBreakerState(Enum):
+    """Circuit breaker state enumeration."""
+    
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+
 class ErrorSeverity(Enum):
     """Error severity levels."""
 
@@ -355,6 +363,7 @@ class ErrorHandler:
         self.classifier = ErrorClassifier()
         self.recovery_strategy = ErrorRecoveryStrategy()
         self.error_history: list[ErrorInfo] = []
+        self.error_counts: dict[str, int] = {}
         self.max_history_size = 1000
 
     def handle_error(
@@ -435,6 +444,39 @@ class ErrorHandler:
             return error_info, recovery_success
 
         return error_info, False
+
+    def log_error(self, exception: Exception, context: ErrorContext) -> None:
+        """Log an error with context (simplified version for tests)."""
+        error_type = type(exception).__name__
+        
+        # Count errors by type
+        self.error_counts[error_type] = self.error_counts.get(error_type, 0) + 1
+        
+        # Add to history
+        error_dict = {
+            "error_type": error_type,
+            "error_message": str(exception),
+            "operation": context.operation,
+            "component": context.component,
+            "timestamp": context.timestamp.isoformat(),
+        }
+        self.error_history.append(error_dict)
+        
+        # Log the error
+        self.logger.error(
+            "Error occurred",
+            error_type=error_type,
+            operation=context.operation,
+            component=context.component,
+        )
+
+    def get_error_stats(self) -> dict[str, Any]:
+        """Get error statistics (simplified version for tests)."""
+        return {
+            "total_errors": len(self.error_history),
+            "error_counts": self.error_counts.copy(),
+            "recent_errors": self.error_history[-10:] if self.error_history else [],
+        }
 
     def _is_error_recoverable(
         self, category: ErrorCategory, severity: ErrorSeverity
@@ -615,4 +657,145 @@ def handle_error_decorator(
         else:
             return sync_wrapper
 
+    return decorator
+
+
+def with_error_context(operation: str, component: str = "unknown"):
+    """Decorator that automatically logs errors with context."""
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    context = ErrorContext(operation=operation, component=component)
+                    error_handler.log_error(e, context)
+                    raise
+            return async_wrapper
+        else:
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    context = ErrorContext(operation=operation, component=component)
+                    error_handler.log_error(e, context)
+                    raise
+            return sync_wrapper
+    return decorator
+
+
+def handle_errors(operation: str, component: str = "unknown", default_return: Any = None):
+    """Decorator that handles errors and returns a default value."""
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    context = ErrorContext(operation=operation, component=component)
+                    error_handler.log_error(e, context)
+                    return default_return
+            return async_wrapper
+        else:
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    context = ErrorContext(operation=operation, component=component)
+                    error_handler.log_error(e, context)
+                    return default_return
+            return sync_wrapper
+    return decorator
+
+
+def retry_with_backoff(max_attempts: int = 3, base_delay: float = 1.0):
+    """Simple retry decorator with exponential backoff."""
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                for attempt in range(max_attempts):
+                    try:
+                        return await func(*args, **kwargs)
+                    except Exception as e:
+                        if attempt == max_attempts - 1:
+                            raise
+                        await asyncio.sleep(base_delay * (2 ** attempt))
+            return async_wrapper
+        else:
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                for attempt in range(max_attempts):
+                    try:
+                        return func(*args, **kwargs)
+                    except Exception as e:
+                        if attempt == max_attempts - 1:
+                            raise
+                        import time
+                        time.sleep(base_delay * (2 ** attempt))
+            return sync_wrapper
+    return decorator
+
+
+class SimpleCircuitBreaker:
+    """Simple circuit breaker for testing."""
+    
+    def __init__(self, failure_threshold: int = 3, recovery_timeout: float = 1.0):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.failure_count = 0
+        self.last_failure_time = 0
+        self.state = CircuitBreakerState.CLOSED
+        
+    def is_open(self) -> bool:
+        if self.state == CircuitBreakerState.OPEN:
+            import time
+            if time.time() - self.last_failure_time > self.recovery_timeout:
+                self.state = CircuitBreakerState.HALF_OPEN
+                return False
+            return True
+        return False
+        
+    def record_success(self):
+        self.failure_count = 0
+        if self.state == CircuitBreakerState.HALF_OPEN:
+            self.state = CircuitBreakerState.CLOSED
+            
+    def record_failure(self):
+        self.failure_count += 1
+        import time
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitBreakerState.OPEN
+
+
+def circuit_breaker(failure_threshold: int = 3, recovery_timeout: float = 1.0):
+    """Simple circuit breaker decorator."""
+    breaker = SimpleCircuitBreaker(failure_threshold, recovery_timeout)
+    
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                if breaker.is_open():
+                    raise Exception("Circuit breaker is open")
+                    
+                try:
+                    result = await func(*args, **kwargs)
+                    breaker.record_success()
+                    return result
+                except Exception as e:
+                    breaker.record_failure()
+                    raise
+            return async_wrapper
+        else:
+            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+                if breaker.is_open():
+                    raise Exception("Circuit breaker is open")
+                    
+                try:
+                    result = func(*args, **kwargs)
+                    breaker.record_success()
+                    return result
+                except Exception as e:
+                    breaker.record_failure()
+                    raise
+            return sync_wrapper
     return decorator
