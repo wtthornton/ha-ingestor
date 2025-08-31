@@ -12,7 +12,7 @@ from typing import Any
 import structlog
 from structlog.stdlib import LoggerFactory
 
-from ..config import get_settings
+from ..core.config import get_settings
 
 # Context variable for correlation ID
 _correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)

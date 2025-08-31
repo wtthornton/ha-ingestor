@@ -1,28 +1,48 @@
-﻿"""
-A production-grade Python service that ingests all relevant Home Assistant
-activity in real-time and writes it to InfluxDB.
+"""
+HA-Ingestor: Enhanced Data Ingestion & Preparation Layer for Home Assistant
+
+A production-grade Python service that ingests Home Assistant activity data
+in real-time and writes it to InfluxDB with advanced filtering, transformation,
+and monitoring capabilities.
 """
 
 __version__ = "0.3.0"
-__author__ = "Your Name"
-__email__ = "your.email@example.com"
+__author__ = "HA-Ingestor Team"
+__email__ = "ha-ingestor@example.com"
 
-# Import main components once they're implemented
-# from .main import IngestorService
-# Import modules to make them available at package level
-from . import influxdb, models, mqtt, utils, websocket
-from .config import Settings, get_settings, reload_settings
+from . import (
+    filters,
+    interfaces,
+    metrics,
+    models,
+    monitoring,
+    services,
+    transformers,
+    utils,
+)
+
+# Import core functionality with new organized structure
+from .core import EventProcessor, PipelineStats, Settings, get_settings
+from .main import cli, main
 
 __all__ = [
     "__version__",
     "__author__",
     "__email__",
+    # Core functionality
     "Settings",
     "get_settings",
-    "reload_settings",
-    "mqtt",
-    "websocket",
-    "influxdb",
+    "EventProcessor",
+    "PipelineStats",
+    "main",
+    "cli",
+    # Modules
+    "services",
+    "interfaces",
     "models",
     "utils",
+    "filters",
+    "transformers",
+    "metrics",
+    "monitoring",
 ]

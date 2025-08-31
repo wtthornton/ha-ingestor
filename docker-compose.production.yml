@@ -6,23 +6,25 @@ services:
     container_name: ha-ingestor
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       # Home Assistant MQTT settings
       - HA_MQTT_HOST=mqtt-broker
       - HA_MQTT_PORT=1883
       - HA_MQTT_CLIENT_ID=ha-ingestor-production
-      - HA_MQTT_USERNAME=tapphousemqtt
-      - HA_MQTT_PASSWORD=Rom24aedslas!@
+      - HA_MQTT_USERNAME=${HA_MQTT_USERNAME}
+      - HA_MQTT_PASSWORD=${HA_MQTT_PASSWORD}
 
       # Home Assistant WebSocket settings (Production)
-      - HA_WS_URL=ws://192.168.1.86:8123/api/websocket
-      - HA_WS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI1YWQ3ZWIzNWVlZTA0YjJhOTU5ZmUyNGNmYjUxMjA5ZSIsImlhdCI6MTc1NTk4MTM2MiwiZXhwIjoyMDcxMzQxMzYyfQ.k5K-vzi0xS1JCx_1qL2dOoIXbWuRiAfyFmtUF-2PeBY
+      - HA_WS_URL=${HA_WS_URL}
+      - HA_WS_TOKEN=${HA_WS_TOKEN}
 
       # InfluxDB settings
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=Rom24aedslas!@
-      - INFLUXDB_ORG=myorg
-      - INFLUXDB_BUCKET=ha_events
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
 
       # Service settings
       - LOG_LEVEL=INFO
@@ -56,11 +58,11 @@ services:
       - "8086:8086"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
-      - DOCKER_INFLUXDB_INIT_ORG=myorg
-      - DOCKER_INFLUXDB_INIT_BUCKET=ha_events
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=Rom24aedslas!@
+      - DOCKER_INFLUXDB_INIT_USERNAME=${DOCKER_INFLUXDB_INIT_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${DOCKER_INFLUXDB_INIT_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
     volumes:
       - influxdb_data:/var/lib/influxdb2
     restart: unless-stopped

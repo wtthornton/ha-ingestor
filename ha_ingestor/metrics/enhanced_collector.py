@@ -136,6 +136,8 @@ class EnhancedMetricsCollector:
         try:
             import platform
 
+            import psutil
+
             hostname = platform.node()
 
             # Extract system metrics
@@ -143,6 +145,10 @@ class EnhancedMetricsCollector:
             memory_percent = system_metrics.get("memory_percent", 0.0)
             memory_used_mb = system_metrics.get("memory_used_mb", 0.0)
             disk_usage_percent = system_metrics.get("disk_usage_percent", 0.0)
+
+            # Get I/O counters
+            io_counters = psutil.disk_io_counters()
+            net_io = psutil.net_io_counters()
 
             # Convert memory to bytes
             memory_used_bytes = int(memory_used_mb * 1024 * 1024)
@@ -154,10 +160,14 @@ class EnhancedMetricsCollector:
                 memory_percent=memory_percent,
                 memory_used_bytes=memory_used_bytes,
                 disk_usage_percent=disk_usage_percent,
-                disk_io_read_bytes=0,  # TODO: Get from actual I/O monitoring
-                disk_io_write_bytes=0,  # TODO: Get from actual I/O monitoring
-                network_io_sent_bytes=0,  # TODO: Get from actual I/O monitoring
-                network_io_recv_bytes=0,  # TODO: Get from actual I/O monitoring
+                disk_io_read_bytes=(
+                    getattr(io_counters, "read_bytes", 0) if io_counters else 0
+                ),
+                disk_io_write_bytes=(
+                    getattr(io_counters, "write_bytes", 0) if io_counters else 0
+                ),
+                network_io_sent_bytes=getattr(net_io, "bytes_sent", 0) if net_io else 0,
+                network_io_recv_bytes=getattr(net_io, "bytes_recv", 0) if net_io else 0,
             )
 
         except Exception as e:
@@ -175,9 +185,6 @@ class EnhancedMetricsCollector:
             # Extract performance metrics
             event_processing_rate = performance_metrics.get(
                 "event_processing_rate", 0.0
-            )
-            average_processing_time = performance_metrics.get(
-                "average_processing_time_ms", 0.0
             )
             error_rate = performance_metrics.get("error_rate", 0.0)
 

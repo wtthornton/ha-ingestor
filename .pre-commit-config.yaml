@@ -16,6 +16,13 @@ repos:
         language_version: python3.13
         args: [--line-length=88]
 
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        name: isort (python)
+        language_version: python3.13
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.2.0
     hooks:
