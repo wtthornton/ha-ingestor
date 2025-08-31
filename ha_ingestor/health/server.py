@@ -3,7 +3,7 @@
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from typing import Any, Optional
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -12,20 +12,20 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 import ha_ingestor
 
-from ..utils.logging import add_log_context, get_logger, set_correlation_id
-from .checks import HealthStatus, create_default_health_checker
 from ..models.api_models import (
-    TimeRange,
     AggregationType,
     EventFilter,
-    MetricsFilter,
-    ExportRequest,
-    QueryRequest,
     EventsResponse,
-    MetricsResponse,
+    ExportRequest,
     ExportResponse,
+    MetricsFilter,
+    MetricsResponse,
+    QueryRequest,
     QueryResponse,
+    TimeRange,
 )
+from ..utils.logging import add_log_context, get_logger, set_correlation_id
+from .checks import HealthStatus, create_default_health_checker
 
 
 class HealthServer:
@@ -201,9 +201,9 @@ class HealthServer:
                 Plain text response with Prometheus metrics
             """
             try:
-                from ..metrics import get_metrics_collector
+                from ..metrics import get_enhanced_metrics_collector
 
-                metrics_collector = get_metrics_collector()
+                metrics_collector = get_enhanced_metrics_collector()
                 metrics_text = metrics_collector.export_prometheus_metrics()
 
                 return PlainTextResponse(content=metrics_text, media_type="text/plain")
@@ -285,22 +285,22 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                 ) from e
 
         # API Data Access Endpoints
-        
+
         @app.get("/api/events", response_model=EventsResponse)
         async def get_events(
             time_range: TimeRange = TimeRange.ONE_DAY,
-            domain: Optional[str] = None,
-            entity_id: Optional[str] = None,
-            event_type: Optional[str] = None,
+            domain: str | None = None,
+            entity_id: str | None = None,
+            event_type: str | None = None,
             limit: int = 100,
             offset: int = 0,
             sort_by: str = "_time",
-            sort_order: str = "desc"
+            sort_order: str = "desc",
         ):
             """Get filtered Home Assistant events from InfluxDB."""
             try:
                 from ..api.data_access import get_data_access
-                
+
                 filter_params = EventFilter(
                     time_range=time_range,
                     domain=domain,
@@ -309,17 +309,17 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                     limit=limit,
                     offset=offset,
                     sort_by=sort_by,
-                    sort_order=sort_order
+                    sort_order=sort_order,
                 )
-                
+
                 data_access = get_data_access()
                 events, total_count = await data_access.get_events(filter_params)
-                
+
                 # Calculate pagination info
                 page = (offset // limit) + 1
                 has_next = total_count > (offset + limit)
                 has_prev = offset > 0
-                
+
                 return EventsResponse(
                     data=events,
                     total_count=total_count,
@@ -328,9 +328,9 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                     has_next=has_next,
                     has_prev=has_prev,
                     time_range=time_range,
-                    filters_applied=filter_params.dict()
+                    filters_applied=filter_params.dict(),
                 )
-                
+
             except Exception as e:
                 self.logger.error("Failed to get events", error=str(e))
                 raise HTTPException(
@@ -342,26 +342,26 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
             metric_type: str,
             time_range: TimeRange = TimeRange.ONE_DAY,
             aggregation: AggregationType = AggregationType.NONE,
-            domain: Optional[str] = None,
-            entity_id: Optional[str] = None
+            domain: str | None = None,
+            entity_id: str | None = None,
         ):
             """Get aggregated metrics from InfluxDB."""
             try:
                 from ..api.data_access import get_data_access
-                
+
                 filter_params = MetricsFilter(
                     metric_type=metric_type,
                     time_range=time_range,
                     aggregation=aggregation,
                     domain=domain,
-                    entity_id=entity_id
+                    entity_id=entity_id,
                 )
-                
+
                 data_access = get_data_access()
                 metrics_response = await data_access.get_metrics(filter_params)
-                
+
                 return metrics_response
-                
+
             except Exception as e:
                 self.logger.error("Failed to get metrics", error=str(e))
                 raise HTTPException(
@@ -373,12 +373,12 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
             """Export data in various formats."""
             try:
                 from ..api.data_access import get_data_access
-                
+
                 data_access = get_data_access()
                 export_response = await data_access.export_data(export_request)
-                
+
                 return export_response
-                
+
             except Exception as e:
                 self.logger.error("Failed to export data", error=str(e))
                 raise HTTPException(
@@ -390,12 +390,12 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
             """Execute a custom Flux query (read-only, sanitized)."""
             try:
                 from ..api.data_access import get_data_access
-                
+
                 data_access = get_data_access()
                 query_response = await data_access.execute_custom_query(query_request)
-                
+
                 return query_response
-                
+
             except Exception as e:
                 self.logger.error("Failed to execute custom query", error=str(e))
                 raise HTTPException(
@@ -423,8 +423,8 @@ ha_ingestor_uptime_seconds {time.time() - self._start_time}
                         "events": "/api/events",
                         "metrics": "/api/metrics",
                         "export": "/api/export",
-                        "query": "/api/query"
-                    }
+                        "query": "/api/query",
+                    },
                 },
                 "timestamp": time.time(),
             }

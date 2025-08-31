@@ -392,17 +392,13 @@ class WebSocketClient:
                     filtered_message = self._event_filter_manager.filter_event(message)
                     if filtered_message is None:
                         # Event was filtered out
-                        self.logger.debug(
-                            "Event filtered out by rules",
-                            event=message.get("event", {}).get("event_type", ""),
-                        )
+                        event_type = message.get("event", {}).get("event_type", "")
+                        self.logger.debug(f"Event filtered out by rules: {event_type}")
                         return
                     elif filtered_message != message:
                         # Event was transformed
-                        self.logger.debug(
-                            "Event transformed by filter rules",
-                            event=message.get("event", {}).get("event_type", ""),
-                        )
+                        event_type = message.get("event", {}).get("event_type", "")
+                        self.logger.debug(f"Event transformed by filter rules: {event_type}")
                         message = filtered_message
 
                 # Handle event message
@@ -412,7 +408,7 @@ class WebSocketClient:
                     else:
                         self._message_handler(message, timestamp)
                 else:
-                    self.logger.debug("No message handler set", message=message)
+                    self.logger.debug(f"No message handler set for message: {message}")
 
             elif message_type == "pong":
                 # Handle pong response
@@ -429,14 +425,10 @@ class WebSocketClient:
 
             else:
                 # Handle other message types
-                self.logger.debug(
-                    "Received message", type=message_type, message=message
-                )
+                self.logger.debug(f"Received message type: {message_type}")
 
         except Exception as e:
-            self.logger.error(
-                "Error handling WebSocket message", message=message, error=str(e)
-            )
+            self.logger.error(f"Error handling WebSocket message: {str(e)}")
 
     def _start_heartbeat(self) -> None:
         """Start heartbeat monitoring."""
