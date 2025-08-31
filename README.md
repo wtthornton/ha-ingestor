@@ -74,10 +74,13 @@ Home Assistant → MQTT/WebSocket → HA-Ingestor → InfluxDB
 
 ## 📚 **Documentation**
 
-- **[AGENT.md](docs/development/AGENT.md)** - Comprehensive development standards and AI agent guidelines
-- **[TROUBLESHOOTING_GUIDE.md](docs/guides/TROUBLESHOOTING_GUIDE.md)** - Common issues and solutions
-- **[DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deployment and configuration guide
-- **[CHANGELOG.md](docs/reference/CHANGELOG.md)** - Project version history
+Complete documentation is organized in the [`docs/`](docs/) directory:
+
+- **[Quick Start Guide](docs/guides/QUICK_START.md)** - Get started in 5 minutes
+- **[Troubleshooting](docs/guides/TROUBLESHOOTING_GUIDE.md)** - Common issues and solutions
+- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Production deployment
+- **[API Reference](docs/api/SYSTEM_ENDPOINTS_REFERENCE.md)** - REST API documentation
+- **[Full Documentation Index](docs/README.md)** - Complete documentation overview
 
 ## 🚀 **Quick Start**
 
