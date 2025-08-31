@@ -56,14 +56,14 @@ from ha_ingestor.utils.logging import setup_default_logging
 async def main():
     """Start the health server."""
     print("🚀 Starting HA-Ingestor Health Server...")
-
+    
     # Setup logging
     setup_default_logging()
-
+    
     # Create and start health server
     health_server = HealthServer(host="0.0.0.0", port=8000)
     app = health_server.create_app()
-
+    
     print("✅ Health server created successfully")
     print("📋 Available endpoints:")
     print("   http://localhost:8000/health")
@@ -75,7 +75,7 @@ async def main():
     print("")
     print("🌐 Server starting on http://localhost:8000")
     print("Press Ctrl+C to stop")
-
+    
     # Start server
     config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
     server = uvicorn.Server(config)
