@@ -5,12 +5,11 @@ datasources:
     type: influxdb
     access: proxy
     url: http://influxdb:8086
-    database: ha_events
-    user: admin
-    secureJsonData:
-      password: ${INFLUXDB_TOKEN}
     jsonData:
+      httpMode: POST
       version: Flux
-      organization: myorg
-      defaultBucket: ha_events
+      organization: ${INFLUXDB_ORG}
+      defaultBucket: ${INFLUXDB_BUCKET}
       tlsSkipVerify: true
+    secureJsonData:
+      token: ${INFLUXDB_TOKEN}
