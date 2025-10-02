@@ -1,0 +1,54 @@
+---
+alwaysApply: true
+description: Project structure and file organization guidelines
+---
+
+# BMAD Project Structure Guide
+
+This project follows the BMAD (Business Model and Architecture Design) methodology with a structured approach to documentation and development.
+
+## Core Structure
+
+- **`.bmad-core/`** - Contains all BMAD methodology files, agents, templates, and workflows
+- **`.cursor/rules/`** - Contains Cursor IDE rules for AI agent personas
+- **`docs/`** - Project documentation (PRD, architecture, stories, QA results)
+
+## Key Files and Locations
+
+- **Core Configuration**: [.bmad-core/core-config.yaml](mdc:.bmad-core/core-config.yaml)
+- **User Guide**: [.bmad-core/user-guide.md](mdc:.bmad-core/user-guide.md)
+- **Working in Brownfield**: [.bmad-core/working-in-the-brownfield.md](mdc:.bmad-core/working-in-the-brownfield.md)
+
+## Document Structure
+
+- **PRD**: `docs/prd.md` (sharded to `docs/prd/`)
+- **Architecture**: `docs/architecture.md` (sharded to `docs/architecture/`)
+- **Stories**: `docs/stories/` directory
+- **QA Results**: `docs/qa/` directory
+
+## Agent Activation
+
+Use `@agent-name` to activate specific BMAD agents:
+- `@bmad-master` - Universal task executor
+- `@architect` - System architecture and design
+- `@dev` - Full-stack development
+- `@pm` - Product management and PRD creation
+- `@qa` - Quality assurance and testing
+- `@po` - Product ownership and story management
+- `@sm` - Scrum master and process management
+- `@ux-expert` - User experience design
+- `@analyst` - Business analysis and research
+
+## File Naming Conventions
+
+- Stories: `story-{epic}-{number}-{slug}.md`
+- Epics: `epic-{number}-{slug}.md`
+- QA Gates: `{epic}.{story}-{slug}.yml`
+- Architecture shards: `{section}-{slug}.md`
+
+## Development Workflow
+
+1. Planning phase uses web agents for cost efficiency
+2. Development phase uses IDE agents for implementation
+3. Documents are sharded for better navigation
+4. QA gates ensure quality before story completion

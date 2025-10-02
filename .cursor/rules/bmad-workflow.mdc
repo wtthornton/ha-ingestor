@@ -1,0 +1,74 @@
+---
+description: BMAD workflow integration and process guidelines
+---
+
+# BMAD Workflow Integration
+
+This rule helps integrate BMAD methodology into development workflows.
+
+## Workflow Phases
+
+### 1. Planning Phase (Web Agents Recommended)
+- Use `@analyst` for market research and competitor analysis
+- Use `@pm` for PRD creation and product strategy
+- Use `@ux-expert` for frontend specifications
+- Use `@architect` for system architecture design
+- Use `@qa` for early test strategy and risk assessment
+
+### 2. Development Phase (IDE Agents)
+- Use `@po` for story management and prioritization
+- Use `@sm` for process management and sprint planning
+- Use `@dev` for implementation and coding
+- Use `@qa` for quality gates and testing
+
+## Document Management
+
+### PRD Management
+- Main PRD: [docs/prd.md](mdc:docs/prd.md)
+- Sharded PRD: [docs/prd/](mdc:docs/prd/)
+- Use `*shard-prd` command to break down large PRDs
+
+### Architecture Management
+- Main Architecture: [docs/architecture.md](mdc:docs/architecture.md)
+- Sharded Architecture: [docs/architecture/](mdc:docs/architecture/)
+- Use `*shard-doc` command to break down large documents
+
+### Story Management
+- Stories Location: [docs/stories/](mdc:docs/stories/)
+- Follow naming convention: `story-{epic}-{number}-{slug}.md`
+- Use `*create-story` for new stories
+- Use `*validate-story` for story validation
+
+## Quality Gates
+
+### QA Process
+- QA Results: [docs/qa/](mdc:docs/qa/)
+- Gate Files: `{epic}.{story}-{slug}.yml`
+- Use `*review` command for comprehensive story review
+- Use `*gate` command for quality gate decisions
+
+### Checklist Usage
+- Use `*execute-checklist` for process validation
+- Available checklists in [.bmad-core/checklists/](mdc:.bmad-core/checklists/)
+- Story DoD: [story-dod-checklist.md](mdc:.bmad-core/checklists/story-dod-checklist.md)
+
+## Agent Commands
+
+All BMAD agents use `*` prefix for commands:
+- `*help` - Show available commands
+- `*exit` - Exit agent persona
+- `*yolo` - Toggle Yolo mode (skip confirmations)
+
+## File References
+
+When referencing BMAD files, use the format:
+- `[filename](mdc:path/to/file)` for relative paths
+- Always reference from workspace root
+
+## Process Integration
+
+1. **Story Creation**: Use `@po` or `@pm` to create stories
+2. **Architecture Review**: Use `@architect` for design decisions
+3. **Development**: Use `@dev` for implementation
+4. **Quality Assurance**: Use `@qa` for testing and review
+5. **Documentation**: Use `@bmad-master` for document management

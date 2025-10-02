@@ -1,0 +1,94 @@
+---
+globs: *.py,*.js,*.ts,*.tsx,*.jsx,*.json,*.yaml,*.yml,Dockerfile*,docker-compose*
+description: Development environment setup and configuration
+---
+
+# Development Environment Guidelines
+
+## Environment Setup
+
+### Python Development
+- Use Python 3.8+ for all new projects
+- Virtual environments are required for Python projects
+- Use `pyproject.toml` for dependency management
+- Follow PEP 621 for project metadata
+
+### Node.js Development
+- Use Node.js 18+ for all new projects
+- Use `package.json` for dependency management
+- Use `package-lock.json` for reproducible builds
+- Use TypeScript for all new JavaScript projects
+
+### Docker Configuration
+- Use multi-stage builds for production images
+- Include `.dockerignore` files
+- Use specific version tags, avoid `latest`
+- Optimize layer caching
+
+## Configuration Files
+
+### Python Projects
+- `pyproject.toml` - Project configuration and dependencies
+- `pytest.ini` - Test configuration
+- `pyrightconfig.json` - Type checking configuration
+
+### Node.js Projects
+- `package.json` - Project metadata and dependencies
+- `tsconfig.json` - TypeScript configuration
+- `vite.config.ts` - Build tool configuration
+- `vitest.config.ts` - Test configuration
+
+### Docker Projects
+- `Dockerfile` - Container build instructions
+- `docker-compose.yml` - Multi-container setup
+- `.dockerignore` - Files to exclude from build context
+
+## Development Tools
+
+### Code Quality
+- Use linters (ESLint, Pylint, etc.)
+- Use formatters (Prettier, Black, etc.)
+- Use type checkers (TypeScript, Pyright, etc.)
+- Use pre-commit hooks for quality gates
+
+### Testing
+- Write unit tests for all new functionality
+- Use test frameworks (Jest, Pytest, etc.)
+- Maintain test coverage above 80%
+- Use integration tests for API endpoints
+
+### Documentation
+- Use Markdown for documentation
+- Include README files for all projects
+- Document API endpoints and interfaces
+- Keep documentation up-to-date
+
+## Environment Variables
+
+- Use `.env` files for local development
+- Never commit secrets to version control
+- Use environment-specific configurations
+- Document required environment variables
+
+## Build and Deployment
+
+- Use CI/CD pipelines for automated testing
+- Use semantic versioning for releases
+- Use containerization for deployment
+- Use infrastructure as code where possible
+
+## File Organization
+
+```
+project/
+├── src/                 # Source code
+├── tests/              # Test files
+├── docs/               # Documentation
+├── config/             # Configuration files
+├── scripts/            # Build and utility scripts
+├── .github/            # GitHub workflows
+├── docker/             # Docker-related files
+├── README.md           # Project overview
+├── pyproject.toml      # Python project config
+└── package.json        # Node.js project config
+```

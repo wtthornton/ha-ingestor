@@ -1,0 +1,142 @@
+---
+globs: *.py,*.js,*.ts,*.tsx,*.jsx,*.json,*.yaml,*.yml,*.env*,Dockerfile*
+description: Security best practices and guidelines
+---
+
+# Security Best Practices
+
+## General Security Principles
+
+- **Defense in Depth**: Implement multiple layers of security
+- **Least Privilege**: Grant minimum necessary permissions
+- **Fail Secure**: Default to secure state on failure
+- **Input Validation**: Validate all user inputs
+- **Output Encoding**: Encode outputs to prevent injection
+
+## Authentication and Authorization
+
+### Authentication
+- Use strong password policies
+- Implement multi-factor authentication where possible
+- Use secure session management
+- Implement proper logout functionality
+- Use OAuth 2.0 for third-party authentication
+
+### Authorization
+- Implement role-based access control (RBAC)
+- Use principle of least privilege
+- Validate permissions on every request
+- Implement proper access controls
+- Use JWT tokens securely
+
+## Data Protection
+
+### Sensitive Data
+- Never store passwords in plain text
+- Use strong encryption for sensitive data
+- Implement proper key management
+- Use environment variables for secrets
+- Never commit secrets to version control
+
+### Data Validation
+- Validate all inputs on both client and server
+- Use whitelist validation where possible
+- Sanitize data before processing
+- Implement proper error handling
+- Use parameterized queries for databases
+
+## API Security
+
+### REST API Security
+- Use HTTPS for all API communications
+- Implement proper CORS policies
+- Use rate limiting to prevent abuse
+- Validate all request parameters
+- Implement proper error handling
+
+### GraphQL Security
+- Implement query depth limiting
+- Use query complexity analysis
+- Validate all inputs
+- Implement proper authorization
+- Use introspection carefully
+
+## Web Application Security
+
+### Frontend Security
+- Use Content Security Policy (CSP)
+- Implement proper XSS protection
+- Use secure cookies with proper flags
+- Validate all client-side inputs
+- Use HTTPS for all communications
+
+### Backend Security
+- Implement proper input validation
+- Use prepared statements for database queries
+- Implement proper error handling
+- Use secure headers
+- Implement proper logging and monitoring
+
+## Infrastructure Security
+
+### Container Security
+- Use minimal base images
+- Run containers as non-root users
+- Keep base images updated
+- Use multi-stage builds
+- Implement proper secrets management
+
+### Cloud Security
+- Use IAM roles and policies
+- Implement proper network segmentation
+- Use encryption in transit and at rest
+- Implement proper monitoring
+- Use infrastructure as code
+
+## Development Security
+
+### Code Security
+- Use secure coding practices
+- Implement proper error handling
+- Use static analysis tools
+- Implement proper logging
+- Use dependency scanning
+
+### Dependency Management
+- Keep dependencies updated
+- Use dependency scanning tools
+- Implement proper version pinning
+- Monitor for security vulnerabilities
+- Use trusted package sources
+
+## Monitoring and Incident Response
+
+### Security Monitoring
+- Implement proper logging
+- Use security monitoring tools
+- Implement alerting for security events
+- Monitor for unusual activity
+- Implement proper audit trails
+
+### Incident Response
+- Have incident response procedures
+- Implement proper backup and recovery
+- Use security incident tracking
+- Implement proper communication plans
+- Conduct regular security reviews
+
+## Compliance and Standards
+
+### Security Standards
+- Follow OWASP guidelines
+- Implement security best practices
+- Use industry-standard protocols
+- Implement proper documentation
+- Conduct regular security assessments
+
+### Privacy Compliance
+- Implement data protection measures
+- Use proper consent mechanisms
+- Implement data retention policies
+- Use privacy by design principles
+- Implement proper data handling procedures

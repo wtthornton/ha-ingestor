@@ -1,0 +1,89 @@
+---
+alwaysApply: true
+description: Overview of all available Cursor rules
+---
+
+# Cursor Rules Overview
+
+This project includes comprehensive Cursor rules to enhance development workflow and code quality.
+
+## Available Rules
+
+### BMAD Agent Rules (`.cursor/rules/bmad/`)
+- **bmad-master.mdc** - Universal task executor and BMAD method expert
+- **architect.mdc** - System architecture and design specialist
+- **dev.mdc** - Full-stack development and implementation
+- **pm.mdc** - Product management and PRD creation
+- **qa.mdc** - Quality assurance and testing specialist
+- **po.mdc** - Product ownership and story management
+- **sm.mdc** - Scrum master and process management
+- **ux-expert.mdc** - User experience design specialist
+- **analyst.mdc** - Business analysis and research
+- **bmad-orchestrator.mdc** - Workflow orchestration and coordination
+
+### Project Rules
+- **project-structure.mdc** - Project structure and file organization guidelines
+- **code-quality.mdc** - Code quality standards and best practices
+- **bmad-workflow.mdc** - BMAD workflow integration and process guidelines
+- **development-environment.mdc** - Development environment setup and configuration
+- **documentation-standards.mdc** - Documentation standards and formatting guidelines
+- **security-best-practices.mdc** - Security best practices and guidelines
+
+## How to Use
+
+### Activating BMAD Agents
+Use `@agent-name` to activate specific BMAD agents:
+```
+@bmad-master    # Universal task executor
+@architect      # System architecture and design
+@dev           # Full-stack development
+@pm            # Product management
+@qa            # Quality assurance
+@po            # Product ownership
+@sm            # Scrum master
+@ux-expert     # User experience design
+@analyst       # Business analysis
+```
+
+### Agent Commands
+All BMAD agents use `*` prefix for commands:
+- `*help` - Show available commands
+- `*exit` - Exit agent persona
+- `*yolo` - Toggle Yolo mode (skip confirmations)
+
+### File References
+When referencing files in rules, use the format:
+- `[filename](mdc:path/to/file)` for relative paths
+- Always reference from workspace root
+
+## Rule Types
+
+### Always Apply Rules
+Rules with `alwaysApply: true` are automatically applied to every request:
+- **project-structure.mdc** - Project structure guidance
+- **README.mdc** - This overview
+
+### File-Specific Rules
+Rules with `globs` apply only to matching file types:
+- **code-quality.mdc** - Applies to code files (*.py, *.js, *.ts, etc.)
+- **development-environment.mdc** - Applies to config files
+- **documentation-standards.mdc** - Applies to documentation files
+- **security-best-practices.mdc** - Applies to code and config files
+
+### Manual Rules
+Rules with `description` can be manually invoked:
+- **bmad-workflow.mdc** - BMAD workflow integration
+
+## Best Practices
+
+1. **Use Appropriate Agents**: Choose the right BMAD agent for your task
+2. **Follow Standards**: Adhere to code quality and documentation standards
+3. **Security First**: Always consider security implications
+4. **Document Everything**: Keep documentation up-to-date
+5. **Test Thoroughly**: Write tests for all new functionality
+
+## Getting Help
+
+- Use `*help` command with any BMAD agent
+- Refer to [.bmad-core/user-guide.md](mdc:.bmad-core/user-guide.md) for detailed BMAD methodology
+- Check [.bmad-core/core-config.yaml](mdc:.bmad-core/core-config.yaml) for project configuration

@@ -1,0 +1,66 @@
+---
+globs: *.py,*.js,*.ts,*.tsx,*.jsx,*.md,*.yaml,*.yml
+description: Code quality standards and best practices
+---
+
+# Code Quality Standards
+
+## General Principles
+
+- **Clarity over Cleverness**: Write code that is easy to understand and maintain
+- **Consistency**: Follow established patterns and conventions
+- **Documentation**: Document complex logic and architectural decisions
+- **Testing**: Write tests for all new functionality
+
+## Python Standards
+
+- Follow PEP 8 style guidelines
+- Use type hints for function parameters and return values
+- Write docstrings for all public functions and classes
+- Use meaningful variable and function names
+- Prefer composition over inheritance
+
+## JavaScript/TypeScript Standards
+
+- Use TypeScript for all new code
+- Follow ESLint and Prettier configurations
+- Use meaningful variable and function names
+- Prefer functional programming patterns where appropriate
+- Write JSDoc comments for complex functions
+
+## Documentation Standards
+
+- Use clear, concise language
+- Include examples for complex concepts
+- Keep documentation up-to-date with code changes
+- Use consistent formatting and structure
+
+## YAML Standards
+
+- Use consistent indentation (2 spaces)
+- Include comments for complex configurations
+- Validate YAML syntax before committing
+- Use meaningful key names
+
+## File Organization
+
+- Group related functionality together
+- Use clear directory structure
+- Avoid deep nesting (max 3-4 levels)
+- Use descriptive file names
+
+## Testing Requirements
+
+- Write unit tests for all new functions
+- Include integration tests for API endpoints
+- Test error conditions and edge cases
+- Maintain test coverage above 80%
+
+## Code Review Checklist
+
+- [ ] Code follows style guidelines
+- [ ] Tests are included and passing
+- [ ] Documentation is updated
+- [ ] No hardcoded values or secrets
+- [ ] Error handling is appropriate
+- [ ] Performance considerations addressed

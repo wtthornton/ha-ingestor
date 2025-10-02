@@ -1,0 +1,113 @@
+---
+globs: *.md,*.mdx,*.rst,*.txt
+description: Documentation standards and formatting guidelines
+---
+
+# Documentation Standards
+
+## Markdown Guidelines
+
+### File Structure
+- Use clear, descriptive filenames
+- Include a title (H1) at the top of each document
+- Use consistent heading hierarchy (H1 → H2 → H3)
+- Include a table of contents for long documents
+
+### Content Standards
+- Write in clear, concise language
+- Use active voice where possible
+- Include examples for complex concepts
+- Keep paragraphs short and focused
+- Use bullet points for lists
+
+### Code Examples
+- Use code blocks with appropriate language tags
+- Include comments in code examples
+- Show both input and expected output
+- Use inline code for short snippets
+
+### Links and References
+- Use descriptive link text
+- Reference files using `[filename](mdc:path/to/file)` format
+- Include context for external links
+- Keep links up-to-date
+
+## BMAD Documentation
+
+### PRD Documentation
+- Follow the PRD template structure
+- Include functional and non-functional requirements
+- Define acceptance criteria clearly
+- Include user stories and epics
+
+### Architecture Documentation
+- Document system components and interactions
+- Include diagrams for complex systems
+- Document technology choices and rationale
+- Include deployment and scaling considerations
+
+### Story Documentation
+- Use the story template format
+- Include clear acceptance criteria
+- Define tasks and subtasks
+- Include testing requirements
+
+## Technical Documentation
+
+### API Documentation
+- Document all endpoints and parameters
+- Include request/response examples
+- Document error codes and messages
+- Include authentication requirements
+
+### Code Documentation
+- Write docstrings for all public functions
+- Include type hints and parameter descriptions
+- Document complex algorithms and business logic
+- Include usage examples
+
+### Configuration Documentation
+- Document all configuration options
+- Include default values and ranges
+- Explain the impact of configuration changes
+- Include troubleshooting guides
+
+## Formatting Guidelines
+
+### Headers
+- Use H1 for document titles
+- Use H2 for major sections
+- Use H3 for subsections
+- Use H4+ sparingly
+
+### Lists
+- Use numbered lists for sequential steps
+- Use bullet points for non-sequential items
+- Use nested lists for hierarchical information
+- Keep list items parallel in structure
+
+### Tables
+- Use tables for structured data
+- Include headers for all columns
+- Align columns appropriately
+- Keep tables simple and readable
+
+### Emphasis
+- Use **bold** for important terms
+- Use *italic* for emphasis
+- Use `code` for technical terms
+- Use > blockquotes for important notes
+
+## Review Process
+
+### Documentation Review
+- Check for accuracy and completeness
+- Verify all links work correctly
+- Ensure consistent formatting
+- Validate code examples
+
+### Maintenance
+- Update documentation with code changes
+- Review documentation regularly
+- Remove outdated information
+- Keep examples current
