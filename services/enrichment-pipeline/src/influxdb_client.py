@@ -1,0 +1,355 @@
+"""
+InfluxDB Client for storing normalized Home Assistant events
+"""
+
+import logging
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+import asyncio
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+logger = logging.getLogger(__name__)
+
+
+class InfluxDBClientWrapper:
+    """Wrapper for InfluxDB operations"""
+    
+    def __init__(self, url: str, token: str, org: str, bucket: str):
+        self.url = url
+        self.token = token
+        self.org = org
+        self.bucket = bucket
+        self.client: Optional[InfluxDBClient] = None
+        self.write_api = None
+        self.query_api = None
+        
+        # Statistics
+        self.points_written = 0
+        self.write_errors = 0
+        self.last_write_time: Optional[datetime] = None
+    
+    async def connect(self) -> bool:
+        """
+        Connect to InfluxDB
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        try:
+            self.client = InfluxDBClient(
+                url=self.url,
+                token=self.token,
+                org=self.org
+            )
+            
+            # Test connection
+            await self._test_connection()
+            
+            # Initialize APIs
+            self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
+            self.query_api = self.client.query_api()
+            
+            logger.info(f"Connected to InfluxDB at {self.url}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to connect to InfluxDB: {e}")
+            return False
+    
+    async def _test_connection(self):
+        """Test InfluxDB connection"""
+        try:
+            # Try to query buckets to test connection
+            buckets_api = self.client.buckets_api()
+            buckets = buckets_api.find_buckets()
+            
+            # Check if our bucket exists
+            bucket_found = any(bucket.name == self.bucket for bucket in buckets)
+            if not bucket_found:
+                logger.warning(f"Bucket '{self.bucket}' not found in InfluxDB")
+            
+        except Exception as e:
+            logger.error(f"InfluxDB connection test failed: {e}")
+            raise
+    
+    async def write_event(self, event_data: Dict[str, Any]) -> bool:
+        """
+        Write a normalized event to InfluxDB
+        
+        Args:
+            event_data: The normalized event data
+            
+        Returns:
+            True if write successful, False otherwise
+        """
+        try:
+            if not self.client or not self.write_api:
+                logger.error("InfluxDB client not connected")
+                return False
+            
+            # Create InfluxDB point
+            point = self._create_point_from_event(event_data)
+            
+            if not point:
+                logger.warning("Failed to create InfluxDB point from event")
+                return False
+            
+            # Write point
+            self.write_api.write(bucket=self.bucket, record=point)
+            
+            # Update statistics
+            self.points_written += 1
+            self.last_write_time = datetime.now()
+            
+            logger.debug(f"Successfully wrote event to InfluxDB: {event_data.get('event_type', 'unknown')}")
+            return True
+            
+        except Exception as e:
+            self.write_errors += 1
+            logger.error(f"Error writing event to InfluxDB: {e}")
+            return False
+    
+    def _create_point_from_event(self, event_data: Dict[str, Any]) -> Optional[Point]:
+        """
+        Create InfluxDB point from event data
+        
+        Args:
+            event_data: The normalized event data
+            
+        Returns:
+            InfluxDB Point or None if creation fails
+        """
+        try:
+            event_type = event_data.get("event_type")
+            if not event_type:
+                return None
+            
+            # Create base point
+            point = Point("home_assistant_events")
+            
+            # Set timestamp
+            timestamp = event_data.get("timestamp")
+            if timestamp:
+                point.time(timestamp)
+            
+            # Add tags
+            point.tag("event_type", event_type)
+            
+            # Add entity metadata as tags
+            entity_metadata = event_data.get("entity_metadata", {})
+            if entity_metadata:
+                if entity_metadata.get("domain"):
+                    point.tag("domain", entity_metadata["domain"])
+                if entity_metadata.get("device_class"):
+                    point.tag("device_class", entity_metadata["device_class"])
+                if entity_metadata.get("entity_category"):
+                    point.tag("entity_category", entity_metadata["entity_category"])
+            
+            # Add fields based on event type
+            if event_type == "state_changed":
+                point = self._add_state_changed_fields(point, event_data)
+            else:
+                # Generic event fields
+                point.field("raw_data", str(event_data))
+            
+            return point
+            
+        except Exception as e:
+            logger.error(f"Error creating InfluxDB point: {e}")
+            return None
+    
+    def _add_state_changed_fields(self, point: Point, event_data: Dict[str, Any]) -> Point:
+        """
+        Add state_changed specific fields to InfluxDB point
+        
+        Args:
+            point: The InfluxDB point
+            event_data: The event data
+            
+        Returns:
+            Updated InfluxDB point
+        """
+        try:
+            # Add entity_id as tag
+            new_state = event_data.get("new_state", {})
+            if new_state.get("entity_id"):
+                point.tag("entity_id", new_state["entity_id"])
+            
+            # Add state fields
+            if "state" in new_state:
+                point.field("state", new_state["state"])
+            
+            # Add old state for comparison
+            old_state = event_data.get("old_state", {})
+            if old_state and "state" in old_state:
+                point.field("old_state", old_state["state"])
+            
+            # Add attributes as fields
+            attributes = new_state.get("attributes", {})
+            for key, value in attributes.items():
+                if self._is_valid_field_value(value):
+                    point.field(f"attr_{key}", value)
+            
+            # Add entity metadata fields
+            entity_metadata = event_data.get("entity_metadata", {})
+            if entity_metadata.get("friendly_name"):
+                point.field("friendly_name", entity_metadata["friendly_name"])
+            if entity_metadata.get("unit_of_measurement"):
+                point.field("unit_of_measurement", entity_metadata["unit_of_measurement"])
+            if entity_metadata.get("icon"):
+                point.field("icon", entity_metadata["icon"])
+            
+            return point
+            
+        except Exception as e:
+            logger.error(f"Error adding state_changed fields: {e}")
+            return point
+    
+    def _is_valid_field_value(self, value: Any) -> bool:
+        """
+        Check if a value is valid for InfluxDB field
+        
+        Args:
+            value: The value to check
+            
+        Returns:
+            True if valid, False otherwise
+        """
+        try:
+            # InfluxDB supports: string, float, integer, boolean
+            if isinstance(value, (str, int, float, bool)):
+                return True
+            
+            # Convert None to empty string
+            if value is None:
+                return True
+            
+            # Complex objects (dict, list) are not valid
+            if isinstance(value, (dict, list)):
+                return False
+            
+            # Try to convert to string for other types
+            str(value)
+            return True
+            
+        except Exception:
+            return False
+    
+    async def write_events_batch(self, events: List[Dict[str, Any]]) -> int:
+        """
+        Write multiple events to InfluxDB in batch
+        
+        Args:
+            events: List of normalized event data
+            
+        Returns:
+            Number of events successfully written
+        """
+        try:
+            if not self.client or not self.write_api:
+                logger.error("InfluxDB client not connected")
+                return 0
+            
+            # Create points
+            points = []
+            for event_data in events:
+                point = self._create_point_from_event(event_data)
+                if point:
+                    points.append(point)
+            
+            if not points:
+                logger.warning("No valid points to write")
+                return 0
+            
+            # Write batch
+            self.write_api.write(bucket=self.bucket, record=points)
+            
+            # Update statistics
+            written_count = len(points)
+            self.points_written += written_count
+            self.last_write_time = datetime.now()
+            
+            logger.info(f"Successfully wrote {written_count} events to InfluxDB")
+            return written_count
+            
+        except Exception as e:
+            self.write_errors += 1
+            logger.error(f"Error writing batch to InfluxDB: {e}")
+            return 0
+    
+    async def query_events(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Query events from InfluxDB
+        
+        Args:
+            query: InfluxDB query string
+            
+        Returns:
+            List of query results
+        """
+        try:
+            if not self.client or not self.query_api:
+                logger.error("InfluxDB client not connected")
+                return []
+            
+            # Execute query
+            result = self.query_api.query(query=query, org=self.org)
+            
+            # Convert to list of dictionaries
+            events = []
+            for table in result:
+                for record in table.records:
+                    # Handle time conversion properly
+                    time_value = record.get_time()
+                    if hasattr(time_value, 'isoformat'):
+                        time_str = time_value.isoformat()
+                    else:
+                        time_str = str(time_value)
+                    
+                    event = {
+                        "time": time_str,
+                        "measurement": record.get_measurement(),
+                        "fields": record.values,
+                        "tags": record.tags
+                    }
+                    events.append(event)
+            
+            logger.debug(f"Query returned {len(events)} events")
+            return events
+            
+        except Exception as e:
+            logger.error(f"Error querying InfluxDB: {e}")
+            return []
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """
+        Get InfluxDB client statistics
+        
+        Returns:
+            Dictionary with statistics
+        """
+        return {
+            "points_written": self.points_written,
+            "write_errors": self.write_errors,
+            "success_rate": (self.points_written / (self.points_written + self.write_errors) * 100) 
+                           if (self.points_written + self.write_errors) > 0 else 0,
+            "last_write_time": self.last_write_time.isoformat() if self.last_write_time else None,
+            "connected": self.client is not None,
+            "bucket": self.bucket,
+            "org": self.org
+        }
+    
+    async def close(self):
+        """Close InfluxDB connection"""
+        try:
+            if self.client:
+                self.client.close()
+                logger.info("InfluxDB connection closed")
+        except Exception as e:
+            logger.error(f"Error closing InfluxDB connection: {e}")
+        finally:
+            # Always reset client references
+            self.client = None
+            self.write_api = None
+            self.query_api = None

@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: ha-ingestor-influxdb-dev
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-admin123}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+    volumes:
+      - influxdb_data_dev:/var/lib/influxdb2
+      - influxdb_config_dev:/etc/influxdb2
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  websocket-ingestion:
+    build:
+      context: ./services/websocket-ingestion
+      dockerfile: Dockerfile.dev
+    container_name: ha-ingestor-websocket-dev
+    restart: unless-stopped
+    environment:
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./services/websocket-ingestion:/app
+      - /app/__pycache__
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  enrichment-pipeline:
+    build:
+      context: ./services/enrichment-pipeline
+      dockerfile: Dockerfile.dev
+    container_name: ha-ingestor-enrichment-dev
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./services/enrichment-pipeline:/app
+      - /app/__pycache__
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  weather-api:
+    build:
+      context: ./services/weather-api
+      dockerfile: Dockerfile.dev
+    container_name: ha-ingestor-weather-dev
+    restart: unless-stopped
+    environment:
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./services/weather-api:/app
+      - /app/__pycache__
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  admin-api:
+    build:
+      context: ./services/admin-api
+      dockerfile: Dockerfile.dev
+    container_name: ha-ingestor-admin-dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./services/admin-api:/app
+      - /app/__pycache__
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  influxdb_data_dev:
+  influxdb_config_dev:
+
+networks:
+  ha-ingestor-network-dev:
+    driver: bridge
