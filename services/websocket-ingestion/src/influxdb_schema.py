@@ -3,7 +3,7 @@ InfluxDB Schema Design and Data Models
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 import re
 
