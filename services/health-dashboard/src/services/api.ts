@@ -1,6 +1,6 @@
 import { SystemHealth, Statistics, EventData, Configuration, ApiResponse, ErrorResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api/v1';
 
 class ApiService {
   private baseUrl: string;
@@ -16,9 +16,9 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.authToken) {

@@ -7,9 +7,9 @@ import logging
 import os
 from aiohttp import web
 from shared.logging_config import setup_logging
-from .data_normalizer import DataNormalizer
-from .influxdb_client import InfluxDBClientWrapper
-from .health_check import health_check_handler
+from data_normalizer import DataNormalizer
+from influxdb_wrapper import InfluxDBClientWrapper
+from health_check import health_check_handler
 
 # Setup logging for the service
 logger = setup_logging("enrichment-pipeline-service")

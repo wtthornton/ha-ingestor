@@ -65,7 +65,7 @@ class InfluxDBClientWrapper:
             buckets = buckets_api.find_buckets()
             
             # Check if our bucket exists
-            bucket_found = any(bucket.name == self.bucket for bucket in buckets)
+            bucket_found = any(bucket.name == self.bucket for bucket in buckets.buckets)
             if not bucket_found:
                 logger.warning(f"Bucket '{self.bucket}' not found in InfluxDB")
             

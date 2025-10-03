@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY services/enrichment-pipeline/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Production stage
@@ -29,11 +29,11 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY src/ ./src/
+COPY services/enrichment-pipeline/src/ ./src/
 COPY shared/ ./shared/
 
 # Set environment variables
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/src
 ENV PYTHONUNBUFFERED=1
 
 # Expose port

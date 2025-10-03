@@ -7,8 +7,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from .weather_client import OpenWeatherMapClient, WeatherData
-from .weather_cache import WeatherCache
+from weather_client import OpenWeatherMapClient, WeatherData
+from weather_cache import WeatherCache
 
 logger = logging.getLogger(__name__)
 

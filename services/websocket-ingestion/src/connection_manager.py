@@ -8,11 +8,11 @@ import random
 from typing import Optional, Callable, Dict, Any
 from datetime import datetime, timedelta
 
-from .websocket_client import HomeAssistantWebSocketClient
-from .event_subscription import EventSubscriptionManager
-from .event_processor import EventProcessor
-from .event_rate_monitor import EventRateMonitor
-from .error_handler import ErrorHandler
+from websocket_client import HomeAssistantWebSocketClient
+from event_subscription import EventSubscriptionManager
+from event_processor import EventProcessor
+from event_rate_monitor import EventRateMonitor
+from error_handler import ErrorHandler
 
 logger = logging.getLogger(__name__)
 

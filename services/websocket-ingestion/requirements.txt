@@ -3,5 +3,6 @@ asyncio-mqtt==0.16.1
 influxdb-client==1.39.0
 python-dotenv==1.0.0
 pydantic==2.5.2
+psutil==5.9.6
 pytest==7.4.4
 pytest-asyncio==0.21.1

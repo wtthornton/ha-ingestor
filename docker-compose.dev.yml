@@ -57,8 +57,8 @@ services:
 
   enrichment-pipeline:
     build:
-      context: ./services/enrichment-pipeline
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: services/enrichment-pipeline/Dockerfile.dev
     container_name: ha-ingestor-enrichment-dev
     restart: unless-stopped
     ports:
@@ -155,6 +155,41 @@ services:
       retries: 3
       start_period: 30s
 
+  data-retention:
+    build:
+      context: ./services/data-retention
+      dockerfile: Dockerfile.dev
+    container_name: ha-ingestor-data-retention-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=DEBUG
+      - CLEANUP_INTERVAL_HOURS=${CLEANUP_INTERVAL_HOURS:-24}
+      - MONITORING_INTERVAL_MINUTES=${MONITORING_INTERVAL_MINUTES:-5}
+      - COMPRESSION_INTERVAL_HOURS=${COMPRESSION_INTERVAL_HOURS:-24}
+      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}
+      - BACKUP_DIR=${BACKUP_DIR:-/backups}
+    volumes:
+      - ./services/data-retention:/app
+      - /app/__pycache__
+      - data_retention_backups_dev:/backups
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   health-dashboard:
     build:
       context: ./services/health-dashboard
@@ -183,6 +218,7 @@ services:
 volumes:
   influxdb_data_dev:
   influxdb_config_dev:
+  data_retention_backups_dev:
 
 networks:
   ha-ingestor-network-dev:

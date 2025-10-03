@@ -5,17 +5,17 @@ import { DataVisualization } from './DataVisualization';
 import { SavedQueries } from './SavedQueries';
 
 export const DataQueryInterface: React.FC = () => {
-  const [currentEvents, setCurrentEvents] = useState<EventData[]>([]);
-  const [currentFilters, setCurrentFilters] = useState<EventFilter>({});
+  const [currentEvents] = useState<EventData[]>([]);
+  const [, setCurrentFilters] = useState<EventFilter>({});
   const [activeTab, setActiveTab] = useState<'browser' | 'visualization' | 'queries'>('browser');
 
-  const handleEventsUpdate = (events: EventData[]) => {
-    setCurrentEvents(events);
-  };
+  // const handleEventsUpdate = (events: EventData[]) => {
+  //   setCurrentEvents(events);
+  // };
 
-  const handleFiltersUpdate = (filters: EventFilter) => {
-    setCurrentFilters(filters);
-  };
+  // const handleFiltersUpdate = (filters: EventFilter) => {
+  //   setCurrentFilters(filters);
+  // };
 
   const handleLoadQuery = (filters: EventFilter) => {
     setCurrentFilters(filters);

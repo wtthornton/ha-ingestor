@@ -12,8 +12,8 @@ COPY vite.config.ts ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+    # Install dependencies
+    RUN npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder

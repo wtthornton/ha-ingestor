@@ -165,6 +165,43 @@ services:
         reservations:
           memory: 512M
 
+  data-retention:
+    image: ha-ingestor-data-retention:latest
+    container_name: ha-ingestor-data-retention-prod
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+      - LOG_LEVEL=INFO
+      - CLEANUP_INTERVAL_HOURS=${CLEANUP_INTERVAL_HOURS:-24}
+      - MONITORING_INTERVAL_MINUTES=${MONITORING_INTERVAL_MINUTES:-5}
+      - COMPRESSION_INTERVAL_HOURS=${COMPRESSION_INTERVAL_HOURS:-24}
+      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}
+      - BACKUP_DIR=${BACKUP_DIR:-/backups}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    volumes:
+      - data_retention_backups_prod:/backups
+
   health-dashboard:
     image: ha-ingestor-dashboard:latest
     container_name: ha-ingestor-dashboard-prod
@@ -194,6 +231,7 @@ services:
 volumes:
   influxdb_data_prod:
   influxdb_config_prod:
+  data_retention_backups_prod:
 
 networks:
   ha-ingestor-network-prod:

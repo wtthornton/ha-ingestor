@@ -21,7 +21,7 @@ export const SavedQueries: React.FC<SavedQueriesProps> = ({ onLoadQuery, onSaveQ
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [newQueryName, setNewQueryName] = useState('');
   const [newQueryDescription, setNewQueryDescription] = useState('');
-  const [currentFilters, setCurrentFilters] = useState<EventFilter>({});
+  const [currentFilters] = useState<EventFilter>({});
 
   useEffect(() => {
     loadSavedQueries();

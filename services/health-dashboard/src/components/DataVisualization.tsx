@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { EventData } from '../types';
 import { MetricsChart } from './MetricsChart';
-import { format, parseISO, startOfHour, endOfHour, subHours } from 'date-fns';
+import { format, parseISO, startOfHour, subHours } from 'date-fns';
 
 interface DataVisualizationProps {
   events: EventData[];

@@ -32,20 +32,24 @@ services:
       dockerfile: Dockerfile
     container_name: ha-ingestor-websocket
     restart: unless-stopped
+    ports:
+      - "8001:8001"
     environment:
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - WEBSOCKET_INGESTION_PORT=8001
+      - ENABLE_HOME_ASSISTANT=false
     depends_on:
       influxdb:
         condition: service_healthy
     networks:
       - ha-ingestor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -53,8 +57,8 @@ services:
 
   enrichment-pipeline:
     build:
-      context: ./services/enrichment-pipeline
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/enrichment-pipeline/Dockerfile
     container_name: ha-ingestor-enrichment
     restart: unless-stopped
     ports:
@@ -84,12 +88,13 @@ services:
     container_name: ha-ingestor-weather
     restart: unless-stopped
     environment:
-      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - ENABLE_WEATHER_API=${ENABLE_WEATHER_API:-false}
     depends_on:
       influxdb:
         condition: service_healthy
@@ -109,12 +114,19 @@ services:
     container_name: ha-ingestor-admin
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8003:8004"
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - ENABLE_AUTH=true
+      - API_PORT=8004
+      - ENABLE_AUTH=false
+      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super-secret-jwt-key}
       - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
@@ -141,6 +153,39 @@ services:
       retries: 3
       start_period: 30s
 
+  data-retention:
+    build:
+      context: ./services/data-retention
+      dockerfile: Dockerfile
+    container_name: ha-ingestor-data-retention
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CLEANUP_INTERVAL_HOURS=${CLEANUP_INTERVAL_HOURS:-24}
+      - MONITORING_INTERVAL_MINUTES=${MONITORING_INTERVAL_MINUTES:-5}
+      - COMPRESSION_INTERVAL_HOURS=${COMPRESSION_INTERVAL_HOURS:-24}
+      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}
+      - BACKUP_DIR=${BACKUP_DIR:-/backups}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - data_retention_backups:/backups
+
   health-dashboard:
     build:
       context: ./services/health-dashboard
@@ -150,10 +195,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
-    depends_on:
-      admin-api:
-        condition: service_healthy
+      - VITE_API_BASE_URL=http://localhost:8003/api/v1
     networks:
       - ha-ingestor-network
     healthcheck:
@@ -166,6 +208,7 @@ services:
 volumes:
   influxdb_data:
   influxdb_config:
+  data_retention_backups:
 
 networks:
   ha-ingestor-network:

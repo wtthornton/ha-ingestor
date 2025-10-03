@@ -50,17 +50,22 @@ if ! test_influxdb; then
 fi
 
 # Test Admin API
-if ! test_service "Admin API" "http://localhost:8000/health"; then
+if ! test_service "Admin API" "http://localhost:8003/health"; then
     ((failed_tests++))
 fi
 
 # Test WebSocket Ingestion (internal)
-if ! test_service "WebSocket Ingestion" "http://localhost:8000/health"; then
+if ! test_service "WebSocket Ingestion" "http://localhost:8001/health"; then
     ((failed_tests++))
 fi
 
 # Test Weather API (internal)
 if ! test_service "Weather API" "http://localhost:8001/health"; then
+    ((failed_tests++))
+fi
+
+# Test Data Retention Service
+if ! test_service "Data Retention Service" "http://localhost:8080/health"; then
     ((failed_tests++))
 fi
 

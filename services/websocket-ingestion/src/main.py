@@ -9,15 +9,15 @@ from typing import Optional
 from aiohttp import web
 from dotenv import load_dotenv
 
-from .health_check import HealthCheckHandler
-from .connection_manager import ConnectionManager
-from .async_event_processor import AsyncEventProcessor
-from .event_queue import EventQueue
-from .batch_processor import BatchProcessor
-from .memory_manager import MemoryManager
-from .weather_enrichment import WeatherEnrichmentService
-from .influxdb_client import InfluxDBConnectionManager
-from .influxdb_batch_writer import InfluxDBBatchWriter
+from health_check import HealthCheckHandler
+from connection_manager import ConnectionManager
+from async_event_processor import AsyncEventProcessor
+from event_queue import EventQueue
+from batch_processor import BatchProcessor
+from memory_manager import MemoryManager
+from weather_enrichment import WeatherEnrichmentService
+from influxdb_wrapper import InfluxDBConnectionManager
+from influxdb_batch_writer import InfluxDBBatchWriter
 
 # Load environment variables
 load_dotenv()
@@ -53,6 +53,7 @@ class WebSocketIngestionService:
         # Get configuration from environment
         self.home_assistant_url = os.getenv('HOME_ASSISTANT_URL')
         self.home_assistant_token = os.getenv('HOME_ASSISTANT_TOKEN')
+        self.home_assistant_enabled = os.getenv('ENABLE_HOME_ASSISTANT', 'true').lower() == 'true'
         
         # High-volume processing configuration
         self.max_workers = int(os.getenv('MAX_WORKERS', '10'))
@@ -73,8 +74,8 @@ class WebSocketIngestionService:
         self.influxdb_bucket = os.getenv('INFLUXDB_BUCKET', 'home-assistant-events')
         self.influxdb_enabled = os.getenv('INFLUXDB_ENABLED', 'true').lower() == 'true'
         
-        if not self.home_assistant_url or not self.home_assistant_token:
-            raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set")
+        if self.home_assistant_enabled and (not self.home_assistant_url or not self.home_assistant_token):
+            raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
     
     async def start(self):
         """Start the service"""
@@ -131,24 +132,28 @@ class WebSocketIngestionService:
         # Set up batch processor handler
         self.batch_processor.add_batch_handler(self._process_batch)
         
-        # Initialize connection manager
-        self.connection_manager = ConnectionManager(
-            self.home_assistant_url,
-            self.home_assistant_token
-        )
-        
-        # Set up event handlers
-        self.connection_manager.on_connect = self._on_connect
-        self.connection_manager.on_disconnect = self._on_disconnect
-        self.connection_manager.on_message = self._on_message
-        self.connection_manager.on_error = self._on_error
-        self.connection_manager.on_event = self._on_event
+        # Initialize connection manager (only if Home Assistant is enabled)
+        if self.home_assistant_enabled:
+            self.connection_manager = ConnectionManager(
+                self.home_assistant_url,
+                self.home_assistant_token
+            )
+            
+            # Set up event handlers
+            self.connection_manager.on_connect = self._on_connect
+            self.connection_manager.on_disconnect = self._on_disconnect
+            self.connection_manager.on_message = self._on_message
+            self.connection_manager.on_error = self._on_error
+            self.connection_manager.on_event = self._on_event
+            
+            # Start connection manager
+            await self.connection_manager.start()
+            logger.info("Home Assistant connection manager started")
+        else:
+            logger.info("Home Assistant connection disabled - running in standalone mode")
         
         # Update health handler with connection manager
         self.health_handler.set_connection_manager(self.connection_manager)
-        
-        # Start connection manager
-        await self.connection_manager.start()
         
         logger.info("WebSocket Ingestion Service started")
     

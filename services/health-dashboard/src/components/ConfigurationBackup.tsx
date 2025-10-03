@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Configuration } from '../types';
+// import { Configuration } from '../types';
 import { apiService } from '../services/api';
 
 interface ConfigurationBackupProps {

@@ -8,7 +8,7 @@ interface EventFeedProps {
   onFilter?: (filter: EventFilter) => void;
 }
 
-export const EventFeed: React.FC<EventFeedProps> = ({ events, loading = false, onFilter }) => {
+export const EventFeed: React.FC<EventFeedProps> = ({ events, loading = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEntity, setSelectedEntity] = useState<string>('');
 
