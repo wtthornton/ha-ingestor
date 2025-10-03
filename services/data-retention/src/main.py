@@ -4,6 +4,7 @@ import logging
 import asyncio
 import os
 from typing import Optional
+from aiohttp import web
 
 from .retention_policy import RetentionPolicyManager, RetentionPolicy, RetentionPeriod
 from .data_cleanup import DataCleanupService
@@ -221,6 +222,32 @@ class DataRetentionService:
 # Global service instance
 data_retention_service = DataRetentionService()
 
+async def health_check_handler(request: web.Request) -> web.Response:
+    """Simple health check handler."""
+    try:
+        # Get basic service status
+        service_status = data_retention_service.get_service_status()
+        
+        health_data = {
+            "status": "healthy",
+            "timestamp": data_retention_service.get_service_status().get("timestamp", "unknown"),
+            "service": "data-retention",
+            "uptime": service_status.get("uptime_seconds", 0)
+        }
+        
+        return web.json_response(health_data)
+        
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return web.json_response(
+            {
+                "status": "error",
+                "timestamp": "unknown",
+                "error": str(e)
+            },
+            status=500
+        )
+
 async def main():
     """Main entry point."""
     logging.basicConfig(
@@ -229,7 +256,24 @@ async def main():
     )
     
     try:
+        # Start the data retention service
         await data_retention_service.start()
+        
+        # Create and start the web application
+        app = web.Application()
+        
+        # Add health check route
+        app.router.add_get('/health', health_check_handler)
+        
+        runner = web.AppRunner(app)
+        await runner.setup()
+        
+        # Get port from environment
+        port = int(os.getenv('PORT', '8080'))
+        site = web.TCPSite(runner, '0.0.0.0', port)
+        await site.start()
+        
+        logger.info(f"Data retention service started on port {port}")
         
         # Keep service running
         while True:

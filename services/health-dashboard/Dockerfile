@@ -44,18 +44,15 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user
+# Create non-root user for file ownership
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Set ownership
-RUN chown -R nextjs:nodejs /usr/share/nginx/html && \
-    chown -R nextjs:nodejs /var/cache/nginx && \
-    chown -R nextjs:nodejs /var/log/nginx && \
-    chown -R nextjs:nodejs /etc/nginx/conf.d
+# Set ownership of web files to non-root user
+RUN chown -R nextjs:nodejs /usr/share/nginx/html
 
-# Switch to non-root user
-USER nextjs
+# Keep nginx running as root for system operations
+# but ensure web files are owned by non-root user
 
 # Expose port
 EXPOSE 80

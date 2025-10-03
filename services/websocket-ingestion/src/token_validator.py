@@ -14,10 +14,11 @@ class TokenValidator:
     """Validates Home Assistant long-lived access tokens"""
     
     def __init__(self):
-        # Home Assistant token format: typically 32+ characters, alphanumeric
-        self.token_pattern = re.compile(r'^[a-zA-Z0-9]{32,}$')
+        # Home Assistant token format: JWT tokens can be quite long (200+ characters)
+        # Support both traditional tokens and JWT format tokens
+        self.token_pattern = re.compile(r'^[a-zA-Z0-9._-]+$')
         self.min_length = 32
-        self.max_length = 128
+        self.max_length = 300  # Increased to support JWT tokens
     
     def validate_token_format(self, token: str) -> Tuple[bool, str]:
         """

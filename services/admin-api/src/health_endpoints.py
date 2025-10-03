@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class HealthStatus(BaseModel):
     """Health status model"""
     status: str
-    timestamp: datetime
+    timestamp: str  # Changed to string for JSON serialization
     uptime_seconds: float
     version: str
     services: Dict[str, Any]
@@ -30,7 +30,7 @@ class ServiceHealth(BaseModel):
     """Service health model"""
     name: str
     status: str
-    last_check: datetime
+    last_check: str  # Changed to string for JSON serialization
     response_time_ms: Optional[float] = None
     error_message: Optional[str] = None
 
@@ -69,14 +69,14 @@ class HealthEndpoints:
                 
                 # Determine overall status
                 overall_status = "healthy"
-                if any(service["status"] != "healthy" for service in services_health.values()):
+                if any(service.status != "healthy" for service in services_health.values()):
                     overall_status = "degraded"
-                if any(service["status"] == "unhealthy" for service in services_health.values()):
+                if any(service.status == "unhealthy" for service in services_health.values()):
                     overall_status = "unhealthy"
                 
                 return HealthStatus(
                     status=overall_status,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now().isoformat(),  # Convert to ISO string
                     uptime_seconds=(datetime.now() - self.start_time).total_seconds(),
                     version=os.getenv("API_VERSION", "1.0.0"),
                     services=services_health,
@@ -147,14 +147,14 @@ class HealthEndpoints:
                             services_health[service_name] = ServiceHealth(
                                 name=service_name,
                                 status=data.get("status", "unknown"),
-                                last_check=datetime.now(),
+                                last_check=datetime.now().isoformat(),  # Convert to ISO string
                                 response_time_ms=response_time
                             )
                         else:
                             services_health[service_name] = ServiceHealth(
                                 name=service_name,
                                 status="unhealthy",
-                                last_check=datetime.now(),
+                                last_check=datetime.now().isoformat(),  # Convert to ISO string
                                 response_time_ms=response_time,
                                 error_message=f"HTTP {response.status}"
                             )
@@ -163,14 +163,14 @@ class HealthEndpoints:
                 services_health[service_name] = ServiceHealth(
                     name=service_name,
                     status="unhealthy",
-                    last_check=datetime.now(),
+                    last_check=datetime.now().isoformat(),  # Convert to ISO string
                     error_message="Timeout"
                 )
             except Exception as e:
                 services_health[service_name] = ServiceHealth(
                     name=service_name,
                     status="unhealthy",
-                    last_check=datetime.now(),
+                    last_check=datetime.now().isoformat(),  # Convert to ISO string
                     error_message=str(e)
                 )
         

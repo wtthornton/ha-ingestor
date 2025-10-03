@@ -39,7 +39,7 @@ class APIResponse(BaseModel):
     success: bool = Field(description="Whether the request was successful")
     data: Optional[Any] = Field(default=None, description="Response data")
     message: Optional[str] = Field(default=None, description="Response message")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Response timestamp")
     request_id: Optional[str] = Field(default=None, description="Request ID for tracking")
 
 
@@ -48,7 +48,7 @@ class ErrorResponse(BaseModel):
     success: bool = Field(default=False, description="Always false for errors")
     error: str = Field(description="Error message")
     error_code: Optional[str] = Field(default=None, description="Error code")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Error timestamp")
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Error timestamp")
     request_id: Optional[str] = Field(default=None, description="Request ID for tracking")
 
 

@@ -22,6 +22,10 @@ COPY src/ ./src/
 RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 
+# Create backups directory with proper permissions
+RUN mkdir -p /backups && \
+    chown -R app:app /backups
+
 # Switch to non-root user
 USER app
 
