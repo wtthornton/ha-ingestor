@@ -3,8 +3,20 @@
 import logging
 import asyncio
 import os
+import sys
 from typing import Optional
 from aiohttp import web
+from dotenv import load_dotenv
+
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
+from shared.logging_config import (
+    setup_logging, get_logger, log_with_context, log_performance, 
+    log_error_with_context, performance_monitor, generate_correlation_id,
+    set_correlation_id, get_correlation_id
+)
+from shared.correlation_middleware import AioHTTPCorrelationMiddleware
 
 from .retention_policy import RetentionPolicyManager, RetentionPolicy, RetentionPeriod
 from .data_cleanup import DataCleanupService
@@ -12,7 +24,11 @@ from .storage_monitor import StorageMonitor
 from .data_compression import DataCompressionService
 from .backup_restore import BackupRestoreService
 
-logger = logging.getLogger(__name__)
+# Load environment variables
+load_dotenv()
+
+# Configure enhanced logging
+logger = setup_logging("data-retention")
 
 class DataRetentionService:
     """Main data retention and storage management service."""

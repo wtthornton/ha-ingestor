@@ -5,8 +5,20 @@ Main entry point for the Enrichment Pipeline Service
 import asyncio
 import logging
 import os
+import sys
 from aiohttp import web
-from shared.logging_config import setup_logging
+from dotenv import load_dotenv
+
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
+from shared.logging_config import (
+    setup_logging, get_logger, log_with_context, log_performance, 
+    log_error_with_context, performance_monitor, generate_correlation_id,
+    set_correlation_id, get_correlation_id
+)
+from shared.correlation_middleware import AioHTTPCorrelationMiddleware
+
 from data_normalizer import DataNormalizer
 from influxdb_wrapper import InfluxDBClientWrapper
 from health_check import health_check_handler
@@ -16,8 +28,11 @@ from quality_alerts import QualityAlertManager, alert_manager
 from quality_dashboard import QualityDashboardAPI
 from quality_reporting import QualityReportingSystem
 
-# Setup logging for the service
-logger = setup_logging("enrichment-pipeline-service")
+# Load environment variables
+load_dotenv()
+
+# Setup enhanced logging for the service
+logger = setup_logging("enrichment-pipeline")
 
 
 class EnrichmentPipelineService:
@@ -58,28 +73,68 @@ class EnrichmentPipelineService:
         self.is_running = False
         self.start_time = None
     
+    @performance_monitor("service_startup")
     async def start(self):
         """Start the enrichment pipeline service"""
+        corr_id = generate_correlation_id()
+        set_correlation_id(corr_id)
+        
+        log_with_context(
+            logger, "INFO", "Starting Enrichment Pipeline Service",
+            operation="service_startup",
+            correlation_id=corr_id,
+            service="enrichment-pipeline"
+        )
+        
         try:
-            logger.info("Starting Enrichment Pipeline Service...")
-            
             # Connect to InfluxDB
             if not await self.influxdb_client.connect():
-                logger.error("Failed to connect to InfluxDB")
+                log_error_with_context(
+                    logger, "Failed to connect to InfluxDB", 
+                    Exception("InfluxDB connection failed"),
+                    operation="influxdb_connection",
+                    correlation_id=corr_id,
+                    url=self.influxdb_url
+                )
                 return False
+            
+            log_with_context(
+                logger, "INFO", "Connected to InfluxDB successfully",
+                operation="influxdb_connection",
+                correlation_id=corr_id,
+                url=self.influxdb_url,
+                org=self.influxdb_org,
+                bucket=self.influxdb_bucket
+            )
             
             # Start quality reporting system
             await self.quality_reporting.start()
+            
+            log_with_context(
+                logger, "INFO", "Quality reporting system started",
+                operation="quality_reporting_startup",
+                correlation_id=corr_id
+            )
             
             # Mark service as running
             self.is_running = True
             self.start_time = asyncio.get_event_loop().time()
             
-            logger.info("Enrichment Pipeline Service started successfully")
+            log_with_context(
+                logger, "INFO", "Enrichment Pipeline Service started successfully",
+                operation="service_startup_complete",
+                correlation_id=corr_id,
+                status="success"
+            )
             return True
             
         except Exception as e:
-            logger.error(f"Error starting service: {e}")
+            log_error_with_context(
+                logger, "Error starting Enrichment Pipeline Service", e,
+                operation="service_startup",
+                correlation_id=corr_id,
+                error_type="startup_failure"
+            )
             return False
     
     async def stop(self):
@@ -101,6 +156,7 @@ class EnrichmentPipelineService:
         except Exception as e:
             logger.error(f"Error stopping service: {e}")
     
+    @performance_monitor("event_processing")
     async def process_event(self, event_data: dict) -> bool:
         """
         Process a single event through the enrichment pipeline
@@ -113,6 +169,19 @@ class EnrichmentPipelineService:
         """
         import time
         start_time = time.time()
+        corr_id = get_correlation_id() or generate_correlation_id()
+        
+        event_type = event_data.get('event_type', 'unknown')
+        entity_id = event_data.get('entity_id', 'N/A')
+        
+        log_with_context(
+            logger, "DEBUG", "Processing event through enrichment pipeline",
+            operation="event_processing",
+            correlation_id=corr_id,
+            event_type=event_type,
+            entity_id=entity_id,
+            domain=event_data.get('domain', 'unknown')
+        )
         
         try:
             # Validate event data
@@ -120,7 +189,14 @@ class EnrichmentPipelineService:
             
             # Check if event is valid
             if not self.data_validator.is_event_valid(event_data):
-                logger.warning(f"Event validation failed: {event_data.get('event_type', 'unknown')}")
+                log_with_context(
+                    logger, "WARNING", "Event validation failed",
+                    operation="event_validation",
+                    correlation_id=corr_id,
+                    event_type=event_type,
+                    entity_id=entity_id,
+                    validation_results=len(validation_results)
+                )
                 # Record validation failure in metrics
                 processing_time_ms = (time.time() - start_time) * 1000
                 self.quality_metrics.record_validation_result(event_data, validation_results, processing_time_ms)
@@ -130,7 +206,13 @@ class EnrichmentPipelineService:
             normalized_event = self.data_normalizer.normalize_event(event_data)
             
             if not normalized_event:
-                logger.warning("Event normalization failed")
+                log_with_context(
+                    logger, "WARNING", "Event normalization failed",
+                    operation="event_normalization",
+                    correlation_id=corr_id,
+                    event_type=event_type,
+                    entity_id=entity_id
+                )
                 # Record normalization failure in metrics
                 processing_time_ms = (time.time() - start_time) * 1000
                 self.quality_metrics.record_validation_result(event_data, validation_results, processing_time_ms)
@@ -144,19 +226,39 @@ class EnrichmentPipelineService:
             self.quality_metrics.record_validation_result(event_data, validation_results, processing_time_ms)
             
             if success:
-                logger.debug(f"Successfully processed {event_data.get('event_type', 'unknown')} event")
+                log_with_context(
+                    logger, "DEBUG", "Successfully processed event",
+                    operation="event_processing_complete",
+                    correlation_id=corr_id,
+                    event_type=event_type,
+                    entity_id=entity_id,
+                    processing_time_ms=processing_time_ms
+                )
             else:
-                logger.warning("Failed to write event to InfluxDB")
+                log_with_context(
+                    logger, "WARNING", "Failed to write event to InfluxDB",
+                    operation="influxdb_write",
+                    correlation_id=corr_id,
+                    event_type=event_type,
+                    entity_id=entity_id
+                )
             
             return success
             
         except Exception as e:
-            logger.error(f"Error processing event: {e}")
+            log_error_with_context(
+                logger, "Error processing event", e,
+                operation="event_processing",
+                correlation_id=corr_id,
+                event_type=event_type,
+                entity_id=entity_id
+            )
             # Record error in quality metrics
             processing_time_ms = (time.time() - start_time) * 1000
             self.quality_metrics.record_validation_result(event_data, [], processing_time_ms)
             return False
     
+    @performance_monitor("batch_processing")
     async def process_events_batch(self, events: list) -> int:
         """
         Process multiple events through the enrichment pipeline
@@ -169,6 +271,15 @@ class EnrichmentPipelineService:
         """
         import time
         start_time = time.time()
+        corr_id = get_correlation_id() or generate_correlation_id()
+        batch_size = len(events)
+        
+        log_with_context(
+            logger, "INFO", "Processing batch of events",
+            operation="batch_processing",
+            correlation_id=corr_id,
+            batch_size=batch_size
+        )
         
         try:
             # Process events individually to track quality metrics
@@ -179,11 +290,26 @@ class EnrichmentPipelineService:
                     processed_count += 1
             
             processing_time_ms = (time.time() - start_time) * 1000
-            logger.info(f"Successfully processed {processed_count}/{len(events)} events in {processing_time_ms:.2f}ms")
+            
+            log_with_context(
+                logger, "INFO", "Batch processing completed",
+                operation="batch_processing_complete",
+                correlation_id=corr_id,
+                batch_size=batch_size,
+                processed_count=processed_count,
+                success_rate=(processed_count / batch_size * 100) if batch_size > 0 else 0,
+                processing_time_ms=processing_time_ms
+            )
+            
             return processed_count
             
         except Exception as e:
-            logger.error(f"Error processing events batch: {e}")
+            log_error_with_context(
+                logger, "Error processing events batch", e,
+                operation="batch_processing",
+                correlation_id=corr_id,
+                batch_size=batch_size
+            )
             return 0
     
     def get_service_status(self) -> dict:
@@ -221,6 +347,10 @@ async def main():
         
         # Create web application
         app = web.Application()
+        
+        # Add correlation middleware
+        correlation_middleware = AioHTTPCorrelationMiddleware()
+        app.middlewares.append(correlation_middleware)
         
         # Set service instance for health checks
         from health_check import health_handler

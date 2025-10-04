@@ -5,6 +5,7 @@ Admin REST API Service
 import asyncio
 import logging
 import os
+import sys
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
@@ -15,6 +16,16 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import uvicorn
+
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
+from shared.logging_config import (
+    setup_logging, get_logger, log_with_context, log_performance, 
+    log_error_with_context, performance_monitor, generate_correlation_id,
+    set_correlation_id, get_correlation_id
+)
+from shared.correlation_middleware import FastAPICorrelationMiddleware
 
 from .health_endpoints import HealthEndpoints
 from .stats_endpoints import StatsEndpoints
@@ -31,12 +42,8 @@ from .alerting_service import alerting_service
 from dotenv import load_dotenv
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure enhanced logging
+logger = setup_logging("admin-api")
 
 
 class APIResponse(BaseModel):
@@ -159,6 +166,9 @@ class AdminAPIService:
     
     def _add_middleware(self):
         """Add middleware to FastAPI app"""
+        # Correlation ID middleware (add first to ensure it's applied to all requests)
+        self.app.add_middleware(FastAPICorrelationMiddleware)
+        
         # CORS middleware
         self.app.add_middleware(
             CORSMiddleware,

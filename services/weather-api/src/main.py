@@ -5,25 +5,36 @@ Weather API Service Main Entry Point
 import asyncio
 import logging
 import os
+import sys
 from aiohttp import web
 from dotenv import load_dotenv
+
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
+from shared.logging_config import (
+    setup_logging, get_logger, log_with_context, log_performance, 
+    log_error_with_context, performance_monitor, generate_correlation_id,
+    set_correlation_id, get_correlation_id
+)
+from shared.correlation_middleware import AioHTTPCorrelationMiddleware
 
 from .health_check import HealthCheckHandler
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure enhanced logging
+logger = setup_logging("weather-api")
 
 
 async def create_app():
     """Create the web application"""
     app = web.Application()
+    
+    # Add correlation middleware
+    correlation_middleware = AioHTTPCorrelationMiddleware()
+    app.middlewares.append(correlation_middleware)
     
     # Add health check endpoint
     health_handler = HealthCheckHandler()

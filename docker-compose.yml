@@ -41,11 +41,23 @@ services:
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - WEBSOCKET_INGESTION_PORT=8001
       - ENABLE_HOME_ASSISTANT=true
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=json
+      - LOG_OUTPUT=both
+      - LOG_FILE_PATH=/var/log/ha-ingestor
+    volumes:
+      - ha_ingestor_logs:/var/log/ha-ingestor
     depends_on:
       influxdb:
         condition: service_healthy
     networks:
       - ha-ingestor-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=websocket-ingestion"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -212,6 +224,7 @@ volumes:
   influxdb_data:
   influxdb_config:
   data_retention_backups:
+  ha_ingestor_logs:
 
 networks:
   ha-ingestor-network:
