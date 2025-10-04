@@ -12,14 +12,14 @@ This rule helps integrate BMAD methodology into development workflows.
 - Use `@analyst` for market research and competitor analysis
 - Use `@pm` for PRD creation and product strategy
 - Use `@ux-expert` for frontend specifications
-- Use `@architect` for system architecture design
-- Use `@qa` for early test strategy and risk assessment
+- Use `@architect` for system architecture design (with Context7 integration for technology decisions)
+- Use `@qa` for early test strategy and risk assessment (with Context7 integration for library risks)
 
 ### 2. Development Phase (IDE Agents)
 - Use `@po` for story management and prioritization
 - Use `@sm` for process management and sprint planning
-- Use `@dev` for implementation and coding
-- Use `@qa` for quality gates and testing
+- Use `@dev` for implementation and coding (with Context7 integration for library implementations)
+- Use `@qa` for quality gates and testing (with Context7 integration for library risk assessments)
 
 ## Document Management
 
@@ -68,7 +68,40 @@ When referencing BMAD files, use the format:
 ## Process Integration
 
 1. **Story Creation**: Use `@po` or `@pm` to create stories
-2. **Architecture Review**: Use `@architect` for design decisions
-3. **Development**: Use `@dev` for implementation
-4. **Quality Assurance**: Use `@qa` for testing and review
-5. **Documentation**: Use `@bmad-master` for document management
+2. **Architecture Review**: Use `@architect` for design decisions (with Context7 for technology research)
+3. **Development**: Use `@dev` for implementation (with Context7 for library documentation)
+4. **Quality Assurance**: Use `@qa` for testing and review (with Context7 for library risk assessment)
+5. **Documentation**: Use `@bmad-master` for document management (with Context7 commands available)
+
+## Context7 Integration
+
+### Available Commands
+- `*context7-resolve {library}` - Resolve library name to Context7-compatible library ID
+- `*context7-docs {library} {topic}` - Get focused documentation (KB-first, then Context7)
+- `*context7-help` - Show Context7 usage examples and best practices
+- `*context7-kb-status` - Show knowledge base statistics and hit rates
+- `*context7-kb-search {query}` - Search local knowledge base
+- `*context7-kb-cleanup` - Clean up old/unused cached documentation
+- `*context7-kb-rebuild` - Rebuild knowledge base index
+- `*context7-kb-analytics` - Show detailed KB usage analytics
+
+### Usage in Workflows
+- **Architecture Phase**: Use KB-first Context7 for technology selection and design decisions
+- **Development Phase**: Use KB-first Context7 for library implementation guidance
+- **QA Phase**: Use KB-first Context7 for library risk assessment and testing strategies
+
+### Knowledge Base Features
+- **KB-First Lookup**: Check local cache before Context7 API calls
+- **Fuzzy Matching**: Handle library/topic name variants intelligently
+- **Cross-References**: Find related documentation across libraries and topics
+- **Usage Analytics**: Track cache hit rates and performance metrics
+- **Automatic Cleanup**: Remove old/unused cached content automatically
+
+### Best Practices
+- Use KB-first approach for all Context7 operations
+- Always specify relevant topics to limit documentation scope
+- Leverage fuzzy matching for better cache hit rates
+- Monitor KB performance with `*context7-kb-status`
+- Regular maintenance with `*context7-kb-cleanup`
+- Search intelligently with `*context7-kb-search`
+- Use Context7 to supplement, not replace, local knowledge

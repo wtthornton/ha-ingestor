@@ -43,13 +43,13 @@ export default defineConfig(({ command, mode }) => {
       cors: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8000',
+          target: env.VITE_API_BASE_URL || 'http://localhost:8003',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
         },
         '/ws': {
-          target: env.VITE_WS_URL || 'ws://localhost:8000',
+          target: env.VITE_WS_URL || 'ws://localhost:8001',
           ws: true,
           changeOrigin: true,
         },

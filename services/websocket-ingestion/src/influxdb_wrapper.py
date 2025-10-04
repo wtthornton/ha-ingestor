@@ -147,19 +147,33 @@ class InfluxDBConnectionManager:
             return False
     
     async def _test_connection(self):
-        """Test InfluxDB connection"""
+        """Test InfluxDB connection using health check endpoint"""
         if not self.client:
             raise Exception("Client not initialized")
         
-        # Test connection by querying buckets
-        query_api = self.client.query_api()
-        query = f'import "influxdata/influxdb/schema"\n\nschema.buckets()'
+        # Test connection using the health check endpoint (more reliable than Flux queries)
+        import aiohttp
         
-        # Execute query with timeout
-        await asyncio.wait_for(
-            asyncio.to_thread(query_api.query, query, org=self.org),
-            timeout=self.timeout
-        )
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.url}/health", timeout=aiohttp.ClientTimeout(total=self.timeout)) as response:
+                    if response.status == 200:
+                        logger.debug("InfluxDB health check passed")
+                        return
+                    else:
+                        raise Exception(f"InfluxDB health check failed with status {response.status}")
+        except Exception as e:
+            # Fallback to simple ping endpoint
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{self.url}/ping", timeout=aiohttp.ClientTimeout(total=self.timeout)) as response:
+                        if response.status == 204:  # Ping returns 204 No Content on success
+                            logger.debug("InfluxDB ping check passed")
+                            return
+                        else:
+                            raise Exception(f"InfluxDB ping check failed with status {response.status}")
+            except Exception as ping_error:
+                raise Exception(f"InfluxDB connection test failed: {e}, ping also failed: {ping_error}")
     
     async def _disconnect(self):
         """Disconnect from InfluxDB"""

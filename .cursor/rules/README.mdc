@@ -51,6 +51,16 @@ All BMAD agents use `*` prefix for commands:
 - `*exit` - Exit agent persona
 - `*yolo` - Toggle Yolo mode (skip confirmations)
 
+### Context7 KB Integration Commands (BMad Master)
+- `*context7-resolve {library}` - Resolve library name to Context7-compatible library ID
+- `*context7-docs {library} {topic}` - Get focused documentation (KB-first, then Context7)
+- `*context7-help` - Show Context7 usage examples and best practices
+- `*context7-kb-status` - Show knowledge base statistics and hit rates
+- `*context7-kb-search {query}` - Search local knowledge base
+- `*context7-kb-cleanup` - Clean up old/unused cached documentation
+- `*context7-kb-rebuild` - Rebuild knowledge base index
+- `*context7-kb-analytics` - Show detailed KB usage analytics
+
 ### File References
 When referencing files in rules, use the format:
 - `[filename](mdc:path/to/file)` for relative paths
@@ -81,6 +91,7 @@ Rules with `description` can be manually invoked:
 3. **Security First**: Always consider security implications
 4. **Document Everything**: Keep documentation up-to-date
 5. **Test Thoroughly**: Write tests for all new functionality
+6. **Leverage Context7 KB**: Use Context7 KB cache for up-to-date library documentation with intelligent caching
 
 ## Getting Help
 

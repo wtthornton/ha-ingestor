@@ -14,7 +14,7 @@ class WebSocketService {
   private connectionHandlers: Set<ConnectionEventHandler> = new Set();
   private disconnectHandlers: Set<ConnectionEventHandler> = new Set();
 
-  constructor(url: string = 'ws://localhost:8000/ws') {
+  constructor(url: string = 'ws://localhost:8001/ws') {
     this.url = url;
   }
 

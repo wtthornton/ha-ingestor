@@ -1,0 +1,67 @@
+# React Library Metadata
+# Generated: 2025-01-27T15:01:00Z
+
+library:
+  name: "react"
+  context7_id: "/websites/react_dev"
+  version: "18.2.0"
+  trust_score: 8
+  code_snippets: 1936
+  description: "React is a JavaScript library for building user interfaces. It allows developers to create interactive web and native applications using reusable components, enabling efficient and scalable UI development."
+  
+  topics:
+    hooks:
+      file: "hooks.md"
+      size: "0KB"
+      last_updated: null
+      cache_hits: 0
+      token_count: 0
+      context7_source: "https://react.dev/reference/hooks"
+    
+    components:
+      file: "components.md"
+      size: "0KB"
+      last_updated: null
+      cache_hits: 0
+      token_count: 0
+      context7_source: "https://react.dev/learn/components"
+    
+    architecture:
+      file: "architecture.md"
+      size: "0KB"
+      last_updated: null
+      cache_hits: 0
+      token_count: 0
+      context7_source: "https://react.dev/learn/architecture"
+  
+  cross_references:
+    - library: "react-router"
+      topic: "routing"
+      relevance: 0.9
+    - library: "redux"
+      topic: "state-management"
+      relevance: 0.8
+    - library: "react-query"
+      topic: "data-fetching"
+      relevance: 0.7
+    - library: "next.js"
+      topic: "framework"
+      relevance: 0.8
+  
+  bmad_integration:
+    - agent: "architect"
+      scenarios: ["technology-selection", "architecture-decisions"]
+      usage_frequency: 0
+    - agent: "dev"
+      scenarios: ["react-implementation", "component-development"]
+      usage_frequency: 0
+    - agent: "qa"
+      scenarios: ["react-testing", "component-testing"]
+      usage_frequency: 0
+  
+  performance_metrics:
+    total_requests: 0
+    cache_hits: 0
+    cache_misses: 0
+    avg_response_time: "0.00s"
+    last_accessed: null

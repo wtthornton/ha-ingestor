@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigation } from './Navigation';
 
-const Monitoring: React.FC = () => {
+export const Monitoring: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />

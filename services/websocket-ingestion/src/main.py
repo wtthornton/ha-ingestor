@@ -3,10 +3,13 @@ WebSocket Ingestion Service Main Entry Point
 """
 
 import asyncio
+import json
 import logging
 import os
+from datetime import datetime
 from typing import Optional
 from aiohttp import web
+import aiohttp
 from dotenv import load_dotenv
 
 from health_check import HealthCheckHandler
@@ -228,6 +231,62 @@ class WebSocketIngestionService:
         logger.error(f"Service error: {error}")
 
 
+async def websocket_handler(request):
+    """WebSocket handler for real-time data streaming"""
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    
+    logger.info("WebSocket client connected")
+    
+    try:
+        # Send initial connection message
+        await ws.send_json({
+            "type": "connection",
+            "status": "connected",
+            "message": "Connected to HA Ingestor WebSocket"
+        })
+        
+        # Keep connection alive and handle messages
+        async for msg in ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
+                    logger.debug(f"Received WebSocket message: {data}")
+                    
+                    # Handle different message types
+                    if data.get("type") == "ping":
+                        await ws.send_json({"type": "pong", "timestamp": datetime.now().isoformat()})
+                    elif data.get("type") == "subscribe":
+                        # Handle subscription requests
+                        await ws.send_json({
+                            "type": "subscription",
+                            "status": "subscribed",
+                            "channels": data.get("channels", [])
+                        })
+                    else:
+                        # Echo back unknown messages
+                        await ws.send_json({
+                            "type": "echo",
+                            "original": data
+                        })
+                        
+                except json.JSONDecodeError:
+                    await ws.send_json({
+                        "type": "error",
+                        "message": "Invalid JSON format"
+                    })
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                logger.error(f"WebSocket error: {ws.exception()}")
+                break
+                
+    except Exception as e:
+        logger.error(f"WebSocket handler error: {e}")
+    finally:
+        logger.info("WebSocket client disconnected")
+    
+    return ws
+
+
 async def create_app():
     """Create the web application"""
     app = web.Application()
@@ -237,6 +296,9 @@ async def create_app():
     
     # Add health check endpoint
     app.router.add_get('/health', service.health_handler.handle)
+    
+    # Add WebSocket endpoint
+    app.router.add_get('/ws', websocket_handler)
     
     # Store service instance in app
     app['service'] = service

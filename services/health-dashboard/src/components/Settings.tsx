@@ -4,7 +4,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationPreferences } from './NotificationPreferences';
 import { useThemeAware } from '../contexts/ThemeContext';
 
-const Settings: React.FC = () => {
+export const Settings: React.FC = () => {
   const { isDark } = useThemeAware();
 
   return (

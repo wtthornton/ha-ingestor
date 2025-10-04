@@ -20,3 +20,32 @@ devLoadAlwaysFiles:
 devDebugLog: .ai/debug-log.md
 devStoryLocation: docs/stories
 slashPrefix: BMad
+context7:
+  enabled: true
+  defaultTokenLimit: 3000
+  cacheDuration: 3600
+  integrationLevel: medium
+  knowledge_base:
+    enabled: true
+    location: "docs/kb/context7-cache"
+    sharding: true
+    indexing: true
+    cross_references: true
+    max_cache_size: "100MB"
+    cleanup_interval: 86400
+    hit_rate_threshold: 0.7
+    fuzzy_match_threshold: 0.5
+    analytics_enabled: true
+  agentLimits:
+    architect:
+      tokenLimit: 4000
+      topics: ["architecture", "design-patterns", "scalability"]
+      kb_priority: true
+    dev:
+      tokenLimit: 3000
+      topics: ["hooks", "routing", "authentication", "testing"]
+      kb_priority: true
+    qa:
+      tokenLimit: 2500
+      topics: ["testing", "security", "performance"]
+      kb_priority: true

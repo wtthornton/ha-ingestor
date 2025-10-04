@@ -305,3 +305,80 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     </span>
   );
 };
+
+// Progress Bar Component
+export interface ProgressBarProps {
+  value: number;
+  max?: number;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'success' | 'warning' | 'error';
+  showLabel?: boolean;
+  label?: string;
+  className?: string;
+}
+
+export const ProgressBar: React.FC<ProgressBarProps> = ({
+  value,
+  max = 100,
+  size = 'md',
+  variant = 'default',
+  showLabel = false,
+  label,
+  className = ''
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm':
+        return 'h-2';
+      case 'lg':
+        return 'h-4';
+      default: // md
+        return 'h-3';
+    }
+  };
+
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'success':
+        return 'bg-design-success';
+      case 'warning':
+        return 'bg-design-warning';
+      case 'error':
+        return 'bg-design-error';
+      default:
+        return 'bg-design-primary';
+    }
+  };
+
+  const getBackgroundClasses = () => {
+    switch (variant) {
+      case 'success':
+        return 'bg-design-success-light';
+      case 'warning':
+        return 'bg-design-warning-light';
+      case 'error':
+        return 'bg-design-error-light';
+      default:
+        return 'bg-design-background-secondary';
+    }
+  };
+
+  return (
+    <div className={`w-full ${className}`}>
+      {showLabel && label && (
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-sm text-design-text-secondary">{label}</span>
+          <span className="text-sm font-medium text-design-text">{percentage.toFixed(1)}%</span>
+        </div>
+      )}
+      <div className={`w-full ${getBackgroundClasses()} rounded-full overflow-hidden ${getSizeClasses()}`}>
+        <div
+          className={`${getVariantClasses()} ${getSizeClasses()} transition-all duration-300 ease-out rounded-full`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+};

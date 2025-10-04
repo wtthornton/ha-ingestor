@@ -21,6 +21,7 @@ from .stats_endpoints import StatsEndpoints
 from .config_endpoints import ConfigEndpoints
 from .events_endpoints import EventsEndpoints
 from .monitoring_endpoints import MonitoringEndpoints
+from .websocket_endpoints import WebSocketEndpoints
 from .auth import AuthManager
 from .logging_service import logging_service
 from .metrics_service import metrics_service
@@ -84,6 +85,7 @@ class AdminAPIService:
         self.config_endpoints = ConfigEndpoints()
         self.events_endpoints = EventsEndpoints()
         self.monitoring_endpoints = MonitoringEndpoints(self.auth_manager)
+        self.websocket_endpoints = WebSocketEndpoints(self.auth_manager)
         
         # FastAPI app
         self.app: Optional[FastAPI] = None
@@ -223,6 +225,12 @@ class AdminAPIService:
             prefix="/api/v1/monitoring",
             tags=["Monitoring"],
             dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
+        )
+        
+        # WebSocket endpoints
+        self.app.include_router(
+            self.websocket_endpoints.router,
+            tags=["WebSocket"]
         )
         
         # Root endpoint

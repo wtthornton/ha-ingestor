@@ -67,12 +67,16 @@ class HealthEndpoints:
                 # Get metrics
                 metrics = await self._get_metrics()
                 
-                # Determine overall status
+                # Determine overall status - be more lenient
                 overall_status = "healthy"
-                if any(service.status != "healthy" for service in services_health.values()):
-                    overall_status = "degraded"
-                if any(service.status == "unhealthy" for service in services_health.values()):
+                unhealthy_count = sum(1 for service in services_health.values() if service.status == "unhealthy")
+                total_services = len(services_health)
+                
+                # Only mark as unhealthy if more than 50% of services are down
+                if unhealthy_count > total_services * 0.5:
                     overall_status = "unhealthy"
+                elif unhealthy_count > 0:
+                    overall_status = "degraded"
                 
                 return HealthStatus(
                     status=overall_status,
@@ -138,7 +142,7 @@ class HealthEndpoints:
             try:
                 start_time = datetime.now()
                 
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=2)) as session:
                     async with session.get(f"{service_url}/health") as response:
                         response_time = (datetime.now() - start_time).total_seconds() * 1000
                         

@@ -59,6 +59,14 @@ commands:
   - shard-doc {document} {destination}: run the task shard-doc against the optionally provided document to the specified destination
   - task {task}: Execute task, if not found or none specified, ONLY list available dependencies/tasks listed below
   - yolo: Toggle Yolo Mode
+  - context7-resolve {library}: Resolve library name to Context7-compatible library ID
+  - context7-docs {library} {topic}: Get focused documentation (KB-first, then Context7)
+  - context7-help: Show Context7 usage examples and best practices
+  - context7-kb-status: Show knowledge base statistics and hit rates
+  - context7-kb-search {query}: Search local knowledge base
+  - context7-kb-cleanup: Clean up old/unused cached documentation
+  - context7-kb-rebuild: Rebuild knowledge base index
+  - context7-kb-analytics: Show detailed KB usage analytics
   - exit: Exit (confirm)
 
 dependencies:
@@ -88,6 +96,10 @@ dependencies:
     - generate-ai-frontend-prompt.md
     - index-docs.md
     - shard-doc.md
+    - context7-simple.md
+    - context7-kb-status.md
+    - context7-kb-search.md
+    - context7-kb-cleanup.md
   templates:
     - architecture-tmpl.yaml
     - brownfield-architecture-tmpl.yaml

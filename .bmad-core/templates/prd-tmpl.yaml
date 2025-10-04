@@ -59,10 +59,11 @@ sections:
       Capture high-level UI/UX vision to guide Design Architect and to inform story creation. Steps:
 
       1. Pre-fill all subsections with educated guesses based on project context
-      2. Present the complete rendered section to user
-      3. Clearly let the user know where assumptions were made
-      4. Ask targeted questions for unclear/missing elements or areas needing more specification
-      5. This is NOT detailed UI spec - focus on product vision and user goals
+      2. **Use Context7 MCP tools (mcp_Context7_resolve-library-id, mcp_Context7_get-library-docs) to get up-to-date documentation for UI/UX technology decisions**
+      3. Present the complete rendered section to user
+      4. Clearly let the user know where assumptions were made
+      5. Ask targeted questions for unclear/missing elements or areas needing more specification
+      6. This is NOT detailed UI spec - focus on product vision and user goals
     elicit: true
     choices:
       accessibility: [None, WCAG AA, WCAG AAA]

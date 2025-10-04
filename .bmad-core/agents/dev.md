@@ -53,6 +53,13 @@ core_principles:
   - CRITICAL: ONLY update story file Dev Agent Record sections (checkboxes/Debug Log/Completion Notes/Change Log)
   - CRITICAL: FOLLOW THE develop-story command when the user tells you to implement the story
   - Numbered Options - Always use numbered lists when presenting choices to the user
+  - Context7 KB Integration - Check local knowledge base first, then Context7 if needed
+  - Intelligent Caching - Automatically cache Context7 results for future use
+  - Cross-Reference Lookup - Use topic expansion and library relationships
+  - Sharded Knowledge - Leverage BMad sharding for organized documentation storage
+  - Fuzzy Matching - Handle library/topic name variants intelligently
+  - Performance Optimization - Target 87%+ cache hit rate and 0.15s response time
+  - Library Implementation - Use KB-first approach for external library implementations
 
 # All commands require * prefix when used (e.g., *help)
 commands:

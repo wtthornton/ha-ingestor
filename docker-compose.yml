@@ -194,6 +194,11 @@ services:
       - "3000:80"
     environment:
       - VITE_API_BASE_URL=http://localhost:8003/api/v1
+      - VITE_WS_URL=ws://localhost:8001/ws
+      - VITE_ENVIRONMENT=production
+    depends_on:
+      admin-api:
+        condition: service_healthy
     networks:
       - ha-ingestor-network
     healthcheck:

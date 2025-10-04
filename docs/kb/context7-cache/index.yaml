@@ -1,0 +1,38 @@
+# Context7 Knowledge Base Cache - Master Index
+# Generated: 2025-01-27T15:01:00Z
+# Version: 1.0
+
+context7_cache:
+  version: "1.0"
+  last_updated: "2025-01-27T15:01:00Z"
+  total_entries: 0
+  total_size: "0MB"
+  hit_rate: 0.0
+  avg_response_time: "0.00s"
+  
+  libraries: {}
+  
+  topics: {}
+  
+  cache_stats:
+    total_hits: 0
+    total_misses: 0
+    hit_rate: 0.0
+    avg_response_time: "0.00s"
+    last_cleanup: null
+    next_cleanup: null
+  
+  performance_metrics:
+    cache_operations: 0
+    context7_calls: 0
+    fuzzy_matches: 0
+    cross_references: 0
+    cleanup_operations: 0
+  
+  configuration:
+    max_cache_size: "100MB"
+    cleanup_interval: 86400
+    hit_rate_threshold: 0.7
+    fuzzy_match_threshold: 0.5
+    cross_reference_enabled: true
+    analytics_enabled: true
