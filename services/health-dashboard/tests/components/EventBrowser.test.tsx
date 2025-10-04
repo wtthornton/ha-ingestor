@@ -4,8 +4,8 @@ import { EventBrowser } from '../../src/components/EventBrowser';
 import { apiService } from '../../src/services/api';
 
 // Mock the API service
-jest.mock('../../src/services/api');
-const mockApiService = apiService as jest.Mocked<typeof apiService>;
+vi.mock('../../src/services/api');
+const mockApiService = apiService as any;
 
 const mockEvents = [
   {

@@ -435,11 +435,22 @@ class TestBackupRestoreService:
         old_time = (datetime.utcnow() - timedelta(days=35)).timestamp()
         recent_time = (datetime.utcnow() - timedelta(days=5)).timestamp()
         
-        with patch.object(Path, 'stat') as mock_stat:
-            def stat_side_effect(path):
+        # Mock the Path.stat method
+        with patch('pathlib.Path.stat') as mock_stat:
+            def stat_side_effect():
                 mock_stat_result = Mock()
-                if path.name == "old_backup.tar.gz":
-                    mock_stat_result.st_mtime = old_time
+                # Get the path from the calling context
+                import inspect
+                frame = inspect.currentframe()
+                while frame:
+                    if 'backup_file' in frame.f_locals:
+                        path_str = str(frame.f_locals['backup_file'])
+                        if 'old_backup' in path_str:
+                            mock_stat_result.st_mtime = old_time
+                        else:
+                            mock_stat_result.st_mtime = recent_time
+                        break
+                    frame = frame.f_back
                 else:
                     mock_stat_result.st_mtime = recent_time
                 return mock_stat_result

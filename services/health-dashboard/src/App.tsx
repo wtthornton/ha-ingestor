@@ -1,11 +1,19 @@
-// import React from 'react';
-import { Dashboard } from './components/Dashboard';
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { LayoutProvider } from './contexts/LayoutContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import router from './router';
 
 function App() {
   return (
-    <div className="App">
-      <Dashboard />
-    </div>
+    <ThemeProvider>
+      <LayoutProvider>
+        <NotificationProvider>
+          <RouterProvider router={router} />
+        </NotificationProvider>
+      </LayoutProvider>
+    </ThemeProvider>
   );
 }
 

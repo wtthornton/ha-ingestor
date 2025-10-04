@@ -1,20 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { HealthCard } from './HealthCard';
-import { MetricsChart } from './MetricsChart';
-import { EventFeed } from './EventFeed';
+import { Navigation } from './Navigation';
+import { LayoutSwitcher } from './LayoutSwitcher';
+import { GridLayout } from './GridLayout';
+import { NotificationContainer } from './NotificationContainer';
+import { MobileDashboard } from './MobileDashboard';
+import { useLayout } from '../contexts/LayoutContext';
 import { useHealth } from '../hooks/useHealth';
 import { useStatistics } from '../hooks/useStatistics';
 import { useEvents } from '../hooks/useEvents';
+import { useThemeAware } from '../contexts/ThemeContext';
+import { useMobileDetection } from '../hooks/useMobileDetection';
 import { websocketService } from '../services/websocket';
-import { ChartData } from '../types';
+import { notificationService } from '../services/notificationService';
 
 export const Dashboard: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000);
 
+  const { layoutState, getCurrentLayoutConfig } = useLayout();
   const { health, loading: healthLoading, error: healthError, refresh: refreshHealth } = useHealth(refreshInterval);
   const { statistics, loading: statsLoading, error: statsError, refresh: refreshStats } = useStatistics('1h', refreshInterval);
   const { events, loading: eventsLoading, error: eventsError, refresh: refreshEvents } = useEvents({ limit: 50 }, 10000);
+  const { isDark } = useThemeAware();
+  const { isMobile } = useMobileDetection();
 
   // WebSocket connection management
   useEffect(() => {
@@ -22,6 +30,9 @@ export const Dashboard: React.FC = () => {
       try {
         await websocketService.connect();
         setIsConnected(true);
+        
+        // Integrate notification service with WebSocket
+        notificationService.integrateWithWebSocket(websocketService);
       } catch (error) {
         console.error('Failed to connect to WebSocket:', error);
         setIsConnected(false);
@@ -40,65 +51,9 @@ export const Dashboard: React.FC = () => {
     };
   }, []);
 
-  // Generate sample chart data for demonstration
-  const generateEventRateData = (): ChartData => {
-    const labels = [];
-    const data = [];
-    const now = new Date();
-    
-    for (let i = 23; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-      labels.push(time.getHours().toString().padStart(2, '0') + ':00');
-      data.push(Math.floor(Math.random() * 100) + 20);
-    }
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Events per Hour',
-          data,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
-          fill: true,
-        },
-      ],
-    };
-  };
-
-  const generateErrorRateData = (): ChartData => {
-    const labels = ['WebSocket', 'Processing', 'Weather API', 'InfluxDB'];
-    const data = [
-      health?.ingestion_service.websocket_connection.last_error ? 1 : 0,
-      health?.ingestion_service.event_processing.error_rate || 0,
-      health?.ingestion_service.weather_enrichment.last_error ? 1 : 0,
-      health?.ingestion_service.influxdb_storage.write_errors || 0,
-    ];
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Error Rate',
-          data,
-          backgroundColor: [
-            'rgba(239, 68, 68, 0.8)',
-            'rgba(245, 158, 11, 0.8)',
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(99, 102, 241, 0.8)',
-          ],
-          borderColor: [
-            'rgba(239, 68, 68, 1)',
-            'rgba(245, 158, 11, 1)',
-            'rgba(34, 197, 94, 1)',
-            'rgba(99, 102, 241, 1)',
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
+  const currentLayout = getCurrentLayoutConfig();
+  const isLoading = healthLoading || statsLoading || eventsLoading;
+  const hasError = healthError || statsError || eventsError;
 
   const handleRefresh = () => {
     refreshHealth();
@@ -110,22 +65,46 @@ export const Dashboard: React.FC = () => {
     setRefreshInterval(interval);
   };
 
+  // Return mobile dashboard for mobile devices
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
+
+  if (!currentLayout) {
+    return (
+      <div className="min-h-screen bg-design-background flex items-center justify-center transition-colors duration-design-normal">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-design-text mb-2">Layout Error</h1>
+          <p className="text-design-text-secondary">Unable to load dashboard layout</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen bg-design-background transition-colors duration-design-normal">
+      <Navigation />
+
+      {/* Dashboard Header */}
+      <header className="bg-design-surface shadow-design-sm border-b border-design-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Health Dashboard</h1>
-              <p className="text-sm text-gray-600">Home Assistant Ingestor Monitoring</p>
+              <h1 className="text-2xl font-bold text-design-text">Dashboard Overview</h1>
+              <p className="text-sm text-design-text-secondary">Home Assistant Ingestor Monitoring</p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
+              {/* Layout Switcher */}
+              <LayoutSwitcher />
+
               {/* Connection Status */}
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-gray-600">
+                <div className={`
+                  w-2 h-2 rounded-full transition-colors duration-design-fast
+                  ${isConnected ? 'bg-design-success animate-pulse-glow' : 'bg-design-error'}
+                `}></div>
+                <span className="text-sm text-design-text-secondary">
                   {isConnected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
@@ -135,17 +114,26 @@ export const Dashboard: React.FC = () => {
                 <select
                   value={refreshInterval}
                   onChange={(e) => handleRefreshIntervalChange(Number(e.target.value))}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="
+                    px-3 py-1 border border-design-border rounded-design-md text-sm
+                    bg-design-surface text-design-text
+                    focus:outline-none focus:ring-2 focus:ring-design-border-focus focus:border-design-border-focus
+                    hover:bg-design-surface-hover transition-colors duration-design-fast
+                  "
                 >
                   <option value={10000}>10s</option>
                   <option value={30000}>30s</option>
                   <option value={60000}>1m</option>
                   <option value={300000}>5m</option>
                 </select>
-                
+
                 <button
                   onClick={handleRefresh}
-                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="
+                    px-3 py-1 bg-design-primary text-design-text-inverse rounded-design-md text-sm
+                    hover:bg-design-primary-hover focus:outline-none focus:ring-2 focus:ring-design-border-focus
+                    transition-all duration-design-fast shadow-design-sm hover:shadow-design-md
+                  "
                 >
                   Refresh
                 </button>
@@ -155,85 +143,36 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content with Grid Layout */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error Display */}
-        {(healthError || statsError || eventsError) && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Connection Error</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {healthError && <p>Health: {healthError}</p>}
-                  {statsError && <p>Statistics: {statsError}</p>}
-                  {eventsError && <p>Events: {eventsError}</p>}
-                </div>
+        <div className="h-[calc(100vh-200px)]">
+          {hasError ? (
+            <div className="bg-design-error-light border border-design-error rounded-design-lg p-6 shadow-design-md">
+              <h3 className="text-sm font-medium text-design-error-dark">Error Loading Data</h3>
+              <div className="mt-2 text-sm text-design-error-dark">
+                {healthError && <p>Health: {healthError}</p>}
+                {statsError && <p>Statistics: {statsError}</p>}
+                {eventsError && <p>Events: {eventsError}</p>}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Health Overview */}
-        <div className="mb-8">
-          {health && <HealthCard health={health} loading={healthLoading} />}
+          ) : (
+            <GridLayout
+              layout={currentLayout}
+              health={health}
+              statistics={statistics}
+              events={events}
+              loading={isLoading}
+              realTime={true}
+              onRefresh={handleRefresh}
+            />
+          )}
         </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <MetricsChart
-            data={generateEventRateData()}
-            type="line"
-            title="Event Rate (Last 24 Hours)"
-            loading={statsLoading}
-            height={300}
-          />
-          
-          <MetricsChart
-            data={generateErrorRateData()}
-            type="doughnut"
-            title="Service Error Status"
-            loading={healthLoading}
-            height={300}
-          />
-        </div>
-
-        {/* Events Feed */}
-        <div className="mb-8">
-          <EventFeed events={events} loading={eventsLoading} />
-        </div>
-
-        {/* Statistics Summary */}
-        {statistics && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistics Summary</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {statistics.metrics?.total_events || 0}
-                </div>
-                <div className="text-sm text-gray-600">Total Events</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {statistics.metrics?.success_rate || 0}%
-                </div>
-                <div className="text-sm text-gray-600">Success Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {statistics.metrics?.avg_processing_time || 0}ms
-                </div>
-                <div className="text-sm text-gray-600">Avg Processing Time</div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
+
+      {/* Notification System */}
+      <NotificationContainer />
     </div>
   );
 };
+
+export default Dashboard;

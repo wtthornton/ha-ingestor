@@ -236,8 +236,6 @@ services:
     depends_on:
       influxdb:
         condition: service_healthy
-      websocket-ingestion:
-        condition: service_healthy
       enrichment-pipeline:
         condition: service_healthy
     networks:

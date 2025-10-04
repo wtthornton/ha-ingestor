@@ -42,7 +42,7 @@ describe('HealthCard', () => {
     expect(screen.getByText('System Health')).toBeInTheDocument();
     expect(screen.getByText('HEALTHY')).toBeInTheDocument();
     expect(screen.getByText('WebSocket Connection')).toBeInTheDocument();
-    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getAllByText('Connected')).toHaveLength(2); // WebSocket and InfluxDB
     expect(screen.getByText('Event Processing')).toBeInTheDocument();
     expect(screen.getByText('50.0 events/min')).toBeInTheDocument();
   });

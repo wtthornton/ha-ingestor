@@ -164,8 +164,39 @@ export interface ChartDataset {
   fill?: boolean;
 }
 
+// Layout System Types
+export interface LayoutConfig {
+  id: string;
+  name: string;
+  description: string;
+  grid: {
+    columns: number;
+    rows: number;
+    gap: number;
+  };
+  widgets: WidgetConfig[];
+}
+
+export interface WidgetConfig {
+  id: string;
+  type: string;
+  position: { x: number; y: number; w: number; h: number };
+  props: Record<string, any>;
+}
+
+export interface LayoutState {
+  currentLayout: string;
+  availableLayouts: LayoutConfig[];
+  isTransitioning: boolean;
+}
+
+export type LayoutType = 'overview' | 'detailed' | 'mobile' | 'compact';
+
 // Utility Types
 export type ServiceStatus = 'healthy' | 'degraded' | 'unhealthy';
 export type AlertLevel = 'critical' | 'error' | 'warning' | 'info';
 export type ChartType = 'line' | 'bar' | 'doughnut' | 'pie';
 export type RefreshInterval = 1000 | 5000 | 10000 | 30000 | 60000; // milliseconds
+
+// Notification Types
+export * from './notification';

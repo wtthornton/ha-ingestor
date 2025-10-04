@@ -114,14 +114,16 @@ class TestHealthCheckEndpoints:
     async def test_get_statistics_error(self, mock_service):
         """Test statistics request with error."""
         mock_service.get_service_statistics.side_effect = Exception("Test error")
-        
+
         with patch('src.health_check.data_retention_service', mock_service):
             request = make_mocked_request('GET', '/stats')
             response = await get_statistics(request)
-            
+
             assert response.status == 500
             assert response.body is not None
-            
+
+            data = json.loads(response.body)
+            data = json.loads(response.body)
             assert data["error"] == "Test error"
     
     @pytest.mark.asyncio
@@ -130,10 +132,11 @@ class TestHealthCheckEndpoints:
         with patch('src.health_check.data_retention_service', mock_service):
             request = make_mocked_request('GET', '/policies')
             response = await get_policies(request)
-            
+
             assert response.status == 200
             assert response.body is not None
-            
+
+            data = json.loads(response.body)
             assert "policies" in data
             assert len(data["policies"]) == 1
             assert data["policies"][0]["name"] == "test_policy"
@@ -157,6 +160,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 201
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["message"] == "Policy added successfully"
             mock_service.add_retention_policy.assert_called_once_with(policy_data)
     
@@ -175,6 +179,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 400
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "Test error"
     
     @pytest.mark.asyncio
@@ -196,6 +201,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["message"] == "Policy updated successfully"
             mock_service.update_retention_policy.assert_called_once_with(policy_data)
     
@@ -203,7 +209,8 @@ class TestHealthCheckEndpoints:
     async def test_delete_policy_success(self, mock_service):
         """Test successful policy deletion."""
         with patch('src.health_check.data_retention_service', mock_service):
-            request = make_mocked_request('DELETE', '/policies/test_policy')
+            # Create a mock request with proper match_info
+            request = Mock()
             request.match_info = {'policy_name': 'test_policy'}
             response = await delete_policy(request)
             
@@ -221,6 +228,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert "results" in data
             assert len(data["results"]) == 1
             assert data["results"][0]["policy"] == "test"
@@ -238,6 +246,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 500
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "Test error"
     
     @pytest.mark.asyncio
@@ -258,6 +267,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 201
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["backup_id"] == "test_backup"
             assert data["success"] is True
             mock_service.create_backup.assert_called_once_with(
@@ -282,6 +292,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 500
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "Test error"
     
     @pytest.mark.asyncio
@@ -302,6 +313,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["message"] == "Backup restored successfully"
             mock_service.restore_backup.assert_called_once_with(
                 backup_id="test_backup",
@@ -323,6 +335,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 400
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "backup_id is required"
     
     @pytest.mark.asyncio
@@ -340,6 +353,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 500
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "Backup restore failed"
     
     @pytest.mark.asyncio
@@ -352,6 +366,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert "backups" in data
             assert len(data["backups"]) == 1
             assert data["backups"][0]["backup_id"] == "test_backup"
@@ -367,6 +382,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["total_backups"] == 5
             assert data["successful_backups"] == 4
     
@@ -380,6 +396,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 200
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["message"] == "Cleaned up 3 old backup files"
             assert data["deleted_count"] == 3
             mock_service.cleanup_old_backups.assert_called_once_with(30)
@@ -396,6 +413,7 @@ class TestHealthCheckEndpoints:
             assert response.status == 500
             assert response.body is not None
             
+            data = json.loads(response.body)
             assert data["error"] == "Test error"
     
     def test_create_app_routes(self, app):

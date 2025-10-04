@@ -20,7 +20,11 @@ from .health_endpoints import HealthEndpoints
 from .stats_endpoints import StatsEndpoints
 from .config_endpoints import ConfigEndpoints
 from .events_endpoints import EventsEndpoints
+from .monitoring_endpoints import MonitoringEndpoints
 from .auth import AuthManager
+from .logging_service import logging_service
+from .metrics_service import metrics_service
+from .alerting_service import alerting_service
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -79,6 +83,7 @@ class AdminAPIService:
         self.stats_endpoints = StatsEndpoints()
         self.config_endpoints = ConfigEndpoints()
         self.events_endpoints = EventsEndpoints()
+        self.monitoring_endpoints = MonitoringEndpoints(self.auth_manager)
         
         # FastAPI app
         self.app: Optional[FastAPI] = None
@@ -90,6 +95,11 @@ class AdminAPIService:
         if self.is_running:
             logger.warning("Admin API service is already running")
             return
+        
+        # Start monitoring services
+        await logging_service.start()
+        await metrics_service.start()
+        await alerting_service.start()
         
         # Create FastAPI app
         self.app = FastAPI(
@@ -137,6 +147,11 @@ class AdminAPIService:
                 await self.server_task
             except asyncio.CancelledError:
                 pass
+        
+        # Stop monitoring services
+        await alerting_service.stop()
+        await metrics_service.stop()
+        await logging_service.stop()
         
         logger.info("Admin API service stopped")
     
@@ -199,6 +214,14 @@ class AdminAPIService:
             self.events_endpoints.router,
             prefix="/api/v1",
             tags=["Events"],
+            dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
+        )
+        
+        # Monitoring endpoints
+        self.app.include_router(
+            self.monitoring_endpoints.router,
+            prefix="/api/v1/monitoring",
+            tags=["Monitoring"],
             dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
         )
         

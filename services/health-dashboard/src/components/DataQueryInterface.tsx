@@ -3,19 +3,25 @@ import { EventData, EventFilter } from '../types';
 import { EventBrowser } from './EventBrowser';
 import { DataVisualization } from './DataVisualization';
 import { SavedQueries } from './SavedQueries';
+import { ExportDialog } from './ExportDialog';
+import { ExportHistory } from './ExportHistory';
+import { ExportResult } from '../utils/exportUtils';
+import { useThemeAware } from '../contexts/ThemeContext';
 
 export const DataQueryInterface: React.FC = () => {
-  const [currentEvents] = useState<EventData[]>([]);
-  const [, setCurrentFilters] = useState<EventFilter>({});
-  const [activeTab, setActiveTab] = useState<'browser' | 'visualization' | 'queries'>('browser');
+  const [currentEvents, setCurrentEvents] = useState<EventData[]>([]);
+  const [currentFilters, setCurrentFilters] = useState<EventFilter>({});
+  const [activeTab, setActiveTab] = useState<'browser' | 'visualization' | 'queries' | 'history'>('browser');
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const { isDark } = useThemeAware();
 
-  // const handleEventsUpdate = (events: EventData[]) => {
-  //   setCurrentEvents(events);
-  // };
+  const handleEventsUpdate = (events: EventData[]) => {
+    setCurrentEvents(events);
+  };
 
-  // const handleFiltersUpdate = (filters: EventFilter) => {
-  //   setCurrentFilters(filters);
-  // };
+  const handleFiltersUpdate = (filters: EventFilter) => {
+    setCurrentFilters(filters);
+  };
 
   const handleLoadQuery = (filters: EventFilter) => {
     setCurrentFilters(filters);
@@ -23,10 +29,15 @@ export const DataQueryInterface: React.FC = () => {
   };
 
   const handleExportData = (events: EventData[], format: 'csv' | 'json') => {
-    if (format === 'csv') {
-      exportToCSV(events);
+    setCurrentEvents(events);
+    setShowExportDialog(true);
+  };
+
+  const handleExportComplete = (result: ExportResult) => {
+    if (result.success) {
+      console.log('Export completed successfully:', result.filename);
     } else {
-      exportToJSON(events);
+      console.error('Export failed:', result.error);
     }
   };
 
@@ -78,6 +89,8 @@ export const DataQueryInterface: React.FC = () => {
         return (
           <EventBrowser
             onExport={handleExportData}
+            onEventsUpdate={handleEventsUpdate}
+            onFiltersUpdate={handleFiltersUpdate}
           />
         );
       case 'visualization':
@@ -92,27 +105,38 @@ export const DataQueryInterface: React.FC = () => {
             onLoadQuery={handleLoadQuery}
           />
         );
+      case 'history':
+        return (
+          <ExportHistory />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-design-background transition-colors duration-design-normal">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-design-surface shadow-design-sm border-b border-design-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Data Query Interface</h1>
-              <p className="text-sm text-gray-600">Explore and analyze Home Assistant data</p>
+              <h1 className="text-2xl font-bold text-design-text">Data Query Interface</h1>
+              <p className="text-sm text-design-text-secondary">Search, analyze, and export Home Assistant events</p>
             </div>
             
             <div className="flex items-center space-x-4">
               {/* Quick Stats */}
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-design-text-secondary">
                 {currentEvents.length} events loaded
               </div>
+              <button
+                onClick={() => setShowExportDialog(true)}
+                className="px-3 py-1 bg-design-primary text-design-text-inverse rounded-design-md text-sm
+                  hover:bg-design-primary-hover transition-colors duration-design-fast shadow-design-sm"
+              >
+                Export Data
+              </button>
             </div>
           </div>
         </div>
@@ -122,14 +146,14 @@ export const DataQueryInterface: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-design-border">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('browser')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-design-fast ${
                   activeTab === 'browser'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-design-primary text-design-primary'
+                    : 'border-transparent text-design-text-secondary hover:text-design-text hover:border-design-border-hover'
                 }`}
               >
                 <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,10 +164,10 @@ export const DataQueryInterface: React.FC = () => {
               
               <button
                 onClick={() => setActiveTab('visualization')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-design-fast ${
                   activeTab === 'visualization'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-design-primary text-design-primary'
+                    : 'border-transparent text-design-text-secondary hover:text-design-text hover:border-design-border-hover'
                 }`}
               >
                 <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,16 +178,30 @@ export const DataQueryInterface: React.FC = () => {
               
               <button
                 onClick={() => setActiveTab('queries')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-design-fast ${
                   activeTab === 'queries'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-design-primary text-design-primary'
+                    : 'border-transparent text-design-text-secondary hover:text-design-text hover:border-design-border-hover'
                 }`}
               >
                 <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
                 Saved Queries
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-design-fast ${
+                  activeTab === 'history'
+                    ? 'border-design-primary text-design-primary'
+                    : 'border-transparent text-design-text-secondary hover:text-design-text hover:border-design-border-hover'
+                }`}
+              >
+                <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Export History
               </button>
             </nav>
           </div>
@@ -175,15 +213,24 @@ export const DataQueryInterface: React.FC = () => {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">Getting Started</h3>
-          <div className="text-sm text-blue-800 space-y-2">
-            <p><strong>Event Browser:</strong> Use filters to find specific events, then export your results in CSV or JSON format.</p>
+        <div className="mt-8 bg-design-background-secondary border border-design-border rounded-design-lg p-6">
+          <h3 className="text-lg font-medium text-design-text mb-2">Getting Started</h3>
+          <div className="text-sm text-design-text-secondary space-y-2">
+            <p><strong>Event Browser:</strong> Use filters to find specific events, then export your results in multiple formats.</p>
             <p><strong>Data Visualization:</strong> Create charts and graphs to analyze trends in your Home Assistant data.</p>
             <p><strong>Saved Queries:</strong> Save frequently used filter combinations for quick access later.</p>
+            <p><strong>Export History:</strong> View and manage your previous data exports.</p>
           </div>
         </div>
       </main>
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        events={currentEvents}
+        onExportComplete={handleExportComplete}
+      />
     </div>
   );
 };

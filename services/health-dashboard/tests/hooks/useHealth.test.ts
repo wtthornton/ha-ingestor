@@ -4,15 +4,15 @@ import { apiService } from '../../src/services/api';
 import { websocketService } from '../../src/services/websocket';
 
 // Mock the services
-jest.mock('../../src/services/api');
-jest.mock('../../src/services/websocket');
+vi.mock('../../src/services/api');
+vi.mock('../../src/services/websocket');
 
-const mockApiService = apiService as jest.Mocked<typeof apiService>;
-const mockWebsocketService = websocketService as jest.Mocked<typeof websocketService>;
+const mockApiService = apiService as any;
+const mockWebsocketService = websocketService as any;
 
 describe('useHealth', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock API service
     mockApiService.getHealth.mockResolvedValue({

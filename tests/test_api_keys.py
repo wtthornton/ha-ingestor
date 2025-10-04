@@ -248,6 +248,45 @@ class WeatherAPITester:
         
         return result
     
+    async def test_location_weather(self, location: str) -> APITestResult:
+        """Test weather API with specific location"""
+        result = APITestResult(f"Weather API Location Test: {location}")
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"{self.base_url}/weather"
+                params = {
+                    'q': location,
+                    'appid': self.api_key,
+                    'units': 'metric'
+                }
+                
+                async with session.get(url, params=params, timeout=10) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        result.set_success({
+                            'status_code': response.status,
+                            'location': data.get('name', 'Unknown'),
+                            'country': data.get('sys', {}).get('country', 'Unknown'),
+                            'temperature': data.get('main', {}).get('temp'),
+                            'weather': data.get('weather', [{}])[0].get('main', 'Unknown'),
+                            'humidity': data.get('main', {}).get('humidity'),
+                            'coordinates': {
+                                'lat': data.get('coord', {}).get('lat'),
+                                'lon': data.get('coord', {}).get('lon')
+                            }
+                        })
+                    elif response.status == 404:
+                        result.set_error(f"Location not found: {location}")
+                    else:
+                        error_text = await response.text()
+                        result.set_error(f"HTTP {response.status}: {error_text}")
+        
+        except Exception as e:
+            result.set_error(f"Location test error: {str(e)}")
+        
+        return result
+    
     async def test_api_quota(self) -> APITestResult:
         """Test API quota and rate limiting"""
         result = APITestResult("Weather API Quota Test")
@@ -323,6 +362,7 @@ class EnvironmentValidator:
                 'HOME_ASSISTANT_URL': 'Home Assistant base URL',
                 'HOME_ASSISTANT_TOKEN': 'Home Assistant long-lived access token',
                 'WEATHER_API_KEY': 'OpenWeatherMap API key',
+                'WEATHER_LOCATION': 'Weather location (city,state,country)',
                 'INFLUXDB_URL': 'InfluxDB connection URL',
                 'INFLUXDB_TOKEN': 'InfluxDB authentication token'
             }
@@ -420,6 +460,13 @@ class APITestSuite:
                 weather_tester.test_api_key_validity(),
                 weather_tester.test_api_quota()
             ]
+            
+            # Test specific location if configured
+            weather_location = os.getenv('WEATHER_LOCATION')
+            if weather_location:
+                logger.info(f"Testing weather for location: {weather_location}")
+                location_test = weather_tester.test_location_weather(weather_location)
+                weather_tests.append(location_test)
             
             for test in weather_tests:
                 result = await test

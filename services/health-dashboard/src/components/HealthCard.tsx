@@ -1,6 +1,10 @@
 import React from 'react';
 import { SystemHealth, ServiceStatus } from '../types';
 import { clsx } from 'clsx';
+import { HealthCardSkeleton } from './SkeletonLoader';
+import { StatusIndicator, StatusBadge, ProgressBar } from './StatusIndicator';
+import { HealthMetrics, MetricCard } from './HealthMetrics';
+import { useStatusAnimation } from '../hooks/useStatusUpdates';
 
 interface HealthCardProps {
   health: SystemHealth;
@@ -35,100 +39,112 @@ const getStatusIcon = (status: ServiceStatus): string => {
 
 export const HealthCard: React.FC<HealthCardProps> = ({ health, loading = false }) => {
   if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      </div>
-    );
+    return <HealthCardSkeleton />;
   }
 
   const { ingestion_service } = health;
   const overallStatus = health.overall_status;
+  const { animationClasses } = useStatusAnimation(overallStatus);
+
+  // Convert ServiceStatus to StatusType
+  const getStatusType = (status: ServiceStatus): 'healthy' | 'warning' | 'error' | 'unknown' => {
+    switch (status) {
+      case 'healthy':
+        return 'healthy';
+      case 'degraded':
+        return 'warning';
+      case 'unhealthy':
+        return 'error';
+      default:
+        return 'unknown';
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className={`bg-design-surface rounded-design-lg shadow-design-md p-6 hover:shadow-design-lg transition-shadow duration-design-normal ${animationClasses}`}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">System Health</h2>
-        <div className={clsx(
-          'px-3 py-1 rounded-full text-sm font-medium border',
-          getStatusColor(overallStatus)
-        )}>
-          <span className="mr-1">{getStatusIcon(overallStatus)}</span>
-          {overallStatus.toUpperCase()}
-        </div>
+        <h2 className="text-xl font-semibold text-design-text">System Health</h2>
+        <StatusBadge 
+          status={getStatusType(overallStatus)} 
+          text={overallStatus.toUpperCase()} 
+          size="md"
+        />
       </div>
 
       <div className="space-y-4">
         {/* WebSocket Connection */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">WebSocket Connection</span>
-          <div className={clsx(
-            'px-2 py-1 rounded text-xs font-medium',
-            ingestion_service.websocket_connection.is_connected
-              ? 'text-green-600 bg-green-50'
-              : 'text-red-600 bg-red-50'
-          )}>
-            {ingestion_service.websocket_connection.is_connected ? 'Connected' : 'Disconnected'}
-          </div>
-        </div>
+        <StatusIndicator
+          status={ingestion_service.websocket_connection.is_connected ? 'healthy' : 'error'}
+          label="WebSocket Connection"
+          value={ingestion_service.websocket_connection.is_connected ? 'Connected' : 'Disconnected'}
+          lastUpdated={new Date(health.timestamp)}
+          variant="inline"
+          size="sm"
+        />
 
         {/* Event Processing */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Event Processing</span>
-          <div className="text-sm text-gray-900">
-            {ingestion_service.event_processing.events_per_minute.toFixed(1)} events/min
-          </div>
-        </div>
+        <StatusIndicator
+          status="healthy"
+          label="Event Processing"
+          value={`${ingestion_service.event_processing.events_per_minute.toFixed(1)} events/min`}
+          lastUpdated={new Date(health.timestamp)}
+          variant="inline"
+          size="sm"
+        />
 
         {/* Weather Enrichment */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Weather Enrichment</span>
-          <div className={clsx(
-            'px-2 py-1 rounded text-xs font-medium',
-            ingestion_service.weather_enrichment.enabled
-              ? 'text-green-600 bg-green-50'
-              : 'text-gray-600 bg-gray-50'
-          )}>
-            {ingestion_service.weather_enrichment.enabled ? 'Enabled' : 'Disabled'}
-          </div>
-        </div>
+        <StatusIndicator
+          status={ingestion_service.weather_enrichment.enabled ? 'healthy' : 'unknown'}
+          label="Weather Enrichment"
+          value={ingestion_service.weather_enrichment.enabled ? 'Enabled' : 'Disabled'}
+          lastUpdated={new Date(health.timestamp)}
+          variant="inline"
+          size="sm"
+        />
 
         {/* InfluxDB Storage */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">InfluxDB Storage</span>
-          <div className={clsx(
-            'px-2 py-1 rounded text-xs font-medium',
-            ingestion_service.influxdb_storage.is_connected
-              ? 'text-green-600 bg-green-50'
-              : 'text-red-600 bg-red-50'
-          )}>
-            {ingestion_service.influxdb_storage.is_connected ? 'Connected' : 'Disconnected'}
-          </div>
-        </div>
+        <StatusIndicator
+          status={ingestion_service.influxdb_storage.is_connected ? 'healthy' : 'error'}
+          label="InfluxDB Storage"
+          value={ingestion_service.influxdb_storage.is_connected ? 'Connected' : 'Disconnected'}
+          lastUpdated={new Date(health.timestamp)}
+          variant="inline"
+          size="sm"
+        />
 
         {/* Error Rate */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Error Rate</span>
-          <div className={clsx(
-            'text-sm font-medium',
-            ingestion_service.event_processing.error_rate > 0.05
-              ? 'text-red-600'
-              : ingestion_service.event_processing.error_rate > 0.01
-              ? 'text-yellow-600'
-              : 'text-green-600'
-          )}>
-            {(ingestion_service.event_processing.error_rate * 100).toFixed(2)}%
-          </div>
+        <div className="space-y-2">
+          <StatusIndicator
+            status={
+              ingestion_service.event_processing.error_rate > 0.05
+                ? 'error'
+                : ingestion_service.event_processing.error_rate > 0.01
+                ? 'warning'
+                : 'healthy'
+            }
+            label="Error Rate"
+            value={`${(ingestion_service.event_processing.error_rate * 100).toFixed(2)}%`}
+            lastUpdated={new Date(health.timestamp)}
+            variant="inline"
+            size="sm"
+          />
+          <ProgressBar
+            value={ingestion_service.event_processing.error_rate * 100}
+            max={10}
+            status={
+              ingestion_service.event_processing.error_rate > 0.05
+                ? 'error'
+                : ingestion_service.event_processing.error_rate > 0.01
+                ? 'warning'
+                : 'healthy'
+            }
+            showPercentage={false}
+          />
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
+      <div className="mt-4 pt-4 border-t border-design-border">
+        <div className="text-xs text-design-text-tertiary">
           Last updated: {new Date(health.timestamp).toLocaleString()}
         </div>
       </div>

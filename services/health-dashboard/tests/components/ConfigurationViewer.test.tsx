@@ -4,8 +4,8 @@ import { ConfigurationViewer } from '../../src/components/ConfigurationViewer';
 import { apiService } from '../../src/services/api';
 
 // Mock the API service
-jest.mock('../../src/services/api');
-const mockApiService = apiService as jest.Mocked<typeof apiService>;
+vi.mock('../../src/services/api');
+const mockApiService = apiService as any;
 
 const mockConfiguration: any = {
   home_assistant_url: 'http://localhost:8123',

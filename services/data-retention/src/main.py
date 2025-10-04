@@ -222,31 +222,6 @@ class DataRetentionService:
 # Global service instance
 data_retention_service = DataRetentionService()
 
-async def health_check_handler(request: web.Request) -> web.Response:
-    """Simple health check handler."""
-    try:
-        # Get basic service status
-        service_status = data_retention_service.get_service_status()
-        
-        health_data = {
-            "status": "healthy",
-            "timestamp": data_retention_service.get_service_status().get("timestamp", "unknown"),
-            "service": "data-retention",
-            "uptime": service_status.get("uptime_seconds", 0)
-        }
-        
-        return web.json_response(health_data)
-        
-    except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        return web.json_response(
-            {
-                "status": "error",
-                "timestamp": "unknown",
-                "error": str(e)
-            },
-            status=500
-        )
 
 async def main():
     """Main entry point."""
@@ -259,11 +234,38 @@ async def main():
         # Start the data retention service
         await data_retention_service.start()
         
-        # Create and start the web application
+        # Create and start the web application with all routes
         app = web.Application()
         
-        # Add health check route
-        app.router.add_get('/health', health_check_handler)
+        # Import route handlers to avoid circular imports
+        from .health_check import (
+            health_check, get_statistics, get_policies, add_policy, 
+            update_policy, delete_policy, run_cleanup, create_backup, 
+            restore_backup, get_backup_history, get_backup_statistics, 
+            cleanup_old_backups
+        )
+        
+        # Health check routes
+        app.router.add_get('/health', health_check)
+        app.router.add_get('/api/v1/health', health_check)
+        app.router.add_get('/stats', get_statistics)
+        app.router.add_get('/api/v1/stats', get_statistics)
+        
+        # Policy management routes
+        app.router.add_get('/policies', get_policies)
+        app.router.add_post('/policies', add_policy)
+        app.router.add_put('/policies', update_policy)
+        app.router.add_delete('/policies/{policy_name}', delete_policy)
+        
+        # Cleanup routes
+        app.router.add_post('/cleanup', run_cleanup)
+        
+        # Backup and restore routes
+        app.router.add_post('/backup', create_backup)
+        app.router.add_post('/restore', restore_backup)
+        app.router.add_get('/backups', get_backup_history)
+        app.router.add_get('/backup-stats', get_backup_statistics)
+        app.router.add_delete('/backups/cleanup', cleanup_old_backups)
         
         runner = web.AppRunner(app)
         await runner.setup()
