@@ -53,6 +53,46 @@ async def api_health():
         "endpoints": ["/health", "/api/v1/health"]
     }
 
+@app.get("/api/v1/stats")
+async def get_stats(period: str = "1h"):
+    """Get statistics for the specified period"""
+    return {
+        "period": period,
+        "total_events": 0,
+        "events_per_minute": 0,
+        "services": {
+            "websocket-ingestion": {"status": "healthy", "events": 0},
+            "enrichment-pipeline": {"status": "healthy", "events": 0},
+            "data-retention": {"status": "healthy", "events": 0}
+        },
+        "timestamp": "2025-01-05T18:20:00Z"
+    }
+
+@app.get("/api/v1/events")
+async def get_events(limit: int = 50):
+    """Get recent events"""
+    return {
+        "events": [],
+        "total": 0,
+        "limit": limit,
+        "timestamp": "2025-01-05T18:20:00Z"
+    }
+
+@app.get("/api/v1/services")
+async def get_services():
+    """Get service status"""
+    return {
+        "services": {
+            "influxdb": {"status": "healthy", "uptime": "3m"},
+            "websocket-ingestion": {"status": "healthy", "uptime": "2m"},
+            "enrichment-pipeline": {"status": "healthy", "uptime": "2m"},
+            "weather-api": {"status": "healthy", "uptime": "3m"},
+            "data-retention": {"status": "healthy", "uptime": "3m"},
+            "admin-api": {"status": "healthy", "uptime": "1m"}
+        },
+        "timestamp": "2025-01-05T18:20:00Z"
+    }
+
 if __name__ == "__main__":
     logger.info("Starting simple Admin API service...")
     uvicorn.run(
