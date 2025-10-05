@@ -47,23 +47,50 @@ async def root():
 async def api_health():
     """API health check endpoint"""
     return {
-        "status": "healthy",
-        "service": "admin-api",
-        "version": "1.0.0",
-        "endpoints": ["/health", "/api/v1/health"]
+        "success": True,
+        "data": {
+            "overall_status": "healthy",
+            "admin_api_status": "healthy",
+            "ingestion_service": {
+                "status": "healthy",
+                "websocket_connection": {
+                    "status": "connected",
+                    "last_heartbeat": "2025-01-05T18:20:00Z",
+                    "reconnect_attempts": 0
+                },
+                "event_processing": {
+                    "status": "healthy",
+                    "events_per_minute": 0,
+                    "last_event_time": "2025-01-05T18:20:00Z",
+                    "processing_lag": 0
+                }
+            },
+            "timestamp": "2025-01-05T18:20:00Z"
+        },
+        "timestamp": "2025-01-05T18:20:00Z"
     }
 
 @app.get("/api/v1/stats")
 async def get_stats(period: str = "1h"):
     """Get statistics for the specified period"""
     return {
-        "period": period,
-        "total_events": 0,
-        "events_per_minute": 0,
-        "services": {
-            "websocket-ingestion": {"status": "healthy", "events": 0},
-            "enrichment-pipeline": {"status": "healthy", "events": 0},
-            "data-retention": {"status": "healthy", "events": 0}
+        "success": True,
+        "data": {
+            "period": period,
+            "total_events": 0,
+            "events_per_minute": 0,
+            "services": {
+                "websocket-ingestion": {"status": "healthy", "events": 0},
+                "enrichment-pipeline": {"status": "healthy", "events": 0},
+                "data-retention": {"status": "healthy", "events": 0}
+            },
+            "metrics": {
+                "cpu_usage": 15.2,
+                "memory_usage": 45.8,
+                "disk_usage": 23.1,
+                "network_io": 1024
+            },
+            "timestamp": "2025-01-05T18:20:00Z"
         },
         "timestamp": "2025-01-05T18:20:00Z"
     }
@@ -72,9 +99,18 @@ async def get_stats(period: str = "1h"):
 async def get_events(limit: int = 50):
     """Get recent events"""
     return {
-        "events": [],
-        "total": 0,
-        "limit": limit,
+        "success": True,
+        "data": [
+            {
+                "id": "event-1",
+                "timestamp": "2025-01-05T18:20:00Z",
+                "entity_id": "sensor.temperature",
+                "event_type": "state_changed",
+                "new_state": {"state": "22.5", "attributes": {"unit_of_measurement": "°C"}},
+                "old_state": {"state": "22.3", "attributes": {"unit_of_measurement": "°C"}},
+                "source": "websocket-ingestion"
+            }
+        ],
         "timestamp": "2025-01-05T18:20:00Z"
     }
 

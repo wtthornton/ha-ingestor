@@ -20,7 +20,7 @@ class EventProcessor:
         
         # Event validation rules
         self.required_fields = {
-            "state_changed": ["event_type", "old_state", "new_state"],
+            "state_changed": ["event_type", "new_state"],
             "call_service": ["event_type", "domain", "service", "service_data"],
             "service_registered": ["event_type", "domain", "service"],
             "service_removed": ["event_type", "domain", "service"]

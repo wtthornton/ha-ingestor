@@ -21,10 +21,33 @@ class NotificationServiceImpl implements NotificationService {
     try {
       const saved = localStorage.getItem('notification-preferences');
       if (saved) {
-        this.preferences = { ...DEFAULT_NOTIFICATION_PREFERENCES, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        // Deep merge to ensure all nested properties exist
+        this.preferences = {
+          ...DEFAULT_NOTIFICATION_PREFERENCES,
+          ...parsed,
+          categories: {
+            ...DEFAULT_NOTIFICATION_PREFERENCES.categories,
+            ...parsed.categories
+          },
+          severity: {
+            ...DEFAULT_NOTIFICATION_PREFERENCES.severity,
+            ...parsed.severity
+          },
+          thresholds: {
+            ...DEFAULT_NOTIFICATION_PREFERENCES.thresholds,
+            ...parsed.thresholds
+          },
+          channels: {
+            ...DEFAULT_NOTIFICATION_PREFERENCES.channels,
+            ...parsed.channels
+          }
+        };
       }
     } catch (error) {
       console.warn('Failed to load notification preferences:', error);
+      // Reset to defaults if loading fails
+      this.preferences = DEFAULT_NOTIFICATION_PREFERENCES;
     }
   }
 
@@ -127,17 +150,16 @@ class NotificationServiceImpl implements NotificationService {
     if (!websocketService) return;
 
     // Listen for system health changes
-    websocketService.on('health_update', (data: any) => {
-      this.handleHealthUpdate(data);
-    });
-
-    // Listen for error events
-    websocketService.on('error', (error: any) => {
-      this.handleError(error);
+    websocketService.subscribe((message: any) => {
+      if (message.type === 'health_update') {
+        this.handleHealthUpdate(message.data);
+      } else if (message.type === 'error') {
+        this.handleError(message.data);
+      }
     });
 
     // Listen for connection status changes
-    websocketService.on('connection_status', (status: any) => {
+    websocketService.onConnect((status: any) => {
       this.handleConnectionStatus(status);
     });
   }
