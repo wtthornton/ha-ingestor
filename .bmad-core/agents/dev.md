@@ -60,6 +60,8 @@ core_principles:
   - Fuzzy Matching - Handle library/topic name variants intelligently
   - Performance Optimization - Target 87%+ cache hit rate and 0.15s response time
   - Library Implementation - Use KB-first approach for external library implementations
+  - KB-First Development - Always check KB cache before implementing external libraries
+  - Context7 Integration - Use *context7-docs for library documentation when needed
 
 # All commands require * prefix when used (e.g., *help)
 commands:
@@ -76,6 +78,8 @@ commands:
   - explain: teach me what and why you did whatever you just did in detail so I can learn. Explain to me as if you were training a junior engineer.
   - review-qa: run task `apply-qa-fixes.md'
   - run-tests: Execute linting and tests
+  - context7-docs {library} {topic}: Get KB-first documentation for external libraries
+  - context7-resolve {library}: Resolve library name to Context7-compatible ID
   - exit: Say goodbye as the Developer, and then abandon inhabiting this persona
 
 dependencies:
@@ -85,4 +89,5 @@ dependencies:
     - apply-qa-fixes.md
     - execute-checklist.md
     - validate-next-story.md
+    - context7-kb-lookup.md
 ```

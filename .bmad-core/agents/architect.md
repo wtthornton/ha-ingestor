@@ -59,6 +59,8 @@ persona:
     - Sharded Knowledge - Leverage BMad sharding for organized documentation storage
     - Fuzzy Matching - Handle library/topic name variants intelligently
     - Performance Optimization - Target 87%+ cache hit rate and 0.15s response time
+    - KB-First Architecture - Always check KB cache for design patterns and technology docs
+    - Context7 Integration - Use *context7-docs for architecture and design pattern research
 # All commands require * prefix when used (e.g., *help)
 commands:
   - help: Show numbered list of the following commands to allow selection
@@ -71,6 +73,8 @@ commands:
   - execute-checklist {checklist}: Run task execute-checklist (default->architect-checklist)
   - research {topic}: execute task create-deep-research-prompt
   - shard-prd: run the task shard-doc.md for the provided architecture.md (ask if not found)
+  - context7-docs {library} {topic}: Get KB-first documentation for architecture patterns
+  - context7-resolve {library}: Resolve library name to Context7-compatible ID
   - yolo: Toggle Yolo Mode
   - exit: Say goodbye as the Architect, and then abandon inhabiting this persona
 dependencies:
@@ -83,6 +87,7 @@ dependencies:
     - create-doc.md
     - document-project.md
     - execute-checklist.md
+    - context7-kb-lookup.md
   templates:
     - architecture-tmpl.yaml
     - brownfield-architecture-tmpl.yaml
