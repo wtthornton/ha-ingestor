@@ -17,7 +17,7 @@ from shared.logging_config import (
     log_error_with_context, performance_monitor, generate_correlation_id,
     set_correlation_id, get_correlation_id
 )
-from shared.correlation_middleware import AioHTTPCorrelationMiddleware
+from shared.correlation_middleware import create_correlation_middleware
 
 from .health_check import HealthCheckHandler
 
@@ -30,11 +30,9 @@ logger = setup_logging("weather-api")
 
 async def create_app():
     """Create the web application"""
-    app = web.Application()
-    
-    # Add correlation middleware
-    correlation_middleware = AioHTTPCorrelationMiddleware()
-    app.middlewares.append(correlation_middleware)
+    # Create web application with proper middleware factory
+    correlation_middleware = create_correlation_middleware()
+    app = web.Application(middlewares=[correlation_middleware])
     
     # Add health check endpoint
     health_handler = HealthCheckHandler()

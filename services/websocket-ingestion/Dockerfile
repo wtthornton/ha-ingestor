@@ -9,17 +9,21 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY services/websocket-ingestion/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY src/ ./src/
+COPY services/websocket-ingestion/src/ ./src/
+COPY shared/ ./shared/
 
-# Set Python path to include src directory
-ENV PYTHONPATH=/app/src
+# Set Python path to include src and shared directories
+ENV PYTHONPATH=/app:/app/src
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create log directory and non-root user
+RUN mkdir -p /var/log/ha-ingestor && \
+    useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app && \
+    chown -R appuser:appuser /var/log/ha-ingestor
 USER appuser
 
 # Expose port

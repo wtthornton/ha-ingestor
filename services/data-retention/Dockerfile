@@ -10,13 +10,14 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements
-COPY requirements.txt .
+COPY services/data-retention/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
-COPY src/ ./src/
+# Copy source code and shared modules
+COPY services/data-retention/src/ ./src/
+COPY shared/ ./shared/
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app && \

@@ -1,0 +1,33 @@
+# Home Assistant Library Cache Entry
+# Generated: 2025-01-27T15:01:00Z
+
+library_info:
+  name: "Home Assistant"
+  context7_id: "/home-assistant/core"
+  trust_score: 9.8
+  snippet_count: 1876
+  last_updated: "2025-01-27T15:01:00Z"
+  topics: ["entities", "states", "events"]
+  
+cache_entry:
+  file_path: "libraries/homeassistant/docs.md"
+  size_bytes: 37891
+  hit_count: 0
+  last_accessed: null
+  
+documentation_summary:
+  topics_covered:
+    - "Entity management"
+    - "State handling"
+    - "Event system"
+    - "Integration development"
+    - "Automation"
+    - "Configuration"
+  
+  key_concepts:
+    - "Entity lifecycle"
+    - "State management"
+    - "Event handling"
+    - "Integration patterns"
+    - "Automation rules"
+    - "Configuration management"

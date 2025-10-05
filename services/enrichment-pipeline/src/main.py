@@ -17,7 +17,7 @@ from shared.logging_config import (
     log_error_with_context, performance_monitor, generate_correlation_id,
     set_correlation_id, get_correlation_id
 )
-from shared.correlation_middleware import AioHTTPCorrelationMiddleware
+from shared.correlation_middleware import create_correlation_middleware
 
 from data_normalizer import DataNormalizer
 from influxdb_wrapper import InfluxDBClientWrapper
@@ -345,12 +345,9 @@ async def main():
             logger.error("Failed to start service")
             return
         
-        # Create web application
-        app = web.Application()
-        
-        # Add correlation middleware
-        correlation_middleware = AioHTTPCorrelationMiddleware()
-        app.middlewares.append(correlation_middleware)
+        # Create web application with proper middleware factory
+        correlation_middleware = create_correlation_middleware()
+        app = web.Application(middlewares=[correlation_middleware])
         
         # Set service instance for health checks
         from health_check import health_handler

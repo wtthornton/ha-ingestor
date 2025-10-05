@@ -110,16 +110,6 @@ class AdminAPIService:
         await metrics_service.start()
         await alerting_service.start()
         
-        # Create FastAPI app
-        self.app = FastAPI(
-            title=self.api_title,
-            version=self.api_version,
-            description=self.api_description,
-            docs_url="/docs" if not self.enable_auth else None,
-            redoc_url="/redoc" if not self.enable_auth else None,
-            openapi_url="/openapi.json" if not self.enable_auth else None
-        )
-        
         # Add middleware
         self._add_middleware()
         
@@ -166,9 +156,6 @@ class AdminAPIService:
     
     def _add_middleware(self):
         """Add middleware to FastAPI app"""
-        # Correlation ID middleware (add first to ensure it's applied to all requests)
-        self.app.add_middleware(FastAPICorrelationMiddleware)
-        
         # CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
@@ -316,26 +303,14 @@ class AdminAPIService:
 admin_api_service = AdminAPIService()
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
-    # Startup
-    logger.info("Starting Admin API service...")
-    await admin_api_service.start()
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down Admin API service...")
-    await admin_api_service.stop()
-
-
 # Create FastAPI app for external use
 app = FastAPI(
     title=admin_api_service.api_title,
     version=admin_api_service.api_version,
     description=admin_api_service.api_description,
-    lifespan=lifespan
+    docs_url="/docs" if not admin_api_service.enable_auth else None,
+    redoc_url="/redoc" if not admin_api_service.enable_auth else None,
+    openapi_url="/openapi.json" if not admin_api_service.enable_auth else None
 )
 
 # Initialize the app in the service
@@ -345,6 +320,18 @@ admin_api_service.app = app
 admin_api_service._add_middleware()
 admin_api_service._add_routes()
 admin_api_service._add_exception_handlers()
+
+# Start monitoring services
+import asyncio
+async def startup():
+    logger.info("Starting Admin API service...")
+    await logging_service.start()
+    await metrics_service.start()
+    await alerting_service.start()
+    logger.info("Admin API service started on 0.0.0.0:8004")
+
+# Run startup
+asyncio.run(startup())
 
 
 if __name__ == "__main__":

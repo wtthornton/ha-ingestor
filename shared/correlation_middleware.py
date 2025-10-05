@@ -4,11 +4,15 @@ Correlation ID Middleware for Request Tracking Across Services
 
 import time
 import uuid
+import logging
 from typing import Optional, Callable, Any
 from contextvars import ContextVar
 from functools import wraps
+from aiohttp.web import middleware
 
 from .logging_config import correlation_id, generate_correlation_id, set_correlation_id, get_correlation_id
+
+logger = logging.getLogger(__name__)
 
 
 class CorrelationMiddleware:
@@ -96,26 +100,38 @@ def extract_correlation_id(headers: dict, header_name: str = 'X-Correlation-ID')
 class FastAPICorrelationMiddleware:
     """Correlation ID middleware for FastAPI"""
     
-    def __init__(self, header_name: str = 'X-Correlation-ID'):
+    def __init__(self, app, header_name: str = 'X-Correlation-ID'):
+        self.app = app
         self.header_name = header_name
     
-    async def __call__(self, request, call_next):
-        """Process request with correlation ID"""
-        # Get correlation ID from header or generate new one
-        corr_id = request.headers.get(self.header_name)
+    async def __call__(self, scope, receive, send):
+        """ASGI middleware implementation"""
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        
+        # Get correlation ID from headers
+        headers = dict(scope.get("headers", []))
+        corr_id = headers.get(self.header_name.encode(), b"").decode()
+        
         if not corr_id:
             corr_id = generate_correlation_id()
         
         # Set in context
         set_correlation_id(corr_id)
         
-        # Process request
-        response = await call_next(request)
+        # Add to scope for later use
+        scope["correlation_id"] = corr_id
         
-        # Add correlation ID to response headers
-        response.headers[self.header_name] = corr_id
+        # Create new send function to add correlation ID to response headers
+        async def send_with_correlation(message):
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.append((self.header_name.encode(), corr_id.encode()))
+                message["headers"] = headers
+            await send(message)
         
-        return response
+        await self.app(scope, receive, send_with_correlation)
 
 
 class AioHTTPCorrelationMiddleware:
@@ -126,6 +142,11 @@ class AioHTTPCorrelationMiddleware:
     
     async def __call__(self, request, handler):
         """Process request with correlation ID"""
+        # Check if this is actually a request object
+        if not hasattr(request, 'headers'):
+            # This is not a request, pass through
+            return await handler(request)
+            
         # Get correlation ID from header or generate new one
         corr_id = request.headers.get(self.header_name)
         if not corr_id:
@@ -134,13 +155,19 @@ class AioHTTPCorrelationMiddleware:
         # Set in context
         set_correlation_id(corr_id)
         
-        # Process request
-        response = await handler(request)
-        
-        # Add correlation ID to response headers
-        response.headers[self.header_name] = corr_id
-        
-        return response
+        try:
+            # Process request
+            response = await handler(request)
+            
+            # Add correlation ID to response headers
+            if hasattr(response, 'headers'):
+                response.headers[self.header_name] = corr_id
+            
+            return response
+        except Exception as e:
+            # If handler fails, still return the error response
+            logger.error(f"Handler failed: {e}")
+            raise
 
 
 def create_correlation_context(corr_id: Optional[str] = None) -> dict:
@@ -164,3 +191,35 @@ def get_correlation_context() -> dict:
         'correlation_id': get_correlation_id(),
         'timestamp': time.time()
     }
+
+
+def create_correlation_middleware(header_name: str = 'X-Correlation-ID'):
+    """
+    Create a correlation ID middleware factory for aiohttp.
+    
+    This follows the proper aiohttp middleware pattern where middleware
+    functions are created by factory functions.
+    
+    Usage:
+        app = web.Application(middlewares=[create_correlation_middleware()])
+    """
+    @middleware
+    async def correlation_middleware(request, handler):
+        """Process request with correlation ID"""
+        # Get correlation ID from header or generate new one
+        corr_id = request.headers.get(header_name)
+        if not corr_id:
+            corr_id = generate_correlation_id()
+        
+        # Set in context
+        set_correlation_id(corr_id)
+        
+        # Process request
+        response = await handler(request)
+        
+        # Add correlation ID to response headers
+        response.headers[header_name] = corr_id
+        
+        return response
+    
+    return correlation_middleware

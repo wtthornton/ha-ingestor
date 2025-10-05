@@ -4,6 +4,7 @@ Enhanced Shared Logging Configuration with Structured JSON Logging and Correlati
 
 import json
 import logging
+import logging.handlers
 import os
 import sys
 import time
