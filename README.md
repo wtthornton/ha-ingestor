@@ -66,17 +66,27 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 - Connects to Home Assistant WebSocket API
 - Subscribes to state_changed events
 - Handles authentication and reconnection
-- Port: 8000 (internal)
+- Port: 8001 (external)
 
 ### Weather API Service
 - Fetches weather data from OpenWeatherMap
 - Enriches Home Assistant data with weather context
-- Port: 8001 (internal)
+- Port: Internal (no external access)
+
+### Enrichment Pipeline Service
+- Processes and enriches Home Assistant events
+- Data validation and normalization
+- Port: 8002 (external)
+
+### Data Retention Service
+- Manages data lifecycle and cleanup
+- Backup and restore operations
+- Port: 8080 (external)
 
 ### Admin API Service
 - Provides REST API for administration
 - Health monitoring and configuration
-- Port: 8000 (external)
+- Port: 8003 (external)
 
 ### InfluxDB
 - Time-series database for event storage
@@ -119,9 +129,11 @@ ha-ingestor/
 
 All services expose health check endpoints:
 
-- Admin API: `http://localhost:8000/health`
-- WebSocket Ingestion: `http://localhost:8000/health` (internal)
-- Weather API: `http://localhost:8001/health` (internal)
+- Admin API: `http://localhost:8003/health`
+- WebSocket Ingestion: `http://localhost:8001/health`
+- Enrichment Pipeline: `http://localhost:8002/health`
+- Data Retention: `http://localhost:8080/health`
+- Weather API: Internal health checks only
 - InfluxDB: `http://localhost:8086/health`
 
 ## Monitoring

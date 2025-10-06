@@ -74,8 +74,9 @@ docker-compose ps
 
 ### **Access Points**
 - **Admin Interface**: http://localhost:3000
-- **API Documentation**: http://localhost:8080/docs
-- **Health Dashboard**: http://localhost:8080/api/v1/health
+- **API Documentation**: http://localhost:8003/docs
+- **Health Dashboard**: http://localhost:8003/api/v1/health
+- **Data Retention API**: http://localhost:8080
 
 ## 📋 **System Architecture**
 
@@ -100,12 +101,12 @@ docker-compose ps
 
 | Service | Description | Port | Status |
 |---------|-------------|------|--------|
-| **websocket-ingestion** | Home Assistant event capture | - | ✅ Production Ready |
-| **enrichment-pipeline** | Data enrichment and validation | - | ✅ Production Ready |
-| **data-retention** | Data lifecycle management | - | ✅ Production Ready |
-| **admin-api** | System administration API | 8080 | ✅ Production Ready |
+| **websocket-ingestion** | Home Assistant event capture | 8001 | ✅ Production Ready |
+| **enrichment-pipeline** | Data enrichment and validation | 8002 | ✅ Production Ready |
+| **data-retention** | Data lifecycle management | 8080 | ✅ Production Ready |
+| **admin-api** | System administration API | 8003 | ✅ Production Ready |
 | **health-dashboard** | Web-based administration | 3000 | ✅ Production Ready |
-| **weather-api** | Weather data integration | - | ✅ Production Ready |
+| **weather-api** | Weather data integration | Internal | ✅ Production Ready |
 | **influxdb** | Time-series database | 8086 | ✅ Production Ready |
 
 ## 📊 **Project Status**

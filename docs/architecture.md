@@ -8,22 +8,25 @@
 
 ```mermaid
 graph TB
-    HA[Home Assistant] -->|WebSocket| WS[WebSocket Ingestion<br/>Python + aiohttp]
-    WS --> ENRICH[Enrichment Pipeline<br/>Weather + Normalization]
-    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Time Series)]
+    HA[Home Assistant] -->|WebSocket| WS[WebSocket Ingestion<br/>Port: 8001]
+    WS --> ENRICH[Enrichment Pipeline<br/>Port: 8002]
+    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Port: 8086)]
     
-    DASH[Health Dashboard<br/>React + TypeScript] -->|REST API| ADMIN[Admin API<br/>FastAPI]
+    DASH[Health Dashboard<br/>Port: 3000] -->|REST API| ADMIN[Admin API<br/>Port: 8003]
     ADMIN --> INFLUX
+    
+    WEATHER[Weather API<br/>Internal] --> ENRICH
+    RETENTION[Data Retention<br/>Port: 8080] --> INFLUX
     
     subgraph "Docker Services"
         WS
         ENRICH
         ADMIN
         DASH
-        RETENTION[Data Retention<br/>Cleanup Service]
+        WEATHER
+        RETENTION
+        INFLUX
     end
-    
-    RETENTION --> INFLUX
 ```
 
 ## Technology Stack
@@ -44,11 +47,13 @@ graph TB
 ## Service Architecture
 
 ### Core Services
-1. **websocket-ingestion** - Captures HA events via WebSocket
-2. **admin-api** - FastAPI REST API for dashboard
-3. **health-dashboard** - React frontend interface
-4. **enrichment-pipeline** - Data processing and weather enrichment
-5. **data-retention** - Cleanup and backup management
+1. **websocket-ingestion** - Captures HA events via WebSocket (Port: 8001)
+2. **enrichment-pipeline** - Data processing and weather enrichment (Port: 8002)
+3. **data-retention** - Cleanup and backup management (Port: 8080)
+4. **admin-api** - FastAPI REST API for dashboard (Port: 8003)
+5. **health-dashboard** - React frontend interface (Port: 3000)
+6. **weather-api** - Weather data integration (Internal)
+7. **influxdb** - Time-series database (Port: 8086)
 
 ### Key Integration Points
 - **Home Assistant WebSocket API** → Real-time event streaming

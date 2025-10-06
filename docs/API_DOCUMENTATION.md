@@ -14,6 +14,16 @@ http://localhost:8003/api/v1
 http://localhost:8080
 ```
 
+**Enrichment Pipeline API**
+```
+http://localhost:8002
+```
+
+**WebSocket Ingestion API**
+```
+http://localhost:8001
+```
+
 ### **Authentication**
 All API endpoints require authentication using an API key:
 ```bash

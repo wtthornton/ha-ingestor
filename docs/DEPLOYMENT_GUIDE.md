@@ -19,11 +19,11 @@ cp infrastructure/env.example .env
 nano .env  # Edit with your configuration
 
 # Start the system
-docker-compose -f docker-compose.complete.yml up -d
+docker-compose up -d
 
 # Verify deployment
-docker-compose -f docker-compose.complete.yml ps
-docker-compose -f docker-compose.complete.yml logs -f
+docker-compose ps
+docker-compose logs -f
 ```
 
 ## 🔧 **Configuration**

@@ -24,7 +24,35 @@
 **Status**: ✅ **RESOLVED** - Authentication issues resolved
 **Solution**: Fixed API key configuration and authentication flow
 
-**Impact**: System success rate improved from 58.3% → 83.3%, all critical issues resolved
+**Impact**: System success rate improved from 58.3% → 66.7%, all critical issues resolved
+
+### **⚠️ Current Known Issues (January 2025)**
+
+#### **🔴 API Endpoints Returning 404**
+**Problem**: Some API endpoints return 404 errors
+**Affected Endpoints**:
+- `/api/v1/config` - Configuration endpoint
+- `/api/v1/events/recent` - Recent events endpoint
+- `/api/v1/services` - Services health check endpoint
+- `/api/v1/dependencies` - Dependencies health check endpoint
+
+**Status**: ⚠️ **KNOWN ISSUE** - Endpoints not implemented
+**Workaround**: Use alternative endpoints or implement missing functionality
+**Priority**: Medium - System remains functional without these endpoints
+
+#### **🔴 Smoke Test Unicode Encoding Issues**
+**Problem**: Smoke tests fail with Unicode encoding errors in Windows environment
+**Error**: `UnicodeEncodeError: 'charmap' codec can't encode characters`
+**Status**: ⚠️ **KNOWN ISSUE** - Windows environment compatibility
+**Workaround**: Run tests in WSL or Linux environment
+**Priority**: Low - Tests pass in Linux environment
+
+#### **🔴 Success Rate Below Target**
+**Problem**: Current success rate is 66.7% (8/12 tests passing)
+**Target**: 95%+ success rate
+**Status**: ⚠️ **KNOWN ISSUE** - System operational but with limitations
+**Impact**: System functions but some features may not work as expected
+**Priority**: Medium - Address missing endpoints to improve success rate
 
 #### **✅ WSL Port Conflict Resolution (FIXED)**
 **Problem**: LocalMCP application appearing on port 8080 instead of HA-Ingestor data retention API
