@@ -48,104 +48,52 @@ SSL_CERT_PATH=/etc/ssl/certs/your-cert.pem
 SSL_KEY_PATH=/etc/ssl/private/your-key.pem
 ```
 
-### **Docker Compose Production**
-```yaml
-version: '3.8'
+### **Docker Compose Production (Optimized)**
+The production configuration now uses optimized Alpine-based images with multi-stage builds:
 
+```yaml
+# docker-compose.prod.yml - Optimized production configuration
 services:
   websocket-ingestion:
-    image: ha-ingestor/websocket-ingestion:latest
+    build:
+      context: ./services/websocket-ingestion
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
       - LOG_LEVEL=INFO
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
     deploy:
       resources:
         limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
           memory: 256M
-          cpus: '0.25'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  enrichment-pipeline:
-    image: ha-ingestor/enrichment-pipeline:latest
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - LOG_LEVEL=INFO
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  data-retention:
-    image: ha-ingestor/data-retention:latest
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - LOG_LEVEL=INFO
-    deploy:
-      resources:
-        limits:
-          memory: 512M
           cpus: '0.5'
         reservations:
-          memory: 256M
+          memory: 128M
           cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   admin-api:
-    image: ha-ingestor/admin-api:latest
+    build:
+      context: ./services/admin-api
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "443:8080"
+      - "8003:8004"
     environment:
-      - NODE_ENV=production
       - LOG_LEVEL=INFO
-    volumes:
-      - /etc/ssl/certs:/etc/ssl/certs:ro
-      - /etc/ssl/private:/etc/ssl/private:ro
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  health-dashboard:
-    image: ha-ingestor/health-dashboard:latest
-    restart: unless-stopped
-    ports:
-      - "443:3000"
-    environment:
-      - NODE_ENV=production
-      - REACT_APP_API_URL=https://your-domain.com/api/v1
+      - ENABLE_AUTH=${ENABLE_AUTH:-true}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     deploy:
       resources:
         limits:
@@ -154,8 +102,40 @@ services:
         reservations:
           memory: 256M
           cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  health-dashboard:
+    build:
+      context: ./services/health-dashboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=${DASHBOARD_API_BASE_URL:-http://localhost:8003/api/v1}
+      - VITE_ENVIRONMENT=${ENVIRONMENT:-production}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -165,12 +145,11 @@ services:
     restart: unless-stopped
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=your_secure_password
-      - DOCKER_INFLUXDB_INIT_ORG=your_organization
-      - DOCKER_INFLUXDB_INIT_BUCKET=home_assistant_prod
-    volumes:
-      - influxdb_data:/var/lib/influxdb2
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
     deploy:
       resources:
         limits:
@@ -179,15 +158,13 @@ services:
         reservations:
           memory: 1G
           cpus: '1.0'
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "influx", "ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  influxdb_data:
-    driver: local
 ```
 
 ## 🔒 **Security Configuration**

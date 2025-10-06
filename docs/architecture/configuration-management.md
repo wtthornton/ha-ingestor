@@ -17,11 +17,11 @@ The project uses a **multi-layered configuration approach** with environment-bas
 
 ### Environment Files
 
-| File | Purpose | Environment |
-|------|---------|-------------|
-| `infrastructure/env.example` | Template for all environment variables | Development |
-| `infrastructure/env.production` | Production environment values | Production |
-| `.env` | Local development overrides | Development |
+| File | Purpose | Environment | Docker Compose |
+|------|---------|-------------|----------------|
+| `infrastructure/env.example` | Template for all environment variables | Development | docker-compose.dev.yml |
+| `infrastructure/env.production` | Production environment values | Production | docker-compose.prod.yml |
+| `.env` | Local development overrides | Development | docker-compose.dev.yml |
 
 ### Core Environment Variables
 
@@ -105,7 +105,7 @@ services:
 ### Production Configuration (`docker-compose.prod.yml`)
 
 ```yaml
-# Production overrides
+# Production overrides with optimizations
 services:
   admin-api:
     build:
@@ -114,7 +114,23 @@ services:
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO
-      - ENABLE_AUTH=true
+      - ENABLE_AUTH=${ENABLE_AUTH:-true}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 ```
 
 ## Service-Specific Configuration

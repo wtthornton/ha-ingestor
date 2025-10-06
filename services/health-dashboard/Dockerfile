@@ -1,8 +1,5 @@
-# Multi-stage build for production
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+# Multi-stage build for Health Dashboard
+FROM node:18-alpine AS deps
 WORKDIR /app
 
 # Copy package files
@@ -12,11 +9,12 @@ COPY vite.config.ts ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-    # Install dependencies
-    RUN npm ci && npm cache clean --force
+# Install dependencies with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci && npm cache clean --force
 
-# Rebuild the source code only when needed
-FROM base AS builder
+# Build stage
+FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies
@@ -45,14 +43,11 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.simple.conf /etc/nginx/conf.d/default.conf
 
 # Create non-root user for file ownership
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
 
 # Set ownership of web files to non-root user
-RUN chown -R nextjs:nodejs /usr/share/nginx/html
-
-# Keep nginx running as root for system operations
-# but ensure web files are owned by non-root user
+RUN chown -R appuser:appgroup /usr/share/nginx/html
 
 # Expose port
 EXPOSE 80

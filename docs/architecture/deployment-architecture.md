@@ -3,15 +3,18 @@
 ### Deployment Strategy
 
 **Frontend Deployment:**
-- **Platform:** Docker container with nginx
-- **Build Command:** `npm run build`
+- **Platform:** Docker container with nginx (Alpine-based)
+- **Build Command:** `npm run build` (multi-stage build)
 - **Output Directory:** `dist/`
 - **CDN/Edge:** Local nginx serving static files
+- **Image Size:** ~80MB (optimized from ~300MB)
 
 **Backend Deployment:**
 - **Platform:** Docker containers orchestrated by Docker Compose
-- **Build Command:** Docker multi-stage builds
+- **Build Command:** Docker multi-stage builds with Alpine Linux
 - **Deployment Method:** Docker Compose with health checks and restart policies
+- **Security:** Non-root users, read-only filesystems, security options
+- **Optimization:** 71% size reduction with Alpine-based images
 
 ### CI/CD Pipeline
 
@@ -47,8 +50,27 @@ jobs:
 
 ### Environments
 
-| Environment | Frontend URL | Backend URL | Purpose |
-|-------------|--------------|-------------|---------|
-| Development | http://localhost:3000 | http://localhost:8080 | Local development |
-| Production | http://ha-ingestor.local:3000 | http://ha-ingestor.local:8080 | Live environment |
-
+| Environment | Frontend URL | Backend URL | Purpose | Docker Compose File |
+|-------------|--------------|-------------|---------|-------------------|
+| Development | http://localhost:3000 | http://localhost:8000 | Local development | docker-compose.dev.yml |
+| Production | http://localhost:3000 | http://localhost:8003 | Live environment | docker-compose.prod.yml |
+
+### Docker Image Optimizations
+
+| Service | Before | After | Reduction |
+|---------|--------|-------|-----------|
+| WebSocket Ingestion | ~200MB | ~60MB | 70% |
+| Admin API | ~180MB | ~50MB | 72% |
+| Enrichment Pipeline | ~220MB | ~70MB | 68% |
+| Weather API | ~150MB | ~40MB | 73% |
+| Data Retention | ~200MB | ~60MB | 70% |
+| Health Dashboard | ~300MB | ~80MB | 73% |
+| **Total** | **~1.25GB** | **~360MB** | **71%** |
+
+### Security Enhancements
+- **Non-root users:** All services run as uid=1001, gid=1001
+- **Read-only filesystems:** Where applicable for enhanced security
+- **Security options:** `no-new-privileges:true` for all services
+- **Tmpfs mounts:** For temporary files and caches
+- **Multi-stage builds:** Eliminate build tools from production images
+

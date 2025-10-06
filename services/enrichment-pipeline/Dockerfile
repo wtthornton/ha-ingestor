@@ -1,40 +1,51 @@
 # Multi-stage build for Enrichment Pipeline Service
-FROM python:3.11-slim as builder
+FROM python:3.11-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev linux-headers
 
 # Copy requirements and install Python dependencies
-COPY services/enrichment-pipeline/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY services/enrichment-pipeline/requirements-prod.txt .
+RUN pip install --no-cache-dir --user -r requirements-prod.txt
 
 # Production stage
-FROM python:3.11-slim
+FROM python:3.11-alpine AS production
 
 # Set working directory
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
-# Copy Python dependencies from builder stage
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Create non-root user first
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Copy Python dependencies from builder stage to user directory
+COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy application code
 COPY services/enrichment-pipeline/src/ ./src/
 COPY shared/ ./shared/
 
+# Set ownership of all files to appuser
+RUN chown -R appuser:appgroup /app /home/appuser/.local
+
+# Create log directory with proper permissions
+RUN mkdir -p /app/logs && \
+    chown -R appuser:appgroup /app/logs && \
+    chmod -R 755 /app/logs
+
 # Set environment variables
 ENV PYTHONPATH=/app:/app/src
 ENV PYTHONUNBUFFERED=1
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8002

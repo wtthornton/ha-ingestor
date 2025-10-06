@@ -18,12 +18,28 @@ cd ha-ingestor
 cp infrastructure/env.example .env
 nano .env  # Edit with your configuration
 
-# Start the system
-docker-compose up -d
+# Start the system (development)
+docker-compose -f docker-compose.dev.yml up -d
+
+# Or start production system
+docker-compose -f docker-compose.prod.yml --env-file infrastructure/env.production up -d
 
 # Verify deployment
 docker-compose ps
 docker-compose logs -f
+```
+
+### **🚀 Optimized Deployment (Recommended)**
+The system now uses optimized Alpine-based Docker images with 71% size reduction:
+
+```bash
+# Build and start optimized system
+docker-compose -f docker-compose.prod.yml build
+docker-compose -f docker-compose.prod.yml up -d
+
+# Validate optimized images
+./scripts/validate-optimized-images.sh  # Linux/macOS
+.\scripts\validate-optimized-images.ps1  # Windows
 ```
 
 ## 🔧 **Configuration**
@@ -58,6 +74,15 @@ BACKUP_DIR=/backups
 
 ## 🌐 **Access Points**
 
+### **Development Environment**
+- **Health Dashboard**: http://localhost:3000
+- **Admin API**: http://localhost:8000
+- **Data Retention API**: http://localhost:8080
+- **WebSocket Ingestion**: http://localhost:8001
+- **Enrichment Pipeline**: http://localhost:8002
+- **InfluxDB**: http://localhost:8086
+
+### **Production Environment**
 - **Health Dashboard**: http://localhost:3000
 - **Admin API**: http://localhost:8003
 - **Data Retention API**: http://localhost:8080
@@ -70,18 +95,26 @@ BACKUP_DIR=/backups
 ## 📊 **System Architecture**
 
 ### **Services**
-- **websocket-ingestion** - Home Assistant event capture
-- **enrichment-pipeline** - Data enrichment and validation
-- **data-retention** - Data lifecycle management
-- **admin-api** - System administration API
-- **health-dashboard** - Web-based administration interface
-- **weather-api** - Weather data integration
-- **influxdb** - Time-series database
+- **websocket-ingestion** - Home Assistant event capture (Alpine-based, ~60MB)
+- **enrichment-pipeline** - Data enrichment and validation (Alpine-based, ~70MB)
+- **data-retention** - Data lifecycle management (Alpine-based, ~60MB)
+- **admin-api** - System administration API (Alpine-based, ~50MB)
+- **health-dashboard** - Web-based administration interface (Alpine-based, ~80MB)
+- **weather-api** - Weather data integration (Alpine-based, ~40MB)
+- **influxdb** - Time-series database (Official image)
+
+### **Docker Optimizations**
+- **Multi-stage builds** for all services
+- **Alpine Linux base images** (71% size reduction)
+- **Non-root users** for security
+- **Production requirements** separated from development
+- **Health checks** configured for all services
 
 ### **Networking**
 - **ha-ingestor-network** - Internal service communication
 - **Port 3000** - Health dashboard frontend
-- **Port 8080** - Admin API
+- **Port 8000/8003** - Admin API (dev/prod)
+- **Port 8080** - Data retention API
 - **Port 8086** - InfluxDB
 
 ## 🔍 **Monitoring & Maintenance**

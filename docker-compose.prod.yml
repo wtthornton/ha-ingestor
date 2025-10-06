@@ -86,16 +86,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
           cpus: '0.5'
         reservations:
-          memory: 256M
+          memory: 128M
           cpus: '0.25'
     security_opt:
       - no-new-privileges:true
-    read_only: false
+    read_only: true
     tmpfs:
       - /tmp
+      - /var/tmp
     volumes:
       - websocket_logs:/app/logs
     logging:
