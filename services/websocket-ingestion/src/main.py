@@ -30,8 +30,7 @@ from event_queue import EventQueue
 from batch_processor import BatchProcessor
 from memory_manager import MemoryManager
 from weather_enrichment import WeatherEnrichmentService
-from influxdb_wrapper import InfluxDBConnectionManager
-from influxdb_batch_writer import InfluxDBBatchWriter
+from http_client import SimpleHTTPClient
 
 # Load environment variables
 load_dotenv()
@@ -56,9 +55,8 @@ class WebSocketIngestionService:
         # Weather enrichment components
         self.weather_enrichment: Optional[WeatherEnrichmentService] = None
         
-        # InfluxDB components
-        self.influxdb_connection: Optional[InfluxDBConnectionManager] = None
-        self.influxdb_writer: Optional[InfluxDBBatchWriter] = None
+        # HTTP client for enrichment service
+        self.http_client: Optional[SimpleHTTPClient] = None
         
         # Get configuration from environment
         self.home_assistant_url = os.getenv('HOME_ASSISTANT_URL')
@@ -77,12 +75,8 @@ class WebSocketIngestionService:
         self.weather_default_location = os.getenv('WEATHER_DEFAULT_LOCATION', 'London,UK')
         self.weather_enrichment_enabled = os.getenv('WEATHER_ENRICHMENT_ENABLED', 'true').lower() == 'true'
         
-        # InfluxDB configuration
-        self.influxdb_url = os.getenv('INFLUXDB_URL', 'http://localhost:8086')
-        self.influxdb_token = os.getenv('INFLUXDB_TOKEN')
-        self.influxdb_org = os.getenv('INFLUXDB_ORG', 'home-assistant')
-        self.influxdb_bucket = os.getenv('INFLUXDB_BUCKET', 'home-assistant-events')
-        self.influxdb_enabled = os.getenv('INFLUXDB_ENABLED', 'true').lower() == 'true'
+        # Enrichment service configuration
+        self.enrichment_service_url = os.getenv('ENRICHMENT_SERVICE_URL', 'http://enrichment-pipeline:8002')
         
         if self.home_assistant_enabled and (not self.home_assistant_url or not self.home_assistant_token):
             raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
@@ -146,37 +140,13 @@ class WebSocketIngestionService:
                     reason="no_api_key_or_disabled"
                 )
             
-            # Initialize InfluxDB components
-            if self.influxdb_token and self.influxdb_enabled:
-                self.influxdb_connection = InfluxDBConnectionManager(
-                    url=self.influxdb_url,
-                    token=self.influxdb_token,
-                    org=self.influxdb_org,
-                    bucket=self.influxdb_bucket
-                )
-                await self.influxdb_connection.start()
-                
-                self.influxdb_writer = InfluxDBBatchWriter(
-                    connection_manager=self.influxdb_connection,
-                    batch_size=self.batch_size,
-                    batch_timeout=self.batch_timeout
-                )
-                await self.influxdb_writer.start()
-                log_with_context(
-                    logger, "INFO", "InfluxDB components initialized",
-                    operation="influxdb_startup",
-                    correlation_id=corr_id,
-                    url=self.influxdb_url,
-                    org=self.influxdb_org,
-                    bucket=self.influxdb_bucket
-                )
-            else:
-                log_with_context(
-                    logger, "INFO", "InfluxDB components disabled",
-                    operation="influxdb_startup",
-                    correlation_id=corr_id,
-                    reason="no_token_or_disabled"
-                )
+            # HTTP client is initialized in main() function
+            log_with_context(
+                logger, "INFO", "HTTP client will be initialized in main()",
+                operation="http_client_startup",
+                correlation_id=corr_id,
+                enrichment_url=self.enrichment_service_url
+            )
             
             # Set up batch processor handler
             self.batch_processor.add_batch_handler(self._process_batch)
@@ -246,11 +216,7 @@ class WebSocketIngestionService:
         if self.weather_enrichment:
             await self.weather_enrichment.stop()
         
-        # Stop InfluxDB components
-        if self.influxdb_writer:
-            await self.influxdb_writer.stop()
-        if self.influxdb_connection:
-            await self.influxdb_connection.stop()
+        # HTTP client cleanup is handled by context manager in main()
         
         if self.connection_manager:
             await self.connection_manager.stop()
@@ -366,14 +332,21 @@ class WebSocketIngestionService:
                     batch_size=batch_size
                 )
             
-            # Store batch in InfluxDB
-            if self.influxdb_writer:
+            # Send batch to enrichment service via HTTP
+            if self.http_client:
                 for event in batch:
-                    await self.influxdb_writer.write_event(event)
+                    success = await self.http_client.send_event(event)
+                    if not success:
+                        log_with_context(
+                            logger, "ERROR", "Failed to send event to enrichment service",
+                            operation="http_send",
+                            correlation_id=corr_id,
+                            event_type=event.get('event_type', 'unknown')
+                        )
                 
                 log_with_context(
-                    logger, "DEBUG", "Batch stored in InfluxDB",
-                    operation="influxdb_storage",
+                    logger, "DEBUG", "Batch sent to enrichment service",
+                    operation="http_batch_send",
                     correlation_id=corr_id,
                     batch_size=batch_size
                 )
@@ -527,31 +500,38 @@ async def main():
     """Main entry point"""
     logger.info("Starting WebSocket Ingestion Service...")
     
-    # Create web application
-    app = await create_app()
-    service = app['service']
+    # Initialize HTTP client for enrichment service
+    enrichment_url = os.getenv("ENRICHMENT_SERVICE_URL", "http://enrichment-pipeline:8002")
     
-    # Start web server
-    runner = web.AppRunner(app)
-    await runner.setup()
-    
-    port = int(os.getenv('WEBSOCKET_INGESTION_PORT', '8000'))
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
-    
-    logger.info(f"WebSocket Ingestion Service started on port {port}")
-    
-    # Start the service
-    await service.start()
-    
-    # Keep the service running
-    try:
-        await asyncio.Future()  # Run forever
-    except KeyboardInterrupt:
-        logger.info("Shutting down WebSocket Ingestion Service...")
-    finally:
-        await service.stop()
-        await runner.cleanup()
+    async with SimpleHTTPClient(enrichment_url) as http_client:
+        # Create web application
+        app = await create_app()
+        service = app['service']
+        
+        # Set the HTTP client in the service
+        service.http_client = http_client
+        
+        # Start web server
+        runner = web.AppRunner(app)
+        await runner.setup()
+        
+        port = int(os.getenv('WEBSOCKET_INGESTION_PORT', '8000'))
+        site = web.TCPSite(runner, '0.0.0.0', port)
+        await site.start()
+        
+        logger.info(f"WebSocket Ingestion Service started on port {port}")
+        
+        # Start the service
+        await service.start()
+        
+        # Keep the service running
+        try:
+            await asyncio.Future()  # Run forever
+        except KeyboardInterrupt:
+            logger.info("Shutting down WebSocket Ingestion Service...")
+        finally:
+            await service.stop()
+            await runner.cleanup()
 
 
 if __name__ == "__main__":

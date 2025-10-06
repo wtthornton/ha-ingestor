@@ -171,19 +171,20 @@ class InfluxDBClientWrapper:
             Updated InfluxDB point
         """
         try:
-            # Add entity_id as tag
+            # Add entity_id as tag (check both new_state and top-level for WebSocket service format)
             new_state = event_data.get("new_state", {})
-            if new_state.get("entity_id"):
-                point.tag("entity_id", new_state["entity_id"])
+            entity_id = new_state.get("entity_id") or event_data.get("entity_id")
+            if entity_id:
+                point.tag("entity_id", entity_id)
             
-            # Add state fields
+            # Add state fields (ensure consistent string type for InfluxDB)
             if "state" in new_state:
-                point.field("state", new_state["state"])
+                point.field("state", str(new_state["state"]))
             
-            # Add old state for comparison
+            # Add old state for comparison (ensure consistent string type for InfluxDB)
             old_state = event_data.get("old_state", {})
             if old_state and "state" in old_state:
-                point.field("old_state", old_state["state"])
+                point.field("old_state", str(old_state["state"]))
             
             # Add attributes as fields
             attributes = new_state.get("attributes", {})

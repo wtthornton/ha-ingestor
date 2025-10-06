@@ -385,7 +385,12 @@ class DataNormalizer:
             # Check timestamp format
             if "timestamp" in event_data:
                 timestamp = event_data["timestamp"]
-                if not isinstance(timestamp, str) or not timestamp.endswith('+00:00'):
+                if not isinstance(timestamp, str):
+                    logger.warning(f"Invalid timestamp format: {timestamp}")
+                    return False
+                # Accept various timestamp formats (with or without timezone)
+                if not (timestamp.endswith('+00:00') or timestamp.endswith('Z') or 
+                       re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$', timestamp)):
                     logger.warning(f"Invalid timestamp format: {timestamp}")
                     return False
             
@@ -395,7 +400,9 @@ class DataNormalizer:
                     return False
                 
                 new_state = event_data["new_state"]
-                if "entity_id" not in new_state or "state" not in new_state:
+                # Check entity_id in both new_state and top-level (WebSocket service format)
+                entity_id = new_state.get("entity_id") or event_data.get("entity_id")
+                if not entity_id or "state" not in new_state:
                     return False
             
             return True

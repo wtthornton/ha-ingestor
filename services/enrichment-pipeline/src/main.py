@@ -356,6 +356,7 @@ async def main():
         # Add routes
         app.router.add_get('/health', health_check_handler)
         app.router.add_get('/api/v1/health', health_check_handler)
+        app.router.add_post('/events', events_handler)  # New endpoint for WebSocket service
         app.router.add_post('/process-event', process_event_handler)
         app.router.add_post('/process-events', process_events_handler)
         app.router.add_get('/status', status_handler)
@@ -385,6 +386,33 @@ async def main():
             
     except Exception as e:
         logger.error(f"Error in main: {e}")
+
+
+async def events_handler(request):
+    """Handle event from WebSocket service"""
+    try:
+        event_data = await request.json()
+        
+        # Process the event using existing logic
+        success = await service.process_event(event_data)
+        
+        if success:
+            return web.json_response({
+                "status": "success",
+                "event_id": event_data.get("id", "unknown")
+            })
+        else:
+            return web.json_response({
+                "status": "failed",
+                "reason": "processing_failed"
+            }, status=500)
+        
+    except Exception as e:
+        logger.error(f"Error in events_handler: {e}")
+        return web.json_response({
+            "status": "error",
+            "error": str(e)
+        }, status=500)
 
 
 async def process_event_handler(request):

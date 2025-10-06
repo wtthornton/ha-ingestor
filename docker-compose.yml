@@ -43,10 +43,7 @@ services:
     environment:
       - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
       - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
       - WEBSOCKET_INGESTION_PORT=8001
       - ENABLE_HOME_ASSISTANT=true
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -56,7 +53,7 @@ services:
     volumes:
       - ha_ingestor_logs:/var/log/ha-ingestor
     depends_on:
-      influxdb:
+      enrichment-pipeline:
         condition: service_healthy
     networks:
       - ha-ingestor-network

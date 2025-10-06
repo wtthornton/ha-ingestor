@@ -64,8 +64,12 @@ class DataValidator:
         
         # Timestamp format patterns
         self.timestamp_patterns = [
+            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$'),  # ISO with microseconds (WebSocket format)
+            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}$'),   # ISO with microseconds (no Z)
             re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$'),  # ISO with milliseconds
+            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$'),   # ISO with milliseconds (no Z)
             re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'),  # ISO without milliseconds
+            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$'),   # ISO without milliseconds (no Z)
             re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$'),  # ISO with timezone
         ]
     
@@ -137,6 +141,7 @@ class DataValidator:
         
         # Check state_changed specific required fields
         if event.get("event_type") == "state_changed":
+            # For processed events from WebSocket service, check if we have the required structure
             if "new_state" not in event or not event["new_state"]:
                 results.append(ValidationResult(
                     is_valid=False,
@@ -147,14 +152,27 @@ class DataValidator:
             else:
                 new_state = event["new_state"]
                 for field, expected_type in self.state_changed_required_fields.items():
-                    if field not in new_state or new_state[field] is None:
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.ERROR,
-                            message=f"Missing required field in new_state: {field}",
-                            field=f"new_state.{field}",
-                            expected=expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
-                        ))
+                    # Handle entity_id mapping - check both new_state.entity_id and top-level entity_id
+                    if field == "entity_id":
+                        entity_id_value = new_state.get(field) or event.get(field)
+                        if entity_id_value is None:
+                            results.append(ValidationResult(
+                                is_valid=False,
+                                level=ValidationLevel.ERROR,
+                                message=f"Missing required field: {field} (checked both new_state.{field} and top-level {field})",
+                                field=f"new_state.{field}",
+                                expected=expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
+                            ))
+                    else:
+                        # For other fields, check in new_state as before
+                        if field not in new_state or new_state[field] is None:
+                            results.append(ValidationResult(
+                                is_valid=False,
+                                level=ValidationLevel.ERROR,
+                                message=f"Missing required field in new_state: {field}",
+                                field=f"new_state.{field}",
+                                expected=expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
+                            ))
         
         return results
     
@@ -190,15 +208,16 @@ class DataValidator:
         if event.get("event_type") == "state_changed" and "new_state" in event:
             new_state = event["new_state"]
             
-            # Validate entity_id
-            if "entity_id" in new_state:
-                if not isinstance(new_state["entity_id"], str):
+            # Validate entity_id - check both new_state.entity_id and top-level entity_id
+            entity_id_value = new_state.get("entity_id") or event.get("entity_id")
+            if entity_id_value is not None:
+                if not isinstance(entity_id_value, str):
                     results.append(ValidationResult(
                         is_valid=False,
                         level=ValidationLevel.ERROR,
                         message="entity_id must be a string",
                         field="new_state.entity_id",
-                        value=type(new_state["entity_id"]).__name__,
+                        value=type(entity_id_value).__name__,
                         expected="str"
                     ))
             
@@ -224,17 +243,17 @@ class DataValidator:
         # Validate entity_id format
         if event.get("event_type") == "state_changed" and "new_state" in event:
             new_state = event["new_state"]
-            if "entity_id" in new_state:
-                entity_id = new_state["entity_id"]
-                if isinstance(entity_id, str) and not self.entity_id_pattern.match(entity_id):
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.ERROR,
-                        message=f"Invalid entity_id format: {entity_id}",
-                        field="new_state.entity_id",
-                        value=entity_id,
-                        expected="domain.entity_name format"
-                    ))
+            # Check both new_state.entity_id and top-level entity_id
+            entity_id = new_state.get("entity_id") or event.get("entity_id")
+            if entity_id and isinstance(entity_id, str) and not self.entity_id_pattern.match(entity_id):
+                results.append(ValidationResult(
+                    is_valid=False,
+                    level=ValidationLevel.ERROR,
+                    message=f"Invalid entity_id format: {entity_id}",
+                    field="new_state.entity_id",
+                    value=entity_id,
+                    expected="domain.entity_name format"
+                ))
         
         # Validate timestamp format
         if "timestamp" in event:
