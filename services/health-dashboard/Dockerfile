@@ -1,4 +1,4 @@
-# Multi-stage build for Health Dashboard
+# Multi-stage build for Simple Health Dashboard
 FROM node:18-alpine AS deps
 WORKDIR /app
 
@@ -33,14 +33,14 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine AS production
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl for health checks and set timezone
+RUN apk add --no-cache curl tzdata
 
 # Copy built application
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.simple.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Create non-root user for file ownership
 RUN addgroup -g 1001 -S appgroup && \
@@ -48,6 +48,10 @@ RUN addgroup -g 1001 -S appgroup && \
 
 # Set ownership of web files to non-root user
 RUN chown -R appuser:appgroup /usr/share/nginx/html
+
+# Set timezone
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Expose port
 EXPOSE 80

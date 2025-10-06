@@ -1,178 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { Navigation } from './Navigation';
-import { LayoutSwitcher } from './LayoutSwitcher';
-import { GridLayout } from './GridLayout';
-import { NotificationContainer } from './NotificationContainer';
-import { MobileDashboard } from './MobileDashboard';
-import { useLayout } from '../contexts/LayoutContext';
+import React from 'react';
 import { useHealth } from '../hooks/useHealth';
 import { useStatistics } from '../hooks/useStatistics';
-import { useEvents } from '../hooks/useEvents';
-import { useThemeAware } from '../contexts/ThemeContext';
-import { useMobileDetection } from '../hooks/useMobileDetection';
-import { websocketService } from '../services/websocket';
-import { notificationService } from '../services/notificationService';
+import { StatusCard } from './StatusCard';
+import { MetricCard } from './MetricCard';
 
 export const Dashboard: React.FC = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(30000);
+  const { health, loading: healthLoading, error: healthError } = useHealth(30000);
+  const { statistics, loading: statsLoading, error: statsError } = useStatistics('1h', 60000);
 
-  const { layoutState, getCurrentLayoutConfig } = useLayout();
-  const { health, loading: healthLoading, error: healthError, refresh: refreshHealth } = useHealth(refreshInterval);
-  const { statistics, loading: statsLoading, error: statsError, refresh: refreshStats } = useStatistics('1h', refreshInterval);
-  const { events, loading: eventsLoading, error: eventsError, refresh: refreshEvents } = useEvents({ limit: 50 }, 10000);
-  const { isDark } = useThemeAware();
-  const { isMobile } = useMobileDetection();
-
-  // WebSocket connection management
-  useEffect(() => {
-    const connectWebSocket = async () => {
-      try {
-        await websocketService.connect();
-        setIsConnected(true);
-        
-        // Integrate notification service with WebSocket
-        notificationService.integrateWithWebSocket(websocketService);
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
-        setIsConnected(false);
-      }
-    };
-
-    connectWebSocket();
-
-    const unsubscribe = websocketService.onDisconnect(() => {
-      setIsConnected(false);
-    });
-
-    return () => {
-      unsubscribe();
-      websocketService.disconnect();
-    };
-  }, []);
-
-  const currentLayout = getCurrentLayoutConfig();
-  const isLoading = healthLoading || statsLoading || eventsLoading;
-  const hasError = healthError || statsError || eventsError;
-
-  const handleRefresh = () => {
-    refreshHealth();
-    refreshStats();
-    refreshEvents();
-  };
-
-  const handleRefreshIntervalChange = (interval: number) => {
-    setRefreshInterval(interval);
-  };
-
-  // Return mobile dashboard for mobile devices
-  if (isMobile) {
-    return <MobileDashboard />;
+  if (healthLoading || statsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!currentLayout) {
+  if (healthError || statsError) {
     return (
-      <div className="min-h-screen bg-design-background flex items-center justify-center transition-colors duration-design-normal">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-design-text mb-2">Layout Error</h1>
-          <p className="text-design-text-secondary">Unable to load dashboard layout</p>
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Error</h1>
+          <p className="text-gray-600 mb-4">
+            {healthError || statsError}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-design-background transition-colors duration-design-normal">
-      <Navigation />
-
-      {/* Dashboard Header */}
-      <header className="bg-design-surface shadow-design-sm border-b border-design-border">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-2xl font-bold text-design-text">Dashboard Overview</h1>
-              <p className="text-sm text-design-text-secondary">Home Assistant Ingestor Monitoring</p>
+              <h1 className="text-3xl font-bold text-gray-900">HA Ingestor Dashboard</h1>
+              <p className="text-gray-600">Home Assistant Event Ingestion Monitor</p>
             </div>
-
-            <div className="flex items-center space-x-4">
-              {/* Layout Switcher */}
-              <LayoutSwitcher />
-
-              {/* Connection Status */}
-              <div className="flex items-center space-x-2">
-                <div className={`
-                  w-2 h-2 rounded-full transition-colors duration-design-fast
-                  ${isConnected ? 'bg-design-success animate-pulse-glow' : 'bg-design-error'}
-                `}></div>
-                <span className="text-sm text-design-text-secondary">
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-
-              {/* Refresh Controls */}
-              <div className="flex items-center space-x-2">
-                <select
-                  value={refreshInterval}
-                  onChange={(e) => handleRefreshIntervalChange(Number(e.target.value))}
-                  className="
-                    px-3 py-1 border border-design-border rounded-design-md text-sm
-                    bg-design-surface text-design-text
-                    focus:outline-none focus:ring-2 focus:ring-design-border-focus focus:border-design-border-focus
-                    hover:bg-design-surface-hover transition-colors duration-design-fast
-                  "
-                >
-                  <option value={10000}>10s</option>
-                  <option value={30000}>30s</option>
-                  <option value={60000}>1m</option>
-                  <option value={300000}>5m</option>
-                </select>
-
-                <button
-                  onClick={handleRefresh}
-                  className="
-                    px-3 py-1 bg-design-primary text-design-text-inverse rounded-design-md text-sm
-                    hover:bg-design-primary-hover focus:outline-none focus:ring-2 focus:ring-design-border-focus
-                    transition-all duration-design-fast shadow-design-sm hover:shadow-design-md
-                  "
-                >
-                  Refresh
-                </button>
-              </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Last updated (PST)</p>
+              <p className="text-sm font-medium text-gray-900">
+                {health?.timestamp ? new Date(health.timestamp + 'Z').toLocaleTimeString('en-US', {
+                  timeZone: 'America/Los_Angeles',
+                  hour12: true,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                }) : new Date().toLocaleTimeString('en-US', {
+                  timeZone: 'America/Los_Angeles',
+                  hour12: true,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </p>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content with Grid Layout */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="h-[calc(100vh-200px)]">
-          {hasError ? (
-            <div className="bg-design-error-light border border-design-error rounded-design-lg p-6 shadow-design-md">
-              <h3 className="text-sm font-medium text-design-error-dark">Error Loading Data</h3>
-              <div className="mt-2 text-sm text-design-error-dark">
-                {healthError && <p>Health: {healthError}</p>}
-                {statsError && <p>Statistics: {statsError}</p>}
-                {eventsError && <p>Events: {eventsError}</p>}
-              </div>
-            </div>
-          ) : (
-            <GridLayout
-              layout={currentLayout}
-              health={health}
-              statistics={statistics}
-              events={events}
-              loading={isLoading}
-              realTime={true}
-              onRefresh={handleRefresh}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* System Health Status */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">System Health</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatusCard
+              title="Overall Status"
+              status={health?.overall_status || 'unhealthy'}
+              value={health?.overall_status}
             />
-          )}
+            
+            <StatusCard
+              title="WebSocket Connection"
+              status={health?.ingestion_service?.websocket_connection?.is_connected ? 'connected' : 'disconnected'}
+              value={health?.ingestion_service?.websocket_connection?.connection_attempts || 0}
+              subtitle="connection attempts"
+            />
+            
+            <StatusCard
+              title="Event Processing"
+              status={health?.ingestion_service?.event_processing?.status || 'unhealthy'}
+              value={health?.ingestion_service?.event_processing?.events_per_minute || 0}
+              subtitle="events/min"
+            />
+            
+            <StatusCard
+              title="Database Storage"
+              status={health?.ingestion_service?.influxdb_storage?.is_connected ? 'connected' : 'disconnected'}
+              value={health?.ingestion_service?.influxdb_storage?.write_errors || 0}
+              subtitle="write errors"
+            />
+          </div>
         </div>
-      </main>
 
-      {/* Notification System */}
-      <NotificationContainer />
+        {/* Key Metrics */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Metrics (Last Hour)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MetricCard
+              title="Total Events"
+              value={health?.ingestion_service?.event_processing?.total_events || 0}
+              unit="events"
+            />
+            
+            <MetricCard
+              title="Events per Minute"
+              value={health?.ingestion_service?.event_processing?.events_per_minute || 0}
+              unit="events/min"
+            />
+            
+            <MetricCard
+              title="Error Rate"
+              value={health?.ingestion_service?.event_processing?.error_rate || 0}
+              unit="%"
+            />
+            
+            <MetricCard
+              title="Weather API Calls"
+              value={health?.ingestion_service?.weather_enrichment?.api_calls || 0}
+              unit="calls"
+            />
+          </div>
+        </div>
+
+        {/* Service Status */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Service Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {health?.services && Object.entries(health.services).map(([serviceName, service]) => (
+              <StatusCard
+                key={serviceName}
+                title={serviceName.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                status={service.status}
+                value={service.response_time ? `${service.response_time}ms` : undefined}
+                subtitle="response time"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Weather Enrichment */}
+        {health?.ingestion_service?.weather_enrichment && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Weather Enrichment</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatusCard
+                title="Weather Service"
+                status={health.ingestion_service.weather_enrichment.enabled ? 'healthy' : 'unhealthy'}
+                value={health.ingestion_service.weather_enrichment.enabled ? 'Enabled' : 'Disabled'}
+              />
+              
+              <MetricCard
+                title="Cache Hits"
+                value={health.ingestion_service.weather_enrichment.cache_hits || 0}
+                unit="hits"
+              />
+              
+              <MetricCard
+                title="API Calls"
+                value={health.ingestion_service.weather_enrichment.api_calls || 0}
+                unit="calls"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Alerts */}
+        {statistics?.alerts && statistics.alerts.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Alerts</h2>
+            <div className="space-y-3">
+              {statistics.alerts.map((alert, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border ${
+                    alert.severity === 'error' 
+                      ? 'bg-red-50 border-red-200 text-red-800'
+                      : alert.severity === 'warning'
+                      ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                      : 'bg-blue-50 border-blue-200 text-blue-800'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg mr-3">
+                      {alert.severity === 'error' ? '🚨' : alert.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                    </span>
+                    <div>
+                      <p className="font-medium">{alert.type}</p>
+                      <p className="text-sm opacity-90">{alert.message}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500 mt-12">
+          <p>HA Ingestor Dashboard - Simple Health Monitor</p>
+          <p>Auto-refreshing every 30 seconds</p>
+        </div>
+      </div>
     </div>
   );
 };
-
-export default Dashboard;

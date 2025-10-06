@@ -31,7 +31,6 @@ export default defineConfig(({ command, mode }) => {
         '@hooks': resolve(__dirname, 'src/hooks'),
         '@services': resolve(__dirname, 'src/services'),
         '@types': resolve(__dirname, 'src/types'),
-        '@utils': resolve(__dirname, 'src/utils'),
       },
     },
     
@@ -43,15 +42,10 @@ export default defineConfig(({ command, mode }) => {
       cors: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8003',
+          target: 'http://ha-ingestor-admin-dev:8004',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
-        },
-        '/ws': {
-          target: env.VITE_WS_URL || 'ws://localhost:8001',
-          ws: true,
-          changeOrigin: true,
         },
       },
     },
@@ -78,8 +72,6 @@ export default defineConfig(({ command, mode }) => {
           // Code splitting
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            charts: ['chart.js', 'react-chartjs-2'],
-            utils: ['date-fns', 'clsx'],
           },
           // Asset naming
           chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -95,7 +87,6 @@ export default defineConfig(({ command, mode }) => {
             return `assets/[name]-[hash][extname]`
           },
         },
-        external: isProduction ? [] : [],
       },
       
       // Build optimization
@@ -108,9 +99,6 @@ export default defineConfig(({ command, mode }) => {
     // CSS configuration
     css: {
       devSourcemap: isDevelopment,
-      modules: {
-        localsConvention: 'camelCase',
-      },
     },
     
     // Environment variables
@@ -120,35 +108,12 @@ export default defineConfig(({ command, mode }) => {
       __ENVIRONMENT__: JSON.stringify(mode),
     },
     
-    // Test configuration
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./tests/setup.ts'],
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'tests/',
-          '**/*.d.ts',
-          '**/*.config.*',
-          'dist/',
-        ],
-      },
-    },
-    
     // Optimize dependencies
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
-        'chart.js',
-        'react-chartjs-2',
-        'date-fns',
-        'clsx',
       ],
-      exclude: ['@testing-library/react', '@testing-library/jest-dom'],
     },
   }
 })

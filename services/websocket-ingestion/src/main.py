@@ -14,7 +14,7 @@ import aiohttp
 from dotenv import load_dotenv
 
 # Add shared directory to path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+sys.path.append('/app/shared')
 
 from shared.logging_config import (
     setup_logging, get_logger, log_with_context, log_performance, 
