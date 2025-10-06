@@ -1,0 +1,168 @@
+# Complete but simplified architecture - all services, minimal complexity
+name: ha-ingestor-complete
+
+services:
+  # Database
+  influxdb:
+    image: influxdb:2.7
+    container_name: ha-ingestor-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=ha-ingestor
+      - DOCKER_INFLUXDB_INIT_BUCKET=home_assistant_events
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ha-ingestor-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # WebSocket Ingestion - CRITICAL for data flow
+  websocket-ingestion:
+    build:
+      context: .
+      dockerfile: services/websocket-ingestion/Dockerfile
+    container_name: ha-ingestor-websocket
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=ha-ingestor-token
+      - INFLUXDB_ORG=ha-ingestor
+      - INFLUXDB_BUCKET=home_assistant_events
+      - WEBSOCKET_INGESTION_PORT=8001
+      - ENABLE_HOME_ASSISTANT=false
+      - LOG_LEVEL=INFO
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Enrichment Pipeline - CRITICAL for data processing
+  enrichment-pipeline:
+    build:
+      context: .
+      dockerfile: services/enrichment-pipeline/Dockerfile
+    container_name: ha-ingestor-enrichment
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=ha-ingestor-token
+      - INFLUXDB_ORG=ha-ingestor
+      - INFLUXDB_BUCKET=home_assistant_events
+      - LOG_LEVEL=INFO
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Admin API
+  admin-api:
+    build:
+      context: .
+      dockerfile: services/admin-api/Dockerfile
+    container_name: ha-ingestor-admin
+    restart: unless-stopped
+    ports:
+      - "8003:8004"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=ha-ingestor-token
+      - INFLUXDB_ORG=ha-ingestor
+      - INFLUXDB_BUCKET=home_assistant_events
+      - WEBSOCKET_INGESTION_URL=http://websocket-ingestion:8001
+      - ENRICHMENT_PIPELINE_URL=http://enrichment-pipeline:8002
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8004
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      websocket-ingestion:
+        condition: service_healthy
+      enrichment-pipeline:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Dashboard with simple nginx
+  dashboard:
+    build:
+      context: ./services/health-dashboard
+      dockerfile: Dockerfile
+    container_name: ha-ingestor-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8003/api/v1
+    depends_on:
+      admin-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Data Retention Service
+  data-retention:
+    build:
+      context: .
+      dockerfile: services/data-retention/Dockerfile
+    container_name: ha-ingestor-data-retention
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=ha-ingestor-token
+      - INFLUXDB_ORG=ha-ingestor
+      - INFLUXDB_BUCKET=home_assistant_events
+      - LOG_LEVEL=INFO
+      - CLEANUP_INTERVAL_HOURS=24
+      - MONITORING_INTERVAL_MINUTES=5
+      - COMPRESSION_INTERVAL_HOURS=24
+      - BACKUP_INTERVAL_HOURS=24
+      - BACKUP_DIR=/backups
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - data_retention_backups:/backups
+
+volumes:
+  influxdb_data:
+  data_retention_backups:
