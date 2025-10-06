@@ -18,7 +18,7 @@ workflow:
       agent: architect
       action: analyze existing project and use task document-project
       creates: multiple documents per the document-project template
-      notes: "Review existing service documentation, codebase, performance metrics, and identify integration dependencies."
+      notes: "MANDATORY: Review existing service documentation, codebase, performance metrics, and identify integration dependencies. MUST use Context7 KB for technology analysis - FORBIDDEN to bypass."
 
     - agent: pm
       creates: prd.md
@@ -30,7 +30,7 @@ workflow:
       creates: architecture.md
       uses: brownfield-architecture-tmpl
       requires: prd.md
-      notes: "Creates architecture with service integration strategy and API evolution planning. SAVE OUTPUT: Copy final architecture.md to your project's docs/ folder."
+      notes: "MANDATORY: Creates architecture with service integration strategy and API evolution planning. MUST use Context7 KB for technology decisions - FORBIDDEN to bypass. SAVE OUTPUT: Copy final architecture.md to your project's docs/ folder."
 
     - agent: po
       validates: all_artifacts
@@ -80,7 +80,8 @@ workflow:
       creates: implementation_files
       requires: story.md
       notes: |
-        Dev Agent (New Chat): @dev
+        MANDATORY: Dev Agent (New Chat): @dev
+        - MUST use Context7 KB for external library implementations - FORBIDDEN to bypass
         - Implements approved story
         - Updates File List with all changes
         - Marks story as "Review" when complete
@@ -92,6 +93,7 @@ workflow:
       optional: true
       notes: |
         OPTIONAL: QA Agent (New Chat): @qa → review-story
+        - MANDATORY: MUST use Context7 KB for testing library assessments - FORBIDDEN to bypass
         - Senior dev review with refactoring ability
         - Fixes small issues directly
         - Leaves checklist for remaining items

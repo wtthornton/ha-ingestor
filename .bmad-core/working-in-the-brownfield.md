@@ -36,7 +36,7 @@ Starting in the Web Option (potentially save some cost but a potentially more fr
 
 Starting in an IDE with large context and good models (Its important to use quality models for this process for the best results)
 
-1. In Claude Code or a similar IDE, select the architect agent and then use the \*document-project task. You will want to ensure you are validating and directing the agent to produce the best possible documents for LLMs to understand your code base, and not include any misleading or unnecessary info.
+1. MANDATORY: In Claude Code or a similar IDE, select the architect agent and then use the \*document-project task. You MUST ensure the agent uses Context7 KB for technology analysis - FORBIDDEN to bypass. You will want to ensure you are validating and directing the agent to produce the best possible documents for LLMs to understand your code base, and not include any misleading or unnecessary info.
 
 ### Choose Your Approach
 

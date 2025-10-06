@@ -623,10 +623,10 @@ Context7 KB integration provides:
 *context7-kb-analytics
 ```
 
-#### Agent Integration
-- **Architect Agent**: Uses KB-first approach for technology decisions with intelligent caching
-- **Dev Agent**: Uses KB-first approach for library implementations with fuzzy matching
-- **QA Agent**: Uses KB-first approach for library risk assessments with cross-referencing
+#### MANDATORY Agent Integration
+- **Architect Agent**: MANDATORY KB-first approach for technology decisions with intelligent caching - FORBIDDEN to bypass
+- **Dev Agent**: MANDATORY KB-first approach for library implementations with fuzzy matching - FORBIDDEN to bypass
+- **QA Agent**: MANDATORY KB-first approach for library risk assessments with cross-referencing - FORBIDDEN to bypass
 
 #### Template Integration
 All BMad templates (architecture, PRD, story) include KB-first Context7 usage suggestions for technology decisions and library implementations.
@@ -638,16 +638,16 @@ All BMad templates (architecture, PRD, story) include KB-first Context7 usage su
 - **Usage Analytics**: Track cache hit rates and performance metrics
 - **Automatic Cleanup**: Remove old/unused cached content automatically
 
-### Best Practices
+### MANDATORY Best Practices
 
-1. **KB-First Approach**: Always check local KB cache before Context7 API calls
-2. **Use Topic Focus**: Always specify relevant topics to limit documentation scope
-3. **Leverage Fuzzy Matching**: Use library/topic name variants for better cache hits
-4. **Monitor KB Performance**: Use `*context7-kb-status` to monitor hit rates
-5. **Regular Maintenance**: Use `*context7-kb-cleanup` to maintain optimal performance
-6. **Search Intelligently**: Use `*context7-kb-search` to find related documentation
-7. **Strategic Usage**: Use Context7 for technology decisions and library implementations
-8. **Error Handling**: KB includes graceful error handling and fallbacks
+1. **MANDATORY KB-First Approach**: MUST check local KB cache before Context7 API calls - FORBIDDEN to bypass
+2. **MANDATORY Topic Focus**: MUST specify relevant topics to limit documentation scope - REQUIRED for efficiency
+3. **MANDATORY Fuzzy Matching**: MUST use library/topic name variants for better cache hits - REQUIRED for accuracy
+4. **MANDATORY Performance Monitoring**: MUST use `*context7-kb-status` to monitor hit rates - REQUIRED for optimization
+5. **MANDATORY Regular Maintenance**: MUST use `*context7-kb-cleanup` to maintain optimal performance - REQUIRED for efficiency
+6. **MANDATORY Intelligent Search**: MUST use `*context7-kb-search` to find related documentation - REQUIRED for comprehensive research
+7. **MANDATORY Strategic Usage**: MUST use Context7 for technology decisions and library implementations - FORBIDDEN to use generic knowledge
+8. **MANDATORY Error Handling**: MUST use KB graceful error handling and fallbacks - REQUIRED for reliability
 
 ### Integration Levels
 

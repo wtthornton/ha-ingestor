@@ -3,14 +3,14 @@
 # Context7 Documentation Retrieval Task
 
 ## Purpose
-Retrieve focused documentation for a library using Context7 MCP tools with token-efficient parameters.
+MANDATORY: Retrieve focused documentation for a library using Context7 MCP tools with token-efficient parameters. FAILURE to use Context7 KB for library research is FORBIDDEN.
 
-## Workflow
-1. **Library Resolution**: Resolve library name to Context7 ID (if needed)
-2. **Parameter Setup**: Configure token limits and topic focus
-3. **Documentation Retrieval**: Call `mcp_Context7_get-library-docs`
-4. **Cache Management**: Store documentation in cache
-5. **Output Formatting**: Present documentation in structured format
+## MANDATORY Workflow
+1. **MANDATORY Library Resolution**: MUST resolve library name to Context7 ID (if needed) - FORBIDDEN to skip
+2. **MANDATORY Parameter Setup**: MUST configure token limits and topic focus - REQUIRED for efficiency
+3. **MANDATORY Documentation Retrieval**: MUST call `mcp_Context7_get-library-docs` - FORBIDDEN to use generic knowledge
+4. **MANDATORY Cache Management**: MUST store documentation in cache - REQUIRED for performance
+5. **MANDATORY Output Formatting**: MUST present documentation in structured format - REQUIRED for usability
 
 ## Implementation
 ```yaml

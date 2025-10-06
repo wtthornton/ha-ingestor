@@ -3,10 +3,10 @@
 # Context7 KB Lookup Implementation Task
 
 ## Purpose
-Implement the actual KB-first lookup system that checks local cache before calling Context7 API.
+MANDATORY: Implement the actual KB-first lookup system that checks local cache before calling Context7 API. FAILURE to use KB-first approach is FORBIDDEN.
 
-## Usage
-When user types `*context7-docs {library} {topic}`, execute this KB-first workflow.
+## MANDATORY Usage
+When user types `*context7-docs {library} {topic}`, you MUST execute this KB-first workflow. FAILURE to use KB-first approach is FORBIDDEN.
 
 ## Implementation Steps
 

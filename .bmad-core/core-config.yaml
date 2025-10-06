@@ -24,7 +24,9 @@ context7:
   enabled: true
   defaultTokenLimit: 3000
   cacheDuration: 3600
-  integrationLevel: medium
+  integrationLevel: mandatory
+  usage_requirement: "MANDATORY for all technology decisions"
+  bypass_forbidden: true
   knowledge_base:
     enabled: true
     location: "docs/kb/context7-cache"
@@ -41,11 +43,17 @@ context7:
       tokenLimit: 4000
       topics: ["architecture", "design-patterns", "scalability"]
       kb_priority: true
+      context7_mandatory: true
+      bypass_forbidden: true
     dev:
       tokenLimit: 3000
       topics: ["hooks", "routing", "authentication", "testing"]
       kb_priority: true
+      context7_mandatory: true
+      bypass_forbidden: true
     qa:
       tokenLimit: 2500
       topics: ["testing", "security", "performance"]
       kb_priority: true
+      context7_mandatory: true
+      bypass_forbidden: true
