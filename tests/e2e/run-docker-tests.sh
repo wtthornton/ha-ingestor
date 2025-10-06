@@ -169,10 +169,50 @@ npx playwright test tests/e2e/performance.spec.ts \
     --project=docker-chromium \
     --reporter=html,json,junit
 
+echo ""
+echo "8. API Endpoints Tests"
+echo "----------------------"
+npx playwright test tests/e2e/api-endpoints.spec.ts \
+    --config=tests/e2e/docker-deployment.config.ts \
+    --project=docker-chromium \
+    --reporter=html,json,junit
+
+echo ""
+echo "9. Frontend UI Comprehensive Tests"
+echo "----------------------------------"
+npx playwright test tests/e2e/frontend-ui-comprehensive.spec.ts \
+    --config=tests/e2e/docker-deployment.config.ts \
+    --project=docker-chromium \
+    --reporter=html,json,junit
+
+echo ""
+echo "10. Enhanced Integration & Performance Tests"
+echo "--------------------------------------------"
+npx playwright test tests/e2e/integration-performance-enhanced.spec.ts \
+    --config=tests/e2e/docker-deployment.config.ts \
+    --project=docker-chromium \
+    --reporter=html,json,junit
+
+echo ""
+echo "11. Dashboard Data Loading Tests"
+echo "-------------------------------"
+npx playwright test tests/e2e/dashboard-data-loading.spec.ts \
+    --config=tests/e2e/docker-deployment.config.ts \
+    --project=docker-chromium \
+    --reporter=html,json,junit
+
+echo ""
+echo "12. Comprehensive Error Handling Tests"
+echo "-------------------------------------"
+npx playwright test tests/e2e/error-handling-comprehensive.spec.ts \
+    --config=tests/e2e/docker-deployment.config.ts \
+    --project=docker-chromium \
+    --reporter=html,json,junit
+
 # Run cross-browser tests (optional)
 if [ "$1" = "--cross-browser" ]; then
     echo ""
-    echo "8. Cross-Browser Tests"
+    echo "13. Cross-Browser Tests"
     echo "----------------------"
     npx playwright test \
         --config=tests/e2e/docker-deployment.config.ts \
@@ -183,7 +223,7 @@ fi
 # Run mobile tests (optional)
 if [ "$1" = "--mobile" ]; then
     echo ""
-    echo "9. Mobile Tests"
+    echo "14. Mobile Tests"
     echo "---------------"
     npx playwright test \
         --config=tests/e2e/docker-deployment.config.ts \
@@ -216,6 +256,11 @@ cat > "$REPORTS_DIR/test-summary.md" << EOF
 5. ✅ Visual Regression Tests
 6. ✅ Integration Tests
 7. ✅ Performance Tests
+8. ✅ API Endpoints Tests
+9. ✅ Frontend UI Comprehensive Tests
+10. ✅ Enhanced Integration & Performance Tests
+11. ✅ Dashboard Data Loading Tests
+12. ✅ Comprehensive Error Handling Tests
 
 ## Test Results
 - **Results Directory**: $TEST_RESULTS_DIR

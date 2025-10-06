@@ -74,9 +74,9 @@ export const HealthCard: React.FC<HealthCardProps> = ({ health, loading = false 
       <div className="space-y-4">
         {/* WebSocket Connection */}
         <StatusIndicator
-          status={ingestion_service.websocket_connection.is_connected ? 'healthy' : 'error'}
+          status={ingestion_service.websocket_connection?.is_connected ? 'healthy' : 'error'}
           label="WebSocket Connection"
-          value={ingestion_service.websocket_connection.is_connected ? 'Connected' : 'Disconnected'}
+          value={ingestion_service.websocket_connection?.is_connected ? 'Connected' : 'Disconnected'}
           lastUpdated={new Date(health.timestamp)}
           variant="inline"
           size="sm"
@@ -86,7 +86,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({ health, loading = false 
         <StatusIndicator
           status="healthy"
           label="Event Processing"
-          value={`${ingestion_service.event_processing.events_per_minute.toFixed(1)} events/min`}
+          value={`${ingestion_service.event_processing?.events_per_minute?.toFixed(1) || '0'} events/min`}
           lastUpdated={new Date(health.timestamp)}
           variant="inline"
           size="sm"
@@ -94,9 +94,9 @@ export const HealthCard: React.FC<HealthCardProps> = ({ health, loading = false 
 
         {/* Weather Enrichment */}
         <StatusIndicator
-          status={ingestion_service.weather_enrichment.enabled ? 'healthy' : 'unknown'}
+          status={ingestion_service.weather_enrichment?.enabled ? 'healthy' : 'unknown'}
           label="Weather Enrichment"
-          value={ingestion_service.weather_enrichment.enabled ? 'Enabled' : 'Disabled'}
+          value={ingestion_service.weather_enrichment?.enabled ? 'Enabled' : 'Disabled'}
           lastUpdated={new Date(health.timestamp)}
           variant="inline"
           size="sm"
@@ -104,9 +104,9 @@ export const HealthCard: React.FC<HealthCardProps> = ({ health, loading = false 
 
         {/* InfluxDB Storage */}
         <StatusIndicator
-          status={ingestion_service.influxdb_storage.is_connected ? 'healthy' : 'error'}
+          status={ingestion_service.influxdb_storage?.is_connected ? 'healthy' : 'error'}
           label="InfluxDB Storage"
-          value={ingestion_service.influxdb_storage.is_connected ? 'Connected' : 'Disconnected'}
+          value={ingestion_service.influxdb_storage?.is_connected ? 'Connected' : 'Disconnected'}
           lastUpdated={new Date(health.timestamp)}
           variant="inline"
           size="sm"

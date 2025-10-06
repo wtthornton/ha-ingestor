@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SystemHealth } from '../types';
 import { apiService } from '../services/api';
 import { websocketService } from '../services/websocket';
+import { ConfigValidator } from '../utils/configValidator';
 
 export const useHealth = (refreshInterval: number = 30000) => {
   const [health, setHealth] = useState<SystemHealth | null>(null);
@@ -12,8 +13,13 @@ export const useHealth = (refreshInterval: number = 30000) => {
   const fetchHealth = useCallback(async () => {
     try {
       setError(null);
-      const healthData = await apiService.getHealth();
-      setHealth(healthData);
+      const rawHealthData = await apiService.getHealth();
+      
+      // Validate and sanitize the health data
+      const validationResult = ConfigValidator.validateHealthData(rawHealthData);
+      ConfigValidator.logValidationResult(validationResult, 'Health Data');
+      
+      setHealth(validationResult.safeData);
       setLastUpdate(new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch health data');
@@ -33,7 +39,11 @@ export const useHealth = (refreshInterval: number = 30000) => {
     // Set up WebSocket subscription
     const unsubscribe = websocketService.subscribe((message) => {
       if (message.type === 'health_update') {
-        setHealth(message.data);
+        // Validate WebSocket health data
+        const validationResult = ConfigValidator.validateHealthData(message.data);
+        ConfigValidator.logValidationResult(validationResult, 'WebSocket Health Data');
+        
+        setHealth(validationResult.safeData);
         setLastUpdate(new Date().toISOString());
         setError(null);
       }

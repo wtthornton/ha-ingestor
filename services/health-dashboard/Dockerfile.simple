@@ -1,0 +1,41 @@
+# Ultra-simple combined container - no nginx, no proxy complexity
+FROM node:18-alpine
+
+# Install Python for admin API
+RUN apk add --no-cache python3 py3-pip curl
+
+# Set working directory
+WORKDIR /app
+
+# Copy and install admin API
+COPY services/admin-api/requirements.txt ./admin-api/
+COPY services/admin-api/src ./admin-api/src/
+RUN cd admin-api && python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
+
+# Copy and install dashboard
+COPY package*.json ./
+RUN npm ci
+
+# Copy dashboard source
+COPY services/health-dashboard/ .
+
+# Build dashboard
+RUN npm run build
+
+# Create simple startup script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "Starting admin API..."' >> /app/start.sh && \
+    echo 'cd /app/admin-api && . venv/bin/activate && python3 src/simple_main.py &' >> /app/start.sh && \
+    echo 'echo "Starting dashboard..."' >> /app/start.sh && \
+    echo 'cd /app && npx serve -s dist -l 3000 --cors' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Expose port
+EXPOSE 3000
+
+# Simple health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/api/v1/health || exit 1
+
+# Start both services
+CMD ["/app/start.sh"]

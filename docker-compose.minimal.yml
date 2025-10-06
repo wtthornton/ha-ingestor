@@ -1,0 +1,57 @@
+# Ultra-minimal solution - just the essentials
+name: ha-ingestor-minimal
+
+services:
+  # Database
+  influxdb:
+    image: influxdb:2.7
+    container_name: ha-ingestor-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=ha-ingestor
+      - DOCKER_INFLUXDB_INIT_BUCKET=home_assistant_events
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ha-ingestor-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  # Admin API only
+  admin-api:
+    build:
+      context: .
+      dockerfile: services/admin-api/Dockerfile
+    container_name: ha-ingestor-admin
+    restart: unless-stopped
+    ports:
+      - "8003:8004"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=ha-ingestor-token
+      - INFLUXDB_ORG=ha-ingestor
+      - INFLUXDB_BUCKET=home_assistant_events
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8004
+    depends_on:
+      - influxdb
+
+  # Simple dashboard - no nginx, no proxy
+  dashboard:
+    build:
+      context: ./services/health-dashboard
+      dockerfile: Dockerfile
+    container_name: ha-ingestor-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8003/api/v1
+    depends_on:
+      - admin-api
+
+volumes:
+  influxdb_data:

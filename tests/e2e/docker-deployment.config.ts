@@ -116,8 +116,8 @@ export default defineConfig({
   },
 
   /* Global setup and teardown for Docker environment */
-  globalSetup: require.resolve('./tests/e2e/docker-global-setup.ts'),
-  globalTeardown: require.resolve('./tests/e2e/docker-global-teardown.ts'),
+  globalSetup: require.resolve('./docker-global-setup.ts'),
+  globalTeardown: require.resolve('./docker-global-teardown.ts'),
 
   /* Test timeout */
   timeout: 60 * 1000, // 60 seconds for Docker environment
@@ -138,7 +138,14 @@ export default defineConfig({
     '**/settings-screen.spec.ts',
     '**/visual-regression.spec.ts',
     '**/integration.spec.ts',
-    '**/performance.spec.ts'
+    '**/performance.spec.ts',
+    '**/api-endpoints.spec.ts',
+    '**/frontend-ui-comprehensive.spec.ts',
+    '**/integration-performance-enhanced.spec.ts',
+    '**/dashboard-data-loading.spec.ts',
+    '**/error-handling-comprehensive.spec.ts',
+    '**/user-journey-complete.spec.ts',
+    '**/cross-service-integration.spec.ts'
   ],
   
   /* Test ignore patterns */

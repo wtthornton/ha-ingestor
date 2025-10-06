@@ -42,7 +42,7 @@ RUN apk add --no-cache curl
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.simple.conf /etc/nginx/conf.d/default.conf
 
 # Create non-root user for file ownership
 RUN addgroup -g 1001 -S nodejs && \

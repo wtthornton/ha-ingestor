@@ -47,16 +47,16 @@ class EventProcessor:
             
             event_type = event_data["event_type"]
             
-            # Check for required fields based on event type
+            # Validate state_changed events specifically (most common)
+            if event_type == "state_changed":
+                return self._validate_state_changed_event(event_data)
+            
+            # For other event types, check for required fields based on event type
             if event_type in self.required_fields:
                 required_fields = self.required_fields[event_type]
                 for field in required_fields:
                     if field not in event_data:
                         return False, f"Missing required field for {event_type}: {field}"
-            
-            # Validate state_changed events specifically
-            if event_type == "state_changed":
-                return self._validate_state_changed_event(event_data)
             
             # Basic validation passed
             return True, ""
@@ -76,36 +76,84 @@ class EventProcessor:
             Tuple of (is_valid, error_message)
         """
         try:
-            # Check old_state
-            old_state = event_data.get("old_state")
-            if old_state is not None and not isinstance(old_state, dict):
-                return False, "old_state must be a dictionary or null"
+            # Home Assistant state_changed events have this structure:
+            # {
+            #   "event_type": "state_changed",
+            #   "time_fired": "2023-01-01T12:00:00.000Z",
+            #   "origin": "LOCAL",
+            #   "context": {...},
+            #   "data": {
+            #     "entity_id": "light.living_room",
+            #     "old_state": {...},
+            #     "new_state": {...}
+            #   }
+            # }
             
-            # Check new_state
-            new_state = event_data.get("new_state")
-            if new_state is None:
-                return False, "new_state is required for state_changed events"
+            # Check if we have the data field (Home Assistant structure)
+            if "data" in event_data:
+                data = event_data["data"]
+                if not isinstance(data, dict):
+                    return False, "data field must be a dictionary"
+                
+                # Check for entity_id in data
+                entity_id = data.get("entity_id")
+                if not entity_id:
+                    return False, "entity_id is required in data field"
+                
+                if not isinstance(entity_id, str) or "." not in entity_id:
+                    return False, "entity_id must be a string in format 'domain.entity'"
+                
+                # Check new_state in data
+                new_state = data.get("new_state")
+                if new_state is None:
+                    return False, "new_state is required in data field"
+                
+                if not isinstance(new_state, dict):
+                    return False, "new_state must be a dictionary"
+                
+                # Check required fields in new_state
+                if "state" not in new_state:
+                    return False, "state is required in new_state"
+                
+                # old_state is optional (can be None for new entities)
+                old_state = data.get("old_state")
+                if old_state is not None and not isinstance(old_state, dict):
+                    return False, "old_state must be a dictionary or null"
+                
+                return True, ""
             
-            if not isinstance(new_state, dict):
-                return False, "new_state must be a dictionary"
-            
-            # Check required fields in new_state
-            required_new_state_fields = ["entity_id", "state"]
-            for field in required_new_state_fields:
-                if field not in new_state:
-                    return False, f"Missing required field in new_state: {field}"
-            
-            # Validate entity_id format
-            entity_id = new_state.get("entity_id")
-            if not isinstance(entity_id, str) or "." not in entity_id:
-                return False, "entity_id must be a string in format 'domain.entity'"
-            
-            # Validate state value
-            state_value = new_state.get("state")
-            if not isinstance(state_value, str):
-                return False, "state must be a string"
-            
-            return True, ""
+            # Fallback: Check for direct fields (legacy structure)
+            else:
+                # Check old_state
+                old_state = event_data.get("old_state")
+                if old_state is not None and not isinstance(old_state, dict):
+                    return False, "old_state must be a dictionary or null"
+                
+                # Check new_state
+                new_state = event_data.get("new_state")
+                if new_state is None:
+                    return False, "new_state is required for state_changed events"
+                
+                if not isinstance(new_state, dict):
+                    return False, "new_state must be a dictionary"
+                
+                # Check required fields in new_state
+                required_new_state_fields = ["entity_id", "state"]
+                for field in required_new_state_fields:
+                    if field not in new_state:
+                        return False, f"Missing required field in new_state: {field}"
+                
+                # Validate entity_id format
+                entity_id = new_state.get("entity_id")
+                if not isinstance(entity_id, str) or "." not in entity_id:
+                    return False, "entity_id must be a string in format 'domain.entity'"
+                
+                # Validate state value
+                state_value = new_state.get("state")
+                if not isinstance(state_value, str):
+                    return False, "state must be a string"
+                
+                return True, ""
             
         except Exception as e:
             logger.error(f"Error validating state_changed event: {e}")
@@ -159,12 +207,30 @@ class EventProcessor:
         Returns:
             Dictionary with extracted state_changed data
         """
-        old_state = event_data.get("old_state", {})
-        new_state = event_data.get("new_state", {})
+        # Handle Home Assistant event structure with data field
+        if "data" in event_data:
+            data = event_data["data"]
+            entity_id = data.get("entity_id")
+            old_state = data.get("old_state")
+            new_state = data.get("new_state", {})
+            time_fired = event_data.get("time_fired")
+            origin = event_data.get("origin")
+            context = event_data.get("context", {})
+        else:
+            # Fallback for legacy structure
+            entity_id = event_data.get("entity_id")
+            old_state = event_data.get("old_state")
+            new_state = event_data.get("new_state", {})
+            time_fired = event_data.get("time_fired")
+            origin = event_data.get("origin")
+            context = event_data.get("context", {})
         
         return {
-            "entity_id": new_state.get("entity_id"),
-            "domain": new_state.get("entity_id", "").split(".")[0] if new_state.get("entity_id") else None,
+            "entity_id": entity_id,
+            "domain": entity_id.split(".")[0] if entity_id else None,
+            "time_fired": time_fired,
+            "origin": origin,
+            "context": context,
             "old_state": {
                 "state": old_state.get("state") if old_state else None,
                 "attributes": old_state.get("attributes", {}) if old_state else {},

@@ -24,9 +24,73 @@
 **Status**: ✅ **RESOLVED** - Authentication issues resolved
 **Solution**: Fixed API key configuration and authentication flow
 
-**Impact**: System success rate improved from 58.3% → 75.0%, all critical issues resolved
+**Impact**: System success rate improved from 58.3% → 83.3%, all critical issues resolved
 
-### **1. WebSocket Connection Issues**
+#### **✅ WSL Port Conflict Resolution (FIXED)**
+**Problem**: LocalMCP application appearing on port 8080 instead of HA-Ingestor data retention API
+**Status**: ✅ **RESOLVED** - WSL port conflict eliminated
+**Root Cause**: WSL relay service (`wslrelay.exe`) was intercepting requests to localhost:8080
+**Solution**: Terminated conflicting WSL process and performed full Docker restart
+**Files Modified**: None (system-level fix)
+
+### **1. Port Conflict Issues**
+
+#### **Problem**: Wrong application appearing on expected port
+**Symptoms:**
+- Browser shows unexpected application (e.g., LocalMCP instead of HA-Ingestor API)
+- Command line shows correct service but browser shows different content
+- Multiple processes listening on the same port
+
+**Diagnosis:**
+```bash
+# Check what's listening on the port
+netstat -ano | findstr :8080
+
+# Check process details
+tasklist /FI "PID eq <PID>"
+
+# Test with different methods
+curl http://localhost:8080/health
+curl http://127.0.0.1:8080/health
+```
+
+**Solutions:**
+
+**Option 1: Terminate Conflicting Process**
+```bash
+# Find the conflicting process
+netstat -ano | findstr :8080
+
+# Terminate the process (replace PID with actual process ID)
+taskkill /PID <PID> /F
+```
+
+**Option 2: Use IPv4 Explicitly**
+- Use `http://127.0.0.1:8080` instead of `http://localhost:8080`
+- This bypasses IPv6 listeners that might be intercepting requests
+
+**Option 3: Change HA-Ingestor Port**
+```bash
+# Edit docker-compose.complete.yml
+# Change port mapping from 8080:8080 to 8081:8080
+# Restart services
+docker-compose -f docker-compose.complete.yml down
+docker-compose -f docker-compose.complete.yml up -d
+```
+
+**Option 4: Full Docker Restart**
+```bash
+# Stop all services
+docker-compose -f docker-compose.complete.yml down
+
+# Clean up any conflicting processes
+docker system prune -f
+
+# Restart services
+docker-compose -f docker-compose.complete.yml up -d
+```
+
+### **2. WebSocket Connection Issues**
 
 #### **Problem**: WebSocket connection to Home Assistant fails
 **Symptoms:**

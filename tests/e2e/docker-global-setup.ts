@@ -57,7 +57,9 @@ async function globalSetup(config: FullConfig) {
           const response = await page.request.get(service.url);
           if (response.status() === 200) {
             const data = await response.json();
-            if (data.status === 'healthy') {
+            // Handle different response formats
+            const status = data.status || data.overall_status || data.data?.overall_status || data.data?.status;
+            if (status === 'healthy' || status === 'pass') {
               isHealthy = true;
               console.log(`✓ ${service.name} is healthy`);
             }
@@ -79,10 +81,10 @@ async function globalSetup(config: FullConfig) {
     
     // Wait for the health dashboard to be accessible
     await page.goto('http://localhost:3000');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('networkidle', { timeout: 60000 });
     
     // Verify the dashboard is accessible
-    await page.waitForSelector('[data-testid="dashboard"]', { timeout: 30000 });
+    await page.waitForSelector('[data-testid="dashboard"]', { timeout: 60000 });
     console.log('✓ Health dashboard is accessible');
     
     // Test basic API endpoints

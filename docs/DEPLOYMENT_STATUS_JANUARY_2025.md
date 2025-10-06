@@ -2,9 +2,9 @@
 
 ## 🎉 Deployment Successfully Stabilized
 
-**Date**: January 5, 2025  
+**Date**: January 6, 2025  
 **Status**: ✅ **FULLY OPERATIONAL**  
-**Commit**: `e2cf3a5` - "Fix Docker deployment issues and stabilize services"
+**Commit**: `3f966bb` - "Fix deployment issues: Add data retention service and missing API endpoints"
 
 ## 📊 Service Status Overview
 
@@ -40,6 +40,12 @@
 - ✅ Proper startup order with health check dependencies
 - ✅ All services now start in correct sequence
 - ✅ Health checks working for all services
+
+### 5. WSL Port Conflict Resolution
+- ✅ Identified and resolved WSL port conflict on port 8080
+- ✅ Terminated conflicting `wslrelay.exe` process
+- ✅ Performed full Docker restart to ensure clean state
+- ✅ Port 8080 now correctly serves data retention API
 
 ## 🌐 Access Points
 

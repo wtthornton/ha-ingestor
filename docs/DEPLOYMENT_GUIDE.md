@@ -19,11 +19,11 @@ cp infrastructure/env.example .env
 nano .env  # Edit with your configuration
 
 # Start the system
-docker-compose up -d
+docker-compose -f docker-compose.complete.yml up -d
 
 # Verify deployment
-docker-compose ps
-docker-compose logs -f
+docker-compose -f docker-compose.complete.yml ps
+docker-compose -f docker-compose.complete.yml logs -f
 ```
 
 ## 🔧 **Configuration**
@@ -47,14 +47,25 @@ INFLUXDB_BUCKET=home_assistant
 # API Configuration
 API_KEY=your_secure_api_key
 ENABLE_AUTH=true
+
+# Data Retention Configuration
+CLEANUP_INTERVAL_HOURS=24
+MONITORING_INTERVAL_MINUTES=5
+COMPRESSION_INTERVAL_HOURS=24
+BACKUP_INTERVAL_HOURS=24
+BACKUP_DIR=/backups
 ```
 
 ## 🌐 **Access Points**
 
-- **Admin Interface**: http://localhost:3000
-- **API Documentation**: http://localhost:8080/docs
-- **Monitoring Dashboard**: http://localhost:8080/api/v1/monitoring/dashboard/overview
-- **Health Checks**: http://localhost:8080/api/v1/health
+- **Health Dashboard**: http://localhost:3000
+- **Admin API**: http://localhost:8003
+- **Data Retention API**: http://localhost:8080
+- **WebSocket Ingestion**: http://localhost:8001
+- **Enrichment Pipeline**: http://localhost:8002
+- **InfluxDB**: http://localhost:8086
+- **API Documentation**: http://localhost:8003/docs
+- **Health Checks**: http://localhost:8003/api/v1/health
 
 ## 📊 **System Architecture**
 

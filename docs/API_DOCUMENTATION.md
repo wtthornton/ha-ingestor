@@ -2,9 +2,16 @@
 
 ## 🌐 **API Overview**
 
-### **Base URL**
+### **Base URLs**
+
+**Admin API (Primary)**
 ```
-http://localhost:8080/api/v1
+http://localhost:8003/api/v1
+```
+
+**Data Retention API**
+```
+http://localhost:8080
 ```
 
 ### **Authentication**
@@ -22,6 +29,10 @@ All API responses follow this format:
   "message": "Operation completed successfully"
 }
 ```
+
+## 🔍 **Admin API Endpoints**
+
+### **Base URL**: `http://localhost:8003/api/v1`
 
 ## 🔍 **Health Endpoints**
 
@@ -42,6 +53,116 @@ Get overall system health status.
       "admin-api": "healthy"
     }
   }
+}
+```
+
+### **GET /services/health**
+Get services health status (alias for /services).
+
+**Response:**
+```json
+{
+  "services": {
+    "influxdb": {"status": "healthy", "uptime": "3m"},
+    "websocket-ingestion": {"status": "healthy", "uptime": "2m"},
+    "enrichment-pipeline": {"status": "healthy", "uptime": "2m"},
+    "weather-api": {"status": "healthy", "uptime": "3m"},
+    "data-retention": {"status": "healthy", "uptime": "3m"},
+    "admin-api": {"status": "healthy", "uptime": "1m"}
+  },
+  "timestamp": "2025-01-05T18:20:00Z"
+}
+```
+
+### **GET /dependencies/health**
+Get dependencies health status.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "dependencies": {
+      "influxdb": {
+        "status": "healthy",
+        "url": "http://influxdb:8086",
+        "last_check": "2025-01-05T18:20:00Z",
+        "response_time_ms": 5.2
+      },
+      "websocket-ingestion": {
+        "status": "healthy", 
+        "url": "http://websocket-ingestion:8001",
+        "last_check": "2025-01-05T18:20:00Z",
+        "response_time_ms": 3.1
+      },
+      "enrichment-pipeline": {
+        "status": "healthy",
+        "url": "http://enrichment-pipeline:8002", 
+        "last_check": "2025-01-05T18:20:00Z",
+        "response_time_ms": 2.8
+      }
+    },
+    "overall_status": "healthy",
+    "timestamp": "2025-01-05T18:20:00Z"
+  }
+}
+```
+
+### **GET /config**
+Get system configuration.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "system": {
+      "version": "1.0.0",
+      "environment": "production",
+      "log_level": "INFO"
+    },
+    "services": {
+      "influxdb": {
+        "url": "http://influxdb:8086",
+        "org": "ha-ingestor",
+        "bucket": "home_assistant_events"
+      },
+      "websocket_ingestion": {
+        "port": 8001,
+        "enable_home_assistant": false
+      },
+      "enrichment_pipeline": {
+        "port": 8002
+      }
+    },
+    "features": {
+      "weather_enrichment": true,
+      "data_retention": true,
+      "monitoring": true
+    }
+  }
+}
+```
+
+### **GET /events/recent**
+Get recent events (alias for /events).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "event-1",
+      "timestamp": "2025-01-05T18:20:00Z",
+      "entity_id": "sensor.temperature",
+      "event_type": "state_changed",
+      "new_state": {"state": "22.5", "attributes": {"unit_of_measurement": "°C"}},
+      "old_state": {"state": "22.3", "attributes": {"unit_of_measurement": "°C"}},
+      "source": "websocket-ingestion"
+    }
+  ],
+  "timestamp": "2025-01-05T18:20:00Z"
 }
 ```
 
@@ -425,6 +546,161 @@ Export log data in various formats.
 - **JSON**: Returns JSON array of log entries
 - **CSV**: Returns CSV file download
 - **HTML**: Returns HTML report
+
+---
+
+## 🗄️ **Data Retention API**
+
+### **Base URL**: `http://localhost:8080`
+
+The Data Retention API provides endpoints for managing data lifecycle, cleanup policies, and storage monitoring.
+
+### **GET /health**
+Get data retention service health status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-01-05T18:20:00Z",
+  "service_status": {
+    "cleanup_service": true,
+    "storage_monitor": true,
+    "compression_service": true,
+    "backup_service": true,
+    "policy_count": 1
+  }
+}
+```
+
+### **GET /stats**
+Get comprehensive service statistics.
+
+**Response:**
+```json
+{
+  "service_status": {
+    "cleanup_service": true,
+    "storage_monitor": true,
+    "compression_service": true,
+    "backup_service": true,
+    "policy_count": 1
+  },
+  "policy_statistics": {
+    "total_policies": 1,
+    "enabled_policies": 1,
+    "disabled_policies": 0
+  }
+}
+```
+
+### **GET /policies**
+Get all retention policies.
+
+**Response:**
+```json
+{
+  "policies": [
+    {
+      "name": "default",
+      "description": "Default 1-year retention policy",
+      "retention_period": 1,
+      "retention_unit": "years",
+      "enabled": true,
+      "created_at": "2025-01-05T18:20:00Z",
+      "updated_at": "2025-01-05T18:20:00Z"
+    }
+  ]
+}
+```
+
+### **POST /policies**
+Add a new retention policy.
+
+**Request Body:**
+```json
+{
+  "name": "sensor_data",
+  "description": "Retain sensor data for 6 months",
+  "retention_period": 6,
+  "retention_unit": "months",
+  "enabled": true
+}
+```
+
+### **POST /cleanup**
+Run data cleanup for specific policy or all policies.
+
+**Request Body:**
+```json
+{
+  "policy_name": "sensor_data"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "cleanup_results": [
+      {
+        "policy_name": "sensor_data",
+        "records_deleted": 1500,
+        "space_freed_mb": 25.6,
+        "execution_time_ms": 1250
+      }
+    ]
+  }
+}
+```
+
+### **POST /backup**
+Create a backup.
+
+**Request Body:**
+```json
+{
+  "backup_type": "full",
+  "include_data": true,
+  "include_config": true,
+  "include_logs": false
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "backup_id": "backup-20250105-182000",
+    "backup_type": "full",
+    "size_mb": 1024,
+    "created_at": "2025-01-05T18:20:00Z"
+  }
+}
+```
+
+### **GET /backups**
+Get backup history.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "backups": [
+      {
+        "backup_id": "backup-20250105-182000",
+        "backup_type": "full",
+        "size_mb": 1024,
+        "created_at": "2025-01-05T18:20:00Z",
+        "status": "completed"
+      }
+    ]
+  }
+}
+```
 
 ### **GET /monitoring/export/metrics**
 Export metrics data.

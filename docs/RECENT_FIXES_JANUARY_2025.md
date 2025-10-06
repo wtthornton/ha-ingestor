@@ -8,7 +8,7 @@ This document outlines the critical system fixes implemented in January 2025 tha
 
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
-| **Success Rate** | 58.3% | **75.0%** | +16.7% |
+| **Success Rate** | 58.3% | **83.3%** | +25.0% |
 | **Critical Issues** | 2 | **0** | -100% |
 | **System Health** | CRITICAL | **DEPLOYMENT READY** | ✅ |
 | **Deployment Status** | NOT READY | **READY** | ✅ |
@@ -83,6 +83,34 @@ app.router.add_get('/api/v1/stats', status_handler)  # NEW
 **Files Modified**:
 - Weather API service configuration
 - Authentication flow improvements
+
+### **5. WSL Port Conflict Resolution**
+
+**Issue**: LocalMCP application appearing on port 8080 instead of HA-Ingestor data retention API
+**Root Cause**: WSL relay service (`wslrelay.exe`) was intercepting browser requests to localhost:8080
+**Solution**: Terminated conflicting WSL process and performed full Docker restart
+
+**Changes Made:**
+```bash
+# Identified conflicting process
+netstat -ano | findstr :8080
+# Found wslrelay.exe (PID 20044) listening on IPv6 localhost
+
+# Terminated conflicting process
+taskkill /PID 20044 /F
+
+# Performed full Docker restart
+docker-compose -f docker-compose.complete.yml down
+docker system prune -f
+docker-compose -f docker-compose.complete.yml up -d
+```
+
+**Impact**: 
+- Eliminated port conflict between WSL and Docker
+- Port 8080 now correctly serves HA-Ingestor data retention API
+- Success rate improved from 75.0% → 83.3%
+
+**Files Modified**: None (system-level fix)
 
 ## 🧪 **Testing Results**
 

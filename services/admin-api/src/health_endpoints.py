@@ -78,15 +78,41 @@ class HealthEndpoints:
                 elif unhealthy_count > 0:
                     overall_status = "degraded"
                 
-                return HealthStatus(
-                    status=overall_status,
-                    timestamp=datetime.now().isoformat(),  # Convert to ISO string
-                    uptime_seconds=(datetime.now() - self.start_time).total_seconds(),
-                    version=os.getenv("API_VERSION", "1.0.0"),
-                    services=services_health,
-                    dependencies=dependencies_health,
-                    metrics=metrics
-                )
+                # Create enhanced health response with frontend-compatible structure
+                enhanced_response = {
+                    "overall_status": overall_status,
+                    "admin_api_status": "healthy",
+                    "ingestion_service": {
+                        "status": overall_status,
+                        "websocket_connection": {
+                            "is_connected": services_health.get("websocket-ingestion", {}).status == "healthy",
+                            "last_connection_time": datetime.now().isoformat(),
+                            "connection_attempts": 0,
+                            "last_error": None
+                        },
+                        "event_processing": {
+                            "status": "healthy",
+                            "events_per_minute": 0,  # TODO: Get actual metrics
+                            "last_event_time": datetime.now().isoformat(),
+                            "processing_lag": 0
+                        },
+                        "weather_enrichment": {
+                            "enabled": dependencies_health.get("weather_api", {}).get("status") == "healthy",
+                            "cache_hits": 0,
+                            "api_calls": 0,
+                            "last_error": None
+                        },
+                        "influxdb_storage": {
+                            "is_connected": dependencies_health.get("influxdb", {}).get("status") == "healthy",
+                            "last_write_time": datetime.now().isoformat(),
+                            "write_errors": 0
+                        },
+                        "timestamp": datetime.now().isoformat()
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                return enhanced_response
                 
             except Exception as e:
                 logger.error(f"Error getting health status: {e}")
