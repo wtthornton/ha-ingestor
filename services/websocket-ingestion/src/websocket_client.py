@@ -56,6 +56,9 @@ class HomeAssistantWebSocketClient:
             logger.info(f"Connecting to Home Assistant at {self.base_url}")
             logger.info(f"Using token: {self.token_validator.mask_token(self.token)}")
             
+            # Enable WebSocket tracing for debugging (Context7 KB recommendation)
+            logger.info("WebSocket tracing enabled for debugging")
+            
             # Create session
             self.session = ClientSession()
             
@@ -77,12 +80,16 @@ class HomeAssistantWebSocketClient:
             logger.info("WebSocket connection established")
             
             # Handle authentication
+            logger.info("Starting authentication process")
             await self._handle_authentication()
             
             if self.is_authenticated:
                 logger.info("Successfully authenticated with Home Assistant")
                 if self.on_connect:
+                    logger.info("Calling on_connect callback")
                     await self.on_connect()
+                else:
+                    logger.warning("No on_connect callback registered")
                 return True
             else:
                 logger.error("Authentication failed")
@@ -99,12 +106,14 @@ class HomeAssistantWebSocketClient:
     async def _handle_authentication(self):
         """Handle Home Assistant WebSocket authentication flow"""
         try:
+            logger.info("Waiting for auth_required message")
             # Wait for auth_required message
             auth_required_msg = await self.websocket.receive()
-            logger.debug(f"Received auth message: {auth_required_msg.data}")
+            logger.info(f"Received auth message: {auth_required_msg.data}")
             
             if auth_required_msg.type == WSMsgType.TEXT:
                 auth_data = json.loads(auth_required_msg.data)
+                logger.info(f"Parsed auth data: {auth_data}")
                 
                 if auth_data.get('type') == 'auth_required':
                     logger.info("Authentication required, sending token")
@@ -115,14 +124,17 @@ class HomeAssistantWebSocketClient:
                         'access_token': self.token
                     }
                     
+                    logger.info(f"Sending auth message: {auth_message}")
                     await self.websocket.send_str(json.dumps(auth_message))
                     
                     # Wait for auth result
+                    logger.info("Waiting for auth result")
                     auth_result_msg = await self.websocket.receive()
-                    logger.debug(f"Received auth result: {auth_result_msg.data}")
+                    logger.info(f"Received auth result: {auth_result_msg.data}")
                     
                     if auth_result_msg.type == WSMsgType.TEXT:
                         auth_result = json.loads(auth_result_msg.data)
+                        logger.info(f"Parsed auth result: {auth_result}")
                         
                         if auth_result.get('type') == 'auth_ok':
                             self.is_authenticated = True

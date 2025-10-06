@@ -42,6 +42,8 @@ class EventSubscriptionManager:
         
         try:
             logger.info(f"Subscribing to events: {event_types}")
+            logger.info(f"WebSocket client connected: {websocket_client.is_connected}")
+            logger.info(f"WebSocket client authenticated: {websocket_client.is_authenticated}")
             
             # Create subscription message
             subscription_id = self.subscription_counter
@@ -52,6 +54,8 @@ class EventSubscriptionManager:
                 "type": "subscribe_events",
                 "event_type": event_types[0] if len(event_types) == 1 else None
             }
+            
+            logger.info(f"Sending subscription message: {subscription_message}")
             
             # If subscribing to multiple event types, we need separate subscriptions
             if len(event_types) > 1:

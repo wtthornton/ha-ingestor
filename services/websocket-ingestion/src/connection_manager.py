@@ -77,9 +77,6 @@ class ConnectionManager:
         success = await self._connect()
         
         if success:
-            # Subscribe to events
-            await self._subscribe_to_events()
-            
             # Start listening task
             self.listen_task = asyncio.create_task(self._listen_loop())
             logger.info("Connection manager started successfully")
@@ -251,8 +248,13 @@ class ConnectionManager:
     async def _subscribe_to_events(self):
         """Subscribe to Home Assistant events"""
         try:
+            logger.info("Attempting to subscribe to Home Assistant events")
+            logger.info(f"Client connected: {self.client and self.client.is_connected}")
+            logger.info(f"Client authenticated: {self.client and self.client.is_authenticated}")
+            
             if self.client and self.client.is_connected and self.client.is_authenticated:
                 # Subscribe to state_changed events by default
+                logger.info("Subscribing to state_changed events")
                 success = await self.event_subscription.subscribe_to_events(
                     self.client, 
                     ['state_changed']
@@ -264,12 +266,22 @@ class ConnectionManager:
                     logger.error("Failed to subscribe to events")
             else:
                 logger.warning("Cannot subscribe to events: not connected or authenticated")
+                if not self.client:
+                    logger.warning("No WebSocket client available")
+                elif not self.client.is_connected:
+                    logger.warning("WebSocket client not connected")
+                elif not self.client.is_authenticated:
+                    logger.warning("WebSocket client not authenticated")
         except Exception as e:
             logger.error(f"Error subscribing to events: {e}")
     
     async def _on_connect(self):
         """Handle successful connection"""
         logger.info("Connected to Home Assistant")
+        
+        # Subscribe to events after connection is established
+        await self._subscribe_to_events()
+        
         if self.on_connect:
             await self.on_connect()
     
