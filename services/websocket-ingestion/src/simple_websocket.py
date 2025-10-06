@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 import aiohttp
 from aiohttp import web
+import time
 
 # Configure logging
 logging.basicConfig(
@@ -29,6 +30,13 @@ class SimpleHAWebSocketService:
         self.ha_token = os.getenv("HOME_ASSISTANT_TOKEN")
         self.ws_url = self.ha_url.replace("http://", "ws://").replace("https://", "wss://") + "/api/websocket"
         
+        # Weather service configuration
+        self.weather_service_url = os.getenv("WEATHER_SERVICE_URL", "http://weather-api:8001")
+        self.weather_enrichment_enabled = os.getenv("ENABLE_WEATHER_API", "true").lower() == "true"
+        
+        # Enrichment pipeline configuration
+        self.enrichment_service_url = os.getenv("ENRICHMENT_SERVICE_URL", "http://enrichment-pipeline:8002")
+        
         self.ws = None
         self.session = None
         self.running = False
@@ -37,6 +45,11 @@ class SimpleHAWebSocketService:
         self.is_connected = False
         self.is_authenticated = False
         self.connection_attempts = 0
+        
+        # Weather enrichment stats
+        self.weather_api_calls = 0
+        self.weather_cache_hits = 0
+        self.weather_enrichments = 0
         
     async def connect(self) -> bool:
         """Connect to Home Assistant WebSocket"""
@@ -145,6 +158,12 @@ class SimpleHAWebSocketService:
             entity_id = data.get("entity_id")
             if entity_id:
                 logger.info(f"   🏠 Entity: {entity_id}")
+            
+            # Enrich with weather data if enabled
+            enriched_event = await self._enrich_with_weather(event_data)
+            
+            # Send to enrichment pipeline
+            await self._send_to_enrichment_pipeline(enriched_event)
     
     async def _print_summary(self):
         """Print processing summary"""
@@ -169,6 +188,54 @@ class SimpleHAWebSocketService:
             await self.session.close()
         logger.info("🛑 WebSocket service stopped")
     
+    async def _enrich_with_weather(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enrich event with weather data"""
+        if not self.weather_enrichment_enabled:
+            return event_data
+        
+        try:
+            # Call weather service to get current weather
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.weather_service_url}/weather/current") as response:
+                    if response.status == 200:
+                        weather_data = await response.json()
+                        self.weather_api_calls += 1
+                        self.weather_enrichments += 1
+                        
+                        # Add weather data to event
+                        enriched_event = event_data.copy()
+                        enriched_event["weather"] = weather_data
+                        enriched_event["weather_enriched"] = True
+                        enriched_event["weather_timestamp"] = datetime.now().isoformat()
+                        
+                        logger.debug(f"🌤️ Event enriched with weather data")
+                        return enriched_event
+                    else:
+                        logger.warning(f"⚠️ Weather service returned {response.status}")
+                        
+        except Exception as e:
+            logger.error(f"❌ Weather enrichment failed: {e}")
+        
+        # Return original event if enrichment fails
+        return event_data
+    
+    async def _send_to_enrichment_pipeline(self, event_data: Dict[str, Any]):
+        """Send event to enrichment pipeline"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.enrichment_service_url}/events",
+                    json=event_data,
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status == 200:
+                        logger.debug(f"📤 Event sent to enrichment pipeline")
+                    else:
+                        logger.warning(f"⚠️ Enrichment pipeline returned {response.status}")
+                        
+        except Exception as e:
+            logger.error(f"❌ Failed to send event to enrichment pipeline: {e}")
+
     def get_health_status(self) -> Dict[str, Any]:
         """Get health status for health check endpoint"""
         return {
@@ -177,6 +244,12 @@ class SimpleHAWebSocketService:
             "is_authenticated": self.is_authenticated,
             "connection_attempts": self.connection_attempts,
             "event_count": self.event_count,
+            "weather_enrichment": {
+                "enabled": self.weather_enrichment_enabled,
+                "api_calls": self.weather_api_calls,
+                "cache_hits": self.weather_cache_hits,
+                "enrichments": self.weather_enrichments
+            },
             "uptime": str(datetime.now() - self.start_time) if self.start_time else "0:00:00",
             "timestamp": datetime.now().isoformat()
         }

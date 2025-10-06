@@ -43,12 +43,20 @@ services:
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=DEBUG
       - TZ=America/Los_Angeles
+      - ENABLE_WEATHER_API=${ENABLE_WEATHER_API:-true}
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - WEATHER_SERVICE_URL=http://weather-api:8001
+      - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
     volumes:
       - ./services/websocket-ingestion:/app
       - ./shared:/app/shared
       - /app/__pycache__
     depends_on:
       influxdb:
+        condition: service_healthy
+      weather-api:
+        condition: service_healthy
+      enrichment-pipeline:
         condition: service_healthy
     networks:
       - ha-ingestor-network-dev
@@ -214,6 +222,33 @@ services:
       - ha-ingestor-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  ha-simulator:
+    build:
+      context: ./services/ha-simulator
+      dockerfile: Dockerfile
+    container_name: ha-ingestor-simulator-dev
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+    environment:
+      - SIMULATOR_PORT=8123
+      - SIMULATOR_AUTH_TOKEN=dev_simulator_token
+      - SIMULATOR_HA_VERSION=2025.10.1
+      - SIMULATOR_LOG_LEVEL=INFO
+      - TZ=America/Los_Angeles
+    volumes:
+      - ./services/ha-simulator/config:/app/config
+      - ./services/ha-simulator/data:/app/data
+      - ./ha_events.log:/app/data/ha_events.log:ro
+    networks:
+      - ha-ingestor-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/health"]
       interval: 30s
       timeout: 10s
       retries: 3

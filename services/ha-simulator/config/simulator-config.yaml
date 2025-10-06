@@ -1,0 +1,116 @@
+# HA Simulator Configuration
+# This file configures the Home Assistant Simulator for development and testing
+
+simulator:
+  name: "HA Development Simulator"
+  version: "2025.10.1"
+  port: 8123
+  description: "Simulates Home Assistant WebSocket API for development"
+
+authentication:
+  enabled: true
+  token: "dev_simulator_token"
+  description: "Authentication token for WebSocket connections"
+
+# Entity definitions for simulation
+# These entities will generate realistic state_changed events
+entities:
+  - entity_id: "sensor.living_room_temperature"
+    domain: "sensor"
+    device_class: "temperature"
+    base_value: 22.0
+    variance: 2.0
+    update_interval: 30  # seconds
+    unit_of_measurement: "°C"
+    friendly_name: "Living Room Temperature"
+    
+  - entity_id: "sensor.wled_estimated_current"
+    domain: "sensor"
+    device_class: "current"
+    base_value: 0.5
+    variance: 0.2
+    update_interval: 10  # seconds
+    unit_of_measurement: "A"
+    friendly_name: "WLED Estimated Current"
+    
+  - entity_id: "sensor.bar_estimated_current"
+    domain: "sensor"
+    device_class: "current"
+    base_value: 0.3
+    variance: 0.1
+    update_interval: 10  # seconds
+    unit_of_measurement: "A"
+    friendly_name: "Bar Estimated Current"
+    
+  - entity_id: "sensor.archer_be800_download_speed"
+    domain: "sensor"
+    device_class: "data_rate"
+    base_value: 100.0
+    variance: 50.0
+    update_interval: 30  # seconds
+    unit_of_measurement: "Mbit/s"
+    friendly_name: "Archer BE800 Download Speed"
+    
+  - entity_id: "sensor.archer_be800_upload_speed"
+    domain: "sensor"
+    device_class: "data_rate"
+    base_value: 50.0
+    variance: 25.0
+    update_interval: 30  # seconds
+    unit_of_measurement: "Mbit/s"
+    friendly_name: "Archer BE800 Upload Speed"
+    
+  - entity_id: "sun.sun"
+    domain: "sun"
+    device_class: null
+    base_value: "above_horizon"
+    variance: null
+    update_interval: 300  # 5 minutes
+    unit_of_measurement: null
+    friendly_name: "Sun"
+    
+  - entity_id: "sensor.slzb_06p7_coordinator_zigbee_chip_temp"
+    domain: "sensor"
+    device_class: "temperature"
+    base_value: 45.0
+    variance: 5.0
+    update_interval: 60  # 1 minute
+    unit_of_measurement: "°C"
+    friendly_name: "SLZB-06P7 Coordinator Zigbee Chip Temperature"
+    
+  - entity_id: "sensor.home_assistant_core_cpu_percent"
+    domain: "sensor"
+    device_class: null
+    base_value: 15.0
+    variance: 10.0
+    update_interval: 60  # 1 minute
+    unit_of_measurement: "%"
+    friendly_name: "Home Assistant Core CPU Percent"
+
+# Simulation scenarios
+scenarios:
+  - name: "normal_operation"
+    description: "Normal home operation patterns"
+    event_rate: "medium"
+    duration: "unlimited"
+    
+  - name: "high_activity"
+    description: "High activity simulation"
+    event_rate: "high"
+    duration: 3600  # 1 hour
+    
+  - name: "low_activity"
+    description: "Low activity simulation"
+    event_rate: "low"
+    duration: 3600  # 1 hour
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+# Data source configuration
+data_sources:
+  log_file: "data/ha_events.log"
+  use_log_analysis: true
+  fallback_to_defaults: true

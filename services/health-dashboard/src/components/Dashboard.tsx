@@ -50,16 +50,14 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600">Home Assistant Event Ingestion Monitor</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Last updated (PST)</p>
+              <p className="text-sm text-gray-500">Last updated (Local Time)</p>
               <p className="text-sm font-medium text-gray-900">
                 {health?.timestamp ? new Date(health.timestamp + 'Z').toLocaleTimeString('en-US', {
-                  timeZone: 'America/Los_Angeles',
                   hour12: true,
                   hour: '2-digit',
                   minute: '2-digit',
                   second: '2-digit'
                 }) : new Date().toLocaleTimeString('en-US', {
-                  timeZone: 'America/Los_Angeles',
                   hour12: true,
                   hour: '2-digit',
                   minute: '2-digit',
