@@ -76,3 +76,6 @@ coverage.xml
 
 # Docker
 .dockerignore
+
+# Context7 KB Cache (local only - regenerate as needed)
+docs/kb/context7-cache/
