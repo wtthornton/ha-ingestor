@@ -1,12 +1,12 @@
 # Playwright Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "Playwright"
   context7_id: "/microsoft/playwright"
   trust_score: 9.8
   snippet_count: 2156
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["testing", "automation", "e2e"]
   
 cache_entry:

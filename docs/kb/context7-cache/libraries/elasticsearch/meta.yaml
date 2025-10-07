@@ -1,12 +1,12 @@
 # Elasticsearch Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "Elasticsearch"
   context7_id: "/elastic/elasticsearch-py"
   trust_score: 9.7
   snippet_count: 2134
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["search", "indexing", "aggregations"]
   
 cache_entry:

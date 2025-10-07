@@ -1,10 +1,10 @@
 # Context7 Knowledge Base Cache - Master Index
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 # Version: 1.0
 
 context7_cache:
   version: "1.0"
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   total_entries: 15
   total_size: "4.1MB"
   hit_rate: 0.0
@@ -16,7 +16,7 @@ context7_cache:
       context7_id: "/reactjs/react.dev"
       trust_score: 10
       snippet_count: 2378
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["hooks", "routing", "components", "state management"]
       cache_entry:
         file_path: "libraries/react/docs.md"
@@ -29,7 +29,7 @@ context7_cache:
       context7_id: "/microsoft/typescript"
       trust_score: 9.9
       snippet_count: 15930
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["types", "interfaces", "generics"]
       cache_entry:
         file_path: "libraries/typescript/docs.md"
@@ -42,7 +42,7 @@ context7_cache:
       context7_id: "/tiangolo/fastapi"
       trust_score: 10
       snippet_count: 1847
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["api endpoints", "authentication", "middleware"]
       cache_entry:
         file_path: "libraries/fastapi/docs.md"
@@ -55,7 +55,7 @@ context7_cache:
       context7_id: "/aio-libs/aiohttp"
       trust_score: 9.8
       snippet_count: 1245
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["websocket", "async http", "client server"]
       cache_entry:
         file_path: "libraries/aiohttp/docs.md"
@@ -68,7 +68,7 @@ context7_cache:
       context7_id: "/influxdata/docs-v2"
       trust_score: 9.5
       snippet_count: 892
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["time series data", "queries", "measurements"]
       cache_entry:
         file_path: "libraries/influxdb/docs.md"
@@ -81,7 +81,7 @@ context7_cache:
       context7_id: "/redis/redis-py"
       trust_score: 9.7
       snippet_count: 1156
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["client connection", "caching", "pubsub"]
       cache_entry:
         file_path: "libraries/redis/docs.md"
@@ -94,7 +94,7 @@ context7_cache:
       context7_id: "/tailwindlabs/tailwindcss.com"
       trust_score: 10
       snippet_count: 1747
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["utility classes", "responsive design", "components"]
       cache_entry:
         file_path: "libraries/tailwindcss/docs.md"
@@ -107,7 +107,7 @@ context7_cache:
       context7_id: "/microsoft/playwright"
       trust_score: 9.8
       snippet_count: 2156
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["testing", "automation", "e2e"]
       cache_entry:
         file_path: "libraries/playwright/docs.md"
@@ -120,7 +120,7 @@ context7_cache:
       context7_id: "/pytest-dev/pytest"
       trust_score: 9.9
       snippet_count: 3245
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["testing", "fixtures", "parametrization"]
       cache_entry:
         file_path: "libraries/pytest/docs.md"
@@ -133,7 +133,7 @@ context7_cache:
       context7_id: "/docker/docker-py"
       trust_score: 9.6
       snippet_count: 1876
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["container management", "api"]
       cache_entry:
         file_path: "libraries/docker/docs.md"
@@ -146,7 +146,7 @@ context7_cache:
       context7_id: "/elastic/elasticsearch-py"
       trust_score: 9.7
       snippet_count: 2134
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["search", "indexing", "aggregations"]
       cache_entry:
         file_path: "libraries/elasticsearch/docs.md"
@@ -159,7 +159,7 @@ context7_cache:
       context7_id: "/home-assistant/core"
       trust_score: 9.8
       snippet_count: 1876
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["entities", "states", "events"]
       cache_entry:
         file_path: "libraries/homeassistant/docs.md"
@@ -172,7 +172,7 @@ context7_cache:
       context7_id: "/vitejs/vite"
       trust_score: 8.3
       snippet_count: 480
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["build configuration", "plugins", "development"]
       cache_entry:
         file_path: "libraries/vite/docs.md"
@@ -185,7 +185,7 @@ context7_cache:
       context7_id: "/vitest-dev/vitest"
       trust_score: 8.3
       snippet_count: 480
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["testing", "mocking", "coverage"]
       cache_entry:
         file_path: "libraries/vitest/docs.md"
@@ -198,7 +198,7 @@ context7_cache:
       context7_id: "/tailwindlabs/heroicons"
       trust_score: 9.5
       snippet_count: 456
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["icons", "ui components", "svg"]
       cache_entry:
         file_path: "libraries/heroicons/docs.md"
@@ -211,7 +211,7 @@ context7_cache:
       context7_id: "/python/logging"
       trust_score: 10
       snippet_count: 1234
-      last_updated: "2025-01-27T15:01:00Z"
+      last_updated: "2025-10-07T16:40:00Z"
       topics: ["logging", "monitoring", "debugging"]
       cache_entry:
         file_path: "libraries/python-logging/docs.md"
@@ -333,19 +333,19 @@ context7_cache:
       last_accessed: null
   
   cache_stats:
-    total_hits: 0
+    total_hits: 3
     total_misses: 0
-    hit_rate: 0.0
-    avg_response_time: "0.00s"
-    last_cleanup: null
-    next_cleanup: null
+    hit_rate: 1.0
+    avg_response_time: "0.12s"
+    last_cleanup: "2025-10-07T16:40:00Z"
+    next_cleanup: "2025-10-08T16:40:00Z"
   
   performance_metrics:
-    cache_operations: 0
+    cache_operations: 3
     context7_calls: 0
     fuzzy_matches: 0
-    cross_references: 0
-    cleanup_operations: 0
+    cross_references: 3
+    cleanup_operations: 1
   
   configuration:
     max_cache_size: "100MB"

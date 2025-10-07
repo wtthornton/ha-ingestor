@@ -1,12 +1,12 @@
 # pytest Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "pytest"
   context7_id: "/pytest-dev/pytest"
   trust_score: 9.9
   snippet_count: 3245
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["testing", "fixtures", "parametrization"]
   
 cache_entry:

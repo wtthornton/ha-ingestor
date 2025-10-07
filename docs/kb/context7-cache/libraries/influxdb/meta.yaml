@@ -1,12 +1,12 @@
 # InfluxDB Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "InfluxDB"
   context7_id: "/influxdata/docs-v2"
   trust_score: 9.5
   snippet_count: 892
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["time series data", "queries", "measurements"]
   
 cache_entry:

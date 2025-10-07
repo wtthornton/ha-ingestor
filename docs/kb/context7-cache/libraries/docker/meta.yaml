@@ -1,12 +1,12 @@
 # Docker Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "Docker"
   context7_id: "/docker/docker-py"
   trust_score: 9.6
   snippet_count: 1876
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["container management", "api"]
   
 cache_entry:

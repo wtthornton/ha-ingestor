@@ -34,7 +34,7 @@ WEATHER_LOCATION=your_city,country_code
 
 # InfluxDB Configuration
 INFLUXDB_URL=http://influxdb:8086
-INfluxDB_TOKEN=your_secure_influxdb_token
+INFLUXDB_TOKEN=your_secure_influxdb_token
 INFLUXDB_ORG=your_organization
 INFLUXDB_BUCKET=home_assistant_prod
 

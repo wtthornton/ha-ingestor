@@ -1,12 +1,12 @@
 # Vite Library Cache Entry
-# Generated: 2025-01-27T15:01:00Z
+# Generated: 2025-10-07T16:40:00Z
 
 library_info:
   name: "Vite"
   context7_id: "/vitejs/vite"
   trust_score: 8.3
   snippet_count: 480
-  last_updated: "2025-01-27T15:01:00Z"
+  last_updated: "2025-10-07T16:40:00Z"
   topics: ["build configuration", "plugins", "development"]
   
 cache_entry:
