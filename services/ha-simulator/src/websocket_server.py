@@ -156,3 +156,4 @@ class HASimulatorWebSocketServer:
         if self.runner:
             await self.runner.cleanup()
         logger.info("HA Simulator WebSocket server stopped")
+

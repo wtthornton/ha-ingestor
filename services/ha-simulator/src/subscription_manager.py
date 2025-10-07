@@ -77,3 +77,4 @@ class SubscriptionManager:
         if ws in self.subscriptions:
             del self.subscriptions[ws]
             logger.info("Removed client subscriptions")
+

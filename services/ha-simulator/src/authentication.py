@@ -86,3 +86,4 @@ class AuthenticationManager:
         if ws in self.authenticated_clients:
             del self.authenticated_clients[ws]
             logger.info("Removed client from authenticated clients")
+

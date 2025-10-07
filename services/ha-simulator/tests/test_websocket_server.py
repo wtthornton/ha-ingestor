@@ -182,3 +182,4 @@ class TestHASimulatorWebSocketServer:
         # Verify response
         assert response.status == 200
         # Note: In a real test, we'd need to check the JSON content
+

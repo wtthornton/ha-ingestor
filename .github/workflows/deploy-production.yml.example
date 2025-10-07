@@ -1,0 +1,225 @@
+# GitHub Actions Workflow for Secure Production Deployment
+# 
+# To use this workflow:
+# 1. Rename this file to deploy-production.yml
+# 2. Add required secrets in GitHub repository settings
+# 3. Update branch names and deployment targets as needed
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Validate secrets
+        run: |
+          echo "Validating required secrets are present..."
+          
+          required_secrets=(
+            "${{ secrets.HOME_ASSISTANT_TOKEN }}"
+            "${{ secrets.WEATHER_API_KEY }}"
+            "${{ secrets.INFLUXDB_PASSWORD }}"
+            "${{ secrets.INFLUXDB_TOKEN }}"
+            "${{ secrets.JWT_SECRET_KEY }}"
+          )
+          
+          missing_secrets=0
+          for secret in "${required_secrets[@]}"; do
+            if [ -z "$secret" ]; then
+              echo "❌ Missing required secret"
+              ((missing_secrets++))
+            fi
+          done
+          
+          if [ $missing_secrets -gt 0 ]; then
+            echo "❌ $missing_secrets required secrets are missing"
+            echo "Please add all required secrets in GitHub repository settings"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are present"
+      
+      - name: Create production environment file
+        run: |
+          cat > infrastructure/env.production << 'EOF'
+          # Home Assistant Configuration
+          HOME_ASSISTANT_URL=${{ secrets.HOME_ASSISTANT_URL || 'http://homeassistant.local:8123' }}
+          HOME_ASSISTANT_TOKEN=${{ secrets.HOME_ASSISTANT_TOKEN }}
+          
+          # Nabu Casa Fallback Configuration (Optional)
+          NABU_CASA_URL=${{ secrets.NABU_CASA_URL || '' }}
+          NABU_CASA_TOKEN=${{ secrets.NABU_CASA_TOKEN || '' }}
+          
+          # InfluxDB Configuration
+          INFLUXDB_URL=http://influxdb:8086
+          INFLUXDB_USERNAME=${{ secrets.INFLUXDB_USERNAME || 'admin' }}
+          INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}
+          INFLUXDB_ORG=ha-ingestor
+          INFLUXDB_BUCKET=home_assistant_events
+          INFLUXDB_TOKEN=${{ secrets.INFLUXDB_TOKEN }}
+          
+          # Weather API Configuration
+          WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
+          WEATHER_API_URL=https://api.openweathermap.org/data/2.5
+          ENABLE_WEATHER_API=true
+          
+          # Authentication Configuration
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          JWT_ALGORITHM=HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES=30
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD || 'change-me-in-secrets' }}
+          
+          # Logging Configuration
+          LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
+          LOG_FILE_PATH=/app/logs
+          
+          # Timezone Configuration
+          TZ=${{ secrets.TIMEZONE || 'America/Los_Angeles' }}
+          
+          # Service Configuration
+          ENABLE_AUTH=true
+          
+          # Service Ports
+          ADMIN_API_PORT=8000
+          WEBSOCKET_INGESTION_PORT=8000
+          WEATHER_API_PORT=8001
+          INFLUXDB_PORT=8086
+          HEALTH_DASHBOARD_PORT=3000
+          
+          # Data Retention Configuration
+          CLEANUP_INTERVAL_HOURS=24
+          MONITORING_INTERVAL_MINUTES=5
+          COMPRESSION_INTERVAL_HOURS=24
+          BACKUP_INTERVAL_HOURS=24
+          BACKUP_DIR=/backups
+          EOF
+          
+          echo "✅ Created production environment file"
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Log in to Docker Hub (if using)
+        if: ${{ secrets.DOCKER_HUB_USERNAME }}
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
+      - name: Build Docker images
+        run: |
+          docker-compose -f docker-compose.prod.yml --env-file infrastructure/env.production build
+      
+      - name: Run tests
+        run: |
+          # Add your test commands here
+          echo "Running tests..."
+          # docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+      
+      - name: Deploy to production
+        run: |
+          # Option 1: Deploy to remote server via SSH
+          # - name: Deploy via SSH
+          #   uses: appleboy/ssh-action@master
+          #   with:
+          #     host: ${{ secrets.PRODUCTION_HOST }}
+          #     username: ${{ secrets.PRODUCTION_USER }}
+          #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+          #     script: |
+          #       cd /path/to/ha-ingestor
+          #       git pull
+          #       docker-compose -f docker-compose.prod.yml pull
+          #       docker-compose -f docker-compose.prod.yml up -d
+          
+          # Option 2: Deploy to Docker Swarm
+          # docker stack deploy -c docker-compose.prod.yml ha-ingestor
+          
+          # Option 3: Deploy locally (for testing)
+          docker-compose -f docker-compose.prod.yml --env-file infrastructure/env.production up -d
+          
+          echo "✅ Deployment complete"
+      
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+      
+      - name: Health checks
+        run: |
+          echo "Running health checks..."
+          
+          # Check InfluxDB
+          curl -f http://localhost:8086/health || exit 1
+          
+          # Check Admin API
+          curl -f http://localhost:8000/health || exit 1
+          
+          echo "✅ All health checks passed"
+      
+      - name: Run smoke tests
+        run: |
+          # Add smoke test commands here
+          echo "Running smoke tests..."
+          # python tests/smoke_tests.py
+      
+      - name: Cleanup on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, cleaning up..."
+          docker-compose -f docker-compose.prod.yml down
+      
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "🎉 Production deployment successful!"
+          # Add notification step (Slack, Discord, email, etc.)
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Production deployment failed!"
+          # Add notification step (Slack, Discord, email, etc.)
+
+# Required GitHub Secrets:
+# 
+# Core Secrets (Required):
+#   HOME_ASSISTANT_TOKEN      - Home Assistant long-lived access token
+#   WEATHER_API_KEY           - OpenWeatherMap API key
+#   INFLUXDB_PASSWORD         - InfluxDB admin password
+#   INFLUXDB_TOKEN           - InfluxDB authentication token
+#   JWT_SECRET_KEY           - JWT signing secret (generate with: openssl rand -hex 32)
+# 
+# Optional Secrets:
+#   HOME_ASSISTANT_URL        - Home Assistant URL (default: http://homeassistant.local:8123)
+#   NABU_CASA_URL            - Nabu Casa remote URL
+#   NABU_CASA_TOKEN          - Nabu Casa access token
+#   INFLUXDB_USERNAME        - InfluxDB username (default: admin)
+#   ADMIN_PASSWORD           - Admin API password
+#   LOG_LEVEL                - Logging level (default: INFO)
+#   TIMEZONE                 - System timezone (default: America/Los_Angeles)
+# 
+# Deployment Secrets (for remote deployment):
+#   PRODUCTION_HOST          - Production server hostname/IP
+#   PRODUCTION_USER          - SSH username
+#   SSH_PRIVATE_KEY          - SSH private key for authentication
+# 
+# Docker Hub Secrets (if using Docker Hub):
+#   DOCKER_HUB_USERNAME      - Docker Hub username
+#   DOCKER_HUB_TOKEN         - Docker Hub access token
+

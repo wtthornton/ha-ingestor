@@ -275,3 +275,4 @@ docker-compose up ha-simulator
 ## License
 
 Part of the ha-ingestor project. See main project license.
+

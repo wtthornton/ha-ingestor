@@ -114,3 +114,4 @@ data_sources:
   log_file: "data/ha_events.log"
   use_log_analysis: true
   fallback_to_defaults: true
+

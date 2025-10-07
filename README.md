@@ -25,29 +25,35 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 
 ### Setup
 
-1. **Clone and setup environment:**
+1. **Clone the repository:**
    ```bash
    git clone <repository-url>
    cd ha-ingestor
-   ./scripts/setup-env.sh
    ```
 
-2. **Configure environment variables:**
-   Edit the `.env` file with your actual values:
+2. **Configure environment (Recommended - Interactive Setup):**
+   
+   **Linux/Mac:**
    ```bash
-   # Home Assistant Configuration
-   HOME_ASSISTANT_URL=http://homeassistant.local:8123
-   HOME_ASSISTANT_TOKEN=your_long_lived_access_token_here
+   ./scripts/setup-secure-env.sh
+   ```
    
-   # InfluxDB Configuration
-   INFLUXDB_USERNAME=admin
-   INFLUXDB_PASSWORD=your_secure_password
-   INFLUXDB_ORG=ha-ingestor
-   INFLUXDB_BUCKET=home_assistant_events
-   INFLUXDB_TOKEN=your_secure_token
+   **Windows:**
+   ```powershell
+   .\scripts\setup-secure-env.ps1
+   ```
    
-   # Weather API Configuration (optional)
-   WEATHER_API_KEY=your_openweathermap_api_key_here
+   This interactive script will:
+   - ✅ Guide you through all required configuration
+   - ✅ Generate secure passwords for production
+   - ✅ Validate your inputs
+   - ✅ Create properly formatted environment files
+   - ✅ Set appropriate file permissions
+
+   **Alternative - Manual Setup:**
+   ```bash
+   cp infrastructure/env.example .env
+   # Edit .env with your values
    ```
 
 3. **Start development environment:**
@@ -59,6 +65,18 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
    ```bash
    ./scripts/test-services.sh
    ```
+
+### 🔒 Security Note
+
+This project follows security best practices:
+- ✅ Sensitive files (env.production, .env) are in `.gitignore`
+- ✅ No secrets are committed to the repository
+- ✅ Secure setup scripts generate random passwords
+- ✅ GitHub Actions workflow supports secret management
+
+**Important:** Never commit files containing actual API keys or passwords!
+
+📖 See [Security Configuration Guide](docs/SECURITY_CONFIGURATION.md) for details.
 
 ## Services
 
@@ -112,7 +130,12 @@ ha-ingestor/
 
 ### Available Scripts
 
-- `./scripts/setup-env.sh` - Set up environment configuration
+**Environment Setup:**
+- `./scripts/setup-secure-env.sh` - Interactive secure environment setup (Linux/Mac)
+- `./scripts/setup-secure-env.ps1` - Interactive secure environment setup (Windows)
+- `./scripts/setup-env.sh` - Simple environment setup (legacy)
+
+**Development:**
 - `./scripts/start-dev.sh` - Start development environment
 - `./scripts/start-prod.sh` - Start production environment
 - `./scripts/test-services.sh` - Test all services
@@ -152,10 +175,12 @@ Test all services:
 
 ## Production Deployment
 
-1. **Configure production environment:**
+### Option 1: Manual Deployment (Recommended for Self-Hosted)
+
+1. **Configure production environment securely:**
    ```bash
-   cp infrastructure/env.example .env
-   # Edit .env with production values
+   ./scripts/setup-secure-env.sh
+   # Select "Production" when prompted
    ```
 
 2. **Start production environment:**
@@ -167,6 +192,27 @@ Test all services:
    ```bash
    ./scripts/test-services.sh
    ```
+
+### Option 2: CI/CD with GitHub Actions
+
+1. **Add secrets to GitHub:**
+   - Go to: `Settings` → `Secrets and variables` → `Actions`
+   - Add required secrets (see [GitHub Secrets Guide](docs/GITHUB_SECRETS_SETUP.md))
+
+2. **Enable workflow:**
+   ```bash
+   mv .github/workflows/deploy-production.yml.example .github/workflows/deploy-production.yml
+   ```
+
+3. **Push to trigger deployment:**
+   ```bash
+   git push origin main
+   ```
+
+📖 **Detailed Guides:**
+- [Security Configuration Guide](docs/SECURITY_CONFIGURATION.md) - Complete security setup
+- [GitHub Secrets Setup](docs/GITHUB_SECRETS_SETUP.md) - CI/CD deployment guide
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Full deployment documentation
 
 ## Troubleshooting
 

@@ -211,3 +211,4 @@ class EventGenerator:
             "events_generated": self.event_counter,
             "clients": len(self.clients)
         }
+

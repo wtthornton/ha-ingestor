@@ -33,10 +33,12 @@ services:
       dockerfile: Dockerfile.dev
     container_name: ha-ingestor-websocket-dev
     restart: unless-stopped
-    command: ["python", "src/simple_websocket.py"]
+    command: ["python", "src/websocket_fallback_enhanced.py"]
     environment:
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      - HOME_ASSISTANT_URL=http://ha-simulator:8123
+      - HOME_ASSISTANT_TOKEN=dev_simulator_token
+      - NABU_CASA_URL=https://lwzisze94hrpqde9typkwgu5pptxdkoh.ui.nabu.casa
+      - NABU_CASA_TOKEN=${NABU_CASA_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
@@ -57,6 +59,8 @@ services:
       weather-api:
         condition: service_healthy
       enrichment-pipeline:
+        condition: service_healthy
+      ha-simulator:
         condition: service_healthy
     networks:
       - ha-ingestor-network-dev

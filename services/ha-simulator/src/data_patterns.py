@@ -284,3 +284,4 @@ class HADataPatternAnalyzer:
             "generated_at": datetime.now().isoformat(),
             "source": "default_patterns"
         }
+
