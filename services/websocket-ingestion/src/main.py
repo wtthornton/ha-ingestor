@@ -45,6 +45,8 @@ class WebSocketIngestionService:
     def __init__(self):
         self.connection_manager: Optional[ConnectionManager] = None
         self.health_handler = HealthCheckHandler()
+        # Pass self reference to health handler for weather statistics
+        self.health_handler.websocket_service = self
         
         # High-volume processing components
         self.async_event_processor: Optional[AsyncEventProcessor] = None

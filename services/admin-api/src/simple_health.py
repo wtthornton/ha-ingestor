@@ -74,8 +74,8 @@ class SimpleHealthService:
                         },
                         "weather_enrichment": {
                             "enabled": True,
-                            "cache_hits": 0,
-                            "api_calls": 0,
+                            "cache_hits": websocket_health.get("weather_enrichment", {}).get("cache_hits", 0),
+                            "api_calls": websocket_health.get("weather_enrichment", {}).get("weather_client_stats", {}).get("total_requests", 0),
                             "last_error": None
                         },
                         "influxdb_storage": {

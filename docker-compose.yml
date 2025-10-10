@@ -50,6 +50,15 @@ services:
       - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
       - LOG_FORMAT=json
       - LOG_OUTPUT=both
+      # Weather API Configuration
+      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
+      - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
+      - WEATHER_DEFAULT_LOCATION=${WEATHER_DEFAULT_LOCATION:-Las Vegas,NV,US}
+      - WEATHER_ENRICHMENT_ENABLED=${WEATHER_ENRICHMENT_ENABLED:-true}
+      - WEATHER_CACHE_MINUTES=${WEATHER_CACHE_MINUTES:-15}
+      - WEATHER_RATE_LIMIT_PER_MINUTE=${WEATHER_RATE_LIMIT_PER_MINUTE:-50}
+      - WEATHER_RATE_LIMIT_PER_DAY=${WEATHER_RATE_LIMIT_PER_DAY:-900}
+      - WEATHER_REQUEST_TIMEOUT=${WEATHER_REQUEST_TIMEOUT:-10}
     volumes:
       - ha_ingestor_logs:/var/log/ha-ingestor
     depends_on:
@@ -104,38 +113,6 @@ services:
           memory: 128M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  weather-api:
-    build:
-      context: .
-      dockerfile: services/weather-api/Dockerfile
-    container_name: ha-ingestor-weather
-    restart: unless-stopped
-    environment:
-      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
-      - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
-      - ENABLE_WEATHER_API=${ENABLE_WEATHER_API:-false}
-    depends_on:
-      influxdb:
-        condition: service_healthy
-    networks:
-      - ha-ingestor-network
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3

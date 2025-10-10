@@ -102,8 +102,8 @@ class HealthEndpoints:
                         },
                         "weather_enrichment": {
                             "enabled": dependencies_health.get("weather_api", {}).get("status") == "healthy",
-                            "cache_hits": 0,
-                            "api_calls": 0,
+                            "cache_hits": websocket_data.get("weather_enrichment", {}).get("cache_hits", 0),
+                            "api_calls": websocket_data.get("weather_enrichment", {}).get("weather_client_stats", {}).get("total_requests", 0),
                             "last_error": None
                         },
                         "influxdb_storage": {
