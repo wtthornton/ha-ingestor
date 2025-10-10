@@ -61,6 +61,9 @@ class HealthEndpoints:
                 # Get service health
                 services_health = await self._check_services()
                 
+                # Get detailed websocket service data
+                websocket_data = await self._get_websocket_service_data()
+                
                 # Get dependency health
                 dependencies_health = await self._check_dependencies()
                 
@@ -85,16 +88,17 @@ class HealthEndpoints:
                     "ingestion_service": {
                         "status": overall_status,
                         "websocket_connection": {
-                            "is_connected": services_health.get("websocket-ingestion", {}).status == "healthy",
+                            "is_connected": websocket_data.get("connection", {}).get("is_running", False),
                             "last_connection_time": datetime.now().isoformat(),
-                            "connection_attempts": 0,
-                            "last_error": None
+                            "connection_attempts": websocket_data.get("connection", {}).get("connection_attempts", 0),
+                            "last_error": websocket_data.get("connection", {}).get("last_error")
                         },
                         "event_processing": {
-                            "status": "healthy",
-                            "events_per_minute": 0,  # TODO: Get actual metrics
-                            "last_event_time": datetime.now().isoformat(),
-                            "processing_lag": 0
+                            "status": "healthy" if websocket_data.get("subscription", {}).get("is_subscribed", False) else "unhealthy",
+                            "events_per_minute": websocket_data.get("subscription", {}).get("event_rate_per_minute", 0),
+                            "last_event_time": websocket_data.get("subscription", {}).get("last_event_time"),
+                            "processing_lag": 0,
+                            "total_events_received": websocket_data.get("subscription", {}).get("total_events_received", 0)
                         },
                         "weather_enrichment": {
                             "enabled": dependencies_health.get("weather_api", {}).get("status") == "healthy",
@@ -205,6 +209,24 @@ class HealthEndpoints:
                 )
         
         return services_health
+    
+    async def _get_websocket_service_data(self) -> Dict[str, Any]:
+        """Get detailed data from websocket service"""
+        try:
+            websocket_url = self.service_urls.get("websocket-ingestion")
+            if not websocket_url:
+                return {}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                async with session.get(f"{websocket_url}/health") as response:
+                    if response.status == 200:
+                        return await response.json()
+                    else:
+                        logger.warning(f"Failed to get websocket service data: HTTP {response.status}")
+                        return {}
+        except Exception as e:
+            logger.error(f"Error getting websocket service data: {e}")
+            return {}
     
     async def _check_dependencies(self) -> Dict[str, Any]:
         """Check health of external dependencies"""

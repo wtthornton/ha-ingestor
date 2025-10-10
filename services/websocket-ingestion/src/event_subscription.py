@@ -41,9 +41,23 @@ class EventSubscriptionManager:
             event_types = ['state_changed']
         
         try:
-            logger.info(f"Subscribing to events: {event_types}")
-            logger.info(f"WebSocket client connected: {websocket_client.is_connected}")
-            logger.info(f"WebSocket client authenticated: {websocket_client.is_authenticated}")
+            logger.info("=" * 80)
+            logger.info("📡 STARTING EVENT SUBSCRIPTION")
+            logger.info("=" * 80)
+            logger.info(f"📋 Event types to subscribe: {event_types}")
+            logger.info(f"🔌 WebSocket client connected: {websocket_client.is_connected}")
+            logger.info(f"🔐 WebSocket client authenticated: {websocket_client.is_authenticated}")
+            
+            # Pre-flight checks
+            if not websocket_client.is_connected:
+                logger.error("❌ Cannot subscribe: WebSocket not connected")
+                return False
+            
+            if not websocket_client.is_authenticated:
+                logger.error("❌ Cannot subscribe: WebSocket not authenticated")
+                return False
+            
+            logger.info("✅ Pre-flight checks passed")
             
             # Create subscription message
             subscription_id = self.subscription_counter
@@ -55,7 +69,11 @@ class EventSubscriptionManager:
                 "event_type": event_types[0] if len(event_types) == 1 else None
             }
             
-            logger.info(f"Sending subscription message: {subscription_message}")
+            logger.info(f"📤 Sending subscription message:")
+            logger.info(f"   ID: {subscription_id}")
+            logger.info(f"   Type: subscribe_events")
+            logger.info(f"   Event Type: {event_types[0] if len(event_types) == 1 else 'all'}")
+            logger.info(f"   Full message: {json.dumps(subscription_message, indent=2)}")
             
             # If subscribing to multiple event types, we need separate subscriptions
             if len(event_types) > 1:
@@ -89,7 +107,10 @@ class EventSubscriptionManager:
                 return success
             else:
                 # Single event type subscription
-                if await websocket_client.send_message(subscription_message):
+                send_result = await websocket_client.send_message(subscription_message)
+                logger.info(f"📨 Send result: {send_result}")
+                
+                if send_result:
                     self.subscriptions[subscription_id] = {
                         "event_type": event_types[0],
                         "subscribed_at": datetime.now(),
@@ -97,10 +118,16 @@ class EventSubscriptionManager:
                     }
                     self.is_subscribed = True
                     self.subscription_start_time = datetime.now()
-                    logger.info(f"Successfully subscribed to {event_types[0]} events")
+                    logger.info("=" * 80)
+                    logger.info(f"✅ SUBSCRIPTION SUCCESSFUL: {event_types[0]} events")
+                    logger.info(f"🆔 Subscription ID: {subscription_id}")
+                    logger.info(f"⏰ Subscribed at: {datetime.now().isoformat()}")
+                    logger.info("=" * 80)
                     return True
                 else:
-                    logger.error("Failed to send subscription message")
+                    logger.error("=" * 80)
+                    logger.error("❌ SUBSCRIPTION FAILED: Could not send message")
+                    logger.error("=" * 80)
                     return False
                     
         except Exception as e:
@@ -122,21 +149,30 @@ class EventSubscriptionManager:
                 subscription_id = message.get("id")
                 success = message.get("success", False)
                 
+                logger.info("=" * 80)
+                logger.info("📥 SUBSCRIPTION RESULT RECEIVED")
+                logger.info(f"🆔 Subscription ID: {subscription_id}")
+                logger.info(f"✅ Success: {success}")
+                logger.info(f"📄 Full message: {json.dumps(message, indent=2)}")
+                
                 if subscription_id in self.subscriptions:
                     if success:
                         self.subscriptions[subscription_id]["status"] = "active"
-                        logger.info(f"Subscription {subscription_id} confirmed for {self.subscriptions[subscription_id]['event_type']}")
+                        logger.info(f"🎉 Subscription {subscription_id} CONFIRMED for {self.subscriptions[subscription_id]['event_type']}")
+                        logger.info("=" * 80)
                     else:
                         self.subscriptions[subscription_id]["status"] = "failed"
                         error = message.get("error", {})
-                        logger.error(f"Subscription {subscription_id} failed: {error}")
+                        logger.error(f"❌ Subscription {subscription_id} FAILED: {error}")
+                        logger.error("=" * 80)
                         return False
                 else:
-                    logger.warning(f"Received result for unknown subscription {subscription_id}")
+                    logger.warning(f"⚠️  Received result for unknown subscription {subscription_id}")
+                    logger.warning("=" * 80)
                 
                 return success
             else:
-                logger.debug(f"Received non-result message: {message.get('type')}")
+                logger.debug(f"📨 Received non-result message: {message.get('type')}")
                 return True
                 
         except Exception as e:
@@ -164,8 +200,11 @@ class EventSubscriptionManager:
                     self.events_by_type[event_type] = self.events_by_type.get(event_type, 0) + 1
                     self.last_event_time = datetime.now()
                     
-                    # Log basic event information
-                    logger.info(f"Received {event_type} event: {self._extract_event_summary(event_data)}")
+                    # Log basic event information (every 10th event to avoid spam)
+                    if self.total_events_received % 10 == 1:
+                        logger.info(f"📨 Received event #{self.total_events_received}: {event_type} - {self._extract_event_summary(event_data)}")
+                    else:
+                        logger.debug(f"📨 Event #{self.total_events_received}: {event_type}")
                     
                     # Call event handler if registered
                     if event_type in self.subscription_handlers:

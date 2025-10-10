@@ -96,12 +96,45 @@ health-dashboard:
   ports:
     - "3000:80"
   environment:
-    - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    - VITE_API_BASE_URL=http://localhost:8003/api/v1
+    - VITE_WS_URL=ws://localhost:8001/ws
+    - VITE_ENVIRONMENT=production
   depends_on:
     admin-api:
       condition: service_healthy
   networks:
     - ha-ingestor-network
+```
+
+### Nginx Proxy Configuration
+
+The dashboard uses nginx to proxy API calls to the Admin API service:
+
+```nginx
+# Proxy API calls to admin API
+location /api/ {
+    proxy_pass http://admin-api:8004/api/v1/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # Handle CORS
+    add_header Access-Control-Allow-Origin *;
+    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+    add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization";
+    
+    # Handle preflight requests
+    if ($request_method = 'OPTIONS') {
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization";
+        add_header Access-Control-Max-Age 1728000;
+        add_header Content-Type 'text/plain; charset=utf-8';
+        add_header Content-Length 0;
+        return 204;
+    }
+}
 ```
 
 ## Environment Configuration
@@ -243,6 +276,44 @@ docker build --progress=plain -t health-dashboard:latest .
 1. **CSP Violations**: Check browser console for policy violations
 2. **Mixed Content**: Ensure all resources use HTTPS
 3. **CORS Issues**: Verify API endpoint configuration
+
+#### 502 Bad Gateway Errors
+
+**Symptoms:**
+- Dashboard shows "HTTP 502: Bad Gateway" error
+- API calls failing with connection refused
+
+**Diagnosis:**
+```bash
+# Check dashboard logs
+docker-compose logs health-dashboard
+
+# Test API endpoints directly
+curl http://localhost:8003/api/v1/health
+```
+
+**Solutions:**
+1. **Verify nginx proxy configuration**:
+   - Check `services/health-dashboard/nginx.conf` has API proxy rules
+   - Ensure `proxy_pass http://admin-api:8004/api/v1/` is configured
+
+2. **Check admin-api service**:
+   ```bash
+   # Verify admin-api is running
+   docker-compose ps admin-api
+   
+   # Check admin-api health
+   curl http://localhost:8003/health
+   ```
+
+3. **Rebuild and restart dashboard**:
+   ```bash
+   # Rebuild dashboard with updated nginx config
+   docker-compose build health-dashboard
+   
+   # Restart dashboard service
+   docker-compose restart health-dashboard
+   ```
 
 ### Debug Mode
 

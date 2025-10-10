@@ -51,6 +51,8 @@ class SimpleHealthService:
                 # Get WebSocket service data
                 websocket_data = services_status.get("websocket-ingestion", {})
                 websocket_health = websocket_data.get("health_data", {})
+                connection_data = websocket_health.get("connection", {})
+                subscription_data = websocket_health.get("subscription", {})
                 
                 # Return simplified response with real WebSocket data
                 return {
@@ -59,15 +61,15 @@ class SimpleHealthService:
                     "ingestion_service": {
                         "status": overall_status,
                         "websocket_connection": {
-                            "is_connected": websocket_health.get("is_connected", False),
+                            "is_connected": connection_data.get("is_running", False),
                             "last_connection_time": websocket_health.get("timestamp", datetime.now().isoformat()),
-                            "connection_attempts": websocket_health.get("connection_attempts", 0),
-                            "last_error": None
+                            "connection_attempts": connection_data.get("connection_attempts", 0),
+                            "last_error": connection_data.get("last_error")
                         },
                         "event_processing": {
-                            "status": "healthy" if websocket_health.get("event_count", 0) > 0 else "degraded",
-                            "events_per_minute": self._calculate_events_per_minute(websocket_health),
-                            "total_events": websocket_health.get("event_count", 0),
+                            "status": "healthy" if subscription_data.get("is_subscribed", False) else "degraded",
+                            "events_per_minute": subscription_data.get("event_rate_per_minute", 0.0),
+                            "total_events": subscription_data.get("total_events_received", 0),
                             "error_rate": 0
                         },
                         "weather_enrichment": {
@@ -141,32 +143,6 @@ class SimpleHealthService:
         
         return services_status
     
-    def _calculate_events_per_minute(self, websocket_health: Dict[str, Any]) -> float:
-        """Calculate events per minute from event count and uptime"""
-        try:
-            event_count = websocket_health.get("event_count", 0)
-            uptime_str = websocket_health.get("uptime", "0:00:00")
-            
-            if event_count == 0:
-                return 0.0
-            
-            # Parse uptime string (format: "H:MM:SS.ffffff")
-            uptime_parts = uptime_str.split(":")
-            if len(uptime_parts) >= 3:
-                hours = int(uptime_parts[0])
-                minutes = int(uptime_parts[1])
-                seconds = float(uptime_parts[2])
-                
-                total_minutes = hours * 60 + minutes + (seconds / 60)
-                
-                if total_minutes > 0:
-                    return round(event_count / total_minutes, 1)
-            
-            return 0.0
-            
-        except Exception as e:
-            logger.error(f"Error calculating events per minute: {e}")
-            return 0.0
 
 
 # Create router instance

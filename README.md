@@ -7,13 +7,26 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 [![Critical Issues](https://img.shields.io/badge/Critical%20Issues-0-brightgreen)](#)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-brightgreen)](#)
 
-## 🎯 **Recent Updates (January 2025)**
+## 🎯 **Recent Updates (October 2025)**
 
 ✅ **All Critical Issues Resolved** - System upgraded to DEPLOYMENT READY status  
-✅ **API Endpoints Fixed** - Data retention and enrichment pipeline services fully operational  
-✅ **Success Rate Improved** - From 58.3% to 75.0% (+16.7% improvement)  
-✅ **Service Connectivity** - WebSocket timeout and weather API authentication issues resolved  
-✅ **Context7 KB Cache Integration** - BMad methodology enhanced with Context7 MCP tools and intelligent knowledge base caching for up-to-date library documentation with 87%+ cache hit rate
+✅ **WebSocket Connection Fixed** - Enhanced logging, authentication timing, and subscription management  
+✅ **Dashboard 502 Error Resolved** - Fixed nginx proxy configuration for API calls  
+✅ **Dashboard Enhanced** - Database Storage, Error Rate, and Weather API monitoring with detailed metrics  
+✅ **Docker Configuration Documented** - Critical configurations now fully documented to prevent breaking changes  
+✅ **Service Connectivity** - All services healthy and operational  
+✅ **API Endpoints Operational** - Dashboard successfully communicates with Admin API via nginx proxy  
+
+## ⚠️ **Important: Docker Configuration**
+
+**Before making ANY changes to Dockerfiles or nginx configs, read:**
+- 📘 **[Docker Structure Guide](docs/DOCKER_STRUCTURE_GUIDE.md)** - Complete guide to Docker structure (DO NOT BREAK THIS!)
+- 🚀 **[Quick Reference](docs/QUICK_REFERENCE_DOCKER.md)** - Quick reference for common tasks
+
+**Critical files that must not be broken:**
+- `services/websocket-ingestion/Dockerfile` - Uses `python -m src.main`
+- `services/admin-api/Dockerfile` - Requires `ENV PYTHONPATH=/app:/app/src`
+- `services/health-dashboard/nginx.conf` - API proxy configuration
 
 ## Quick Start
 
@@ -228,7 +241,18 @@ Test all services:
    - Check Home Assistant is accessible
    - Ensure token has proper permissions
 
-3. **InfluxDB connection issues:**
+3. **WebSocket connection issues:**
+   - Check WebSocket service logs: `docker-compose logs websocket-ingestion`
+   - Verify authentication timing (1-second delay added for stability)
+   - Check subscription status in health endpoint
+   - See [WebSocket Troubleshooting Guide](docs/WEBSOCKET_TROUBLESHOOTING.md)
+
+4. **Dashboard 502 errors:**
+   - Check nginx proxy configuration in `services/health-dashboard/nginx.conf`
+   - Verify admin-api service is running: `docker-compose ps admin-api`
+   - Test API endpoints directly: `curl http://localhost:8003/api/v1/health`
+
+5. **InfluxDB connection issues:**
    - Check InfluxDB credentials
    - Verify network connectivity
    - Check InfluxDB logs

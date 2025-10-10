@@ -248,42 +248,66 @@ class ConnectionManager:
     async def _subscribe_to_events(self):
         """Subscribe to Home Assistant events"""
         try:
-            logger.info("Attempting to subscribe to Home Assistant events")
-            logger.info(f"Client connected: {self.client and self.client.is_connected}")
-            logger.info(f"Client authenticated: {self.client and self.client.is_authenticated}")
+            logger.info("=" * 80)
+            logger.info("🔍 CHECKING SUBSCRIPTION PREREQUISITES")
+            logger.info("=" * 80)
+            logger.info(f"🔌 Client exists: {self.client is not None}")
+            logger.info(f"🔗 Client connected: {self.client and self.client.is_connected}")
+            logger.info(f"🔐 Client authenticated: {self.client and self.client.is_authenticated}")
             
-            if self.client and self.client.is_connected and self.client.is_authenticated:
-                # Subscribe to state_changed events by default
-                logger.info("Subscribing to state_changed events")
-                success = await self.event_subscription.subscribe_to_events(
-                    self.client, 
-                    ['state_changed']
-                )
+            if not self.client:
+                logger.error("❌ Cannot subscribe: No WebSocket client available")
+                return
                 
-                if success:
-                    logger.info("Successfully subscribed to state_changed events")
-                else:
-                    logger.error("Failed to subscribe to events")
+            if not self.client.is_connected:
+                logger.error("❌ Cannot subscribe: WebSocket client not connected")
+                return
+                
+            if not self.client.is_authenticated:
+                logger.error("❌ Cannot subscribe: WebSocket client not authenticated")
+                return
+            
+            logger.info("✅ All prerequisites met, waiting 1 second before subscribing...")
+            await asyncio.sleep(1)  # Give authentication time to fully complete
+            
+            # Subscribe to state_changed events by default
+            logger.info("📡 Initiating subscription to state_changed events")
+            success = await self.event_subscription.subscribe_to_events(
+                self.client, 
+                ['state_changed']
+            )
+            
+            if success:
+                logger.info("=" * 80)
+                logger.info("🎉 EVENT SUBSCRIPTION PROCESS COMPLETED SUCCESSFULLY")
+                logger.info("=" * 80)
             else:
-                logger.warning("Cannot subscribe to events: not connected or authenticated")
-                if not self.client:
-                    logger.warning("No WebSocket client available")
-                elif not self.client.is_connected:
-                    logger.warning("WebSocket client not connected")
-                elif not self.client.is_authenticated:
-                    logger.warning("WebSocket client not authenticated")
+                logger.error("=" * 80)
+                logger.error("❌ EVENT SUBSCRIPTION PROCESS FAILED")
+                logger.error("=" * 80)
+                
         except Exception as e:
-            logger.error(f"Error subscribing to events: {e}")
+            logger.error("=" * 80)
+            logger.error(f"❌ ERROR SUBSCRIBING TO EVENTS: {e}")
+            logger.error("=" * 80)
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
     
     async def _on_connect(self):
         """Handle successful connection"""
-        logger.info("Connected to Home Assistant")
+        logger.info("=" * 80)
+        logger.info("🎉 CONNECTED TO HOME ASSISTANT")
+        logger.info("=" * 80)
         
         # Subscribe to events after connection is established
+        logger.info("⏳ Preparing to subscribe to events...")
         await self._subscribe_to_events()
         
         if self.on_connect:
+            logger.info("📞 Calling external on_connect callback")
             await self.on_connect()
+        else:
+            logger.info("ℹ️  No external on_connect callback registered")
     
     async def _on_disconnect(self):
         """Handle disconnection"""
