@@ -1,10 +1,21 @@
-# Home Assistant Ingestor - Full Stack Architecture
+# Home Assistant Ingestor - Architecture Documentation
 
-## Executive Summary
+## 📖 Overview
 
-**Microservices-based real-time data ingestion system** with React dashboard, deployed via Docker Compose. Captures Home Assistant events via WebSocket, processes through Python services, stores in InfluxDB, and provides admin interface via FastAPI + React.
+This document serves as the main entry point for the Home Assistant Ingestor architecture documentation.
 
-## Core Architecture
+**For complete architectural documentation, please see:** **[Architecture Documentation Index](architecture/index.md)**
+
+---
+
+## Quick Summary
+
+**System Type:** Microservices-based real-time data ingestion system  
+**Tech Stack:** Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, Docker  
+**Deployment:** Docker Compose with optimized Alpine images  
+**Purpose:** Capture Home Assistant events, enrich with weather context, store in time-series database
+
+## Architecture Diagram
 
 ```mermaid
 graph TB
@@ -29,82 +40,88 @@ graph TB
     end
 ```
 
-## Technology Stack
+## Services
 
-| Layer | Technology | Version | Purpose |
-|-------|------------|---------|---------|
-| **Frontend** | React + TypeScript | 18.2.0 + 5.2.2 | Dashboard UI |
-| **Frontend** | TailwindCSS | 3.4.0 | Styling |
-| **Frontend** | Vite | 5.0.8 | Build tool |
-| **Frontend** | Vitest | 1.0.4 | Testing |
-| **Backend API** | FastAPI | 0.104.1 | REST API |
-| **Backend WS** | aiohttp | 3.9.1 | WebSocket client |
-| **Backend** | Python | 3.11 | All services |
-| **Database** | InfluxDB | 2.7 | Time series storage |
-| **Testing** | Playwright | 1.55.1 | E2E testing |
-| **Deployment** | Docker Compose | 2.20+ | Orchestration |
+| Service | Technology | Port | Purpose |
+|---------|-----------|------|---------|
+| **websocket-ingestion** | Python/aiohttp | 8001 | Home Assistant WebSocket client |
+| **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and weather enrichment |
+| **data-retention** | Python/FastAPI | 8080 | Data lifecycle and cleanup management |
+| **admin-api** | Python/FastAPI | 8003 | Administration REST API |
+| **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface |
+| **weather-api** | Python/FastAPI | Internal | Weather data integration |
+| **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage |
 
-## Service Architecture
+## 📚 Complete Documentation
 
-### Core Services
-1. **websocket-ingestion** - Captures HA events via WebSocket (Port: 8001)
-2. **enrichment-pipeline** - Data processing and weather enrichment (Port: 8002)
-3. **data-retention** - Cleanup and backup management (Port: 8080)
-4. **admin-api** - FastAPI REST API for dashboard (Port: 8003)
-5. **health-dashboard** - React frontend interface (Port: 3000)
-6. **weather-api** - Weather data integration (Internal)
-7. **influxdb** - Time-series database (Port: 8086)
+For detailed architecture information, please refer to the comprehensive documentation in the `architecture/` directory:
 
-### Key Integration Points
-- **Home Assistant WebSocket API** → Real-time event streaming
-- **OpenWeatherMap API** → Weather data enrichment
-- **InfluxDB 2.7** → Time-series data storage
-- **Docker Compose** → Service orchestration
+### Getting Started
+- **[Introduction](architecture/introduction.md)** - Project overview and high-level architecture
+- **[Key Concepts](architecture/key-concepts.md)** - Core architectural concepts
+- **[Tech Stack](architecture/tech-stack.md)** - Technology stack with rationale
 
-## Data Flow
+### System Design
+- **[Core Workflows](architecture/core-workflows.md)** - Data flow and sequence diagrams
+- **[Deployment Architecture](architecture/deployment-architecture.md)** - Deployment patterns
+- **[Source Tree](architecture/source-tree.md)** - Project structure
+- **[Data Models](architecture/data-models.md)** - Data structures and types
+- **[Database Schema](architecture/database-schema.md)** - InfluxDB schema design
 
-1. **Ingestion**: Home Assistant events → WebSocket service → Event queue
-2. **Processing**: Event queue → Enrichment pipeline → Data normalization
-3. **Storage**: Normalized data → InfluxDB time-series database
-4. **Visualization**: Dashboard → Admin API → InfluxDB queries → Real-time UI
+### Development
+- **[Development Workflow](architecture/development-workflow.md)** - Setup and contribution guide
+- **[Coding Standards](architecture/coding-standards.md)** - Code quality standards
+- **[Configuration Management](architecture/configuration-management.md)** - Environment configuration
+- **[API Guidelines](architecture/api-guidelines.md)** - REST API design standards
 
-## Development Workflow
+### Quality & Operations
+- **[Testing Strategy](architecture/testing-strategy.md)** - Testing approach
+- **[Error Handling Strategy](architecture/error-handling-strategy.md)** - Error handling patterns
+- **[Monitoring and Observability](architecture/monitoring-and-observability.md)** - Logging and metrics
+- **[Performance Standards](architecture/performance-standards.md)** - Performance targets
+- **[Security Standards](architecture/security-standards.md)** - Security best practices
+
+### Full Index
+📋 **[Complete Architecture Documentation Index](architecture/index.md)**
+
+---
+
+## Quick Development Reference
 
 ```bash
 # Start all services
 docker-compose up
 
-# Frontend development
-cd services/health-dashboard
-npm run dev
+# Frontend development (with hot reload)
+cd services/health-dashboard && npm run dev
 
-# Backend development
-cd services/admin-api
-python -m uvicorn src.main:app --reload
+# Backend development (with auto-reload)
+cd services/admin-api && python -m uvicorn src.main:app --reload
+
+# Run tests
+docker-compose -f docker-compose.yml run --rm websocket-ingestion pytest
+cd services/health-dashboard && npm test
 ```
 
 ## Key Patterns
 
-- **Microservices**: Independent, containerized services
-- **Event-Driven**: Real-time WebSocket event processing
-- **API Gateway**: FastAPI as single entry point for frontend
-- **Time-Series**: InfluxDB optimized for Home Assistant data
-- **Container-First**: Everything runs in Docker containers
+- **Microservices Architecture**: Independent, containerized services
+- **Event-Driven Processing**: Real-time WebSocket event streaming
+- **API Gateway Pattern**: FastAPI as unified REST interface
+- **Service Isolation**: Docker containerization with health checks
+- **Optimized Deployment**: Multi-stage Docker builds with Alpine Linux
 
-## Critical Rules for Development
+## Performance Characteristics
 
-1. **Type Safety**: Use TypeScript interfaces from `shared/types/`
-2. **API Calls**: Always use service layer, never direct HTTP calls
-3. **Environment**: Access config through environment objects only
-4. **Testing**: Vitest for frontend, pytest for backend, Playwright for E2E
-5. **Styling**: Use TailwindCSS utility classes, extend design system
-6. **Error Handling**: Standardized error responses across all services
+- **Event Processing**: 10,000+ events/day
+- **Response Time**: <100ms API calls
+- **Reliability**: 99.9% uptime with auto-reconnection
+- **Container Size**: 71% reduction with Alpine images (40-80MB per service)
 
-## Deployment
+---
 
-- **Local Development**: `docker-compose up`
-- **Production**: `docker-compose -f docker-compose.prod.yml up`
-- **Health Checks**: All services have built-in health endpoints
-- **Monitoring**: Structured JSON logging across all services
+**Last Updated**: October 2025  
+**Version**: 4.0  
+**Status**: Production Ready
 
-This architecture supports 10,000+ events/day with 99.9% reliability through robust error handling and automatic reconnection patterns.
+**For complete details, see the [Architecture Documentation Index](architecture/index.md)**

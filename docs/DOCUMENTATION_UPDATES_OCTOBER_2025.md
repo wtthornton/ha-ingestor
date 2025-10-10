@@ -251,11 +251,11 @@ This document summarizes all documentation updates made in October 2025, includi
 
 ### Existing Documentation
 
-- [WebSocket Fixes Summary](WEBSOCKET_FIXES_SUMMARY.md)
-- [WebSocket Fixes Test Results](WEBSOCKET_FIXES_TEST_RESULTS.md)
-- [WebSocket Fixes Deployment Log](WEBSOCKET_FIXES_DEPLOYMENT_LOG.md)
-- [WebSocket Fixes Final Summary](WEBSOCKET_FIXES_FINAL_SUMMARY.md)
-- [Dashboard 502 Fix Summary](DASHBOARD_502_FIX_SUMMARY.md)
+- [WebSocket Fixes Summary](archive/summaries/WEBSOCKET_FIXES_SUMMARY.md)
+- [WebSocket Fixes Test Results](archive/summaries/WEBSOCKET_FIXES_TEST_RESULTS.md)
+- [WebSocket Fixes Deployment Log](archive/summaries/WEBSOCKET_FIXES_DEPLOYMENT_LOG.md)
+- [WebSocket Fixes Final Summary](archive/summaries/WEBSOCKET_FIXES_FINAL_SUMMARY.md)
+- [Dashboard 502 Fix Summary](archive/summaries/DASHBOARD_502_FIX_SUMMARY.md)
 - [Docker Structure Guide](DOCKER_STRUCTURE_GUIDE.md)
 
 ### New Documentation
