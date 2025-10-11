@@ -69,9 +69,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
         reservations:
-          memory: 128M
+          memory: 256M
     logging:
       driver: "json-file"
       options:
@@ -206,6 +206,184 @@ services:
       start_period: 30s
     volumes:
       - data_retention_backups:/backups
+
+  carbon-intensity:
+    build:
+      context: .
+      dockerfile: services/carbon-intensity-service/Dockerfile
+    container_name: ha-ingestor-carbon-intensity
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      - WATTTIME_API_TOKEN=${WATTTIME_API_TOKEN:-}
+      - GRID_REGION=${GRID_REGION:-CAISO_NORTH}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - SERVICE_PORT=8010
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  electricity-pricing:
+    build:
+      context: .
+      dockerfile: services/electricity-pricing-service/Dockerfile
+    container_name: ha-ingestor-electricity-pricing
+    restart: unless-stopped
+    ports:
+      - "8011:8011"
+    environment:
+      - PRICING_PROVIDER=${PRICING_PROVIDER:-awattar}
+      - PRICING_API_KEY=${PRICING_API_KEY:-}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - SERVICE_PORT=8011
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  air-quality:
+    build:
+      context: .
+      dockerfile: services/air-quality-service/Dockerfile
+    container_name: ha-ingestor-air-quality
+    restart: unless-stopped
+    ports:
+      - "8012:8012"
+    environment:
+      - AIRNOW_API_KEY=${AIRNOW_API_KEY:-}
+      - LATITUDE=${LATITUDE:-36.1699}
+      - LONGITUDE=${LONGITUDE:--115.1398}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - SERVICE_PORT=8012
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  calendar:
+    build:
+      context: .
+      dockerfile: services/calendar-service/Dockerfile
+    container_name: ha-ingestor-calendar
+    restart: unless-stopped
+    ports:
+      - "8013:8013"
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - SERVICE_PORT=8013
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8013/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  smart-meter:
+    build:
+      context: .
+      dockerfile: services/smart-meter-service/Dockerfile
+    container_name: ha-ingestor-smart-meter
+    restart: unless-stopped
+    ports:
+      - "8014:8014"
+    environment:
+      - METER_TYPE=${METER_TYPE:-generic}
+      - METER_API_TOKEN=${METER_API_TOKEN:-}
+      - METER_DEVICE_ID=${METER_DEVICE_ID:-}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - SERVICE_PORT=8014
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   health-dashboard:
     build:

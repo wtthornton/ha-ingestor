@@ -14,22 +14,30 @@ This document provides a comprehensive reference for all Docker Compose services
 │   (Port 3000)       │◄──►│   (Port 8003)       │◄──►│   (Port 8001)       │
 │   nginx + React     │    │   FastAPI Gateway   │    │   Home Assistant    │
 └─────────────────────┘    └─────────────────────┘    └─────────────────────┘
-           │                           │                           │
-           │                           ▼                           ▼
-           │                ┌─────────────────────┐    ┌─────────────────────┐
-           │                │  Enrichment Pipeline│    │    Weather API      │
-           │                │   (Port 8002)       │    │   (Internal)        │
-           │                │   Data Processing   │    │   OpenWeatherMap    │
-           │                └─────────────────────┘    └─────────────────────┘
-           │                           │                           │
-           │                           ▼                           ▼
-           │                ┌─────────────────────┐    ┌─────────────────────┐
-           │                │   Data Retention    │    │      InfluxDB       │
-           │                │   (Port 8080)       │    │   (Port 8086)       │
-           │                │   Lifecycle Mgmt    │    │   Time Series DB    │
-           │                └─────────────────────┘    └─────────────────────┘
-           │                           │
-           └───────────────────────────┘
+          │                           │                           │
+          │                           ▼                           ▼
+          │                ┌─────────────────────┐    ┌─────────────────────┐
+          │                │  Enrichment Pipeline│◄───│  External Data Svcs │
+          │                │   (Port 8002)       │    │  - Weather (8000)   │
+          │                │   Multi-Source Data │    │  - Carbon (8010)    │
+          │                └─────────────────────┘    │  - Pricing (8011)   │
+          │                           │                │  - Air Quality(8012)│
+          │                           ▼                │  - Calendar (8013)  │
+          │                ┌─────────────────────┐    │  - Smart Meter(8014)│
+          │                │   Data Retention    │    └─────────────────────┘
+          │                │   (Port 8080)       │
+          │                │   Tiered Storage +  │
+          │                │   S3 Archival       │
+          │                └─────────────────────┘
+          │                           │
+          │                           ▼
+          │                ┌─────────────────────┐
+          │                │      InfluxDB       │
+          │                │   (Port 8086)       │
+          │                │   Time Series DB    │
+          │                └─────────────────────┘
+          │                           │
+          └───────────────────────────┘
 ```
 
 ---

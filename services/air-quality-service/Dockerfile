@@ -1,0 +1,34 @@
+# Multi-stage build for Air Quality Service
+FROM python:3.11-alpine AS builder
+
+WORKDIR /app
+RUN apk add --no-cache gcc musl-dev linux-headers
+
+COPY services/air-quality-service/requirements-prod.txt .
+RUN pip install --no-cache-dir --user -r requirements-prod.txt
+
+FROM python:3.11-alpine AS production
+
+WORKDIR /app
+RUN apk add --no-cache curl
+
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+COPY --from=builder /root/.local /home/appuser/.local
+COPY services/air-quality-service/src/ ./src/
+COPY shared/ ./shared/
+
+RUN chown -R appuser:appgroup /app /home/appuser/.local
+
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+USER appuser
+
+EXPOSE 8012
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8012/health || exit 1
+
+CMD ["python", "-m", "src.main"]
+

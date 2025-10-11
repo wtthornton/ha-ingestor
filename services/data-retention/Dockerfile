@@ -4,8 +4,16 @@ FROM python:3.11-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache gcc musl-dev linux-headers
+# Install build dependencies including C++ compiler and Fortran
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    musl-dev \
+    linux-headers \
+    gfortran \
+    openblas-dev \
+    lapack-dev \
+    build-base
 
 # Copy requirements and install Python dependencies
 COPY services/data-retention/requirements-prod.txt .
@@ -18,7 +26,7 @@ FROM python:3.11-alpine AS production
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl openblas lapack
 
 # Create non-root user first
 RUN addgroup -g 1001 -S appgroup && \

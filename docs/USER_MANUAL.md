@@ -7,8 +7,10 @@ Home Assistant Ingestor is a comprehensive system that captures, enriches, and s
 
 ### **Key Features**
 - **Real-time Event Capture** - Direct WebSocket connection to Home Assistant
-- **Weather Enrichment** - Location-based weather data integration
-- **Data Storage & Analysis** - InfluxDB time-series database
+- **Multi-Source Data Enrichment** - Weather, carbon intensity, electricity pricing, air quality, and more
+- **Calendar Integration** - Event-based automation triggers
+- **Smart Meter Integration** - Real-time energy consumption data
+- **Advanced Data Storage** - InfluxDB with tiered retention and S3 archival
 - **Web Dashboard** - Real-time monitoring and administration
 - **Data Export** - Multiple formats (CSV, JSON, PDF, Excel)
 - **Mobile Support** - Responsive design with touch gestures
@@ -73,26 +75,66 @@ Home Assistant Ingestor is a comprehensive system that captures, enriches, and s
    - Set `HA_ACCESS_TOKEN` to your long-lived token
    - Configure entity filters if needed
 
-### **Weather API Configuration**
+### **External Data Sources Configuration**
+
+#### **Weather API (Required)**
 1. **Get OpenWeatherMap API Key**
    - Sign up at https://openweathermap.org/api
    - Generate an API key
-   - Copy the key for configuration
+   - Set `WEATHER_API_KEY` in environment
 
 2. **Set Location**
    - Configure `WEATHER_LOCATION` with your city and country
    - Format: "City,CountryCode" (e.g., "London,GB")
 
-### **Data Retention Configuration**
-1. **Retention Policies**
-   - Set data retention periods (default: 1 year)
-   - Configure cleanup intervals
-   - Set storage limits and alerts
+#### **Carbon Intensity Service (Optional)**
+- Get API key from National Grid or equivalent
+- Set `CARBON_INTENSITY_API_KEY` and `CARBON_INTENSITY_REGION`
+- Provides carbon footprint data for automation
 
-2. **Backup Settings**
-   - Configure backup schedules
+#### **Electricity Pricing Service (Optional)**
+- Configure provider (Octopus Energy, etc.)
+- Set `ELECTRICITY_PRICING_PROVIDER` and API key
+- Enables cost-optimized automation
+
+#### **Air Quality Service (Optional)**
+- Get API key from OpenAQ or government sources
+- Set `AIR_QUALITY_API_KEY`
+- Monitor air quality and trigger automations
+
+#### **Calendar Service (Optional)**
+- Configure Google Calendar, Outlook, or iCal
+- Set `CALENDAR_GOOGLE_CLIENT_ID` and credentials
+- Enable event-based automation triggers
+
+#### **Smart Meter Service (Optional)**
+- Configure meter protocol (SMETS2, P1, etc.)
+- Set `SMART_METER_PROTOCOL` and connection details
+- Real-time energy consumption monitoring
+
+### **Data Retention Configuration (Enhanced)**
+
+1. **Tiered Retention Policies**
+   - **Hot Storage** - Recent data (default: 7 days), full resolution
+   - **Warm Storage** - Medium-term data (default: 30 days), 1-minute downsampling
+   - **Cold Storage** - Long-term data (default: 365 days), 1-hour downsampling
+   - Configure intervals: `HOT_RETENTION_DAYS`, `WARM_RETENTION_DAYS`, `COLD_RETENTION_DAYS`
+
+2. **S3 Archival (Optional)**
+   - Enable archival: `ENABLE_S3_ARCHIVAL=true`
+   - Configure bucket: `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+   - Automatic archival to Amazon S3 or Glacier
+   - Cost-effective long-term storage
+
+3. **Materialized Views**
+   - Pre-computed aggregations for fast queries
+   - Automatic refresh and maintenance
+   - Significant query performance improvement
+
+4. **Backup Settings**
+   - Configure backup schedules and intervals
    - Set backup retention periods
-   - Configure backup storage locations
+   - Local and S3 backup support
 
 ## 📈 **Data Analysis**
 

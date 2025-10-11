@@ -4,6 +4,8 @@
 
 ### **Base URLs**
 
+**Core Services**
+
 **Admin API (Primary)**
 ```
 http://localhost:8003/api/v1
@@ -23,6 +25,14 @@ http://localhost:8002
 ```
 http://localhost:8001
 ```
+
+**External Data Services (Internal)**
+- Carbon Intensity Service: `http://carbon-intensity-service:8010` (internal only)
+- Electricity Pricing Service: `http://electricity-pricing-service:8011` (internal only)
+- Air Quality Service: `http://air-quality-service:8012` (internal only)
+- Calendar Service: `http://calendar-service:8013` (internal only)
+- Smart Meter Service: `http://smart-meter-service:8014` (internal only)
+- Weather API Service: `http://weather-api:8000` (internal only)
 
 ### **Authentication**
 All API endpoints require authentication using an API key:

@@ -27,30 +27,57 @@ graph TB
     ADMIN --> INFLUX
     
     WEATHER[Weather API<br/>Internal] --> ENRICH
-    RETENTION[Data Retention<br/>Port: 8080] --> INFLUX
+    CARBON[Carbon Intensity<br/>Port: 8010] --> ENRICH
+    PRICING[Electricity Pricing<br/>Port: 8011] --> ENRICH
+    AIRQ[Air Quality<br/>Port: 8012] --> ENRICH
+    CAL[Calendar<br/>Port: 8013] --> ENRICH
+    METER[Smart Meter<br/>Port: 8014] --> ENRICH
     
-    subgraph "Docker Services"
+    RETENTION[Data Retention<br/>Port: 8080] --> INFLUX
+    RETENTION -->|S3 Archive| S3[(S3/Glacier)]
+    
+    subgraph "Core Services"
         WS
         ENRICH
         ADMIN
         DASH
-        WEATHER
         RETENTION
         INFLUX
+    end
+    
+    subgraph "External Data Services"
+        WEATHER
+        CARBON
+        PRICING
+        AIRQ
+        CAL
+        METER
     end
 ```
 
 ## Services
 
+### Core Services
+
 | Service | Technology | Port | Purpose |
 |---------|-----------|------|---------|
 | **websocket-ingestion** | Python/aiohttp | 8001 | Home Assistant WebSocket client |
-| **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and weather enrichment |
-| **data-retention** | Python/FastAPI | 8080 | Data lifecycle and cleanup management |
+| **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and multi-source enrichment |
+| **data-retention** | Python/FastAPI | 8080 | Enhanced data lifecycle, tiered retention, S3 archival |
 | **admin-api** | Python/FastAPI | 8003 | Administration REST API |
 | **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface |
-| **weather-api** | Python/FastAPI | Internal | Weather data integration |
 | **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage |
+
+### External Data Services
+
+| Service | Technology | Port | Purpose |
+|---------|-----------|------|---------|
+| **carbon-intensity-service** | Python/FastAPI | 8010 | Carbon intensity data from National Grid |
+| **electricity-pricing-service** | Python/FastAPI | 8011 | Real-time electricity pricing (Octopus, etc.) |
+| **air-quality-service** | Python/FastAPI | 8012 | Air quality index and pollutant levels |
+| **calendar-service** | Python/FastAPI | 8013 | Calendar integration (Google, Outlook, iCal) |
+| **smart-meter-service** | Python/FastAPI | 8014 | Smart meter data (SMETS2, P1, etc.) |
+| **weather-api** | Python/FastAPI | Internal | Weather data integration |
 
 ## 📚 Complete Documentation
 

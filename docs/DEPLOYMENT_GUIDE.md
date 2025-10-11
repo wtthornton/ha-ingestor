@@ -54,6 +54,17 @@ HA_ACCESS_TOKEN=your_long_lived_access_token
 WEATHER_API_KEY=your_openweathermap_api_key
 WEATHER_LOCATION=your_city,country_code
 
+# External Data Services (Optional - Enable as needed)
+CARBON_INTENSITY_API_KEY=your_carbon_intensity_api_key
+CARBON_INTENSITY_REGION=GB  # UK region code
+ELECTRICITY_PRICING_PROVIDER=octopus  # octopus, agile, etc.
+ELECTRICITY_PRICING_API_KEY=your_pricing_api_key
+AIR_QUALITY_API_KEY=your_air_quality_api_key
+CALENDAR_GOOGLE_CLIENT_ID=your_google_client_id
+CALENDAR_GOOGLE_CLIENT_SECRET=your_google_client_secret
+SMART_METER_PROTOCOL=smets2  # smets2, p1, etc.
+SMART_METER_CONNECTION=your_meter_connection
+
 # InfluxDB Configuration
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your_influxdb_token
@@ -64,12 +75,25 @@ INFLUXDB_BUCKET=home_assistant
 API_KEY=your_secure_api_key
 ENABLE_AUTH=true
 
-# Data Retention Configuration
+# Data Retention Configuration (Enhanced)
 CLEANUP_INTERVAL_HOURS=24
 MONITORING_INTERVAL_MINUTES=5
 COMPRESSION_INTERVAL_HOURS=24
 BACKUP_INTERVAL_HOURS=24
 BACKUP_DIR=/backups
+
+# Tiered Storage Configuration
+ENABLE_TIERED_RETENTION=true
+HOT_RETENTION_DAYS=7
+WARM_RETENTION_DAYS=30
+COLD_RETENTION_DAYS=365
+
+# S3 Archival Configuration (Optional)
+ENABLE_S3_ARCHIVAL=false
+S3_BUCKET=your-s3-bucket
+S3_ACCESS_KEY=your-s3-access-key
+S3_SECRET_KEY=your-s3-secret-key
+S3_REGION=us-east-1
 ```
 
 ## 🌐 **Access Points**
@@ -94,14 +118,21 @@ BACKUP_DIR=/backups
 
 ## 📊 **System Architecture**
 
-### **Services**
+### **Core Services**
 - **websocket-ingestion** - Home Assistant event capture (Alpine-based, ~60MB)
-- **enrichment-pipeline** - Data enrichment and validation (Alpine-based, ~70MB)
-- **data-retention** - Data lifecycle management (Alpine-based, ~60MB)
+- **enrichment-pipeline** - Multi-source data enrichment and validation (Alpine-based, ~70MB)
+- **data-retention** - Enhanced data lifecycle, tiered retention, S3 archival (Alpine-based, ~65MB)
 - **admin-api** - System administration API (Alpine-based, ~50MB)
 - **health-dashboard** - Web-based administration interface (Alpine-based, ~80MB)
-- **weather-api** - Weather data integration (Alpine-based, ~40MB)
 - **influxdb** - Time-series database (Official image)
+
+### **External Data Services**
+- **carbon-intensity-service** - Carbon intensity data integration (Alpine-based, ~40MB)
+- **electricity-pricing-service** - Real-time electricity pricing (Alpine-based, ~40MB)
+- **air-quality-service** - Air quality monitoring (Alpine-based, ~40MB)
+- **calendar-service** - Calendar integration (Alpine-based, ~45MB)
+- **smart-meter-service** - Smart meter data integration (Alpine-based, ~45MB)
+- **weather-api** - Weather data integration (Alpine-based, ~40MB)
 
 ### **Docker Optimizations**
 - **Multi-stage builds** for all services

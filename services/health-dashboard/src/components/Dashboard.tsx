@@ -1,12 +1,15 @@
 import React from 'react';
 import { useHealth } from '../hooks/useHealth';
 import { useStatistics } from '../hooks/useStatistics';
+import { useDataSources } from '../hooks/useDataSources';
 import { StatusCard } from './StatusCard';
 import { MetricCard } from './MetricCard';
+import { DataSourceCard } from './DataSourceCard';
 
 export const Dashboard: React.FC = () => {
   const { health, loading: healthLoading, error: healthError } = useHealth(30000);
   const { statistics, loading: statsLoading, error: statsError } = useStatistics('1h', 60000);
+  const { dataSources, loading: dataSourcesLoading } = useDataSources(30000);
 
   if (healthLoading || statsLoading) {
     return (
@@ -104,6 +107,98 @@ export const Dashboard: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* External Data Sources */}
+        {!dataSourcesLoading && dataSources && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              External Data Sources
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                (Auto-refresh every 30s)
+              </span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Carbon Intensity */}
+              {dataSources.carbonIntensity && (
+                <DataSourceCard
+                  title="Grid Carbon Intensity"
+                  icon="🌱"
+                  status={dataSources.carbonIntensity.status}
+                  value={dataSources.carbonIntensity.last_successful_fetch ? 'Active' : 'Waiting'}
+                  subtitle="WattTime API - 15 min intervals"
+                  successRate={dataSources.carbonIntensity.success_rate}
+                  lastFetch={dataSources.carbonIntensity.last_successful_fetch}
+                />
+              )}
+
+              {/* Electricity Pricing */}
+              {dataSources.electricityPricing && (
+                <DataSourceCard
+                  title="Electricity Pricing"
+                  icon="⚡"
+                  status={dataSources.electricityPricing.status}
+                  value={dataSources.electricityPricing.last_successful_fetch ? 'Active' : 'Waiting'}
+                  subtitle="Utility API - Hourly updates"
+                  successRate={dataSources.electricityPricing.success_rate}
+                  lastFetch={dataSources.electricityPricing.last_successful_fetch}
+                />
+              )}
+
+              {/* Air Quality */}
+              {dataSources.airQuality && (
+                <DataSourceCard
+                  title="Air Quality Index"
+                  icon="💨"
+                  status={dataSources.airQuality.status}
+                  value={dataSources.airQuality.last_successful_fetch ? 'Active' : 'Waiting'}
+                  subtitle="AirNow API - Hourly updates"
+                  successRate={dataSources.airQuality.success_rate}
+                  lastFetch={dataSources.airQuality.last_successful_fetch}
+                />
+              )}
+
+              {/* Calendar */}
+              {dataSources.calendar && (
+                <DataSourceCard
+                  title="Calendar Integration"
+                  icon="📅"
+                  status={dataSources.calendar.status}
+                  value={dataSources.calendar.oauth_valid ? 'Connected' : 'Not Connected'}
+                  subtitle="Google Calendar - 15 min intervals"
+                  successRate={dataSources.calendar.success_rate}
+                  lastFetch={dataSources.calendar.last_successful_fetch}
+                />
+              )}
+
+              {/* Smart Meter */}
+              {dataSources.smartMeter && (
+                <DataSourceCard
+                  title="Smart Meter"
+                  icon="🔌"
+                  status={dataSources.smartMeter.status}
+                  value={dataSources.smartMeter.last_successful_fetch ? 'Active' : 'Waiting'}
+                  subtitle="Power monitoring - 5 min intervals"
+                  successRate={dataSources.smartMeter.success_rate}
+                  lastFetch={dataSources.smartMeter.last_successful_fetch}
+                />
+              )}
+            </div>
+
+            {/* Data Source Summary */}
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <span className="text-2xl mr-3">💡</span>
+                <div>
+                  <h3 className="font-semibold text-blue-900">Data Enrichment Active</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Your system is now collecting contextual data for carbon-aware, cost-aware, and health-aware automation.
+                    Total data sources: <strong>{Object.values(dataSources).filter(d => d !== null).length}/5</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Key Metrics */}
         <div className="mb-8">
@@ -210,8 +305,10 @@ export const Dashboard: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 mt-12">
-          <p>HA Ingestor Dashboard - Simple Health Monitor</p>
-          <p>Auto-refreshing every 30 seconds</p>
+          <p className="font-semibold">HA Ingestor Dashboard - Enhanced with Data Enrichment</p>
+          <p className="text-xs mt-1">
+            7 Data Sources Active • Auto-refresh every 30s • Storage Optimized
+          </p>
         </div>
       </div>
     </div>

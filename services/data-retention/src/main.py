@@ -23,6 +23,12 @@ from .data_cleanup import DataCleanupService
 from .storage_monitor import StorageMonitor
 from .data_compression import DataCompressionService
 from .backup_restore import BackupRestoreService
+from .materialized_views import MaterializedViewManager
+from .tiered_retention import TieredRetentionManager
+from .s3_archival import S3ArchivalManager
+from .storage_analytics import StorageAnalytics
+from .retention_endpoints import RetentionEndpoints
+from .scheduler import RetentionScheduler
 
 # Load environment variables
 load_dotenv()
@@ -41,6 +47,14 @@ class DataRetentionService:
         self.compression_service: Optional[DataCompressionService] = None
         self.backup_service: Optional[BackupRestoreService] = None
         
+        # New components for Epic 2
+        self.view_manager: Optional[MaterializedViewManager] = None
+        self.retention_manager: Optional[TieredRetentionManager] = None
+        self.archival_manager: Optional[S3ArchivalManager] = None
+        self.analytics: Optional[StorageAnalytics] = None
+        self.scheduler: Optional[RetentionScheduler] = None
+        self.retention_endpoints: Optional[RetentionEndpoints] = None
+        
         # Configuration
         self.cleanup_interval_hours = int(os.getenv('CLEANUP_INTERVAL_HOURS', '24'))
         self.monitoring_interval_minutes = int(os.getenv('MONITORING_INTERVAL_MINUTES', '5'))
@@ -54,25 +68,51 @@ class DataRetentionService:
         """Start the data retention service."""
         logger.info("Starting data retention service...")
         
-        # Initialize services
+        # Initialize existing services
         self.cleanup_service = DataCleanupService()
         self.storage_monitor = StorageMonitor()
         self.compression_service = DataCompressionService()
         self.backup_service = BackupRestoreService(backup_dir=self.backup_dir)
         
-        # Start services
+        # Initialize new Epic 2 components
+        self.view_manager = MaterializedViewManager()
+        self.view_manager.initialize()
+        
+        self.retention_manager = TieredRetentionManager()
+        self.retention_manager.initialize()
+        
+        self.archival_manager = S3ArchivalManager()
+        self.archival_manager.initialize()
+        
+        self.analytics = StorageAnalytics()
+        self.analytics.initialize()
+        
+        # Initialize scheduler
+        self.scheduler = RetentionScheduler()
+        
+        # Schedule Epic 2 operations
+        self.scheduler.schedule_daily(2, 0, self.retention_manager.downsample_hot_to_warm, "Hot to Warm Downsampling")
+        self.scheduler.schedule_daily(2, 30, self.retention_manager.downsample_warm_to_cold, "Warm to Cold Downsampling")
+        self.scheduler.schedule_daily(3, 0, self.archival_manager.archive_to_s3, "S3 Archival")
+        self.scheduler.schedule_daily(4, 0, self.view_manager.refresh_all_views, "Refresh Views")
+        self.scheduler.schedule_daily(5, 0, self.analytics.calculate_storage_metrics, "Calculate Metrics")
+        
+        # Start scheduler in background
+        asyncio.create_task(self.scheduler.run_scheduler())
+        
+        # Start existing services
         await self.cleanup_service.start()
         await self.storage_monitor.start()
         await self.compression_service.start()
         await self.backup_service.start()
         
-        # Schedule periodic tasks
+        # Schedule existing periodic tasks
         await self.cleanup_service.schedule_cleanup(self.cleanup_interval_hours)
         await self.storage_monitor.schedule_monitoring(self.monitoring_interval_minutes)
         await self.compression_service.schedule_compression(self.compression_interval_hours)
         await self.backup_service.schedule_backups(self.backup_interval_hours)
         
-        logger.info("Data retention service started")
+        logger.info("Data retention service started with Epic 2 enhancements")
     
     async def stop(self) -> None:
         """Stop the data retention service."""
@@ -129,6 +169,18 @@ class DataRetentionService:
         )
         
         self.policy_manager.update_policy(policy)
+    
+    def setup_epic2_endpoints(self, app: web.Application):
+        """Setup Epic 2 API endpoints"""
+        if self.view_manager and self.retention_manager and self.archival_manager and self.analytics:
+            self.retention_endpoints = RetentionEndpoints(
+                self.view_manager,
+                self.retention_manager,
+                self.archival_manager,
+                self.analytics
+            )
+            self.retention_endpoints.add_routes(app)
+            logger.info("Epic 2 retention endpoints registered")
     
     def remove_retention_policy(self, policy_name: str) -> None:
         """Remove a retention policy."""
@@ -282,6 +334,9 @@ async def main():
         app.router.add_get('/backups', get_backup_history)
         app.router.add_get('/backup-stats', get_backup_statistics)
         app.router.add_delete('/backups/cleanup', cleanup_old_backups)
+        
+        # Epic 2: Storage optimization routes
+        data_retention_service.setup_epic2_endpoints(app)
         
         runner = web.AppRunner(app)
         await runner.setup()

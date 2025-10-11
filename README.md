@@ -9,13 +9,14 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 
 ## 🎯 **Recent Updates (October 2025)**
 
+✅ **Data Enrichment Platform Complete** - 5 new external data services fully integrated  
+✅ **Advanced Storage Optimization** - Tiered retention, materialized views, and S3 archival  
+✅ **Multi-Source Data Integration** - Carbon intensity, electricity pricing, air quality, calendar, and smart meter data  
+✅ **Storage Analytics** - Comprehensive monitoring and optimization of time-series data  
 ✅ **All Critical Issues Resolved** - System upgraded to DEPLOYMENT READY status  
 ✅ **WebSocket Connection Fixed** - Enhanced logging, authentication timing, and subscription management  
 ✅ **Dashboard 502 Error Resolved** - Fixed nginx proxy configuration for API calls  
 ✅ **Dashboard Enhanced** - Database Storage, Error Rate, and Weather API monitoring with detailed metrics  
-✅ **Docker Configuration Documented** - Critical configurations now fully documented to prevent breaking changes  
-✅ **Service Connectivity** - All services healthy and operational  
-✅ **API Endpoints Operational** - Dashboard successfully communicates with Admin API via nginx proxy  
 
 ## ⚠️ **Important: Docker Configuration**
 
@@ -93,34 +94,83 @@ This project follows security best practices:
 
 ## Services
 
-### WebSocket Ingestion Service
+### Core Services
+
+#### WebSocket Ingestion Service
 - Connects to Home Assistant WebSocket API
 - Subscribes to state_changed events
 - Handles authentication and reconnection
 - Port: 8001 (external)
 
-### Weather API Service
+#### Enrichment Pipeline Service
+- Processes and enriches Home Assistant events
+- Data validation and normalization
+- Coordinates multi-source enrichment
+- Port: 8002 (external)
+
+#### Data Retention Service (Enhanced)
+- Manages data lifecycle and cleanup
+- Tiered storage (hot/warm/cold)
+- Materialized views for fast queries
+- S3/Glacier archival support
+- Storage analytics and optimization
+- Backup and restore operations
+- Port: 8080 (external)
+
+#### Admin API Service
+- Provides REST API for administration
+- Health monitoring and configuration
+- System-wide metrics and statistics
+- Port: 8003 (external)
+
+#### Health Dashboard
+- Modern React-based web interface
+- Real-time monitoring and metrics
+- Mobile-responsive design
+- Port: 3000 (external)
+
+### External Data Services (New)
+
+#### Carbon Intensity Service
+- Fetches carbon intensity data from National Grid
+- Regional carbon metrics
+- Renewable energy percentage
+- Port: 8010 (internal)
+
+#### Electricity Pricing Service
+- Real-time electricity pricing data
+- Support for multiple providers (Octopus Energy, etc.)
+- Time-of-use tariff information
+- Port: 8011 (internal)
+
+#### Air Quality Service
+- Air quality index and pollutant levels
+- Data from OpenAQ and government sources
+- Health recommendations
+- Port: 8012 (internal)
+
+#### Calendar Service
+- Integrates with Google Calendar, Outlook, iCal
+- Event-based automation triggers
+- Holiday and schedule tracking
+- Port: 8013 (internal)
+
+#### Smart Meter Service
+- Smart meter data integration
+- Support for multiple protocols (SMETS2, P1, etc.)
+- Real-time energy consumption
+- Port: 8014 (internal)
+
+### Data Storage
+
+#### Weather API Service
 - Fetches weather data from OpenWeatherMap
 - Enriches Home Assistant data with weather context
 - Port: Internal (no external access)
 
-### Enrichment Pipeline Service
-- Processes and enriches Home Assistant events
-- Data validation and normalization
-- Port: 8002 (external)
-
-### Data Retention Service
-- Manages data lifecycle and cleanup
-- Backup and restore operations
-- Port: 8080 (external)
-
-### Admin API Service
-- Provides REST API for administration
-- Health monitoring and configuration
-- Port: 8003 (external)
-
-### InfluxDB
+#### InfluxDB
 - Time-series database for event storage
+- Tiered storage with downsampling
 - Web interface for data exploration
 - Port: 8086
 
@@ -130,15 +180,23 @@ This project follows security best practices:
 
 ```
 ha-ingestor/
-├── services/                 # Backend services
-│   ├── websocket-ingestion/ # Home Assistant WebSocket client
-│   ├── weather-api/         # Weather data service
-│   └── admin-api/           # REST API service
-├── infrastructure/          # Docker and configuration
-├── scripts/                 # Utility scripts
-├── shared/                  # Shared code and types
-├── tests/                   # Integration tests
-└── docs/                    # Documentation
+├── services/                      # Backend services
+│   ├── websocket-ingestion/      # Home Assistant WebSocket client
+│   ├── enrichment-pipeline/      # Data enrichment and validation
+│   ├── data-retention/           # Enhanced data lifecycle management
+│   ├── admin-api/                # REST API service
+│   ├── health-dashboard/         # React-based web interface
+│   ├── weather-api/              # Weather data service
+│   ├── carbon-intensity-service/ # Carbon intensity data (NEW)
+│   ├── electricity-pricing-service/ # Electricity pricing (NEW)
+│   ├── air-quality-service/      # Air quality data (NEW)
+│   ├── calendar-service/         # Calendar integration (NEW)
+│   └── smart-meter-service/      # Smart meter data (NEW)
+├── infrastructure/               # Docker and configuration
+├── scripts/                      # Utility scripts
+├── shared/                       # Shared code and types
+├── tests/                        # Integration tests
+└── docs/                         # Documentation
 ```
 
 ### Available Scripts
@@ -165,12 +223,21 @@ ha-ingestor/
 
 All services expose health check endpoints:
 
+### Core Services
 - Admin API: `http://localhost:8003/health`
 - WebSocket Ingestion: `http://localhost:8001/health`
 - Enrichment Pipeline: `http://localhost:8002/health`
 - Data Retention: `http://localhost:8080/health`
-- Weather API: Internal health checks only
+- Health Dashboard: `http://localhost:3000`
 - InfluxDB: `http://localhost:8086/health`
+
+### External Data Services
+- Carbon Intensity: Internal health checks only
+- Electricity Pricing: Internal health checks only
+- Air Quality: Internal health checks only
+- Calendar: Internal health checks only
+- Smart Meter: Internal health checks only
+- Weather API: Internal health checks only
 
 ## Monitoring
 

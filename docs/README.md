@@ -21,14 +21,18 @@ Home Assistant Ingestor is a complete data pipeline that:
 ### 🔄 **Real-time Data Pipeline**
 - Direct WebSocket connection to Home Assistant
 - Event normalization and validation
-- Weather data enrichment
+- Multi-source data enrichment (weather, carbon, pricing, air quality)
+- Calendar-based automation triggers
+- Smart meter integration
 - High-performance data processing
 
 ### 📊 **Advanced Analytics**
-- Time-series data storage in InfluxDB
+- Time-series data storage in InfluxDB with tiered retention
+- Materialized views for fast query performance
 - Historical data analysis and trends
 - Custom data queries and filtering
-- Multiple export formats
+- Multiple export formats (CSV, JSON, PDF, Excel)
+- Storage analytics and optimization
 
 ### 🖥️ **Modern Web Interface**
 - Real-time monitoring dashboard
@@ -43,10 +47,12 @@ Home Assistant Ingestor is a complete data pipeline that:
 - Log aggregation and analysis
 
 ### 🛡️ **Enterprise Features**
-- Data retention policies
+- Tiered data retention (hot/warm/cold storage)
+- S3/Glacier archival support
 - Automated backup and restore
 - Security and authentication
-- Scalable architecture
+- Scalable microservices architecture
+- Comprehensive monitoring and alerting
 
 ## 🚀 **Quick Start**
 
@@ -99,15 +105,27 @@ docker-compose ps
 
 ## 🏗️ **Services**
 
+### Core Services
+
 | Service | Description | Port | Status |
 |---------|-------------|------|--------|
 | **websocket-ingestion** | Home Assistant event capture | 8001 | ✅ Production Ready |
 | **enrichment-pipeline** | Data enrichment and validation | 8002 | ✅ Production Ready |
-| **data-retention** | Data lifecycle management | 8080 | ✅ Production Ready |
+| **data-retention** | Enhanced data lifecycle management | 8080 | ✅ Production Ready |
 | **admin-api** | System administration API | 8003 | ✅ Production Ready |
 | **health-dashboard** | Web-based administration | 3000 | ✅ Production Ready |
-| **weather-api** | Weather data integration | Internal | ✅ Production Ready |
 | **influxdb** | Time-series database | 8086 | ✅ Production Ready |
+
+### External Data Services (New)
+
+| Service | Description | Port | Status |
+|---------|-------------|------|--------|
+| **carbon-intensity-service** | Carbon intensity data from National Grid | 8010 | ✅ Production Ready |
+| **electricity-pricing-service** | Real-time electricity pricing | 8011 | ✅ Production Ready |
+| **air-quality-service** | Air quality index and pollutants | 8012 | ✅ Production Ready |
+| **calendar-service** | Calendar integration (Google, Outlook, iCal) | 8013 | ✅ Production Ready |
+| **smart-meter-service** | Smart meter data integration | 8014 | ✅ Production Ready |
+| **weather-api** | Weather data integration | Internal | ✅ Production Ready |
 
 ## 📊 **Project Status**
 

@@ -34,6 +34,44 @@ export interface HealthStatus {
   timestamp: string;
 }
 
+export interface DataSourceHealth {
+  status: 'healthy' | 'degraded';
+  service: string;
+  uptime_seconds: number;
+  last_successful_fetch: string | null;
+  total_fetches: number;
+  failed_fetches: number;
+  success_rate: number;
+  timestamp: string;
+  oauth_valid?: boolean;
+}
+
+export interface DataSourceMetrics {
+  carbon_intensity?: {
+    current: number;
+    renewable_pct: number;
+    forecast_1h: number;
+  };
+  electricity_pricing?: {
+    current_price: number;
+    currency: string;
+    cheapest_hours: number[];
+  };
+  air_quality?: {
+    aqi: number;
+    category: string;
+  };
+  occupancy?: {
+    currently_home: boolean;
+    wfh_today: boolean;
+    confidence: number;
+  };
+  smart_meter?: {
+    total_power_w: number;
+    daily_kwh: number;
+  };
+}
+
 export interface Statistics {
   timestamp: string;
   period: string;

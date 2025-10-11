@@ -1,5 +1,9 @@
 aiohttp==3.9.1
 influxdb-client==1.38.0
+influxdb3-python==0.3.0
 python-dotenv==1.0.0
 psutil==5.9.6
 schedule==1.2.0
+boto3==1.34.0
+pyarrow==14.0.1
+pandas==2.1.4

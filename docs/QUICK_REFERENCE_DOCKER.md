@@ -71,6 +71,8 @@ start http://localhost:3000
 
 ## Port Reference
 
+### Core Services
+
 | Service | Container Port | Host Port | URL |
 |---------|---------------|-----------|-----|
 | InfluxDB | 8086 | 8086 | http://localhost:8086 |
@@ -78,6 +80,18 @@ start http://localhost:3000
 | WebSocket | 8001 | 8001 | http://localhost:8001/health |
 | Admin API | 8004 | **8003** ⚠️ | http://localhost:8003/api/v1/health |
 | Dashboard | 80 | **3000** ⚠️ | http://localhost:3000 |
+| Data Retention | 8080 | 8080 | http://localhost:8080/health |
+
+### External Data Services (Internal Only)
+
+| Service | Container Port | Description |
+|---------|---------------|-------------|
+| Carbon Intensity | 8010 | Carbon intensity data from National Grid |
+| Electricity Pricing | 8011 | Real-time electricity pricing |
+| Air Quality | 8012 | Air quality index and pollutants |
+| Calendar | 8013 | Calendar integration |
+| Smart Meter | 8014 | Smart meter data |
+| Weather API | 8000 | Weather data from OpenWeatherMap |
 
 ---
 

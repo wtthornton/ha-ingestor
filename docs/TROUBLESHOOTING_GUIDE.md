@@ -2,7 +2,24 @@
 
 ## 🚨 **Common Issues & Solutions**
 
-### **📋 Recently Fixed Issues (January 2025)**
+### **📋 Recent Updates (October 2025)**
+
+#### **✅ Data Enrichment Platform Complete (NEW)**
+**Status**: ✅ **COMPLETE** - 5 new external data services deployed
+**Services Added**:
+- Carbon Intensity Service (Port 8010)
+- Electricity Pricing Service (Port 8011)
+- Air Quality Service (Port 8012)
+- Calendar Service (Port 8013)
+- Smart Meter Service (Port 8014)
+
+#### **✅ Advanced Storage Optimization (NEW)**
+**Status**: ✅ **COMPLETE** - Enhanced data retention capabilities
+**Features**:
+- Tiered storage (hot/warm/cold) with automatic downsampling
+- Materialized views for fast query performance
+- S3/Glacier archival support
+- Storage analytics and monitoring
 
 #### **✅ Data Retention Service API Routes (FIXED)**
 **Problem**: 404 errors on `/api/v1/health` and `/api/v1/stats` endpoints
