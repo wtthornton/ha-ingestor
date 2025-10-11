@@ -9,6 +9,7 @@ import tempfile
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import boto3
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from influxdb_client_3 import InfluxDBClient3, Point

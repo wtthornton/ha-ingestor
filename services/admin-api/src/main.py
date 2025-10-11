@@ -33,6 +33,7 @@ from .config_endpoints import ConfigEndpoints
 from .events_endpoints import EventsEndpoints
 from .monitoring_endpoints import MonitoringEndpoints
 from .websocket_endpoints import WebSocketEndpoints
+from .integration_endpoints import router as integration_router
 from .auth import AuthManager
 from .logging_service import logging_service
 from .metrics_service import metrics_service
@@ -228,6 +229,13 @@ class AdminAPIService:
         self.app.include_router(
             self.websocket_endpoints.router,
             tags=["WebSocket"]
+        )
+        
+        # Integration Management endpoints
+        self.app.include_router(
+            integration_router,
+            prefix="/api/v1",
+            tags=["Integration Management"]
         )
         
         # Root endpoint

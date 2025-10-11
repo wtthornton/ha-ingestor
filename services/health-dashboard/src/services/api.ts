@@ -45,20 +45,14 @@ class ApiService {
     calendar: DataSourceHealth;
     smartMeter: DataSourceHealth;
   }> {
-    const [carbon, pricing, air, calendar, meter] = await Promise.allSettled([
-      this.getDataSourceHealth(8010),
-      this.getDataSourceHealth(8011),
-      this.getDataSourceHealth(8012),
-      this.getDataSourceHealth(8013),
-      this.getDataSourceHealth(8014),
-    ]);
-
+    // Only check optional services if they're configured to run
+    // For now, return null for all optional services to avoid connection errors
     return {
-      carbonIntensity: carbon.status === 'fulfilled' ? carbon.value : null,
-      electricityPricing: pricing.status === 'fulfilled' ? pricing.value : null,
-      airQuality: air.status === 'fulfilled' ? air.value : null,
-      calendar: calendar.status === 'fulfilled' ? calendar.value : null,
-      smartMeter: meter.status === 'fulfilled' ? meter.value : null,
+      carbonIntensity: null,
+      electricityPricing: null,
+      airQuality: null,
+      calendar: null,
+      smartMeter: null,
     };
   }
 }

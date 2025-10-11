@@ -40,6 +40,10 @@ services:
     restart: unless-stopped
     ports:
       - "8001:8001"
+    env_file:
+      - infrastructure/.env.websocket
+      - infrastructure/.env.weather
+      - infrastructure/.env.influxdb
     environment:
       - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
       - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
@@ -93,6 +97,9 @@ services:
     restart: unless-stopped
     ports:
       - "8002:8002"
+    env_file:
+      - infrastructure/.env.influxdb
+      - infrastructure/.env.weather
     environment:
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
@@ -145,6 +152,9 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-adminpass}
       - WEBSOCKET_INGESTION_URL=http://websocket-ingestion:8001
       - ENRICHMENT_PIPELINE_URL=http://enrichment-pipeline:8002
+    volumes:
+      - ./infrastructure:/app/infrastructure:rw
+      - ./docker-compose.yml:/app/docker-compose.yml:ro
     depends_on:
       influxdb:
         condition: service_healthy

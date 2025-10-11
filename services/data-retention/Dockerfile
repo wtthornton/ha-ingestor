@@ -1,36 +1,38 @@
 # Multi-stage build for Data Retention Service
-FROM python:3.11-alpine AS builder
+FROM python:3.11-slim AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies including C++ compiler and Fortran
-RUN apk add --no-cache \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    musl-dev \
-    linux-headers \
-    gfortran \
-    openblas-dev \
-    lapack-dev \
-    build-base
+    libopenblas-dev \
+    liblapack-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install Python dependencies with pre-compiled wheels
 COPY services/data-retention/requirements-prod.txt .
 RUN pip install --no-cache-dir --user -r requirements-prod.txt
 
 # Production stage
-FROM python:3.11-alpine AS production
+FROM python:3.11-slim AS production
 
 # Set working directory
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apk add --no-cache curl openblas lapack
+RUN apt-get update && apt-get install -y \
+    curl \
+    libopenblas0 \
+    liblapack3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user first
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -S appuser -u 1001 -G appgroup
+RUN groupadd -g 1001 appgroup && \
+    useradd -r -u 1001 -g appgroup appuser
 
 # Copy Python dependencies from builder stage to user directory
 COPY --from=builder /root/.local /home/appuser/.local

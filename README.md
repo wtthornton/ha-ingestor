@@ -120,12 +120,15 @@ This project follows security best practices:
 #### Admin API Service
 - Provides REST API for administration
 - Health monitoring and configuration
+- **Integration management and service control**
 - System-wide metrics and statistics
 - Port: 8003 (external)
 
 #### Health Dashboard
 - Modern React-based web interface
 - Real-time monitoring and metrics
+- **Configuration management UI**
+- **Service status and control**
 - Mobile-responsive design
 - Port: 3000 (external)
 
@@ -206,6 +209,10 @@ ha-ingestor/
 - `./scripts/setup-secure-env.ps1` - Interactive secure environment setup (Windows)
 - `./scripts/setup-env.sh` - Simple environment setup (legacy)
 
+**Configuration Management:**
+- `./scripts/setup-config.sh` - Interactive service configuration setup (Linux/Mac)
+- `./scripts/setup-config.ps1` - Interactive service configuration setup (Windows)
+
 **Development:**
 - `./scripts/start-dev.sh` - Start development environment
 - `./scripts/start-prod.sh` - Start production environment
@@ -219,12 +226,54 @@ ha-ingestor/
 - `docker-compose.dev.yml` - Development environment
 - `docker-compose.prod.yml` - Production environment
 
+## Configuration Management
+
+### Web-Based Configuration (Recommended)
+
+The Health Dashboard provides a user-friendly interface for managing service configurations:
+
+1. **Access Dashboard**: Navigate to `http://localhost:3000`
+2. **Open Configuration**: Click the 🔧 **Configuration** tab
+3. **Select Service**: Click on a service card (Home Assistant, Weather API, or InfluxDB)
+4. **Edit Settings**: Update API keys, URLs, and other configuration values
+5. **Save Changes**: Click "Save Changes" to persist to configuration files
+6. **Restart Service**: Restart the service via command line for changes to take effect
+
+**Supported Services:**
+- **Home Assistant WebSocket** - Connection URL and access token
+- **Weather API** - OpenWeatherMap API key and location settings
+- **InfluxDB** - Database connection and credentials
+
+**Security Features:**
+- API keys and tokens are masked (••••••••) by default
+- Show/Hide toggle for sensitive values
+- Configuration files are automatically set to secure permissions (600)
+
+### Command-Line Configuration
+
+For automated or scripted setup:
+
+**Linux/Mac:**
+```bash
+./scripts/setup-config.sh
+```
+
+**Windows:**
+```powershell
+.\scripts\setup-config.ps1
+```
+
+These scripts provide interactive prompts to configure all services.
+
+📖 **See:** [Configuration Management Guide](docs/QUICK_START_INTEGRATION_MANAGEMENT.md)
+
 ## Health Checks
 
 All services expose health check endpoints:
 
 ### Core Services
 - Admin API: `http://localhost:8003/health`
+- Admin API Configuration: `http://localhost:8003/api/v1/integrations`
 - WebSocket Ingestion: `http://localhost:8001/health`
 - Enrichment Pipeline: `http://localhost:8002/health`
 - Data Retention: `http://localhost:8080/health`

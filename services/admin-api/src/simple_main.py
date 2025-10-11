@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from simple_health import router as health_router
+from integration_endpoints import router as integration_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +46,9 @@ app.add_middleware(
 
 # Include health router
 app.include_router(health_router, prefix="/api/v1", tags=["Health"])
+
+# Include integration management router
+app.include_router(integration_router, prefix="/api/v1", tags=["Integration Management"])
 
 
 @app.get("/")

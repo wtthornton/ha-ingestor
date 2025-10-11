@@ -26,6 +26,14 @@ Home Assistant Ingestor is a complete data pipeline that:
 - Smart meter integration
 - High-performance data processing
 
+### 🔧 **Configuration Management** ⭐ NEW
+- Web-based service configuration interface
+- Secure credential management with masked values
+- Real-time configuration editing and validation
+- Support for Home Assistant, Weather API, and InfluxDB
+- Command-line configuration scripts for automation
+- Service status monitoring and control
+
 ### 📊 **Advanced Analytics**
 - Time-series data storage in InfluxDB with tiered retention
 - Materialized views for fast query performance
@@ -79,9 +87,11 @@ docker-compose ps
 ```
 
 ### **Access Points**
-- **Admin Interface**: http://localhost:3000
+- **Health Dashboard**: http://localhost:3000 (includes Configuration Management ⭐)
+- **Admin API**: http://localhost:8003
 - **API Documentation**: http://localhost:8003/docs
-- **Health Dashboard**: http://localhost:8003/api/v1/health
+- **System Health**: http://localhost:8003/api/v1/health
+- **Integration Management**: http://localhost:8003/api/v1/integrations ⭐
 - **Data Retention API**: http://localhost:8080
 
 ## 📋 **System Architecture**
@@ -112,8 +122,8 @@ docker-compose ps
 | **websocket-ingestion** | Home Assistant event capture | 8001 | ✅ Production Ready |
 | **enrichment-pipeline** | Data enrichment and validation | 8002 | ✅ Production Ready |
 | **data-retention** | Enhanced data lifecycle management | 8080 | ✅ Production Ready |
-| **admin-api** | System administration API | 8003 | ✅ Production Ready |
-| **health-dashboard** | Web-based administration | 3000 | ✅ Production Ready |
+| **admin-api** | System administration API + Integration Management ⭐ | 8003 | ✅ Production Ready |
+| **health-dashboard** | Web-based administration + Configuration UI ⭐ | 3000 | ✅ Production Ready |
 | **influxdb** | Time-series database | 8086 | ✅ Production Ready |
 
 ### External Data Services (New)
@@ -206,7 +216,15 @@ ENABLE_AUTH=true
 - Modern React-based dashboard
 - Mobile-responsive design
 - Real-time monitoring
-- Configuration management
+- **Web-based configuration management** ⭐ NEW
+
+### **🔧 Configuration Management** ⭐ NEW
+- Manage service credentials through web UI
+- Edit API keys and tokens securely
+- Real-time configuration validation
+- Masked sensitive values
+- One-click save functionality
+- Service status monitoring
 
 ### **🔍 Monitoring & Alerting**
 - System health monitoring
