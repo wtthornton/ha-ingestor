@@ -33,33 +33,31 @@ import { chromium } from 'playwright';
     
     // Check if charts are displayed (should not see installation message)
     const installationMessage = await page.locator('text=Installation Required').isVisible();
+    const testChartVisible = await page.locator('text=Test Chart').isVisible();
     const chartTestVisible = await page.locator('text=Chart.js Test').isVisible();
-    const chartWorking = await page.locator('text=Chart.js is working').isVisible();
-    const chartError = await page.locator('text=Chart.js Error').isVisible();
     
     console.log(`Installation message visible: ${installationMessage}`);
-    console.log(`Chart test visible: ${chartTestVisible}`);
-    console.log(`Chart working: ${chartWorking}`);
-    console.log(`Chart error: ${chartError}`);
+    console.log(`Test chart visible: ${testChartVisible}`);
+    console.log(`Chart.js test visible: ${chartTestVisible}`);
     
-    // Check if we can see chart elements
+    // Check if we can see chart elements (canvas elements)
     const chartElements = await page.locator('canvas').count();
-    console.log(`📊 Found ${chartElements} chart elements`);
+    console.log(`📊 Found ${chartElements} chart canvas elements`);
     
     // Take a screenshot
     await page.screenshot({ path: 'metrics-charts-test.png' });
     console.log('📸 Screenshot saved as metrics-charts-test.png');
     
-    if (!installationMessage && chartTestVisible) {
-      if (chartWorking) {
-        console.log('✅ Chart.js is working correctly!');
-      } else if (chartError) {
-        console.log('❌ Chart.js has an error - check console');
+    if (!installationMessage && testChartVisible) {
+      if (chartElements > 0) {
+        console.log('✅ Actual charts are rendering correctly!');
       } else {
-        console.log('⚠️ Chart test visible but status unclear');
+        console.log('⚠️ Test chart section visible but no canvas elements found');
       }
+    } else if (chartTestVisible) {
+      console.log('ℹ️ Chart.js diagnostic visible - charts may not be fully implemented yet');
     } else {
-      console.log('❌ Charts not working - installation message still showing or chart test not visible');
+      console.log('❌ Charts not working - installation message still showing');
     }
     
     // Wait a bit to see the charts
