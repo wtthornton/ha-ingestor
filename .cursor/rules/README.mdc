@@ -60,6 +60,7 @@ All BMAD agents use `*` prefix for commands:
 - `*context7-kb-cleanup` - Clean up old/unused cached documentation
 - `*context7-kb-rebuild` - Rebuild knowledge base index
 - `*context7-kb-analytics` - Show detailed KB usage analytics
+- `*context7-kb-test` - Test KB integration and cache functionality
 
 ### File References
 When referencing files in rules, use the format:

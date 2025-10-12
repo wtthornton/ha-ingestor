@@ -13,6 +13,29 @@
 ```
 
 #### Initial Setup
+
+**Option 1: Quick Start with Deployment Wizard (Recommended)**
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd ha-ingestor
+
+# Run interactive deployment wizard
+./scripts/deploy-wizard.sh
+
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+The wizard will:
+- Guide you through configuration
+- Auto-detect system resources
+- Generate secure `.env` file
+- Validate Home Assistant connection
+
+**Option 2: Manual Setup**
+
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -23,6 +46,9 @@ cp .env.example .env
 
 # Edit environment variables
 nano .env
+
+# Validate configuration (optional but recommended)
+./scripts/validate-ha-connection.sh
 
 # Start development environment
 docker-compose -f docker-compose.dev.yml up -d
@@ -85,4 +111,4 @@ LOG_FORMAT=json
 # Shared
 ENVIRONMENT=development
 ```
-
+

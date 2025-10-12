@@ -18,6 +18,14 @@ required:
 
 Design a complete test strategy that identifies what to test, at which level (unit/integration/e2e), and why. This ensures efficient test coverage without redundancy while maintaining appropriate test boundaries.
 
+## Testing Framework References
+
+Reference these documents for test design:
+
+- **Testing Strategy**: `docs/architecture/testing-strategy.md` - Overall testing approach and standards
+- **Tech Stack**: `docs/architecture/tech-stack.md` - Testing frameworks and versions used
+- **Coding Standards**: `docs/architecture/coding-standards.md` - Test naming conventions and patterns
+
 ## Dependencies
 
 ```yaml

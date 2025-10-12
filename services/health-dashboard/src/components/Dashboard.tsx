@@ -4,11 +4,16 @@ import { useStatistics } from '../hooks/useStatistics';
 import { useDataSources } from '../hooks/useDataSources';
 import { StatusCard } from './StatusCard';
 import { MetricCard } from './MetricCard';
-import { DataSourceCard } from './DataSourceCard';
+// import { DataSourceCard } from './DataSourceCard';
 import { ConfigForm } from './ConfigForm';
 import { ServiceControl } from './ServiceControl';
 import { ServicesTab } from './ServicesTab';
-import { ServiceDependencyGraph } from './ServiceDependencyGraph';
+// import { ServiceDependencyGraph } from './ServiceDependencyGraph';
+import { AnimatedDependencyGraph } from './AnimatedDependencyGraph';
+import { SportsTab } from './sports/SportsTab';
+import { DataSourcesPanel } from './DataSourcesPanel';
+import { AnalyticsPanel } from './AnalyticsPanel';
+import { AlertsPanel } from './AlertsPanel';
 
 export const Dashboard: React.FC = () => {
   const { health, loading: healthLoading, error: healthError } = useHealth(30000);
@@ -20,6 +25,61 @@ export const Dashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('1h');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedTab, setSelectedTab] = useState('overview');
+  
+  // Real-time metrics for animated dependencies
+  const [realTimeMetrics, setRealTimeMetrics] = useState({
+    eventsPerSecond: 0,
+    apiCallsActive: 0,
+    dataSourcesActive: [],
+    lastUpdate: new Date(),
+  });
+
+  // Services data for animated dependencies
+  const [services, setServices] = useState<any[]>([]);
+
+  // Fetch services data for dependencies graph
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch('/api/v1/services');
+        if (response.ok) {
+          const data = await response.json();
+          setServices(data.services || []);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      }
+    };
+
+    fetchServices();
+    const interval = setInterval(fetchServices, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate real-time metrics from health and statistics data
+  useEffect(() => {
+    if (health && statistics) {
+      const eventsPerMin = health?.ingestion_service?.event_processing?.events_per_minute || 0;
+      const eventsPerSec = eventsPerMin / 60;
+      
+      // Count active data sources
+      const activeDataSources: string[] = [];
+      if (dataSources) {
+        Object.keys(dataSources).forEach(key => {
+          if (dataSources[key] !== null) {
+            activeDataSources.push(key);
+          }
+        });
+      }
+      
+      setRealTimeMetrics({
+        eventsPerSecond: eventsPerSec,
+        apiCallsActive: activeDataSources.length,
+        dataSourcesActive: activeDataSources,
+        lastUpdate: new Date(),
+      });
+    }
+  }, [health, statistics, dataSources]);
 
   // Apply theme to document
   useEffect(() => {
@@ -29,6 +89,34 @@ export const Dashboard: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Poll for real-time metrics (for animated dependencies)
+  useEffect(() => {
+    const fetchRealTimeMetrics = async () => {
+      try {
+        const response = await fetch('/api/metrics/realtime');
+        if (response.ok) {
+          const data = await response.json();
+          setRealTimeMetrics({
+            eventsPerSecond: data.events_per_second || 0,
+            apiCallsActive: data.active_api_calls || 0,
+            dataSourcesActive: data.active_sources || [],
+            lastUpdate: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch real-time metrics:', err);
+      }
+    };
+
+    // Initial fetch
+    fetchRealTimeMetrics();
+
+    // Poll every 2 seconds for real-time feel
+    const interval = setInterval(fetchRealTimeMetrics, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (healthLoading || statsLoading) {
     return (
@@ -137,6 +225,7 @@ export const Dashboard: React.FC = () => {
               { id: 'overview', label: '📊 Overview', icon: '📊' },
               { id: 'services', label: '🔧 Services', icon: '🔧' },
               { id: 'dependencies', label: '🔗 Dependencies', icon: '🔗' },
+              { id: 'sports', label: '🏈 Sports', icon: '🏈🏒' },
               { id: 'data-sources', label: '🌐 Data Sources', icon: '🌐' },
               { id: 'analytics', label: '📈 Analytics', icon: '📈' },
               { id: 'alerts', label: '🚨 Alerts', icon: '🚨' },
@@ -259,58 +348,31 @@ export const Dashboard: React.FC = () => {
         
         {/* Dependencies Tab */}
         {selectedTab === 'dependencies' && (
-          <ServiceDependencyGraph 
-            services={[]} // Will be populated from services API
+          <AnimatedDependencyGraph 
+            services={services}
             darkMode={darkMode}
+            realTimeData={realTimeMetrics}
           />
+        )}
+        
+        {/* Sports Tab */}
+        {selectedTab === 'sports' && (
+          <SportsTab darkMode={darkMode} />
         )}
         
         {/* Data Sources Tab */}
         {selectedTab === 'data-sources' && (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
-            <div className="text-6xl mb-4">🌐</div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              External Data Sources
-            </h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-              Monitor external API integrations (Weather, Carbon Intensity, etc.)
-            </p>
-            <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              Tip: Configure API credentials in the Configuration tab
-            </p>
-          </div>
+          <DataSourcesPanel darkMode={darkMode} />
         )}
         
         {/* Analytics Tab */}
         {selectedTab === 'analytics' && (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
-            <div className="text-6xl mb-4">📈</div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Advanced Analytics
-            </h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-              Detailed metrics, trends, and performance analysis
-            </p>
-            <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              Tip: View current metrics in the Overview tab
-            </p>
-          </div>
+          <AnalyticsPanel darkMode={darkMode} />
         )}
         
         {/* Alerts Tab */}
         {selectedTab === 'alerts' && (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
-            <div className="text-6xl mb-4">🚨</div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              System Alerts
-            </h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-              Monitor and manage system alerts and notifications
-            </p>
-            <div className={`inline-flex items-center px-4 py-2 rounded-lg ${darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'}`}>
-              ✓ No active alerts - System healthy
-            </div>
-          </div>
+          <AlertsPanel darkMode={darkMode} />
         )}
         
         {/* Overview Tab (Default) */}

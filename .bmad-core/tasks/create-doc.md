@@ -19,6 +19,17 @@ When this task is invoked:
 
 If a YAML Template has not been provided, list all templates from .bmad-core/templates or ask the user to provide another.
 
+## Project Context Reference
+
+Before starting document creation, you should be aware of:
+
+- **Tech Stack**: `docs/architecture/tech-stack.md` - For technology decisions and framework selection
+- **Source Tree**: `docs/architecture/source-tree.md` - For file/folder structure and organization patterns
+- **Coding Standards**: `docs/architecture/coding-standards.md` - For naming conventions and code quality standards
+- **Existing Docs**: Check `docs/` folder for related documentation to reference
+- **PRD Location**: Configured in core-config.yaml → prd.prdFile (usually `docs/prd.md`)
+- **Architecture Location**: Configured in core-config.yaml → architecture.architectureFile (usually `docs/architecture.md`)
+
 ## CRITICAL: Mandatory Elicitation Format
 
 **When `elicit: true`, this is a HARD STOP requiring user interaction:**

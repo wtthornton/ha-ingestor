@@ -57,3 +57,26 @@ context7:
       kb_priority: true
       context7_mandatory: true
       bypass_forbidden: true
+
+# Agent-specific document loading configuration
+# These documents are automatically loaded during agent activation for optimal context
+agentLoadAlwaysFiles:
+  architect:
+    - docs/architecture/tech-stack.md
+    - docs/architecture/source-tree.md
+    - docs/architecture/coding-standards.md
+  dev:
+    - docs/architecture/tech-stack.md
+    - docs/architecture/source-tree.md
+    - docs/architecture/coding-standards.md
+  pm:
+    - docs/architecture/tech-stack.md
+    - docs/architecture/source-tree.md
+  qa:
+    - docs/architecture/tech-stack.md
+    - docs/architecture/coding-standards.md
+    - docs/architecture/testing-strategy.md
+  bmad-master:
+    - docs/architecture/tech-stack.md
+    - docs/architecture/source-tree.md
+    - docs/architecture/coding-standards.md

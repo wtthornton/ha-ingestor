@@ -12,6 +12,8 @@ import os
 from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 
+from .influxdb_client import AdminAPIInfluxDBClient
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +24,7 @@ class StatisticsResponse(BaseModel):
     metrics: Dict[str, Any]
     trends: Dict[str, Any]
     alerts: List[Dict[str, Any]]
+    source: str = "influxdb"  # Add source indicator
 
 
 class MetricData(BaseModel):
@@ -39,12 +42,39 @@ class StatsEndpoints:
     def __init__(self):
         """Initialize stats endpoints"""
         self.router = APIRouter()
+        
+        # InfluxDB client for querying metrics
+        self.influxdb_client = AdminAPIInfluxDBClient()
+        self.use_influxdb = os.getenv("USE_INFLUXDB_STATS", "true").lower() == "true"
+        
+        # Keep service URLs for fallback
         self.service_urls = {
             "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
             "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002")
         }
         
         self._add_routes()
+    
+    async def initialize(self):
+        """Initialize InfluxDB connection"""
+        try:
+            if self.use_influxdb:
+                success = await self.influxdb_client.connect()
+                if not success:
+                    logger.warning("InfluxDB connection failed, will use fallback")
+                    self.use_influxdb = False
+                else:
+                    logger.info("InfluxDB client initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize InfluxDB: {e}")
+            self.use_influxdb = False
+    
+    async def close(self):
+        """Close InfluxDB connection"""
+        try:
+            await self.influxdb_client.close()
+        except Exception as e:
+            logger.error(f"Error closing InfluxDB client: {e}")
     
     def _add_routes(self):
         """Add statistics routes"""
@@ -54,13 +84,28 @@ class StatsEndpoints:
             period: str = Query("1h", description="Time period for statistics"),
             service: Optional[str] = Query(None, description="Specific service to get stats for")
         ):
-            """Get comprehensive statistics"""
+            """Get comprehensive statistics from InfluxDB"""
             try:
+                # Try InfluxDB first
+                if self.use_influxdb and self.influxdb_client.is_connected:
+                    try:
+                        stats = await self._get_stats_from_influxdb(period, service)
+                        return StatisticsResponse(
+                            timestamp=datetime.now(),
+                            period=period,
+                            metrics=stats["metrics"],
+                            trends=stats["trends"],
+                            alerts=stats["alerts"],
+                            source="influxdb"
+                        )
+                    except Exception as influx_error:
+                        logger.warning(f"InfluxDB query failed: {influx_error}, falling back to service calls")
+                
+                # Fallback to direct service calls
+                logger.info("Using fallback: direct service HTTP calls")
                 if service and service in self.service_urls:
-                    # Get stats for specific service
                     stats = await self._get_service_stats(service, period)
                 else:
-                    # Get stats for all services
                     stats = await self._get_all_stats(period)
                 
                 return StatisticsResponse(
@@ -68,7 +113,8 @@ class StatsEndpoints:
                     period=period,
                     metrics=stats["metrics"],
                     trends=stats["trends"],
-                    alerts=stats["alerts"]
+                    alerts=stats["alerts"],
+                    source="services-fallback"
                 )
                 
             except Exception as e:
@@ -147,8 +193,109 @@ class StatsEndpoints:
                     detail="Failed to get alerts"
                 )
     
+    async def _get_stats_from_influxdb(self, period: str, service: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get all statistics from InfluxDB
+        
+        Args:
+            period: Time period for statistics
+            service: Optional specific service to query
+        
+        Returns:
+            Dictionary with metrics, trends, and alerts
+        """
+        # Get event statistics
+        event_stats = await self.influxdb_client.get_event_statistics(period)
+        
+        # Get error rate
+        error_stats = await self.influxdb_client.get_error_rate(period)
+        
+        # Get service metrics
+        if service:
+            service_metrics = {service: await self.influxdb_client.get_service_metrics(service, period)}
+        else:
+            service_stats = await self.influxdb_client.get_all_service_statistics(period)
+            service_metrics = service_stats.get("services", {})
+        
+        # Get trends
+        trends = await self.influxdb_client.get_event_trends(period, window="5m")
+        
+        # Calculate alerts from metrics
+        alerts = self._calculate_alerts(service_metrics, error_stats)
+        
+        return {
+            "metrics": {
+                **event_stats,
+                **error_stats,
+                "services": service_metrics
+            },
+            "trends": trends.get("trends", []),
+            "alerts": alerts
+        }
+    
+    def _calculate_alerts(self, service_metrics: Dict[str, Any], error_stats: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Calculate alerts from metrics
+        
+        Args:
+            service_metrics: Service metrics dictionary
+            error_stats: Error statistics dictionary
+        
+        Returns:
+            List of alert dictionaries
+        """
+        alerts = []
+        
+        # High error rate alert
+        error_rate = error_stats.get("error_rate_percent", 0)
+        if error_rate > 5:
+            alerts.append({
+                "level": "error",
+                "service": "system",
+                "message": f"High error rate: {error_rate}%",
+                "timestamp": datetime.now().isoformat()
+            })
+        elif error_rate > 2:
+            alerts.append({
+                "level": "warning",
+                "service": "system",
+                "message": f"Elevated error rate: {error_rate}%",
+                "timestamp": datetime.now().isoformat()
+            })
+        
+        # Service health alerts
+        for service, metrics in service_metrics.items():
+            if isinstance(metrics, dict):
+                success_rate = metrics.get("success_rate", 100)
+                if success_rate < 90:
+                    alerts.append({
+                        "level": "error",
+                        "service": service,
+                        "message": f"Critical: Low success rate: {success_rate}%",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                elif success_rate < 95:
+                    alerts.append({
+                        "level": "warning",
+                        "service": service,
+                        "message": f"Low success rate: {success_rate}%",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                
+                # Check processing time
+                processing_time = metrics.get("processing_time_ms", 0)
+                if processing_time > 1000:  # > 1 second
+                    alerts.append({
+                        "level": "warning",
+                        "service": service,
+                        "message": f"Slow processing: {processing_time}ms",
+                        "timestamp": datetime.now().isoformat()
+                    })
+        
+        return alerts
+    
     async def _get_all_stats(self, period: str) -> Dict[str, Any]:
-        """Get statistics for all services"""
+        """Get statistics for all services (fallback method)"""
         all_stats = {
             "metrics": {},
             "trends": {},

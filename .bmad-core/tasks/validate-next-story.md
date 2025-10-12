@@ -6,6 +6,15 @@
 
 To comprehensively validate a story draft before implementation begins, ensuring it is complete, accurate, and provides sufficient context for successful development. This task identifies issues and gaps that need to be addressed, preventing hallucinations and ensuring implementation readiness.
 
+## Story Validation Context
+
+Validate against:
+
+- **Epic Requirements**: Located in core-config.yaml → prd.prdShardedLocation with pattern epic-{n}*.md
+- **Previous Stories**: Located in core-config.yaml → devStoryLocation for context and consistency
+- **Architecture Constraints**: Check `docs/architecture/` folder for tech stack and structure requirements
+- **Story Template**: `.bmad-core/templates/story-tmpl.yaml` for completeness validation
+
 ## SEQUENTIAL Task Execution (Do not proceed until current Task is complete)
 
 ### 0. Load Core Configuration and Inputs

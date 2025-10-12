@@ -20,6 +20,15 @@ required:
 - Developer has completed all tasks and updated the File List
 - All automated tests are passing
 
+## Quality Validation References
+
+Review stories against these standards:
+
+- **Coding Standards**: `docs/architecture/coding-standards.md` - Code quality and conventions
+- **Testing Strategy**: `docs/architecture/testing-strategy.md` - Testing approach and requirements
+- **Tech Stack Compliance**: `docs/architecture/tech-stack.md` - Technology versions and frameworks
+- **Security Standards**: `docs/architecture/security-standards.md` - Security best practices (if exists)
+
 ## Review Process - Adaptive Test Architecture
 
 ### 1. Risk Assessment (Determines Review Depth)

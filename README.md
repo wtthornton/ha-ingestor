@@ -39,13 +39,39 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 
 ### Setup
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd ha-ingestor
-   ```
+#### 🚀 Quick Start with Deployment Wizard (Recommended)
 
-2. **Configure environment (Recommended - Interactive Setup):**
+The easiest way to get started:
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd ha-ingestor
+
+# 2. Run the deployment wizard
+./scripts/deploy-wizard.sh
+
+# 3. Start services
+docker-compose up -d
+
+# 4. Access dashboard
+open http://localhost:3000
+```
+
+The deployment wizard will:
+- ✅ Guide you through deployment options
+- ✅ Configure Home Assistant connection
+- ✅ Auto-detect system resources
+- ✅ Generate secure configuration
+- ✅ Validate connectivity
+
+**See:** [`docs/DEPLOYMENT_WIZARD_GUIDE.md`](docs/DEPLOYMENT_WIZARD_GUIDE.md) for detailed usage.
+
+---
+
+#### Alternative Setup Methods
+
+**1. Interactive Environment Setup:**
    
    **Linux/Mac:**
    ```bash
@@ -56,29 +82,32 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
    ```powershell
    .\scripts\setup-secure-env.ps1
    ```
-   
-   This interactive script will:
-   - ✅ Guide you through all required configuration
-   - ✅ Generate secure passwords for production
-   - ✅ Validate your inputs
-   - ✅ Create properly formatted environment files
-   - ✅ Set appropriate file permissions
 
-   **Alternative - Manual Setup:**
+**2. Manual Setup:**
    ```bash
    cp infrastructure/env.example .env
    # Edit .env with your values
    ```
 
-3. **Start development environment:**
+**3. Validate Configuration:**
    ```bash
-   ./scripts/start-dev.sh
+   # Test your connection before deployment
+   ./scripts/validate-ha-connection.sh
    ```
 
-4. **Test services:**
-   ```bash
-   ./scripts/test-services.sh
-   ```
+---
+
+#### Development Environment
+
+For development work:
+
+```bash
+# Start development environment
+./scripts/start-dev.sh
+
+# Test services
+./scripts/test-services.sh
+```
 
 ### 🔒 Security Note
 

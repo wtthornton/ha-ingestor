@@ -71,11 +71,14 @@ sections:
   - id: dev-notes
     title: Dev Notes
     instruction: |
-      Populate relevant information, only what was pulled from actual artifacts from docs folder, relevant to this story:
-      - Do not invent information
-      - If known add Relevant Source Tree info that relates to this story
-      - If there were important notes from previous story that are relevant to this one, include them here
-      - Put enough information in this section so that the dev agent should NEVER need to read the architecture documents, these notes along with the tasks and subtasks must give the Dev Agent the complete context it needs to comprehend with the least amount of overhead the information to complete the story, meeting all AC and completing all tasks+subtasks
+      Populate relevant information from project documentation (MUST load these docs first):
+      - **REQUIRED**: Load docs/architecture/source-tree.md for relevant structure info
+      - **REQUIRED**: Load docs/architecture/tech-stack.md for technology context
+      - **REQUIRED**: Load docs/architecture/coding-standards.md for standards
+      - Include notes from previous story if relevant to this one
+      - Do not invent information - all content must be from actual documentation
+      - Provide complete context so dev agent doesn't need to read architecture docs
+      - These notes + tasks/subtasks must give Dev Agent complete context to meet all AC
     elicit: true
     owner: scrum-master
     editors: [scrum-master]

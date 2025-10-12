@@ -176,6 +176,8 @@ sections:
       - id: existing-tech-stack
         title: Existing Technology Stack
         instruction: |
+          REQUIRED: Load and reference docs/architecture/tech-stack.md if it exists.
+          
           If document-project output available:
           - Extract from "Actual Tech Stack" table in High Level Architecture section
           - Include version numbers and any noted constraints

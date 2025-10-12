@@ -11,6 +11,14 @@ Implement fixes based on QA results (gate and assessments) for a specific story.
 - Apply code and test changes to close gaps and address issues
 - Update only the allowed story sections for the Dev agent
 
+## Quality Standards Reference
+
+Apply fixes according to:
+
+- **Coding Standards**: `docs/architecture/coding-standards.md` - Code quality requirements and conventions
+- **Architecture Guidelines**: Check core-config.yaml → architecture.architectureFile for system architecture
+- **Testing Standards**: `docs/architecture/testing-strategy.md` - Test coverage and quality requirements
+
 ## Inputs
 
 ```yaml

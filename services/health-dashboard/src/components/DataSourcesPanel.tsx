@@ -1,0 +1,352 @@
+/**
+ * DataSourcesPanel Component
+ * 
+ * Displays status and metrics for all external data sources
+ * Epic 13.1: Data Sources Status Dashboard
+ */
+
+import React, { useState, useEffect } from 'react';
+import { getMockDataSources, type DataSource } from '../mocks/dataSourcesMock';
+
+interface DataSourcesPanelProps {
+  darkMode: boolean;
+}
+
+export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) => {
+  const [dataSources, setDataSources] = useState<DataSource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  const fetchDataSources = async () => {
+    try {
+      // Mock data for now - will be replaced with real API call
+      // TODO: Replace with actual API call to /api/v1/data-sources/status
+      const mockData = getMockDataSources();
+      
+      setDataSources(mockData);
+      setError(null);
+      setLastUpdate(new Date());
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch data sources');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataSources();
+    const interval = setInterval(fetchDataSources, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'healthy':
+        return darkMode ? 'text-green-400' : 'text-green-600';
+      case 'degraded':
+        return darkMode ? 'text-yellow-400' : 'text-yellow-600';
+      case 'error':
+        return darkMode ? 'text-red-400' : 'text-red-600';
+      default:
+        return darkMode ? 'text-gray-400' : 'text-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status: string): string => {
+    switch (status) {
+      case 'healthy':
+        return '🟢';
+      case 'degraded':
+        return '🟡';
+      case 'error':
+        return '🔴';
+      default:
+        return '⚪';
+    }
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${Math.round(bytes / Math.pow(k, i))} ${sizes[i]}`;
+  };
+
+  const formatTimestamp = (timestamp?: string): string => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    return `${Math.floor(diffHours / 24)} days ago`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+            darkMode ? 'border-blue-400' : 'border-blue-600'
+          } mx-auto`}></div>
+          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Loading data sources...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`rounded-lg shadow-md p-6 ${
+        darkMode ? 'bg-red-900/20 border border-red-500/30' : 'bg-red-50 border border-red-200'
+      }`}>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div className="flex-1">
+            <h3 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+              Error Loading Data Sources
+            </h3>
+            <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
+              {error}
+            </p>
+          </div>
+          <button
+            onClick={fetchDataSources}
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-2`}>
+              <span>🌐</span>
+              External Data Sources
+            </h2>
+            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Monitor external API integrations and performance
+            </p>
+          </div>
+          <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-sm">Last updated</p>
+            <p className="text-sm font-medium">{lastUpdate.toLocaleTimeString()}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span>🟢</span>
+            <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {dataSources.filter(s => s.status === 'healthy').length} Healthy
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>🟡</span>
+            <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {dataSources.filter(s => s.status === 'degraded').length} Degraded
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>🔴</span>
+            <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {dataSources.filter(s => s.status === 'error').length} Error
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>⚪</span>
+            <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {dataSources.filter(s => s.status === 'unknown').length} Unknown
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Source Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {dataSources.map(source => (
+          <div
+            key={source.id}
+            className={`rounded-lg shadow-md p-6 transition-all hover:shadow-lg ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{source.icon}</span>
+                <div>
+                  <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {source.name}
+                  </h3>
+                  <div className={`flex items-center gap-2 text-sm ${getStatusColor(source.status)}`}>
+                    <span>{getStatusIcon(source.status)}</span>
+                    <span className="capitalize">{source.status}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* API Usage */}
+            {source.api_usage && (
+              <div className="mb-4">
+                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  API Usage Today
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {source.api_usage.calls_today}
+                  </span>
+                  {source.api_usage.quota_limit && (
+                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      / {source.api_usage.quota_limit}
+                    </span>
+                  )}
+                </div>
+                {source.api_usage.quota_percentage !== undefined && source.api_usage.quota_percentage > 0 && (
+                  <div className="mt-2">
+                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          source.api_usage.quota_percentage > 80
+                            ? 'bg-red-500'
+                            : source.api_usage.quota_percentage > 60
+                            ? 'bg-yellow-500'
+                            : 'bg-green-500'
+                        }`}
+                        style={{ width: `${source.api_usage.quota_percentage}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {source.api_usage.quota_percentage}% of quota used
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Performance Metrics */}
+            <div className="mb-4 space-y-2">
+              <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Performance
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span>Avg Response:</span>
+                  <span className={`font-medium ${
+                    source.performance.avg_response_time_ms > 1000
+                      ? 'text-red-500'
+                      : source.performance.avg_response_time_ms > 500
+                      ? 'text-yellow-500'
+                      : darkMode ? 'text-green-400' : 'text-green-600'
+                  }`}>
+                    {source.performance.avg_response_time_ms > 0 
+                      ? `${source.performance.avg_response_time_ms}ms` 
+                      : 'N/A'}
+                    {source.performance.avg_response_time_ms > 1000 && ' ⚠️'}
+                  </span>
+                </div>
+                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span>Last Success:</span>
+                  <span className="font-medium">{formatTimestamp(source.performance.last_success)}</span>
+                </div>
+                {source.performance.retry_count !== undefined && source.performance.retry_count > 0 && (
+                  <div className={`flex justify-between ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                    <span>Retries:</span>
+                    <span className="font-medium">{source.performance.retry_count}</span>
+                  </div>
+                )}
+                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span>Errors (24h):</span>
+                  <span className={`font-medium ${
+                    source.performance.error_count_24h > 0 
+                      ? (darkMode ? 'text-red-400' : 'text-red-600')
+                      : ''
+                  }`}>
+                    {source.performance.error_count_24h}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cache Metrics */}
+            {source.cache && (
+              <div className="space-y-2">
+                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Cache Performance
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Hit Rate:</span>
+                    <span className="font-medium">{source.cache.hit_rate_percentage}%</span>
+                  </div>
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Cache Size:</span>
+                    <span className="font-medium">{formatBytes(source.cache.size_bytes)}</span>
+                  </div>
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Cached Items:</span>
+                    <span className="font-medium">{source.cache.item_count}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+              <button
+                onClick={() => {/* TODO: Implement configure */}}
+                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                  darkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                }`}
+              >
+                Configure
+              </button>
+              <button
+                onClick={() => {/* TODO: Implement test */}}
+                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                  darkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                Test
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Configuration Tip */}
+      <div className={`rounded-lg p-4 ${darkMode ? 'bg-blue-900/20 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'}`}>
+        <div className="flex items-start gap-3">
+          <span className="text-xl">💡</span>
+          <div className={darkMode ? 'text-blue-200' : 'text-blue-800'}>
+            <p className="font-medium">Configuration Tip</p>
+            <p className="text-sm mt-1">
+              Configure API credentials and settings in the Configuration tab to enable external data sources.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

@@ -43,6 +43,11 @@ sections:
       - id: existing-project-analysis
         title: Existing Project Analysis
         instruction: |
+          REQUIRED: Before documenting architecture, check for existing documentation:
+          - Look for docs/architecture/ folder and load key documents
+          - Reference existing tech-stack.md, source-tree.md, coding-standards.md
+          - Build upon existing docs rather than replacing them
+          
           Analyze the existing project structure and architecture:
 
           1. Review existing documentation in docs folder

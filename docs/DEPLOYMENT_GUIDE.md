@@ -7,8 +7,91 @@
 - 4GB RAM minimum (8GB recommended)
 - 20GB storage minimum (50GB recommended)
 - Stable internet connection
+- Home Assistant instance with long-lived access token
 
-### **Deployment Commands**
+---
+
+## 🚀 **Recommended: Interactive Deployment Wizard**
+
+### **Step 1: Run the Deployment Wizard**
+
+The easiest and fastest way to deploy:
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd ha-ingestor
+
+# Run interactive deployment wizard
+./scripts/deploy-wizard.sh
+```
+
+The wizard will guide you through:
+1. **Deployment Option Selection**
+   - Same machine as Home Assistant (localhost)
+   - Separate machine on local network
+   - Remote access via Nabu Casa
+   - Custom configuration
+
+2. **Home Assistant Configuration**
+   - URL configuration with smart defaults
+   - Access token setup
+   - Optional connection testing
+
+3. **System Resource Detection**
+   - Automatic RAM, CPU, disk space checks
+   - Docker and Docker Compose verification
+   - Warning system for insufficient resources
+
+4. **Secure Configuration Generation**
+   - Automatic `.env` file creation
+   - Secure random password generation
+   - Credentials file for easy reference
+
+### **Step 2: Validate Your Setup (Recommended)**
+
+Before starting services, validate your configuration:
+
+```bash
+./scripts/validate-ha-connection.sh
+```
+
+This will test:
+- ✅ TCP/IP connectivity
+- ✅ HTTP/HTTPS endpoint
+- ✅ WebSocket connection
+- ✅ Authentication
+- ✅ API access
+
+### **Step 3: Deploy**
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Verify deployment
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+### **Step 4: Access Dashboard**
+
+```bash
+# Open in browser
+open http://localhost:3000
+```
+
+**📖 Detailed Guide:** See [`docs/DEPLOYMENT_WIZARD_GUIDE.md`](DEPLOYMENT_WIZARD_GUIDE.md) for complete wizard documentation.
+
+---
+
+## 📝 **Alternative: Manual Deployment**
+
+If you prefer manual configuration:
+
+### **Manual Deployment Commands**
 ```bash
 # Clone repository
 git clone <repository-url>

@@ -111,6 +111,15 @@ class AdminAPIService:
         await metrics_service.start()
         await alerting_service.start()
         
+        # Initialize InfluxDB connection for stats endpoints
+        try:
+            logger.info("Initializing InfluxDB connection for statistics...")
+            await self.stats_endpoints.initialize()
+            logger.info("InfluxDB connection initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize InfluxDB: {e}")
+            logger.warning("Statistics will fall back to direct service calls")
+        
         # Add middleware
         self._add_middleware()
         
@@ -147,6 +156,13 @@ class AdminAPIService:
                 await self.server_task
             except asyncio.CancelledError:
                 pass
+        
+        # Close InfluxDB connection
+        try:
+            logger.info("Closing InfluxDB connection...")
+            await self.stats_endpoints.close()
+        except Exception as e:
+            logger.error(f"Error closing InfluxDB connection: {e}")
         
         # Stop monitoring services
         await alerting_service.stop()
@@ -329,23 +345,52 @@ admin_api_service._add_middleware()
 admin_api_service._add_routes()
 admin_api_service._add_exception_handlers()
 
-# Start monitoring services
-import asyncio
-async def startup():
+# Add startup and shutdown events
+@app.on_event("startup")
+async def on_startup():
+    """Handle application startup"""
     logger.info("Starting Admin API service...")
+    
+    # Start monitoring services
     await logging_service.start()
     await metrics_service.start()
     await alerting_service.start()
+    
+    # Initialize InfluxDB connection for stats endpoints
+    try:
+        logger.info("Initializing InfluxDB connection for statistics...")
+        await admin_api_service.stats_endpoints.initialize()
+        logger.info("InfluxDB connection initialized successfully")
+    except Exception as e:
+        logger.warning(f"Failed to initialize InfluxDB: {e}")
+        logger.warning("Statistics will fall back to direct service calls")
+    
     logger.info("Admin API service started on 0.0.0.0:8004")
 
-# Run startup
-asyncio.run(startup())
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    """Handle application shutdown"""
+    logger.info("Shutting down Admin API service...")
+    
+    # Close InfluxDB connection
+    try:
+        await admin_api_service.stats_endpoints.close()
+    except Exception as e:
+        logger.error(f"Error closing InfluxDB connection: {e}")
+    
+    # Stop monitoring services
+    await alerting_service.stop()
+    await metrics_service.stop()
+    await logging_service.stop()
+    
+    logger.info("Admin API service stopped")
 
 
 if __name__ == "__main__":
     # Run the service
     uvicorn.run(
-        "main:app",
+        "src.main:app",
         host=admin_api_service.api_host,
         port=admin_api_service.api_port,
         reload=os.getenv('RELOAD', 'false').lower() == 'true',

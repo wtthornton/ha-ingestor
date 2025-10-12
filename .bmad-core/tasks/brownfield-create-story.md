@@ -6,6 +6,16 @@
 
 Create a single user story for very small brownfield enhancements that can be completed in one focused development session. This task is for minimal additions or bug fixes that require existing system integration awareness.
 
+## Required Project Context
+
+Before creating a brownfield story, load these documents:
+
+- **Architecture**: Check core-config.yaml → architecture.architectureFile for main architecture document
+- **Tech Stack**: `docs/architecture/tech-stack.md` - Verify technologies and frameworks are documented
+- **Source Tree**: `docs/architecture/source-tree.md` - Understand project structure and file organization
+- **Coding Standards**: `docs/architecture/coding-standards.md` - Reference for Dev Notes section and code quality
+- **Epic File**: Located in core-config.yaml → prd.prdShardedLocation with pattern epic-{n}*.md (if part of epic)
+
 ## When to Use This Task
 
 **Use this task when:**

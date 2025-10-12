@@ -41,6 +41,12 @@ export default defineConfig(({ command, mode }) => {
       open: true,
       cors: true,
       proxy: {
+        '/api/sports': {
+          target: 'http://localhost:8005',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api\/sports/, '/api/v1'),
+        },
         '/api': {
           target: 'http://ha-ingestor-admin-dev:8004',
           changeOrigin: true,

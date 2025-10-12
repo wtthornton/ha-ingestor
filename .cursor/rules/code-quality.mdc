@@ -15,18 +15,27 @@ description: Code quality standards and best practices
 ## Python Standards
 
 - Follow PEP 8 style guidelines
-- Use type hints for function parameters and return values
-- Write docstrings for all public functions and classes
-- Use meaningful variable and function names
+- Use type hints for function parameters and return values (PEP 484)
+- Write docstrings for all public functions and classes (Google or NumPy style)
+- Use meaningful variable and function names (snake_case for functions/variables)
 - Prefer composition over inheritance
+- Use dataclasses or Pydantic models for data structures
+- Handle exceptions explicitly, avoid bare except clauses
+- Use context managers (with statements) for resource management
+- Follow single responsibility principle
 
 ## JavaScript/TypeScript Standards
 
-- Use TypeScript for all new code
+- Use TypeScript for all new code (strict mode enabled)
 - Follow ESLint and Prettier configurations
-- Use meaningful variable and function names
+- Use meaningful variable and function names (camelCase for functions/variables)
 - Prefer functional programming patterns where appropriate
 - Write JSDoc comments for complex functions
+- Use const by default, let when reassignment needed, avoid var
+- Prefer arrow functions for callbacks and short functions
+- Use async/await over raw promises for better readability
+- Implement proper error boundaries in React components
+- Use TypeScript interfaces for object shapes, types for unions/primitives
 
 ## Documentation Standards
 
@@ -55,6 +64,12 @@ description: Code quality standards and best practices
 - Include integration tests for API endpoints
 - Test error conditions and edge cases
 - Maintain test coverage above 80%
+- Use descriptive test names that explain what is being tested
+- Follow AAA pattern: Arrange, Act, Assert
+- Mock external dependencies in unit tests
+- Use test fixtures for common test data
+- Test both happy path and error scenarios
+- Include performance tests for critical paths
 
 ## Code Review Checklist
 
@@ -64,3 +79,9 @@ description: Code quality standards and best practices
 - [ ] No hardcoded values or secrets
 - [ ] Error handling is appropriate
 - [ ] Performance considerations addressed
+- [ ] Type hints/types are complete and accurate
+- [ ] Logging is appropriate and follows standards
+- [ ] Security best practices are followed
+- [ ] Code is readable and maintainable
+- [ ] No commented-out code or debug statements
+- [ ] Dependencies are justified and documented

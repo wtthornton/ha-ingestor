@@ -6,6 +6,8 @@
 Home Assistant Ingestor is a comprehensive system that captures, enriches, and stores Home Assistant events with weather context, providing real-time monitoring, data analysis, and production-ready deployment capabilities.
 
 ### **Key Features**
+- **🚀 Interactive Deployment Wizard** - Guided setup in 30-60 minutes (NEW!)
+- **✅ Connection Validator** - Pre-deployment testing and validation (NEW!)
 - **Real-time Event Capture** - Direct WebSocket connection to Home Assistant
 - **Multi-Source Data Enrichment** - Weather, carbon intensity, electricity pricing, air quality, and more
 - **Calendar Integration** - Event-based automation triggers
@@ -14,6 +16,70 @@ Home Assistant Ingestor is a comprehensive system that captures, enriches, and s
 - **Web Dashboard** - Real-time monitoring and administration
 - **Data Export** - Multiple formats (CSV, JSON, PDF, Excel)
 - **Mobile Support** - Responsive design with touch gestures
+
+### **🚀 Quick Start with Deployment Wizard (Recommended)**
+
+The fastest way to get started:
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd ha-ingestor
+
+# 2. Run the deployment wizard
+./scripts/deploy-wizard.sh
+
+# 3. Start services
+docker-compose up -d
+
+# 4. Access dashboard
+open http://localhost:3000
+```
+
+The deployment wizard will:
+- ✅ Guide you through deployment options (same machine, separate, remote)
+- ✅ Configure Home Assistant connection
+- ✅ Auto-detect system resources
+- ✅ Generate secure configuration files
+- ✅ Validate connectivity before deployment
+
+**See:** [`docs/DEPLOYMENT_WIZARD_GUIDE.md`](DEPLOYMENT_WIZARD_GUIDE.md) for detailed wizard usage.
+
+### **🔍 Validate Your Setup**
+
+Before deployment, test your configuration:
+
+```bash
+./scripts/validate-ha-connection.sh
+```
+
+The validator will:
+- Test TCP/IP connectivity
+- Validate HTTP/HTTPS endpoint
+- Test WebSocket connection
+- Verify authentication
+- Check API access
+- Generate detailed report
+
+### **Alternative Manual Setup**
+
+If you prefer manual configuration:
+
+1. **Copy Environment Template**
+   ```bash
+   cp infrastructure/env.example .env
+   ```
+
+2. **Edit Configuration**
+   ```bash
+   nano .env
+   # Configure HOME_ASSISTANT_URL, HOME_ASSISTANT_TOKEN, etc.
+   ```
+
+3. **Deploy**
+   ```bash
+   docker-compose up -d
+   ```
 
 ## 🖥️ **Web Dashboard**
 

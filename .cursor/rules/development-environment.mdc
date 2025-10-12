@@ -8,35 +8,51 @@ description: Development environment setup and configuration
 ## Environment Setup
 
 ### Python Development
-- Use Python 3.8+ for all new projects
-- Virtual environments are required for Python projects
-- Use `pyproject.toml` for dependency management
-- Follow PEP 621 for project metadata
+- Use Python 3.10+ for all new projects (3.12+ preferred for new features)
+- Virtual environments are required for Python projects (venv or poetry)
+- Use `pyproject.toml` for dependency management (PEP 621)
+- Use Poetry or pip-tools for reproducible builds
+- Pin dependencies with version constraints
+- Use Ruff for fast linting and formatting (or Black + isort)
+- Use mypy or pyright for static type checking
 
 ### Node.js Development
-- Use Node.js 18+ for all new projects
+- Use Node.js 20+ LTS for all new projects (22+ for new features)
 - Use `package.json` for dependency management
-- Use `package-lock.json` for reproducible builds
-- Use TypeScript for all new JavaScript projects
+- Use `package-lock.json` (npm) or `pnpm-lock.yaml` (pnpm) for reproducible builds
+- Use TypeScript 5+ for all new JavaScript projects
+- Consider pnpm or yarn for better performance and disk usage
+- Use ESM (ES Modules) syntax by default
+- Enable strict TypeScript configuration
 
 ### Docker Configuration
 - Use multi-stage builds for production images
-- Include `.dockerignore` files
-- Use specific version tags, avoid `latest`
-- Optimize layer caching
+- Include `.dockerignore` files to exclude unnecessary files
+- Use specific version tags, avoid `latest` tag
+- Optimize layer caching by ordering commands strategically
+- Use slim or alpine base images when possible
+- Run containers as non-root users for security
+- Use Docker Compose for multi-container applications
+- Implement health checks in Dockerfiles
 
 ## Configuration Files
 
 ### Python Projects
 - `pyproject.toml` - Project configuration and dependencies
-- `pytest.ini` - Test configuration
-- `pyrightconfig.json` - Type checking configuration
+- `pytest.ini` or `pyproject.toml` [tool.pytest] - Test configuration
+- `pyrightconfig.json` or `pyproject.toml` [tool.pyright] - Type checking configuration
+- `ruff.toml` or `pyproject.toml` [tool.ruff] - Linter/formatter configuration
+- `.python-version` - Python version specification for pyenv
+- `requirements.txt` or `requirements-*.txt` - Pinned dependencies for production
 
 ### Node.js Projects
 - `package.json` - Project metadata and dependencies
-- `tsconfig.json` - TypeScript configuration
-- `vite.config.ts` - Build tool configuration
-- `vitest.config.ts` - Test configuration
+- `tsconfig.json` - TypeScript configuration (use strict mode)
+- `vite.config.ts` or `next.config.js` - Build tool configuration
+- `vitest.config.ts` or `jest.config.js` - Test configuration
+- `eslint.config.js` - ESLint flat config (ESLint 9+)
+- `.prettierrc` - Prettier formatting configuration
+- `.nvmrc` or `.node-version` - Node version specification
 
 ### Docker Projects
 - `Dockerfile` - Container build instructions
@@ -46,16 +62,23 @@ description: Development environment setup and configuration
 ## Development Tools
 
 ### Code Quality
-- Use linters (ESLint, Pylint, etc.)
-- Use formatters (Prettier, Black, etc.)
-- Use type checkers (TypeScript, Pyright, etc.)
-- Use pre-commit hooks for quality gates
+- Use linters (ESLint for JS/TS, Ruff for Python)
+- Use formatters (Prettier for JS/TS, Ruff or Black for Python)
+- Use type checkers (TypeScript strict mode, mypy/pyright for Python)
+- Use pre-commit hooks for quality gates (husky, lint-staged, pre-commit)
+- Implement code review practices
+- Use static analysis tools (SonarQube, CodeQL)
+- Monitor code coverage and set minimum thresholds
 
 ### Testing
 - Write unit tests for all new functionality
-- Use test frameworks (Jest, Pytest, etc.)
+- Use modern test frameworks (Vitest/Jest for JS/TS, Pytest for Python)
 - Maintain test coverage above 80%
 - Use integration tests for API endpoints
+- Implement E2E tests for critical user flows (Playwright, Cypress)
+- Use test fixtures and factories for test data
+- Mock external dependencies appropriately
+- Run tests in CI/CD pipeline
 
 ### Documentation
 - Use Markdown for documentation

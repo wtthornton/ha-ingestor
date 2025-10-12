@@ -6,6 +6,16 @@
 
 Create a single epic for smaller brownfield enhancements that don't require the full PRD and Architecture documentation process. This task is for isolated features or modifications that can be completed within a focused scope.
 
+## Required Project Context
+
+Before creating a brownfield epic, load these documents:
+
+- **Architecture**: Check core-config.yaml → architecture.architectureFile for main architecture document
+- **Tech Stack**: `docs/architecture/tech-stack.md` - Verify technologies and frameworks are documented
+- **Source Tree**: `docs/architecture/source-tree.md` - Understand project structure and file organization
+- **Coding Standards**: `docs/architecture/coding-standards.md` - Reference for technical standards and patterns
+- **PRD Location**: Check core-config.yaml → prd.prdShardedLocation for existing epics and requirements
+
 ## When to Use This Task
 
 **Use this task when:**

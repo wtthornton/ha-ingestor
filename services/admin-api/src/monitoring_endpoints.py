@@ -95,6 +95,53 @@ class MonitoringEndpoints:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to retrieve logs: {str(e)}")
         
+        @self.router.get("/metrics/realtime", response_model=Dict[str, Any])
+        async def get_realtime_metrics():
+            """
+            Get real-time metrics for animated dependencies visualization.
+            Returns events/sec, active API calls, and active data sources.
+            """
+            try:
+                # Calculate events per second from recent metrics
+                events_metric = metrics_service.get_collector().get_metric("events_processed_total")
+                events_per_second = 0.0
+                
+                if events_metric and len(events_metric.values) >= 2:
+                    # Get events from last 5 seconds
+                    recent_values = events_metric.values[-10:]  # Approximate
+                    if len(recent_values) >= 2:
+                        events_per_second = len(recent_values) / 5.0
+                
+                # Detect active data sources (simplified for Phase 1)
+                active_sources = []
+                
+                # Check if we have recent metrics from each source
+                if events_per_second > 0:
+                    active_sources.append('home-assistant')
+                
+                # TODO: Add actual detection logic for sports APIs
+                # For now, return mock data
+                active_sources_count = len(active_sources)
+                
+                return {
+                    "success": True,
+                    "events_per_second": round(events_per_second, 2),
+                    "active_api_calls": active_sources_count,
+                    "active_sources": active_sources,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+            except Exception as e:
+                # Graceful fallback
+                return {
+                    "success": False,
+                    "events_per_second": 0,
+                    "active_api_calls": 0,
+                    "active_sources": [],
+                    "timestamp": datetime.now().isoformat(),
+                    "error": str(e)
+                }
+        
         @self.router.get("/logs/statistics", response_model=Dict[str, Any])
         async def get_log_statistics(
             current_user: Dict[str, Any] = Depends(self.auth_manager.get_current_user)

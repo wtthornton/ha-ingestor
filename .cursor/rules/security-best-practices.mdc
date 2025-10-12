@@ -16,18 +16,26 @@ description: Security best practices and guidelines
 ## Authentication and Authorization
 
 ### Authentication
-- Use strong password policies
-- Implement multi-factor authentication where possible
-- Use secure session management
-- Implement proper logout functionality
-- Use OAuth 2.0 for third-party authentication
+- Use strong password policies (min 12 chars, complexity requirements)
+- Implement multi-factor authentication (TOTP, WebAuthn/FIDO2)
+- Use secure session management (HttpOnly, Secure, SameSite cookies)
+- Implement proper logout functionality (invalidate tokens/sessions)
+- Use OAuth 2.0/OIDC for third-party authentication
+- Implement rate limiting on authentication endpoints
+- Use bcrypt, argon2, or scrypt for password hashing
+- Implement account lockout after failed attempts
+- Use secure password reset flows with time-limited tokens
 
 ### Authorization
-- Implement role-based access control (RBAC)
+- Implement role-based access control (RBAC) or attribute-based (ABAC)
 - Use principle of least privilege
-- Validate permissions on every request
-- Implement proper access controls
-- Use JWT tokens securely
+- Validate permissions on every request (don't trust client)
+- Implement proper access controls at all layers
+- Use JWT tokens securely (short expiry, secure storage, validate signature)
+- Implement token refresh mechanisms
+- Use opaque tokens for sensitive operations
+- Verify token issuer and audience claims
+- Implement proper scope validation
 
 ## Data Protection
 
@@ -48,11 +56,16 @@ description: Security best practices and guidelines
 ## API Security
 
 ### REST API Security
-- Use HTTPS for all API communications
-- Implement proper CORS policies
-- Use rate limiting to prevent abuse
-- Validate all request parameters
-- Implement proper error handling
+- Use HTTPS for all API communications (TLS 1.3+)
+- Implement proper CORS policies (specific origins, not *)
+- Use rate limiting to prevent abuse (per-user, per-IP)
+- Validate all request parameters (type, format, range)
+- Implement proper error handling (don't leak sensitive info)
+- Use API keys or OAuth tokens for authentication
+- Implement request signing for critical operations
+- Use Content-Type validation
+- Implement CSRF protection for state-changing operations
+- Use security headers (X-Content-Type-Options, X-Frame-Options, etc.)
 
 ### GraphQL Security
 - Implement query depth limiting
@@ -80,11 +93,15 @@ description: Security best practices and guidelines
 ## Infrastructure Security
 
 ### Container Security
-- Use minimal base images
-- Run containers as non-root users
-- Keep base images updated
-- Use multi-stage builds
-- Implement proper secrets management
+- Use minimal base images (alpine, distroless)
+- Run containers as non-root users (USER directive)
+- Keep base images updated with security patches
+- Use multi-stage builds to minimize attack surface
+- Implement proper secrets management (Docker secrets, vault)
+- Scan images for vulnerabilities (Trivy, Snyk, Clair)
+- Limit container capabilities and use read-only filesystems
+- Implement resource limits (CPU, memory)
+- Use container security contexts and AppArmor/SELinux profiles
 
 ### Cloud Security
 - Use IAM roles and policies
@@ -103,11 +120,15 @@ description: Security best practices and guidelines
 - Use dependency scanning
 
 ### Dependency Management
-- Keep dependencies updated
-- Use dependency scanning tools
-- Implement proper version pinning
-- Monitor for security vulnerabilities
-- Use trusted package sources
+- Keep dependencies updated regularly
+- Use dependency scanning tools (Dependabot, Renovate, Snyk)
+- Implement proper version pinning with ranges
+- Monitor for security vulnerabilities (CVE databases)
+- Use trusted package sources (PyPI, npm registry)
+- Audit dependencies before adding (check maintainership, activity)
+- Use lock files for reproducible builds
+- Remove unused dependencies
+- Consider supply chain security (SBOM, signed packages)
 
 ## Monitoring and Incident Response
 

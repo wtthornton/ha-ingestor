@@ -1,0 +1,398 @@
+/**
+ * AlertsPanel Component
+ * 
+ * Alert management system with history, filtering, and configuration
+ * Epic 13.3: Alert Management System
+ */
+
+import React, { useState, useEffect } from 'react';
+import { getMockAlerts, type Alert } from '../mocks/alertsMock';
+
+interface AlertsPanelProps {
+  darkMode: boolean;
+}
+
+export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
+  const [selectedService, setSelectedService] = useState<string>('all');
+  const [showAcknowledged, setShowAcknowledged] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  const fetchAlerts = async () => {
+    try {
+      // Mock data for now - will be replaced with real API call
+      // TODO: Replace with actual API call to /api/v1/alerts?hours=24
+      const mockAlerts = getMockAlerts();
+      
+      setAlerts(mockAlerts);
+      setError(null);
+      setLastUpdate(new Date());
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return darkMode ? 'text-red-400 bg-red-900/30 border-red-500/50' : 'text-red-700 bg-red-50 border-red-200';
+      case 'error':
+        return darkMode ? 'text-red-300 bg-red-900/20 border-red-500/30' : 'text-red-600 bg-red-50 border-red-200';
+      case 'warning':
+        return darkMode ? 'text-yellow-300 bg-yellow-900/20 border-yellow-500/30' : 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'info':
+        return darkMode ? 'text-blue-300 bg-blue-900/20 border-blue-500/30' : 'text-blue-700 bg-blue-50 border-blue-200';
+      default:
+        return darkMode ? 'text-gray-300 bg-gray-800 border-gray-600' : 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return '🔴';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
+      default:
+        return '•';
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffHours < 1) {
+      return `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hours ago`;
+    } else {
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+  };
+
+  const handleAcknowledge = (alertId: string) => {
+    setAlerts(prev => prev.map(alert => 
+      alert.id === alertId 
+        ? { ...alert, acknowledged: true, acknowledgedBy: 'admin', acknowledgedAt: new Date().toISOString() }
+        : alert
+    ));
+  };
+
+  const filteredAlerts = alerts.filter(alert => {
+    if (selectedSeverity !== 'all' && alert.severity !== selectedSeverity) return false;
+    if (selectedService !== 'all' && alert.service !== selectedService) return false;
+    if (!showAcknowledged && alert.acknowledged) return false;
+    return true;
+  });
+
+  const services = [...new Set(alerts.map(a => a.service))];
+  const criticalCount = alerts.filter(a => a.severity === 'critical' && !a.acknowledged).length;
+  const errorCount = alerts.filter(a => a.severity === 'error' && !a.acknowledged).length;
+  const warningCount = alerts.filter(a => a.severity === 'warning' && !a.acknowledged).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+            darkMode ? 'border-blue-400' : 'border-blue-600'
+          } mx-auto`}></div>
+          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Loading alerts...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`rounded-lg shadow-md p-6 ${
+        darkMode ? 'bg-red-900/20 border border-red-500/30' : 'bg-red-50 border border-red-200'
+      }`}>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div className="flex-1">
+            <h3 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+              Error Loading Alerts
+            </h3>
+            <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
+              {error}
+            </p>
+          </div>
+          <button
+            onClick={fetchAlerts}
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Status Summary */}
+      <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-2`}>
+              <span>🚨</span>
+              System Alerts & Notifications
+            </h2>
+            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Monitor and manage system alerts and notifications
+            </p>
+          </div>
+          <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-sm">Last updated</p>
+            <p className="text-sm font-medium">{lastUpdate.toLocaleTimeString()}</p>
+          </div>
+        </div>
+
+        {/* Status Banner */}
+        {criticalCount === 0 && errorCount === 0 ? (
+          <div className={`flex items-center gap-3 p-4 rounded-lg ${
+            darkMode ? 'bg-green-900/20 border border-green-500/30' : 'bg-green-50 border border-green-200'
+          }`}>
+            <span className="text-2xl">✅</span>
+            <div className={darkMode ? 'text-green-200' : 'text-green-800'}>
+              <p className="font-semibold">No Critical Alerts</p>
+              <p className="text-sm">System is healthy and operating normally</p>
+            </div>
+          </div>
+        ) : (
+          <div className={`flex items-center gap-3 p-4 rounded-lg ${
+            darkMode ? 'bg-red-900/20 border border-red-500/30' : 'bg-red-50 border border-red-200'
+          }`}>
+            <span className="text-2xl">⚠️</span>
+            <div className={darkMode ? 'text-red-200' : 'text-red-800'}>
+              <p className="font-semibold">Active Alerts Require Attention</p>
+              <p className="text-sm">
+                {criticalCount} critical, {errorCount} errors, {warningCount} warnings
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Severity:
+            </label>
+            <select
+              value={selectedSeverity}
+              onChange={(e) => setSelectedSeverity(e.target.value)}
+              aria-label="Filter alerts by severity level"
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              } transition-colors`}
+            >
+              <option value="all">All</option>
+              <option value="critical">Critical</option>
+              <option value="error">Error</option>
+              <option value="warning">Warning</option>
+              <option value="info">Info</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Service:
+            </label>
+            <select
+              value={selectedService}
+              onChange={(e) => setSelectedService(e.target.value)}
+              aria-label="Filter alerts by service"
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              } transition-colors`}
+            >
+              <option value="all">All Services</option>
+              {services.map(service => (
+                <option key={service} value={service}>{service}</option>
+              ))}
+            </select>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showAcknowledged}
+              onChange={(e) => setShowAcknowledged(e.target.checked)}
+              className="w-4 h-4 rounded"
+              aria-label="Toggle display of acknowledged alerts"
+            />
+            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Show acknowledged
+            </span>
+          </label>
+
+          <div className="ml-auto">
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {filteredAlerts.length} of {alerts.length} alerts
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Alert List */}
+      <div className="space-y-3">
+        {filteredAlerts.length === 0 ? (
+          <div className={`rounded-lg shadow-md p-12 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="text-6xl mb-4">🎉</div>
+            <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+              No Alerts Found
+            </h3>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {selectedSeverity !== 'all' || selectedService !== 'all'
+                ? 'Try adjusting your filters'
+                : 'Everything is running smoothly!'}
+            </p>
+          </div>
+        ) : (
+          filteredAlerts.map(alert => (
+            <div
+              key={alert.id}
+              className={`rounded-lg shadow-md p-6 border ${getSeverityColor(alert.severity)} ${
+                alert.acknowledged ? 'opacity-60' : ''
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="text-2xl">{getSeverityIcon(alert.severity)}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {alert.title}
+                      </h3>
+                      <span className={`text-xs px-2 py-1 rounded uppercase ${
+                        darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        {alert.severity}
+                      </span>
+                    </div>
+                    <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      {alert.message}
+                    </p>
+                    <div className={`flex items-center gap-4 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <span>🏷️ {alert.service}</span>
+                      <span>🕐 {formatTimestamp(alert.timestamp)}</span>
+                      {alert.acknowledged && (
+                        <span className="text-green-500">
+                          ✓ Acknowledged by {alert.acknowledgedBy}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {!alert.acknowledged && (
+                  <button
+                    onClick={() => handleAcknowledge(alert.id)}
+                    aria-label={`Acknowledge alert: ${alert.title}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      darkMode
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
+                  >
+                    Acknowledge
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Alert Configuration */}
+      <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+          📋 Alert Configuration
+        </h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Email Notifications
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Receive email alerts for critical events
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Error Rate Threshold
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Alert when error rate exceeds 5%
+              </p>
+            </div>
+            <input
+              type="number"
+              defaultValue={5}
+              min={1}
+              max={100}
+              className={`w-20 px-3 py-2 rounded-lg border ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Check Interval
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                How often to check for alerts
+              </p>
+            </div>
+            <select
+              defaultValue={30}
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value={10}>10 seconds</option>
+              <option value={30}>30 seconds</option>
+              <option value={60}>1 minute</option>
+              <option value={300}>5 minutes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

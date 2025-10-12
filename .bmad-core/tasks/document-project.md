@@ -10,6 +10,12 @@ Generate comprehensive documentation for existing projects optimized for AI deve
 
 ### 1. Initial Project Analysis
 
+**Project Document Locations** (from core-config.yaml):
+- **PRD**: Check `prd.prdFile` (sharded to `prd.prdShardedLocation` if prdSharded=true)
+- **Architecture**: Check `architecture.architectureFile` (sharded to `architecture.architectureShardedLocation`)
+- **Stories**: Located in `devStoryLocation`
+- **QA Results**: Located in `qa.qaLocation`
+
 **CRITICAL:** First, check if a PRD or requirements document exists in context. If yes, use it to focus your documentation efforts on relevant areas only.
 
 **IF PRD EXISTS**:
