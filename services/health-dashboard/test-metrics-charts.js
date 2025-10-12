@@ -8,7 +8,7 @@ import { chromium } from 'playwright';
   try {
     console.log('🔍 Testing metrics charts...');
     
-    // Clear all browser data and navigate
+    // Clear all browser data and navigate to Docker container
     await page.context().clearCookies();
     await page.goto('http://localhost:3000?_v=' + Date.now());
     await page.waitForLoadState('networkidle');
