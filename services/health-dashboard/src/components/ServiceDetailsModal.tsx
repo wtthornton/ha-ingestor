@@ -9,6 +9,7 @@ import type {
 } from '../types';
 import { MetricsChart } from './MetricsChart';
 import { SimpleChart } from './SimpleChart';
+import { ChartTest } from './ChartTest';
 
 interface ServiceDetailsModalProps {
   service: ServiceStatus;
@@ -366,12 +367,7 @@ export const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
                       Real-time metrics visualization for {service.service}
                     </p>
                     
-                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Test Chart
-                      </h4>
-                      <SimpleChart darkMode={darkMode} />
-                    </div>
+                    <ChartTest />
                   </div>
                 )}
 
