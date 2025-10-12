@@ -90,3 +90,94 @@ export interface Statistics {
     severity: 'info' | 'warning' | 'error';
   }>;
 }
+
+// Service Management Types (Phase 1, 2, 3)
+export interface ServiceStatus {
+  service: string;
+  running: boolean;
+  status: 'running' | 'stopped' | 'error' | 'degraded';
+  timestamp?: string;
+  error?: string;
+  port?: number;
+  uptime?: string;
+  metrics?: ServiceMetrics;
+}
+
+export interface ServiceMetrics {
+  requests_per_minute?: number;
+  error_rate?: number;
+  cpu_usage?: number;
+  memory_usage?: number;
+  total_requests?: number;
+}
+
+export interface ServiceGroup {
+  title: string;
+  description: string;
+  services: ServiceStatus[];
+}
+
+export type ServiceType = 'core' | 'external' | 'storage' | 'ui';
+
+export interface ServiceDefinition {
+  id: string;
+  name: string;
+  icon: string;
+  type: ServiceType;
+  port?: number;
+  description: string;
+}
+
+export interface ServiceDetails {
+  service: string;
+  status: 'running' | 'stopped' | 'error' | 'degraded';
+  uptime: string;
+  container_id?: string;
+  image?: string;
+  last_restart?: string;
+  port_mappings?: string[];
+  environment?: Record<string, string>;
+}
+
+export interface ServiceLog {
+  timestamp: string;
+  level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
+  message: string;
+}
+
+export interface ServiceMetricPoint {
+  timestamp: string;
+  requests: number;
+  errors: number;
+  response_time?: number;
+}
+
+export interface ServiceHealthCheck {
+  timestamp: string;
+  status: 'healthy' | 'unhealthy';
+  response_time?: number;
+  error?: string;
+}
+
+export interface ServiceResourceUsage {
+  cpu_percent: number;
+  memory_used_mb: number;
+  memory_limit_mb: number;
+  memory_percent: number;
+}
+
+export interface ServiceDependency {
+  from: string;
+  to: string;
+  type: 'data_flow' | 'api_call' | 'storage';
+  description?: string;
+}
+
+export interface ServiceNode {
+  id: string;
+  name: string;
+  icon: string;
+  type: ServiceType;
+  layer: number;
+  position: number;
+}

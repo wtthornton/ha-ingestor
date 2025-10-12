@@ -7,6 +7,8 @@ import { MetricCard } from './MetricCard';
 import { DataSourceCard } from './DataSourceCard';
 import { ConfigForm } from './ConfigForm';
 import { ServiceControl } from './ServiceControl';
+import { ServicesTab } from './ServicesTab';
+import { ServiceDependencyGraph } from './ServiceDependencyGraph';
 
 export const Dashboard: React.FC = () => {
   const { health, loading: healthLoading, error: healthError } = useHealth(30000);
@@ -134,10 +136,11 @@ export const Dashboard: React.FC = () => {
             {[
               { id: 'overview', label: '📊 Overview', icon: '📊' },
               { id: 'services', label: '🔧 Services', icon: '🔧' },
+              { id: 'dependencies', label: '🔗 Dependencies', icon: '🔗' },
               { id: 'data-sources', label: '🌐 Data Sources', icon: '🌐' },
               { id: 'analytics', label: '📈 Analytics', icon: '📈' },
               { id: 'alerts', label: '🚨 Alerts', icon: '🚨' },
-              { id: 'configuration', label: '🔧 Configuration', icon: '🔧' }
+              { id: 'configuration', label: '⚙️ Configuration', icon: '⚙️' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -251,18 +254,15 @@ export const Dashboard: React.FC = () => {
         
         {/* Services Tab */}
         {selectedTab === 'services' && (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
-            <div className="text-6xl mb-4">🔧</div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Service Management
-            </h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-              Individual service configuration and monitoring
-            </p>
-            <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              Tip: Use the Configuration tab to manage service credentials and settings
-            </p>
-          </div>
+          <ServicesTab darkMode={darkMode} />
+        )}
+        
+        {/* Dependencies Tab */}
+        {selectedTab === 'dependencies' && (
+          <ServiceDependencyGraph 
+            services={[]} // Will be populated from services API
+            darkMode={darkMode}
+          />
         )}
         
         {/* Data Sources Tab */}
