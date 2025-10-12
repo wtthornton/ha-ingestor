@@ -107,8 +107,17 @@ class InfluxDBClientWrapper:
             
         except Exception as e:
             self.write_errors += 1
-            logger.error(f"Error writing event to InfluxDB: {e}")
-            return False
+            error_msg = str(e)
+            
+            # Handle field type conflicts specifically
+            if "field type conflict" in error_msg:
+                logger.warning(f"InfluxDB field type conflict (dropping event): {error_msg}")
+                # For field type conflicts, we'll drop the event to prevent data corruption
+                # This is a temporary solution until we can clean up the existing data
+                return False
+            else:
+                logger.error(f"Error writing event to InfluxDB: {e}")
+                return False
     
     def _create_point_from_event(self, event_data: Dict[str, Any]) -> Optional[Point]:
         """
@@ -186,11 +195,15 @@ class InfluxDBClientWrapper:
             if old_state and "state" in old_state:
                 point.field("old_state", str(old_state["state"]))
             
-            # Add attributes as fields
+            # Add attributes as fields (normalize to string for InfluxDB type consistency)
             attributes = new_state.get("attributes", {})
             for key, value in attributes.items():
                 if self._is_valid_field_value(value):
-                    point.field(f"attr_{key}", value)
+                    # Always convert to string to avoid InfluxDB field type conflicts
+                    # This ensures consistent schema even if Home Assistant changes attribute types
+                    normalized_value = self._normalize_field_value(value)
+                    # Use a consistent field name prefix to avoid conflicts with existing data
+                    point.field(f"attr_{key}", normalized_value)
             
             # Add entity metadata fields
             entity_metadata = event_data.get("entity_metadata", {})
@@ -206,6 +219,32 @@ class InfluxDBClientWrapper:
         except Exception as e:
             logger.error(f"Error adding state_changed fields: {e}")
             return point
+    
+    def _normalize_field_value(self, value: Any) -> str:
+        """
+        Normalize field value to string for consistent InfluxDB schema
+        
+        Args:
+            value: The value to normalize
+            
+        Returns:
+            Normalized string value
+        """
+        try:
+            # Convert None to empty string
+            if value is None:
+                return ""
+            
+            # Convert booleans to lowercase string (true/false)
+            if isinstance(value, bool):
+                return str(value).lower()
+            
+            # Convert to string for all other types
+            return str(value)
+            
+        except Exception as e:
+            logger.warning(f"Failed to normalize field value {value}: {e}")
+            return ""
     
     def _is_valid_field_value(self, value: Any) -> bool:
         """

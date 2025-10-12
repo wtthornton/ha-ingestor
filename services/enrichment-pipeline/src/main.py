@@ -391,7 +391,31 @@ async def main():
 async def events_handler(request):
     """Handle event from WebSocket service"""
     try:
+        # Check if service is running
+        if not service.is_running:
+            logger.error("Service is not running, rejecting event")
+            return web.json_response({
+                "status": "error",
+                "reason": "service_not_running"
+            }, status=503)
+        
         event_data = await request.json()
+        
+        # Validate event data structure
+        if not isinstance(event_data, dict):
+            logger.error(f"Invalid event data type: {type(event_data)}")
+            return web.json_response({
+                "status": "error",
+                "reason": "invalid_event_data"
+            }, status=400)
+        
+        # Check required fields
+        if not event_data.get('event_type'):
+            logger.error("Missing required field: event_type")
+            return web.json_response({
+                "status": "error",
+                "reason": "missing_event_type"
+            }, status=400)
         
         # Process the event using existing logic
         success = await service.process_event(event_data)
@@ -402,6 +426,7 @@ async def events_handler(request):
                 "event_id": event_data.get("id", "unknown")
             })
         else:
+            logger.warning(f"Event processing failed for event_type: {event_data.get('event_type')}")
             return web.json_response({
                 "status": "failed",
                 "reason": "processing_failed"
@@ -409,6 +434,8 @@ async def events_handler(request):
         
     except Exception as e:
         logger.error(f"Error in events_handler: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return web.json_response({
             "status": "error",
             "error": str(e)
