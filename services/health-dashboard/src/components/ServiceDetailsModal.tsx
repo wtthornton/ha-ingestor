@@ -7,6 +7,8 @@ import type {
   ServiceResourceUsage,
   ServiceHealthCheck,
 } from '../types';
+import { MetricsChart } from './MetricsChart';
+import { SimpleChart } from './SimpleChart';
 
 interface ServiceDetailsModalProps {
   service: ServiceStatus;
@@ -353,20 +355,22 @@ export const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
 
                 {/* Metrics Tab */}
                 {activeTab === 'metrics' && (
-                  <div className={`p-8 rounded-lg text-center ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <div className="text-6xl mb-4">📈</div>
-                    <h3 className="text-xl font-bold mb-2">Metrics Charts</h3>
-                    <p className={`mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Real-time metrics visualization
+                  <div className="p-4">
+                    <div className="flex items-center mb-4">
+                      <div className="text-2xl mr-3">📈</div>
+                      <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Metrics Charts
+                      </h3>
+                    </div>
+                    <p className={`mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Real-time metrics visualization for {service.service}
                     </p>
-                    <div className={`p-4 rounded-md text-left ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                      <p className="text-sm font-medium mb-2">📦 Installation Required:</p>
-                      <code className={`block p-3 rounded text-xs ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-                        npm install chart.js react-chartjs-2
-                      </code>
-                      <p className="text-xs mt-2 opacity-75">
-                        Charts will display here once Chart.js is installed
-                      </p>
+                    
+                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
+                      <h4 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Test Chart
+                      </h4>
+                      <SimpleChart darkMode={darkMode} />
                     </div>
                   </div>
                 )}
