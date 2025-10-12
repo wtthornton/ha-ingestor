@@ -5,10 +5,76 @@
 ## Purpose
 MANDATORY: Implement the actual KB-first lookup system that checks local cache before calling Context7 API. FAILURE to use KB-first approach is FORBIDDEN.
 
+## Session Tracking (Hybrid Auto-Refresh)
+```python
+# Global session state - tracks if staleness check has run
+_SESSION_KB_CHECKED = False
+```
+
 ## MANDATORY Usage
 When user types `*context7-docs {library} {topic}`, you MUST execute this KB-first workflow. FAILURE to use KB-first approach is FORBIDDEN.
 
+## Auto-Refresh Functions (Hybrid Mode)
+
+### Auto Check and Queue Stale
+```python
+def auto_check_and_queue_stale():
+    """
+    Check all cached libraries for staleness and queue stale ones.
+    Runs once per session on first KB access (if enabled).
+    
+    Returns:
+        List of stale libraries with metadata
+    """
+    from .context7_kb_refresh import is_cache_stale, get_cache_age, list_cached_libraries, queue_refresh
+    
+    stale_libs = []
+    
+    for lib in list_cached_libraries():
+        if is_cache_stale(lib):
+            stale_libs.append({
+                'name': lib,
+                'age_days': get_cache_age(lib)
+            })
+            queue_refresh(lib, 'all')
+    
+    return stale_libs
+
+
+def notify_stale_libraries(stale_libs):
+    """Display user-friendly notification about stale libraries"""
+    if not stale_libs:
+        return
+    
+    print(f"📋 KB Status: {len(stale_libs)} libraries need refresh")
+    
+    # Show up to 3 stale libraries
+    for lib in stale_libs[:3]:
+        print(f"   ⚠️  {lib['name']} ({lib['age_days']} days old)")
+    
+    if len(stale_libs) > 3:
+        print(f"   ... and {len(stale_libs) - 3} more")
+    
+    print(f"💡 Queued for refresh on next agent startup\n")
+```
+
 ## Implementation Steps
+
+### Step 0: Session Check (Hybrid Auto-Refresh)
+```yaml
+session_check:
+  enabled_if: "config.auto_check_on_first_access == true"
+  runs: "once_per_session"
+  action: "check_and_queue_stale"
+  
+  workflow:
+    - check_session_flag: "_SESSION_KB_CHECKED"
+    - if_not_checked:
+        - set_flag: "_SESSION_KB_CHECKED = True"
+        - run: "auto_check_and_queue_stale()"
+        - notify: "notify_stale_libraries()"
+    - continue_to_step_1
+```
 
 ### Step 1: Check KB Cache
 ```yaml

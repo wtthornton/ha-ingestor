@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getMockAlerts, type Alert } from '../mocks/alertsMock';
+import { SkeletonCard, SkeletonList } from './skeletons';
 
 interface AlertsPanelProps {
   darkMode: boolean;
@@ -111,14 +112,18 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
-            darkMode ? 'border-blue-400' : 'border-blue-600'
-          } mx-auto`}></div>
-          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Loading alerts...
-          </p>
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4 shimmer"></div>
+          <div className="flex gap-4 mb-6">
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32 shimmer"></div>
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32 shimmer"></div>
+          </div>
+        </div>
+        {/* Alerts List Skeleton */}
+        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <SkeletonList count={5} />
         </div>
       </div>
     );

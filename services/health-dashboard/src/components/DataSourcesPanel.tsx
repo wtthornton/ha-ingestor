@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getMockDataSources, type DataSource } from '../mocks/dataSourcesMock';
+import { SkeletonCard } from './skeletons';
 
 interface DataSourcesPanelProps {
   darkMode: boolean;
@@ -90,14 +91,14 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
-            darkMode ? 'border-blue-400' : 'border-blue-600'
-          } mx-auto`}></div>
-          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Loading data sources...
-          </p>
+      <div className="space-y-6">
+        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-6 shimmer"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={`datasource-${i}`} variant="default" />
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -13,6 +13,7 @@ import { UpcomingGameCard } from './UpcomingGameCard';
 import { CompletedGameCard } from './CompletedGameCard';
 import { useTeamPreferences } from '../../hooks/useTeamPreferences';
 import { useSportsData } from '../../hooks/useSportsData';
+import { SkeletonCard } from '../skeletons';
 import type { Team } from '../../types/sports';
 
 interface SportsTabProps {
@@ -97,10 +98,14 @@ export const SportsTab: React.FC<SportsTabProps> = ({ darkMode = false }) => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${bgPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
-          <p className={textPrimary}>Loading sports preferences...</p>
+      <div className="space-y-6">
+        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-6 shimmer"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={`sport-${i}`} variant="default" />
+            ))}
+          </div>
         </div>
       </div>
     );

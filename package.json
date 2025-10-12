@@ -1,0 +1,28 @@
+{
+  "name": "ha-ingestor",
+  "version": "1.0.0",
+  "description": "A comprehensive Home Assistant data ingestion system that captures, normalizes, and stores Home Assistant events in InfluxDB with weather data enrichment.",
+  "main": "validate-deployment.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wtthornton/ha-ingestor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/wtthornton/ha-ingestor/issues"
+  },
+  "homepage": "https://github.com/wtthornton/ha-ingestor#readme",
+  "dependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}

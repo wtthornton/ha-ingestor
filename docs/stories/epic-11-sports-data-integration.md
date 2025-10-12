@@ -1,5 +1,27 @@
 # Epic 11: NFL & NHL Sports Data Integration - Brownfield Enhancement
 
+**Status:** ✅ COMPLETE (with Production Hotfix Applied)  
+**Created:** October 12, 2025  
+**Hotfix Applied:** October 12, 2025 (nginx routing fix)
+
+---
+
+## ⚠️ PRODUCTION HOTFIX APPLIED (Oct 12, 2025)
+
+**Issue:** NHL data not accessible in production due to missing nginx routing  
+**Fix:** Added `/api/sports/` proxy configuration to nginx.conf  
+**Impact:** Critical feature now working - users can access NHL data  
+**Architecture Change:** Simplified from dual sports services to single service (sports-data only)  
+
+**Documentation:**
+- Implementation: `implementation/sports-architecture-simplification-summary.md`
+- Verification: `implementation/sports-architecture-simplification-verification-results.md`
+- QA Gate: `docs/qa/gates/11.x-sports-architecture-simplification.yml`
+
+**Status:** ✅ Technical Implementation Complete, ⏳ Frontend Testing Pending
+
+---
+
 ## Epic Goal
 
 Enable users to monitor their favorite NFL and NHL teams with real-time game updates, statistics visualization, and smart alerting, integrated seamlessly into the existing HA Ingestor Dashboard with team-specific data fetching to optimize API usage.

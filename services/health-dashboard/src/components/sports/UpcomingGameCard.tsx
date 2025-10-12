@@ -53,8 +53,7 @@ export const UpcomingGameCard: React.FC<UpcomingGameCardProps> = ({
   }, [game.startTime]);
 
   return (
-    <div className={`${cardBg} rounded-lg shadow border ${borderColor} p-4 
-      hover:shadow-lg transition-all duration-200`}>
+    <div className={`card-base card-hover content-fade-in ${cardBg} border ${borderColor} p-4`}>
       
       {/* Header */}
       <div className="flex items-center justify-between mb-3">

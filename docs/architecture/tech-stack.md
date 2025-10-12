@@ -16,15 +16,16 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 | **Database** | InfluxDB | 2.7 | Time-series data storage | Purpose-built for time-series data and Home Assistant events |
 | **File Storage** | Local Docker Volumes | - | Persistent data storage | Simple local storage with Docker Compose |
 | **Authentication** | Long-lived Access Tokens | - | Home Assistant authentication | HA's standard auth method for WebSocket connections |
-| **Frontend Testing** | Vitest | 1.0.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support |
-| **Backend Testing** | pytest | 7.4.3 | Backend service testing | Simple, comprehensive testing for Python services |
-| **E2E Testing** | Playwright | 1.55.1 | End-to-end testing | Modern, reliable E2E testing for full application |
+| **Frontend Testing** | Vitest | 3.2.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support |
+| **Backend Testing** | pytest | 7.4.3+ | Backend service testing | Simple, comprehensive testing for Python services |
+| **E2E Testing** | Playwright | 1.56.0 | End-to-end testing | Modern, reliable E2E testing for full application |
 | **Build Tool** | Docker | 24+ | Containerization | Standard deployment with multi-stage builds |
 | **Bundler** | Vite | 5.0.8 | Frontend build tool | Fast, simple build tool with excellent TypeScript support |
 | **Orchestration** | Docker Compose | 2.20+ | Service orchestration | Simple orchestration for local deployment |
 | **CI/CD** | GitHub Actions | - | Automated testing | Free CI/CD with Docker support |
 | **Monitoring** | Python logging | - | Application logging | Built-in logging with structured JSON format |
 | **Logging** | Python logging | - | Application logging | Standard logging with health check integration |
+| **Sports Data** | ESPN API + FastAPI | Free | NFL/NHL game data | Free API with team-based filtering for optimal usage |
 
 ## Technology Rationale
 
@@ -44,13 +45,21 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 - **Docker Volumes**: Simple, reliable local storage for development and production
 
 ### Testing Strategy
-- **Vitest**: Fast, modern testing for React components with TypeScript support
-- **pytest**: Comprehensive testing framework for Python services
-- **Playwright**: Reliable E2E testing across multiple browsers
+- **Vitest 3.2**: Fast, modern testing for React components with TypeScript support and enhanced performance
+- **pytest 7.4+**: Comprehensive testing framework for Python services
+- **Playwright 1.56**: Reliable E2E testing across multiple browsers with latest features
 
 ### Deployment
 - **Docker Compose**: Simple orchestration for local development and production deployment
 - **GitHub Actions**: Free CI/CD with Docker support for automated testing and deployment
+
+### Sports Data Integration
+- **ESPN API**: Free public API for NFL and NHL game data (no API key required)
+- **FastAPI Service**: sports-data microservice (port 8005) with team-based filtering
+- **Caching Strategy**: 15-second TTL for live games, 5-minute TTL for upcoming games
+- **Architecture Choice**: Selected ESPN API over API-SPORTS.io to eliminate ongoing costs while meeting all current requirements
+
+**Note**: The sports-api service (Epic 10 - API-SPORTS.io integration) has been archived. It provided more comprehensive features (player stats, injuries, historical data) but required a paid API key. The implementation is preserved in the codebase for future restoration if advanced features become necessary.
 
 ## Version Management
 

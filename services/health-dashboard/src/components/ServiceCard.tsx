@@ -16,18 +16,18 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
   onViewDetails,
   onConfigure,
 }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeClass = (status: string, isDark: boolean) => {
     switch (status) {
       case 'running':
-        return darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800';
+        return isDark ? 'badge-success' : 'badge-success';
       case 'stopped':
-        return darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600';
+        return isDark ? 'badge-info' : 'badge-info';
       case 'error':
-        return darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800';
+        return isDark ? 'badge-error' : 'badge-error';
       case 'degraded':
-        return darkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800';
+        return isDark ? 'badge-warning' : 'badge-warning';
       default:
-        return darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600';
+        return isDark ? 'badge-info' : 'badge-info';
     }
   };
 
@@ -48,14 +48,14 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
   return (
     <div
-      className={`rounded-lg shadow-md p-6 transition-all duration-200 hover:shadow-lg ${
+      className={`card-base card-hover content-fade-in ${
         darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
       }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-3xl">{icon}</div>
+          <div className="text-3xl icon-entrance">{icon}</div>
           <div>
             <h3 className={`font-semibold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {service.service}
@@ -67,8 +67,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
             )}
           </div>
         </div>
-        <span className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(service.status)}`}>
-          <span>{getStatusIcon(service.status)}</span>
+        <span className={`badge-base status-transition flex items-center space-x-1 ${getStatusBadgeClass(service.status, darkMode)}`}>
+          <span className={service.status === 'running' ? 'live-pulse-dot' : ''}>{getStatusIcon(service.status)}</span>
           <span className="capitalize">{service.status}</span>
         </span>
       </div>
@@ -127,11 +127,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         {onViewDetails && (
           <button
             onClick={onViewDetails}
-            className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-              darkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
-            }`}
+            className={`btn-primary flex-1 btn-press`}
           >
             👁️ View Details
           </button>
@@ -139,11 +135,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         {onConfigure && (
           <button
             onClick={onConfigure}
-            className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-              darkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
+            className={`btn-secondary flex-1 btn-press`}
           >
             ⚙️ Configure
           </button>

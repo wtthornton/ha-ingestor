@@ -38,6 +38,24 @@ context7:
     hit_rate_threshold: 0.7
     fuzzy_match_threshold: 0.5
     analytics_enabled: true
+    refresh:
+      enabled: true
+      default_max_age_days: 30
+      check_on_access: true
+      auto_queue: true
+      notify_stale: true
+      auto_process_on_startup: true
+      auto_check_on_first_access: true
+      library_types:
+        stable:
+          max_age_days: 30
+          examples: ["react", "pytest", "fastapi", "typescript"]
+        active:
+          max_age_days: 14
+          examples: ["vitest", "playwright", "vite"]
+        critical:
+          max_age_days: 7
+          examples: ["security-libs", "jwt", "oauth"]
   agentLimits:
     architect:
       tokenLimit: 4000

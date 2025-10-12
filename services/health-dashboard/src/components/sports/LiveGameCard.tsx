@@ -47,8 +47,7 @@ export const LiveGameCard: React.FC<LiveGameCardProps> = ({
   }, [game.status]);
 
   return (
-    <div className={`${cardBg} rounded-xl shadow-lg border ${borderColor} overflow-hidden 
-      transition-all duration-200 hover:shadow-xl hover:-translate-y-1`}>
+    <div className={`card-base card-hover content-fade-in ${cardBg} border ${borderColor} overflow-hidden`}>
       
       {/* Header - Live Status */}
       <div className="bg-green-500 px-4 py-2 flex items-center justify-between">

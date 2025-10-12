@@ -21,6 +21,7 @@ activation-instructions:
   - STEP 2: Adopt the persona defined in the 'agent' and 'persona' sections below
   - STEP 3: Load and read `.bmad-core/core-config.yaml` (project configuration) before any greeting
   - STEP 3b: Load project context documents from core-config.yaml agentLoadAlwaysFiles.bmad-master
+  - STEP 3c: Auto-process KB refresh queue (if enabled and queue exists)
   - STEP 4: Greet user with your name/role and immediately run `*help` to display available commands
   - DO NOT: Load any other agent files during activation
   - ONLY load dependency files when user selects them for execution via command or request of a task
@@ -34,6 +35,7 @@ activation-instructions:
   - CRITICAL: Do NOT run discovery tasks automatically
   - CRITICAL: NEVER LOAD root/data/bmad-kb.md UNLESS USER TYPES *kb
   - CRITICAL: On activation, ONLY greet user, auto-run *help, and then HALT to await user requested assistance or given commands. ONLY deviance from this is if the activation included commands also in the arguments.
+  - AUTO-REFRESH: On startup, if auto_process_on_startup enabled and .refresh-queue exists, silently process queue and show brief message if items processed
   - MANDATORY CONTEXT7 KB RULE: You MUST use Context7 KB for ANY technology/library decisions. FAILURE to use Context7 KB for technology decisions is FORBIDDEN and will result in incomplete/inaccurate recommendations.
   - MANDATORY KB-FIRST RULE: You MUST check KB cache BEFORE making any technology recommendations. Bypassing KB cache is FORBIDDEN.
   - MANDATORY CONTEXT7 INTEGRATION: You MUST use *context7-docs commands when researching libraries, frameworks, or technology patterns. Using generic knowledge instead of Context7 KB is FORBIDDEN.
@@ -76,6 +78,8 @@ commands:
   - context7-kb-rebuild: Rebuild knowledge base index
   - context7-kb-analytics: Show detailed KB usage analytics
   - context7-kb-test: Test KB integration and cache functionality
+  - context7-kb-refresh: Check and refresh stale cache entries
+  - context7-kb-process-queue: Process queued background refreshes
   - exit: Exit (confirm)
 
 dependencies:
@@ -110,6 +114,9 @@ dependencies:
     - context7-kb-status.md
     - context7-kb-search.md
     - context7-kb-cleanup.md
+    - context7-kb-refresh.md
+    - context7-kb-refresh-check.md
+    - context7-kb-process-queue.md
   templates:
     - architecture-tmpl.yaml
     - brownfield-architecture-tmpl.yaml

@@ -11,4 +11,10 @@ Integrate weather API enrichment and implement InfluxDB storage with optimized s
 
 **Epic 4: Production Readiness & Monitoring**
 Implement comprehensive logging, health monitoring, retention policies, and production deployment capabilities with Docker Compose orchestration.
-
+
+**Epic 5-15: [Previous Epics]**
+Admin interface, enhanced dashboards, sports data, UX improvements, and advanced features.
+
+**Epic 16: Code Quality & Maintainability Improvements**
+Improve code maintainability for the personal home automation project. Simplify Dashboard component, add basic test coverage, and enhance security setup documentation.
+

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ServiceCard } from './ServiceCard';
 import { ServiceDetailsModal } from './ServiceDetailsModal';
+import { SkeletonCard } from './skeletons';
 import type { ServiceStatus, ServiceDefinition } from '../types';
 
 interface ServicesTabProps {
@@ -82,14 +83,26 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
-            darkMode ? 'border-blue-400' : 'border-blue-600'
-          } mx-auto`}></div>
-          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Loading services...
-          </p>
+      <div className="space-y-8">
+        <div>
+          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Core Services
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={`core-${i}`} variant="service" />
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            External Data Services
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={`external-${i}`} variant="service" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -197,20 +210,22 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
         <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           🏗️ Core Services ({coreServices.length})
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {coreServices.map((service) => (
-            <ServiceCard
-              key={service.service}
-              service={service}
-              icon={service.def.icon}
-              darkMode={darkMode}
-              onViewDetails={() => {
-                setSelectedService({ service, icon: service.def.icon });
-              }}
-              onConfigure={() => {
-                alert(`Configure ${service.service} - Use Configuration tab for now!`);
-              }}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
+          {coreServices.map((service, index) => (
+            <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
+              <ServiceCard
+                key={service.service}
+                service={service}
+                icon={service.def.icon}
+                darkMode={darkMode}
+                onViewDetails={() => {
+                  setSelectedService({ service, icon: service.def.icon });
+                }}
+                onConfigure={() => {
+                  alert(`Configure ${service.service} - Use Configuration tab for now!`);
+                }}
+              />
+            </div>
           ))}
         </div>
         {coreServices.length === 0 && (
@@ -225,20 +240,22 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
         <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           🌐 External Data Services ({externalServices.length})
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {externalServices.map((service) => (
-            <ServiceCard
-              key={service.service}
-              service={service}
-              icon={service.def.icon}
-              darkMode={darkMode}
-              onViewDetails={() => {
-                setSelectedService({ service, icon: service.def.icon });
-              }}
-              onConfigure={() => {
-                alert(`Configure ${service.service} - Use Configuration tab for now!`);
-              }}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
+          {externalServices.map((service, index) => (
+            <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
+              <ServiceCard
+                key={service.service}
+                service={service}
+                icon={service.def.icon}
+                darkMode={darkMode}
+                onViewDetails={() => {
+                  setSelectedService({ service, icon: service.def.icon });
+                }}
+                onConfigure={() => {
+                  alert(`Configure ${service.service} - Use Configuration tab for now!`);
+                }}
+              />
+            </div>
           ))}
         </div>
         {externalServices.length === 0 && (

@@ -24,7 +24,7 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
   const winner = game.score.home > game.score.away ? 'home' : 'away';
   
   return (
-    <div className={`${cardBg} rounded-lg shadow border ${borderColor} p-4`}>
+    <div className={`card-base card-hover content-fade-in ${cardBg} border ${borderColor} p-4`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span className={`text-sm font-semibold ${textSecondary} uppercase`}>

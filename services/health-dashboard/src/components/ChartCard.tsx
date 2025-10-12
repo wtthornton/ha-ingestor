@@ -191,13 +191,13 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   }, [data, type, color, darkMode, height]);
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-6 transition-colors duration-300 ${className}`}>
+    <div className={`card-base card-hover content-fade-in ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} ${className}`}>
       <div className="flex justify-between items-center mb-4">
         <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           {title}
         </h3>
         {hoveredPoint && (
-          <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} fade-in`}>
             {hoveredPoint.value.toFixed(1)}{unit} at {hoveredPoint.timestamp}
           </div>
         )}

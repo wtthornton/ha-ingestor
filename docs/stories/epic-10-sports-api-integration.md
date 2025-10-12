@@ -1,10 +1,38 @@
 # Epic 10: Sports API Integration
 
-**Status:** Approved  
-**Priority:** High  
+**Status:** ⚠️ ARCHIVED - Superseded by Epic 11  
+**Priority:** ~~High~~ Reference Only  
 **Epic Owner:** Sarah (Product Owner)  
 **Technical Lead:** Winston (Architect)  
-**Created:** October 11, 2025
+**Created:** October 11, 2025  
+**Archived:** October 12, 2025
+
+---
+
+## ⚠️ ARCHIVE NOTICE
+
+**This epic has been superseded by Epic 11 (NFL & NHL Sports Data Integration).**
+
+**Why archived:**
+- Epic 11 implemented a simpler solution using free ESPN API
+- Frontend was built for Epic 11 architecture (sports-data service)
+- API-SPORTS.io requires paid API key ($0-50/month)
+- Current user requirements met by Epic 11 implementation
+
+**Status of Implementation:**
+- ✅ All stories completed (10.1-10.7)
+- ✅ sports-api service fully functional
+- ✅ Comprehensive test coverage (90%+)
+- ⚠️ Service commented out in docker-compose.yml
+- 📁 Code preserved in `services/sports-api/`
+
+**To restore this service:**
+1. Uncomment sports-api in docker-compose.yml
+2. Add API_SPORTS_KEY to environment
+3. Update frontend to use sports-api endpoints (8-10 hours)
+4. Deploy and test
+
+**See:** `docs/stories/epic-11-sports-data-integration.md` for active implementation.
 
 ---
 
