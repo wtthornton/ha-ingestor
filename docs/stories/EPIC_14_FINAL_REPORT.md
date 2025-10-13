@@ -344,7 +344,7 @@ services/health-dashboard/src/
         ├── UpcomingGameCard.tsx (animations)
         └── CompletedGameCard.tsx (animations)
 
-docs/
+../../implementation/
 └── EPIC_14_EXECUTION_SUMMARY.md (final status)
 ```
 

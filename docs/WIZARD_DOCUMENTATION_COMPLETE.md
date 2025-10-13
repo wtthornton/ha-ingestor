@@ -26,7 +26,7 @@ All project documentation has been successfully updated to feature the new deplo
 #### **New Documentation (4 files)**
 6. ✅ `docs/DEPLOYMENT_WIZARD_GUIDE.md` - Complete user guide
 7. ✅ `docs/DEPLOYMENT_WIZARD_QUICK_START.md` - Quick reference
-8. ✅ `docs/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md` - Implementation summary
+8. ✅ `../implementation/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md` - Implementation summary
 9. ✅ `docs/QUICK_START.md` - Ultra-fast getting started
 
 ---
@@ -100,7 +100,7 @@ All project documentation has been successfully updated to feature the new deplo
 - Testing checklist
 - Implementation tips
 
-### 3. DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md (~400 lines)
+### 3. ../implementation/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md (~400 lines)
 **Implementation summary including:**
 - All deliverables
 - Features implemented
@@ -241,7 +241,7 @@ README.md (Entry Point)
 
 Supporting Documentation:
 ├── QUICK_START.md (5-min guide)
-├── DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md (for devs)
+├── ../implementation/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md (for devs)
 ├── HOME_ASSISTANT_DEPLOYMENT_PLAN.md (strategy)
 ├── DEPLOYMENT_OPTIONS_ANALYSIS.md (technical)
 └── stories/deployment-wizard-connection-validator.md (BMAD)

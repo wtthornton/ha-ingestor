@@ -30,7 +30,7 @@ All documentation has been updated to include the new deployment wizard and conn
 |------|---------|--------|
 | `docs/DEPLOYMENT_WIZARD_GUIDE.md` | Complete wizard user guide | ✅ Complete |
 | `docs/DEPLOYMENT_WIZARD_QUICK_START.md` | Quick reference guide | ✅ Complete |
-| `docs/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md` | Implementation summary | ✅ Complete |
+| `../implementation/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md` | Implementation summary | ✅ Complete |
 | `docs/QUICK_START.md` | Ultra-fast getting started guide | ✅ Complete |
 
 ### **Supporting Documentation**
@@ -130,7 +130,7 @@ All documentation has been updated to include the new deployment wizard and conn
 **Audience:** Developers and users  
 **Purpose:** Fast reference
 
-### 3. DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md
+### 3. ../implementation/DEPLOYMENT_WIZARD_IMPLEMENTATION_COMPLETE.md
 **Implementation summary with:**
 - All deliverables
 - Success metrics
