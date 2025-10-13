@@ -31,9 +31,13 @@ from .health_endpoints import HealthEndpoints
 from .stats_endpoints import StatsEndpoints
 from .config_endpoints import ConfigEndpoints
 from .events_endpoints import EventsEndpoints
+from .docker_endpoints import DockerEndpoints
 from .monitoring_endpoints import MonitoringEndpoints
 from .websocket_endpoints import WebSocketEndpoints
 from .integration_endpoints import router as integration_router
+from .devices_endpoints import router as devices_router
+from .metrics_endpoints import create_metrics_router
+from .alert_endpoints import create_alert_router
 from .auth import AuthManager
 from .logging_service import logging_service
 from .metrics_service import metrics_service
@@ -92,6 +96,7 @@ class AdminAPIService:
         self.stats_endpoints = StatsEndpoints()
         self.config_endpoints = ConfigEndpoints()
         self.events_endpoints = EventsEndpoints()
+        self.docker_endpoints = DockerEndpoints()
         self.monitoring_endpoints = MonitoringEndpoints(self.auth_manager)
         self.websocket_endpoints = WebSocketEndpoints(self.auth_manager)
         
@@ -247,6 +252,13 @@ class AdminAPIService:
             dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
         )
         
+        # Docker management endpoints
+        self.app.include_router(
+            self.docker_endpoints.router,
+            tags=["Docker Management"],
+            dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
+        )
+        
         # Events endpoints
         self.app.include_router(
             self.events_endpoints.router,
@@ -275,6 +287,38 @@ class AdminAPIService:
             prefix="/api/v1",
             tags=["Integration Management"]
         )
+        
+        # Devices & Entities endpoints
+        self.app.include_router(
+            devices_router,
+            tags=["Devices & Entities"]
+        )
+        
+        # Metrics endpoints (Epic 17.3)
+        self.app.include_router(
+            create_metrics_router(),
+            prefix="/api/v1",
+            tags=["Metrics"]
+        )
+        
+        # Alert endpoints (Epic 17.4)
+        self.app.include_router(
+            create_alert_router(),
+            prefix="/api/v1",
+            tags=["Alerts"]
+        )
+        
+        # Root health endpoint (for Docker health checks)
+        @self.app.get("/health")
+        async def root_health():
+            """Simple health check endpoint for Docker and monitoring"""
+            uptime = (datetime.now() - self.health_endpoints.start_time).total_seconds()
+            return {
+                "status": "healthy",
+                "timestamp": datetime.now().isoformat(),
+                "service": "admin-api",
+                "uptime_seconds": uptime
+            }
         
         # Root endpoint
         @self.app.get("/", response_model=APIResponse)

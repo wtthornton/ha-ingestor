@@ -22,8 +22,8 @@ from shared.correlation_middleware import create_correlation_middleware
 from data_normalizer import DataNormalizer
 from influxdb_wrapper import InfluxDBClientWrapper
 from health_check import health_check_handler
-from data_validator import DataValidator
-from quality_metrics import QualityMetricsTracker
+from data_validator import DataValidationEngine
+from quality_metrics import QualityMetricsCollector
 from quality_alerts import QualityAlertManager, alert_manager
 from quality_dashboard import QualityDashboardAPI
 from quality_reporting import QualityReportingSystem
@@ -55,8 +55,8 @@ class EnrichmentPipelineService:
         )
         
         # Quality Monitoring Components
-        self.data_validator = DataValidator()
-        self.quality_metrics = QualityMetricsTracker()
+        self.data_validator = DataValidationEngine()
+        self.quality_metrics = QualityMetricsCollector()
         self.alert_manager = alert_manager
         self.quality_dashboard = QualityDashboardAPI(
             self.quality_metrics, 
@@ -325,9 +325,9 @@ class EnrichmentPipelineService:
             "uptime": asyncio.get_event_loop().time() - self.start_time if self.start_time else 0,
             "normalization": self.data_normalizer.get_normalization_statistics(),
             "influxdb": self.influxdb_client.get_statistics(),
-            "quality_metrics": self.quality_metrics.get_current_metrics(),
+            "quality_metrics": self.quality_metrics.get_metrics(),
             "quality_health": self.quality_metrics.get_health_status(),
-            "validation_stats": self.data_validator.get_validation_statistics(),
+            "validation_stats": self.data_validator.get_statistics(),
             "alert_stats": self.alert_manager.get_alert_statistics(),
             "timestamp": asyncio.get_event_loop().time()
         }

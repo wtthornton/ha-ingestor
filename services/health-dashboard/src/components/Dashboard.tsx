@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRealtimeMetrics } from '../hooks/useRealtimeMetrics';
 import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
+import { AlertBanner } from './AlertBanner';
 import * as Tabs from './tabs';
 
 // Tab configuration
@@ -9,6 +10,7 @@ const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
   custom: Tabs.CustomTab,
   services: Tabs.ServicesTab,
   dependencies: Tabs.DependenciesTab,
+  devices: Tabs.DevicesTab,
   events: Tabs.EventsTab,
   logs: Tabs.LogsTab,
   sports: Tabs.SportsTab,
@@ -23,6 +25,7 @@ const TAB_CONFIG = [
   { id: 'custom', label: '🎨 Custom', icon: '🎨', shortLabel: 'Custom' },
   { id: 'services', label: '🔧 Services', icon: '🔧', shortLabel: 'Services' },
   { id: 'dependencies', label: '🔗 Dependencies', icon: '🔗', shortLabel: 'Deps' },
+  { id: 'devices', label: '📱 Devices', icon: '📱', shortLabel: 'Devices' },
   { id: 'events', label: '📡 Events', icon: '📡', shortLabel: 'Events' },
   { id: 'logs', label: '📜 Logs', icon: '📜', shortLabel: 'Logs' },
   { id: 'sports', label: '🏈 Sports', icon: '🏈', shortLabel: 'Sports' },
@@ -164,6 +167,10 @@ export const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Alert Banner (Epic 17.4) */}
+        <AlertBanner darkMode={darkMode} />
+        
+        {/* Tab Content */}
         <TabComponent darkMode={darkMode} />
       </main>
     </div>

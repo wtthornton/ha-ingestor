@@ -31,6 +31,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=influxdb,environment=production"
 
   websocket-ingestion:
     build:
@@ -63,6 +69,12 @@ services:
       - WEATHER_RATE_LIMIT_PER_MINUTE=${WEATHER_RATE_LIMIT_PER_MINUTE:-50}
       - WEATHER_RATE_LIMIT_PER_DAY=${WEATHER_RATE_LIMIT_PER_DAY:-900}
       - WEATHER_REQUEST_TIMEOUT=${WEATHER_REQUEST_TIMEOUT:-10}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=websocket-ingestion,environment=production"
     volumes:
       - ha_ingestor_logs:/var/log/ha-ingestor
     depends_on:
@@ -76,12 +88,6 @@ services:
           memory: 512M
         reservations:
           memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "5"
-        labels: "service=websocket-ingestion"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -107,6 +113,7 @@ services:
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
+      - LOG_FORMAT=json
     depends_on:
       influxdb:
         condition: service_healthy
@@ -118,6 +125,12 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=enrichment-pipeline,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 30s
@@ -133,12 +146,18 @@ services:
     restart: unless-stopped
     ports:
       - "8003:8004"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infrastructure:/app/infrastructure:rw
+      - ./docker-compose.yml:/app/docker-compose.yml:ro
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
+      - LOG_FORMAT=json
       - API_HOST=0.0.0.0
       - API_PORT=8004
       - ENABLE_AUTH=false
+      - DOCKER_HOST=unix:///var/run/docker.sock
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
       - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
@@ -152,9 +171,6 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-adminpass}
       - WEBSOCKET_INGESTION_URL=http://websocket-ingestion:8001
       - ENRICHMENT_PIPELINE_URL=http://enrichment-pipeline:8002
-    volumes:
-      - ./infrastructure:/app/infrastructure:rw
-      - ./docker-compose.yml:/app/docker-compose.yml:ro
     depends_on:
       influxdb:
         condition: service_healthy
@@ -170,8 +186,14 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=admin-api,environment=production"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -192,6 +214,7 @@ services:
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
+      - LOG_FORMAT=json
       - CLEANUP_INTERVAL_HOURS=${CLEANUP_INTERVAL_HOURS:-24}
       - MONITORING_INTERVAL_MINUTES=${MONITORING_INTERVAL_MINUTES:-5}
       - COMPRESSION_INTERVAL_HOURS=${COMPRESSION_INTERVAL_HOURS:-24}
@@ -208,6 +231,12 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=data-retention,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -245,6 +274,12 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=carbon-intensity,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
       interval: 30s
@@ -280,6 +315,12 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=electricity-pricing,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8011/health"]
       interval: 30s
@@ -316,6 +357,12 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=air-quality,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
       interval: 30s
@@ -352,6 +399,12 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=calendar,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8013/health"]
       interval: 30s
@@ -388,6 +441,12 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=smart-meter,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8014/health"]
       interval: 30s
@@ -462,6 +521,12 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=sports-data,environment=production"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8005/health')"]
       interval: 30s
@@ -494,8 +559,51 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=health-dashboard,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  log-aggregator:
+    build:
+      context: .
+      dockerfile: services/log-aggregator/Dockerfile
+    container_name: ha-ingestor-log-aggregator
+    restart: unless-stopped
+    ports:
+      - "8015:8015"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
+      - LOG_FORMAT=json
+      - PORT=8015
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ha_ingestor_logs:/var/log/ha-ingestor
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=log-aggregator,environment=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8015/health"]
       interval: 30s
       timeout: 10s
       retries: 3

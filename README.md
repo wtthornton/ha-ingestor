@@ -129,12 +129,16 @@ This project follows security best practices:
 - Connects to Home Assistant WebSocket API
 - Subscribes to state_changed events
 - Handles authentication and reconnection
+- Enhanced logging with correlation IDs
+- Weather enrichment integration
 - Port: 8001 (external)
 
 #### Enrichment Pipeline Service
 - Processes and enriches Home Assistant events
-- Data validation and normalization
-- Coordinates multi-source enrichment
+- Data validation and quality metrics
+- Normalization and InfluxDB storage
+- Multi-source enrichment coordination
+- Quality dashboard and alerting
 - Port: 8002 (external)
 
 #### Data Retention Service (Enhanced)
@@ -147,21 +151,35 @@ This project follows security best practices:
 - Port: 8080 (external)
 
 #### Admin API Service
-- Provides REST API for administration
-- Health monitoring and configuration
-- **Integration management and service control**
+- Provides REST API gateway for all services
+- Centralized health monitoring
+- **Docker service control** (start/stop/restart containers)
+- **Integration management UI** (HA, Weather, InfluxDB config)
 - System-wide metrics and statistics
-- Port: 8003 (external)
+- WebSocket endpoints for real-time updates
+- Devices & entities registry
+- Alert management system
+- Port: 8003 (mapped to container 8004)
 
 #### Health Dashboard
-- Modern React-based web interface
-- Real-time monitoring and metrics
-- **Configuration management UI**
-- **Service status and control**
-- Mobile-responsive design
+- **12 comprehensive tabs** (Overview, Custom, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Analytics, Alerts, Configuration)
+- **Interactive dependency graph** with click-to-highlight visualization
+- Real-time WebSocket integration
+- **Customizable widget dashboard** (drag & drop)
+- Mobile-responsive design with dark mode
+- Configuration management UI (no terminal needed)
 - Port: 3000 (external)
 
-### External Data Services (New)
+### External Data Services
+
+#### Sports Data Service
+- **NFL & NHL game tracking** using **FREE ESPN API**
+- Team-based filtering (user selects favorite teams)
+- Live game status and upcoming games
+- Smart caching (15s for live, 5min for upcoming)
+- Full dashboard integration with Setup Wizard
+- Port: 8005 (external)
+- **Status:** ✅ Production Ready
 
 #### Carbon Intensity Service
 - Fetches carbon intensity data from National Grid
@@ -193,12 +211,18 @@ This project follows security best practices:
 - Real-time energy consumption
 - Port: 8014 (internal)
 
-### Data Storage
+### Data Storage & Monitoring
 
 #### Weather API Service
 - Fetches weather data from OpenWeatherMap
 - Enriches Home Assistant data with weather context
+- Integrated into websocket-ingestion service
 - Port: Internal (no external access)
+
+#### Log Aggregator Service
+- Centralized log collection from all Docker containers
+- JSON log aggregation and analysis
+- Port: 8015 (external)
 
 #### InfluxDB
 - Time-series database for event storage
@@ -212,23 +236,34 @@ This project follows security best practices:
 
 ```
 ha-ingestor/
-├── services/                      # Backend services
-│   ├── websocket-ingestion/      # Home Assistant WebSocket client
-│   ├── enrichment-pipeline/      # Data enrichment and validation
-│   ├── data-retention/           # Enhanced data lifecycle management
-│   ├── admin-api/                # REST API service
-│   ├── health-dashboard/         # React-based web interface
-│   ├── weather-api/              # Weather data service
-│   ├── carbon-intensity-service/ # Carbon intensity data (NEW)
-│   ├── electricity-pricing-service/ # Electricity pricing (NEW)
-│   ├── air-quality-service/      # Air quality data (NEW)
-│   ├── calendar-service/         # Calendar integration (NEW)
-│   └── smart-meter-service/      # Smart meter data (NEW)
-├── infrastructure/               # Docker and configuration
-├── scripts/                      # Utility scripts
-├── shared/                       # Shared code and types
-├── tests/                        # Integration tests
-└── docs/                         # Documentation
+├── services/                      # 12 microservices (Alpine-based)
+│   ├── websocket-ingestion/      # Port 8001 - HA WebSocket client
+│   ├── enrichment-pipeline/      # Port 8002 - Data processing
+│   ├── admin-api/                # Port 8003 - REST API gateway
+│   ├── data-retention/           # Port 8080 - Data lifecycle
+│   ├── health-dashboard/         # Port 3000 - React UI (12 tabs)
+│   ├── sports-data/              # Port 8005 - ESPN API integration
+│   ├── log-aggregator/           # Port 8015 - Log aggregation
+│   ├── weather-api/              # Internal - Weather enrichment
+│   ├── carbon-intensity-service/ # Port 8010 - Carbon data
+│   ├── electricity-pricing-service/ # Port 8011 - Pricing
+│   ├── air-quality-service/      # Port 8012 - Air quality
+│   ├── calendar-service/         # Port 8013 - Calendar
+│   ├── smart-meter-service/      # Port 8014 - Smart meter
+│   └── ha-simulator/             # Test simulator for HA events
+├── shared/                       # Shared Python utilities
+│   ├── logging_config.py         # Structured logging + correlation IDs
+│   ├── correlation_middleware.py # Request tracking
+│   ├── metrics_collector.py      # Metrics framework
+│   └── alert_manager.py          # Alert management
+├── infrastructure/               # Environment configs
+│   ├── .env.websocket            # WebSocket config
+│   ├── .env.weather              # Weather API config
+│   └── .env.influxdb             # InfluxDB config
+├── scripts/                      # Deployment scripts
+├── tests/                        # Integration & E2E tests (Playwright)
+├── tools/cli/                    # CLI utilities
+└── docs/                         # Comprehensive documentation
 ```
 
 ### Available Scripts
@@ -302,14 +337,17 @@ All services expose health check endpoints:
 
 ### Core Services
 - Admin API: `http://localhost:8003/health`
+- Admin API Full Docs: `http://localhost:8003/docs` (when auth disabled)
 - Admin API Configuration: `http://localhost:8003/api/v1/integrations`
 - WebSocket Ingestion: `http://localhost:8001/health`
 - Enrichment Pipeline: `http://localhost:8002/health`
 - Data Retention: `http://localhost:8080/health`
+- Sports Data: `http://localhost:8005/health`
+- Log Aggregator: `http://localhost:8015/health`
 - Health Dashboard: `http://localhost:3000`
 - InfluxDB: `http://localhost:8086/health`
 
-### External Data Services
+### External Data Services (Internal Network Only)
 - Carbon Intensity: Internal health checks only
 - Electricity Pricing: Internal health checks only
 - Air Quality: Internal health checks only

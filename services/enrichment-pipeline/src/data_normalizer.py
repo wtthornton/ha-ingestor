@@ -1,5 +1,6 @@
 """
 Data Normalization Service for Home Assistant Events
+Epic 18.1: Integrated with Data Validation Engine
 """
 
 import logging
@@ -7,6 +8,9 @@ from typing import Dict, Any, Optional, Union
 from datetime import datetime, timezone
 import re
 import json
+
+from data_validator import get_validator, ValidationResult
+from quality_metrics import get_quality_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +22,8 @@ class DataNormalizer:
         self.normalized_events = 0
         self.normalization_errors = 0
         self.last_normalized_time: Optional[datetime] = None
+        self.validator = get_validator()  # Epic 18.1: Data validation engine
+        self.quality_metrics = get_quality_metrics_collector()  # Epic 18.2: Quality metrics
         
         # State value mappings
         self.boolean_states = {
@@ -60,9 +66,30 @@ class DataNormalizer:
             event_data: The raw event data
             
         Returns:
-            Normalized event data or None if normalization fails
+            Normalized event data or None if normalization fails or validation fails
         """
         try:
+            # Epic 18.1: Validate event data FIRST
+            validation_result = self.validator.validate_event(event_data)
+            
+            # Epic 18.2: Record quality metrics
+            self.quality_metrics.record_validation_result(validation_result, event_data)
+            
+            # Log validation results
+            if not validation_result.is_valid:
+                logger.error(
+                    f"Event validation failed for {event_data.get('data', {}).get('entity_id', 'unknown')}: "
+                    f"{', '.join(validation_result.errors)}"
+                )
+                self.normalization_errors += 1
+                return None  # Reject invalid events
+            
+            if validation_result.warnings:
+                logger.warning(
+                    f"Event validation warnings for {event_data.get('data', {}).get('entity_id', 'unknown')}: "
+                    f"{', '.join(validation_result.warnings)}"
+                )
+            
             # Start with a copy of the original data
             normalized = event_data.copy()
             
@@ -317,10 +344,163 @@ class DataNormalizer:
                 elif unit in self.pressure_units:
                     normalized_attrs["unit_of_measurement"] = self.pressure_units[unit]
             
+            # Normalize numeric attribute fields to prevent InfluxDB type conflicts
+            normalized_attrs = self._normalize_numeric_attributes(normalized_attrs)
+            
             return normalized_attrs
             
         except Exception as e:
             logger.error(f"Error normalizing attribute units: {e}")
+            return attributes
+    
+    def _normalize_numeric_attributes(self, attributes: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Normalize ALL attribute field types to prevent InfluxDB type conflicts.
+        
+        InfluxDB enforces strict field typing - once a field is defined with a type,
+        it cannot accept different types. This method ensures consistent typing for:
+        - Boolean fields (true/false strings → boolean)
+        - Numeric fields (string numbers → float)
+        - String fields (keep as strings)
+        - Null/empty values (remove)
+        
+        Args:
+            attributes: The attributes dictionary
+            
+        Returns:
+            Attributes with normalized field types
+        """
+        try:
+            # Known boolean attribute fields that may arrive as strings from Home Assistant
+            boolean_fields = [
+                'dynamic_eq', 'aux_heat', 'away_mode', 'is_volume_muted', 
+                'shuffle', 'repeat', 'is_locked', 'motion_detected', 
+                'tamper_detected', 'battery_low', 'door_open', 'window_open',
+                'occupancy', 'presence', 'charging', 'auto', 'eco_mode'
+            ]
+            
+            # Known numeric attribute fields that may arrive as strings from Home Assistant
+            numeric_fields = [
+                'azimuth', 'elevation', 'brightness', 'temperature', 'humidity',
+                'pressure', 'battery', 'battery_level', 'power', 'energy', 
+                'voltage', 'current', 'frequency', 'speed', 'distance',
+                'wind_speed', 'wind_bearing', 'visibility', 'precipitation',
+                'uv_index', 'pm25', 'pm10', 'co2', 'voc', 'latitude', 'longitude',
+                'volume_level', 'media_position', 'media_duration', 'supported_features',
+                'hvac_modes', 'swing_modes', 'fan_modes', 'preset_modes', 'options',
+                'min_temp', 'max_temp', 'min_humidity', 'max_humidity', 'step'
+            ]
+            
+            normalized_attrs = attributes.copy()
+            type_conversions = {'boolean': 0, 'numeric': 0, 'removed': 0}
+            
+            for key, value in list(normalized_attrs.items()):
+                # Skip None values
+                if value is None:
+                    del normalized_attrs[key]
+                    type_conversions['removed'] += 1
+                    continue
+                
+                # Remove attr_ prefix for matching
+                attr_name = key.replace('attr_', '')
+                
+                # Handle Boolean Fields
+                if attr_name in boolean_fields:
+                    try:
+                        if isinstance(value, bool):
+                            # Already boolean, keep as-is
+                            pass
+                        elif isinstance(value, str):
+                            # Convert string to boolean
+                            value_lower = value.lower().strip()
+                            if value_lower in ('true', '1', 'on', 'yes', 'enabled'):
+                                normalized_attrs[key] = True
+                                type_conversions['boolean'] += 1
+                            elif value_lower in ('false', '0', 'off', 'no', 'disabled'):
+                                normalized_attrs[key] = False
+                                type_conversions['boolean'] += 1
+                            elif value_lower == '':
+                                # Empty string - remove field
+                                del normalized_attrs[key]
+                                type_conversions['removed'] += 1
+                            else:
+                                # Invalid boolean value - remove to prevent conflict
+                                logger.warning(f"Invalid boolean value for {key}: '{value}' - removing field")
+                                del normalized_attrs[key]
+                                type_conversions['removed'] += 1
+                        elif isinstance(value, (int, float)):
+                            # Convert 0/1 to boolean
+                            normalized_attrs[key] = bool(value)
+                            type_conversions['boolean'] += 1
+                        else:
+                            # Unknown type - remove
+                            logger.warning(f"Removing boolean field {key} with invalid type {type(value)}: {value}")
+                            del normalized_attrs[key]
+                            type_conversions['removed'] += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to convert {key} to boolean: {value} ({e}) - removing field")
+                        del normalized_attrs[key]
+                        type_conversions['removed'] += 1
+                
+                # Handle Numeric Fields
+                elif attr_name in numeric_fields:
+                    try:
+                        if isinstance(value, str):
+                            # Handle empty strings
+                            if value.strip() == '':
+                                del normalized_attrs[key]
+                                type_conversions['removed'] += 1
+                                continue
+                            
+                            # Attempt float conversion
+                            normalized_attrs[key] = float(value)
+                            type_conversions['numeric'] += 1
+                        
+                        elif isinstance(value, (int, float)):
+                            # Already numeric, ensure it's float for consistency
+                            normalized_attrs[key] = float(value)
+                        
+                        elif isinstance(value, bool):
+                            # Boolean shouldn't be in numeric field - convert to 0/1
+                            normalized_attrs[key] = float(1 if value else 0)
+                            type_conversions['numeric'] += 1
+                        
+                        else:
+                            # Non-numeric value - remove to prevent conflict
+                            logger.warning(f"Removing numeric field {key} with non-numeric type {type(value)}: {value}")
+                            del normalized_attrs[key]
+                            type_conversions['removed'] += 1
+                    
+                    except (ValueError, TypeError) as e:
+                        # Conversion failed - remove field rather than cause InfluxDB conflict
+                        logger.warning(f"Failed to convert {key} to float: {value} ({e}) - removing field")
+                        del normalized_attrs[key]
+                        type_conversions['removed'] += 1
+                
+                # Handle String Fields (keep as-is, just ensure they're strings)
+                else:
+                    if isinstance(value, str):
+                        # Already string, keep as-is
+                        pass
+                    elif isinstance(value, (int, float, bool)):
+                        # Convert primitives to strings to maintain consistency
+                        normalized_attrs[key] = str(value)
+                    elif value == '':
+                        # Empty string - remove
+                        del normalized_attrs[key]
+                        type_conversions['removed'] += 1
+                    # Lists, dicts, etc. keep as-is (InfluxDB will handle as JSON)
+            
+            # Log type conversions summary if any occurred
+            if sum(type_conversions.values()) > 0:
+                logger.info(f"Type normalization applied: {type_conversions['boolean']} boolean, "
+                           f"{type_conversions['numeric']} numeric, "
+                           f"{type_conversions['removed']} removed fields")
+            
+            return normalized_attrs
+            
+        except Exception as e:
+            logger.error(f"Error normalizing attribute types: {e}")
             return attributes
     
     def _extract_entity_metadata(self, event_data: Dict[str, Any]) -> Dict[str, Any]:

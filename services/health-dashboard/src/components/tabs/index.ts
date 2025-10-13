@@ -15,4 +15,5 @@ export { DataSourcesTab } from './DataSourcesTab';
 export { AnalyticsTab } from './AnalyticsTab';
 export { AlertsTab } from './AlertsTab';
 export { ConfigurationTab } from './ConfigurationTab';
+export { DevicesTab } from './DevicesTab';
 

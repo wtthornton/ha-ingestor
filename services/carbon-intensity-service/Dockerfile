@@ -1,5 +1,5 @@
 # Multi-stage build for Carbon Intensity Service
-FROM python:3.11-alpine AS builder
+FROM python:3.12-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -9,10 +9,11 @@ RUN apk add --no-cache gcc musl-dev linux-headers
 
 # Copy requirements and install Python dependencies
 COPY services/carbon-intensity-service/requirements-prod.txt .
-RUN pip install --no-cache-dir --user -r requirements-prod.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --user -r requirements-prod.txt
 
 # Production stage
-FROM python:3.11-alpine AS production
+FROM python:3.12-alpine AS production
 
 # Set working directory
 WORKDIR /app
@@ -40,6 +41,8 @@ RUN mkdir -p /app/logs && \
     chmod -R 755 /app/logs
 
 # Set environment variables
+ENV PYTHONPATH=/app:/app/src
+ENV PYTHONUNBUFFERED=1
 ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Switch to non-root user

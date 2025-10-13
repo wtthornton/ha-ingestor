@@ -8,12 +8,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 interface LogEntry {
-  id: string;
+  id?: string;
   timestamp: string;
   level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
   service: string;
   message: string;
-  context?: any;
+  correlation_id?: string;
+  context?: {
+    filename?: string;
+    lineno?: number;
+    function?: string;
+    module?: string;
+    pathname?: string;
+  };
 }
 
 interface LogTailViewerProps {
@@ -31,51 +38,43 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
   const logsEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // WebSocket connection for logs
+  // Fetch logs from log aggregator service
   useEffect(() => {
-    const connectLogStream = () => {
-      const ws = new WebSocket('ws://localhost:8003/ws/logs');
-      
-      ws.onopen = () => {
-        console.log('Log stream connected');
-      };
-      
-      ws.onmessage = (event) => {
-        if (isPaused) return;
+    let intervalId: NodeJS.Timeout;
+    
+    const fetchLogs = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (selectedService !== 'all') params.append('service', selectedService);
+        if (selectedLevel !== 'all') params.append('level', selectedLevel);
+        params.append('limit', '100');
         
-        try {
-          const logEntry = JSON.parse(event.data);
-          setLogs(prev => {
-            // Keep max 1000 logs
-            const updated = [logEntry, ...prev].slice(0, 1000);
-            return updated;
-          });
-        } catch (e) {
-          console.error('Failed to parse log entry:', e);
+        const response = await fetch(`http://localhost:8015/api/v1/logs?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLogs(data.logs || []);
+        } else {
+          console.error('Failed to fetch logs:', response.statusText);
         }
-      };
-      
-      ws.onerror = (error) => {
-        console.error('Log stream error:', error);
-      };
-      
-      ws.onclose = () => {
-        console.log('Log stream disconnected');
-        // Attempt reconnect after 5 seconds
-        setTimeout(connectLogStream, 5000);
-      };
-      
-      wsRef.current = ws;
-    };
-    
-    connectLogStream();
-    
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+      } catch (error) {
+        console.error('Error fetching logs:', error);
       }
     };
-  }, [isPaused]);
+    
+    if (!isPaused) {
+      // Fetch logs immediately
+      fetchLogs();
+      
+      // Set up polling every 5 seconds
+      intervalId = setInterval(fetchLogs, 5000);
+    }
+    
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isPaused, selectedService, selectedLevel]);
 
   // Auto-scroll
   useEffect(() => {
@@ -84,16 +83,49 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
     }
   }, [logs, autoScroll]);
 
-  // Filter logs
+  // Search logs using log aggregator API
+  const searchLogs = async (query: string) => {
+    if (!query.trim()) return;
+    
+    try {
+      const params = new URLSearchParams();
+      params.append('q', query);
+      params.append('limit', '100');
+      
+      const response = await fetch(`http://localhost:8015/api/v1/logs/search?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLogs(data.logs || []);
+      } else {
+        console.error('Failed to search logs:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error searching logs:', error);
+    }
+  };
+
+  // Filter logs (for local filtering when not searching)
   const filteredLogs = logs.filter(log => {
     if (selectedLevel !== 'all' && log.level !== selectedLevel) return false;
     if (selectedService !== 'all' && log.service !== selectedService) return false;
-    if (searchQuery && !log.message.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
   // Get unique services
   const services = ['all', ...Array.from(new Set(logs.map(l => l.service)))];
+
+  // Clear logs
+  const clearLogs = () => {
+    setLogs([]);
+  };
+
+  // Copy log to clipboard
+  const copyLog = (log: LogEntry) => {
+    const logText = `[${log.timestamp}] ${log.level} ${log.service}: ${log.message}`;
+    navigator.clipboard.writeText(logText).then(() => {
+      console.log('Log copied to clipboard');
+    });
+  };
 
   // Get log level color
   const getLogLevelColor = (level: string) => {
@@ -110,17 +142,6 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
       default:
         return darkMode ? 'text-gray-300' : 'text-gray-700';
     }
-  };
-
-  // Copy log to clipboard
-  const copyLog = (log: LogEntry) => {
-    const logText = `[${log.timestamp}] [${log.level}] [${log.service}] ${log.message}`;
-    navigator.clipboard.writeText(logText);
-  };
-
-  // Clear logs
-  const clearLogs = () => {
-    setLogs([]);
   };
 
   return (
@@ -183,13 +204,26 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
             ))}
           </select>
           
-          <input
-            type="text"
-            placeholder="Search logs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-base min-h-[44px]"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Search logs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  searchLogs(searchQuery);
+                }
+              }}
+              className="input-base min-h-[44px] flex-1"
+            />
+            <button
+              onClick={() => searchLogs(searchQuery)}
+              className="btn-primary text-sm min-h-[44px] px-4"
+            >
+              🔍 Search
+            </button>
+          </div>
         </div>
         
         <div className="flex gap-4 mt-3 text-sm">

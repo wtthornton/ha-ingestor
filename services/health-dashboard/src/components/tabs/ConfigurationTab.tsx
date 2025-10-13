@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { ThresholdConfig } from '../ThresholdConfig';
 import { ServiceControl } from '../ServiceControl';
 import { ConfigForm } from '../ConfigForm';
+import { ContainerManagement } from '../ContainerManagement';
+import { APIKeyManagement } from '../APIKeyManagement';
 import { TabProps } from './types';
 
-type ConfigView = 'main' | 'websocket' | 'weather' | 'influxdb';
+type ConfigView = 'main' | 'websocket' | 'weather' | 'influxdb' | 'containers' | 'api-keys';
 
 export const ConfigurationTab: React.FC<TabProps> = ({ darkMode }) => {
   const [configView, setConfigView] = useState<ConfigView>('main');
@@ -51,6 +53,34 @@ export const ConfigurationTab: React.FC<TabProps> = ({ darkMode }) => {
     );
   }
 
+  if (configView === 'containers') {
+    return (
+      <div>
+        <button
+          onClick={() => setConfigView('main')}
+          className="mb-4 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        >
+          ← Back to Configuration
+        </button>
+        <ContainerManagement darkMode={darkMode} />
+      </div>
+    );
+  }
+
+  if (configView === 'api-keys') {
+    return (
+      <div>
+        <button
+          onClick={() => setConfigView('main')}
+          className="mb-4 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        >
+          ← Back to Configuration
+        </button>
+        <APIKeyManagement darkMode={darkMode} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Preferences & Thresholds */}
@@ -64,7 +94,25 @@ export const ConfigurationTab: React.FC<TabProps> = ({ darkMode }) => {
           Manage external API credentials and service settings
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <button
+            onClick={() => setConfigView('containers')}
+            className="bg-green-50 dark:bg-green-900 p-6 rounded-lg hover:shadow-lg transition-shadow duration-200 text-left"
+          >
+            <div className="text-4xl mb-2">🐳</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Container Management</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Start, stop, restart containers</p>
+          </button>
+          
+          <button
+            onClick={() => setConfigView('api-keys')}
+            className="bg-purple-50 dark:bg-purple-900 p-6 rounded-lg hover:shadow-lg transition-shadow duration-200 text-left"
+          >
+            <div className="text-4xl mb-2">🔑</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">API Key Management</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Configure external service keys</p>
+          </button>
+          
           <button
             onClick={() => setConfigView('websocket')}
             className="bg-blue-50 dark:bg-blue-900 p-6 rounded-lg hover:shadow-lg transition-shadow duration-200 text-left"

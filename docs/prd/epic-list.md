@@ -18,3 +18,15 @@ Admin interface, enhanced dashboards, sports data, UX improvements, and advanced
 **Epic 16: Code Quality & Maintainability Improvements**
 Improve code maintainability for the personal home automation project. Simplify Dashboard component, add basic test coverage, and enhance security setup documentation.
 
+**Epic 17: Essential Monitoring & Observability**
+Implement essential monitoring and observability features to ensure the Home Assistant Ingestor system is production-ready with proper visibility into system health, performance, and issues.
+
+**Epic 18: Data Quality & Validation Completion**
+Complete the data quality and validation system that was identified as incomplete in QA assessments. This epic focuses on implementing the missing data quality components without over-engineering the solution.
+
+**Epic 19: Device & Entity Discovery**
+Discover and maintain complete inventory of all devices, entities, and integrations connected to Home Assistant. Provides visibility into system topology, enables troubleshooting, and establishes foundation for advanced monitoring features. ✅ **COMPLETE**
+
+**Epic 20: Devices Dashboard**
+Interactive dashboard tab to browse and visualize Home Assistant devices, entities, and integrations. Reuses proven Dependencies Tab pattern for excellent UX. Provides easy exploration and system understanding.
+

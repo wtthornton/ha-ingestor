@@ -20,28 +20,49 @@ ha-ingestor/
 │   ├── stories/                   # Development stories
 │   ├── qa/                        # Quality assurance documents
 │   └── kb/                        # Knowledge base cache
-├── services/                      # Microservices
-│   ├── admin-api/                 # FastAPI REST API service
-│   ├── health-dashboard/          # React frontend application
-│   ├── websocket-ingestion/       # WebSocket client service
-│   ├── enrichment-pipeline/       # Data processing service
-│   ├── data-retention/            # Data cleanup service
-│   └── weather-api/               # Weather integration service
-├── shared/                        # Shared code and types
-│   ├── types/                     # TypeScript interfaces
-│   └── logging_config.py          # Shared logging configuration
+├── services/                      # 12 Microservices (Alpine-based)
+│   ├── admin-api/                 # FastAPI REST API gateway (Port 8003)
+│   ├── health-dashboard/          # React frontend (12 tabs, Port 3000)
+│   ├── websocket-ingestion/       # WebSocket client service (Port 8001)
+│   ├── enrichment-pipeline/       # Data processing service (Port 8002)
+│   ├── data-retention/            # Data lifecycle management (Port 8080)
+│   ├── sports-data/               # ESPN sports API service (Port 8005)
+│   ├── log-aggregator/            # Centralized logging (Port 8015)
+│   ├── weather-api/               # Weather integration (Internal)
+│   ├── carbon-intensity-service/  # Carbon data (Port 8010)
+│   ├── electricity-pricing-service/ # Pricing data (Port 8011)
+│   ├── air-quality-service/       # Air quality (Port 8012)
+│   ├── calendar-service/          # Calendar integration (Port 8013)
+│   ├── smart-meter-service/       # Smart meter (Port 8014)
+│   └── ha-simulator/              # Test event generator
+├── shared/                        # Shared Python utilities
+│   ├── logging_config.py          # ⭐ Structured logging + correlation IDs
+│   ├── correlation_middleware.py # Request tracking middleware
+│   ├── metrics_collector.py       # Metrics collection framework
+│   ├── alert_manager.py           # Alert management system
+│   ├── system_metrics.py          # System-level metrics
+│   └── types/                     # Shared type definitions
+│       └── health.py              # Health status types
 ├── infrastructure/                # Infrastructure configuration
 │   ├── docker-logging.conf        # Docker logging configuration
 │   ├── env.example                # Environment template
 │   ├── env.production             # Production environment
+│   ├── .env.websocket             # WebSocket service config
+│   ├── .env.weather               # Weather API config
+│   ├── .env.influxdb              # InfluxDB config
+│   ├── env.sports.template        # Sports API template
 │   └── influxdb/                  # InfluxDB configuration
+│       ├── influxdb.conf          # InfluxDB server config
+│       └── init-influxdb.sh       # Initialization script
 ├── scripts/                       # Deployment and utility scripts
-├── tests/                         # Integration and E2E tests
-├── tools/                         # CLI tools and utilities
-├── docker-compose.yml             # Main Docker Compose file
-├── docker-compose.dev.yml         # Development configuration
-├── docker-compose.prod.yml        # Production configuration
-└── README.md                      # Project overview
+├── tests/                         # Integration and E2E tests (Playwright)
+├── tools/cli/                     # CLI utilities and helpers
+├── docker-compose.yml             # Main Docker Compose (Production)
+├── docker-compose.dev.yml         # Development with hot reload
+├── docker-compose.prod.yml        # Production overrides
+├── docker-compose.minimal.yml     # Core services only
+├── docker-compose.simple.yml      # Simplified configuration
+└── README.md                      # Project overview (Updated)
 ```
 
 ## Services Directory Structure
@@ -72,38 +93,48 @@ admin-api/
 health-dashboard/
 ├── src/
 │   ├── components/                # React components
-│   │   ├── Dashboard.tsx          # Main dashboard component
-│   │   ├── Navigation.tsx         # Navigation component
-│   │   ├── StatusIndicator.tsx    # Status indicator
-│   │   ├── Monitoring.tsx         # Monitoring component
-│   │   ├── Settings.tsx           # Settings component
-│   │   └── StatisticsCard.tsx     # Statistics display
+│   │   ├── Dashboard.tsx          # Main dashboard with 12 tabs
+│   │   ├── tabs/                  # Tab components
+│   │   │   ├── OverviewTab.tsx    # System overview
+│   │   │   ├── CustomTab.tsx      # Customizable dashboard
+│   │   │   ├── ServicesTab.tsx    # Service management
+│   │   │   ├── DependenciesTab.tsx # Dependency visualization
+│   │   │   ├── DevicesTab.tsx     # Device & entity browser
+│   │   │   ├── EventsTab.tsx      # Real-time event stream
+│   │   │   ├── LogsTab.tsx        # Live log viewer
+│   │   │   ├── SportsTab.tsx      # Sports tracking
+│   │   │   ├── DataSourcesTab.tsx # Data sources status
+│   │   │   ├── AnalyticsTab.tsx   # Performance analytics
+│   │   │   ├── AlertsTab.tsx      # Alert management
+│   │   │   └── ConfigurationTab.tsx # Service configuration
+│   │   ├── ServiceDependencyGraph.tsx # ⭐ Interactive graph
+│   │   ├── sports/                # Sports components
+│   │   │   ├── LiveGameCard.tsx   # Live game display
+│   │   │   ├── TeamSelector.tsx   # Team selection UI
+│   │   │   └── SetupWizard.tsx    # First-run setup
+│   │   ├── ConnectionStatusIndicator.tsx # WebSocket status
+│   │   ├── AlertBanner.tsx        # Alert notifications
+│   │   ├── MetricsChart.tsx       # Chart.js charts
+│   │   └── widgets/               # Reusable widgets
 │   ├── hooks/                     # Custom React hooks
+│   │   ├── useRealtimeMetrics.ts  # WebSocket hook
 │   │   ├── useHealth.ts           # Health status hook
-│   │   ├── useStatistics.ts       # Statistics hook
-│   │   └── useEvents.ts           # Events hook
+│   │   └── useStatistics.ts       # Statistics hook
 │   ├── services/                  # API service layer
 │   │   ├── api.ts                 # API client
-│   │   ├── websocket.ts           # WebSocket service
-│   │   └── notificationService.ts # Notification service
-│   ├── contexts/                  # React contexts
-│   │   ├── ThemeContext.tsx       # Theme management
-│   │   ├── LayoutContext.tsx      # Layout management
-│   │   └── NotificationContext.tsx # Notification management
+│   │   └── websocket.ts           # WebSocket service
 │   ├── types/                     # TypeScript type definitions
-│   │   └── index.ts               # Type exports
-│   ├── utils/                     # Utility functions
-│   │   └── exportUtils.ts         # Data export utilities
-│   ├── App.tsx                    # Main application component
-│   └── main.tsx                   # Application entry point
-├── tests/                         # Component and unit tests
+│   ├── App.tsx                    # Main application
+│   └── main.tsx                   # Entry point
+├── tests/                         # Playwright E2E tests
 ├── public/                        # Static assets
-├── Dockerfile                     # Production Docker image
-├── Dockerfile.dev                 # Development Docker image
-├── package.json                   # Node.js dependencies
-├── vite.config.ts                 # Vite configuration
-├── tailwind.config.js             # TailwindCSS configuration
-└── playwright.config.ts           # Playwright E2E configuration
+├── Dockerfile                     # Production (nginx + multi-stage)
+├── nginx.conf                     # nginx configuration
+├── package.json                   # Dependencies
+├── vite.config.ts                 # Vite build configuration
+├── vitest.config.ts               # Vitest test configuration
+├── playwright.config.ts           # Playwright E2E configuration
+└── tailwind.config.js             # TailwindCSS configuration
 ```
 
 ### WebSocket Ingestion Service (`services/websocket-ingestion/`)

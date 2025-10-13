@@ -235,6 +235,7 @@ This document provides a comprehensive overview of all services in the Home Assi
 - Location-based weather data
 - Weather context for events
 - Caching and rate limiting
+- Integrated into websocket-ingestion service
 
 **Data Source:** OpenWeatherMap
 
@@ -242,11 +243,76 @@ This document provides a comprehensive overview of all services in the Home Assi
 
 ---
 
+### 13. Sports Data Service ⚡ NEW
+**Port:** 8005 (external)  
+**Technology:** Python 3.11, FastAPI  
+**Purpose:** NFL & NHL sports data integration
+
+**Key Features:**
+- **FREE ESPN API** (no API key required)
+- Team-based filtering (user selects favorite teams)
+- Live game status with real-time updates
+- Upcoming games (next 24-48 hours)
+- Smart caching strategy:
+  - Live games: 15-second TTL
+  - Upcoming games: 5-minute TTL
+- Dashboard integration with Setup Wizard
+- API usage tracking and metrics
+
+**Endpoints:**
+- `/api/v1/games/live` - Get live games for selected teams
+- `/api/v1/games/upcoming` - Get upcoming games
+- `/api/v1/teams` - Get available teams (NFL & NHL)
+- `/api/v1/user/teams` - Manage selected teams
+- `/api/v1/metrics/api-usage` - Track API usage
+
+**Health Check:** `http://localhost:8005/health`
+
+**API Documentation:** `http://localhost:8005/docs`
+
+**README:** [services/sports-data/README.md](../services/sports-data/README.md)
+
+**Status:** ✅ Production Ready
+
+---
+
+### 14. Log Aggregator Service
+**Port:** 8015 (external)  
+**Technology:** Python 3.11  
+**Purpose:** Centralized log aggregation
+
+**Key Features:**
+- Collects logs from all Docker containers
+- JSON log parsing and aggregation
+- Real-time log streaming
+- Log search and filtering
+
+**Health Check:** `http://localhost:8015/health`
+
+**README:** [services/log-aggregator/README.md](../services/log-aggregator/README.md)
+
+---
+
+### 15. HA Simulator Service
+**Port:** N/A (test utility)  
+**Technology:** Python 3.11  
+**Purpose:** Test event generator
+
+**Key Features:**
+- Simulates Home Assistant events
+- Configurable event generation
+- Used for testing and development
+- YAML-based configuration
+
+**README:** [services/ha-simulator/README.md](../services/ha-simulator/README.md)
+
+---
+
 ## 📊 Service Statistics
 
 ### Core Services
-- **Total:** 6 services
-- **External Ports:** 5 services
+- **Total:** 8 services (including sports-data and log-aggregator)
+- **External Ports:** 8 services
 - **Technology:** Python/FastAPI, React/TypeScript, InfluxDB
 - **Container Size:** 40-80MB (Alpine-based)
 
@@ -257,8 +323,8 @@ This document provides a comprehensive overview of all services in the Home Assi
 - **Container Size:** 40-45MB (Alpine-based)
 
 ### Overall System
-- **Total Services:** 12
-- **Microservices:** 11 containerized services + InfluxDB
+- **Total Services:** 15 (14 microservices + InfluxDB)
+- **Microservices:** Python (12), React (1), InfluxDB (1), Simulator (1)
 - **Total Container Size:** ~600MB (71% reduction with Alpine)
 - **Architecture:** Event-driven microservices
 
@@ -268,20 +334,23 @@ This document provides a comprehensive overview of all services in the Home Assi
 
 ```
 Home Assistant → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
-                                              ↑
-                                              |
-                        ┌─────────────────────┴─────────────────────┐
-                        │                                           │
-                External Data Services                    Data Retention
-                - Weather API                                      ↓
-                - Carbon Intensity                              S3/Glacier
-                - Electricity Pricing
-                - Air Quality
-                - Calendar
-                - Smart Meter
-                        │
-                        ↓
-                Admin API ← Health Dashboard
+                        ↓                       ↑                    ↑
+                  (Weather Enrichment)          |                    |
+                                                |              Data Retention
+                        ┌───────────────────────┴──────┐            ↓
+                        │                              │        S3/Glacier
+                External Data Services          Sports Data
+                - Carbon Intensity              (ESPN API)
+                - Electricity Pricing                  
+                - Air Quality                          
+                - Calendar                             
+                - Smart Meter                          
+                        │                              │
+                        └──────────────┬───────────────┘
+                                       ↓
+                Admin API ← Health Dashboard (12 tabs)
+                    ↑            ↑
+              Log Aggregator  Sports Tab
 ```
 
 ---

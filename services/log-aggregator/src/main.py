@@ -1,0 +1,230 @@
+"""Log Aggregation Service for Centralized Log Collection"""
+
+import asyncio
+import json
+import logging
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+from aiohttp import web
+import aiofiles
+
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
+from shared.logging_config import setup_logging, get_logger
+
+# Configure logging
+logger = setup_logging("log-aggregator")
+
+class LogAggregator:
+    """Simple log aggregation service for collecting logs from all services"""
+    
+    def __init__(self):
+        self.log_directory = Path("/var/log/ha-ingestor")
+        self.log_directory.mkdir(exist_ok=True)
+        self.aggregated_logs = []
+        self.max_logs = 10000  # Keep last 10k log entries in memory
+        
+    async def collect_logs(self) -> List[Dict]:
+        """Collect logs from Docker logging directories"""
+        logs = []
+        
+        try:
+            # Read from Docker log files (simplified approach)
+            docker_log_dir = Path("/var/lib/docker/containers")
+            if docker_log_dir.exists():
+                for container_dir in docker_log_dir.iterdir():
+                    if container_dir.is_dir():
+                        log_file = container_dir / "container.log"
+                        if log_file.exists():
+                            # Read recent logs (last 100 lines)
+                            async with aiofiles.open(log_file, 'r') as f:
+                                lines = await f.readlines()
+                                recent_lines = lines[-100:] if len(lines) > 100 else lines
+                                
+                                for line in recent_lines:
+                                    try:
+                                        log_entry = json.loads(line.strip())
+                                        log_entry['source'] = container_dir.name
+                                        logs.append(log_entry)
+                                    except json.JSONDecodeError:
+                                        # Skip non-JSON lines
+                                        continue
+            
+            # Store in aggregated logs
+            self.aggregated_logs.extend(logs)
+            
+            # Keep only recent logs
+            if len(self.aggregated_logs) > self.max_logs:
+                self.aggregated_logs = self.aggregated_logs[-self.max_logs:]
+                
+            logger.info(f"Collected {len(logs)} log entries")
+            return logs
+            
+        except Exception as e:
+            logger.error(f"Error collecting logs: {e}")
+            return []
+    
+    async def get_recent_logs(self, service: Optional[str] = None, 
+                            level: Optional[str] = None, 
+                            limit: int = 100) -> List[Dict]:
+        """Get recent logs with optional filtering"""
+        logs = self.aggregated_logs.copy()
+        
+        # Filter by service
+        if service:
+            logs = [log for log in logs if log.get('service') == service]
+        
+        # Filter by level
+        if level:
+            logs = [log for log in logs if log.get('level') == level.upper()]
+        
+        # Sort by timestamp (most recent first)
+        logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        # Return limited results
+        return logs[:limit]
+    
+    async def search_logs(self, query: str, limit: int = 100) -> List[Dict]:
+        """Search logs by message content"""
+        logs = []
+        
+        for log in self.aggregated_logs:
+            if query.lower() in log.get('message', '').lower():
+                logs.append(log)
+        
+        # Sort by timestamp (most recent first)
+        logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        return logs[:limit]
+
+# Global log aggregator instance
+log_aggregator = LogAggregator()
+
+async def health_check(request: web.Request) -> web.Response:
+    """Health check endpoint"""
+    return web.json_response({
+        "status": "healthy",
+        "service": "log-aggregator",
+        "timestamp": datetime.utcnow().isoformat(),
+        "logs_collected": len(log_aggregator.aggregated_logs)
+    })
+
+async def get_logs(request: web.Request) -> web.Response:
+    """Get recent logs with optional filtering"""
+    service = request.query.get('service')
+    level = request.query.get('level')
+    limit = int(request.query.get('limit', 100))
+    
+    logs = await log_aggregator.get_recent_logs(service, level, limit)
+    
+    return web.json_response({
+        "logs": logs,
+        "count": len(logs),
+        "filters": {
+            "service": service,
+            "level": level,
+            "limit": limit
+        }
+    })
+
+async def search_logs(request: web.Request) -> web.Response:
+    """Search logs by query"""
+    query = request.query.get('q', '')
+    limit = int(request.query.get('limit', 100))
+    
+    if not query:
+        return web.json_response({
+            "error": "Query parameter 'q' is required"
+        }, status=400)
+    
+    logs = await log_aggregator.search_logs(query, limit)
+    
+    return web.json_response({
+        "logs": logs,
+        "count": len(logs),
+        "query": query,
+        "limit": limit
+    })
+
+async def collect_logs(request: web.Request) -> web.Response:
+    """Manually trigger log collection"""
+    logs = await log_aggregator.collect_logs()
+    
+    return web.json_response({
+        "message": f"Collected {len(logs)} log entries",
+        "logs_collected": len(logs),
+        "total_logs": len(log_aggregator.aggregated_logs)
+    })
+
+async def get_log_stats(request: web.Request) -> web.Response:
+    """Get log statistics"""
+    stats = {
+        "total_logs": len(log_aggregator.aggregated_logs),
+        "services": {},
+        "levels": {},
+        "recent_logs": len([log for log in log_aggregator.aggregated_logs 
+                           if (datetime.utcnow() - datetime.fromisoformat(log.get('timestamp', '1970-01-01T00:00:00Z').replace('Z', '+00:00'))).total_seconds() < 3600])
+    }
+    
+    # Count by service and level
+    for log in log_aggregator.aggregated_logs:
+        service = log.get('service', 'unknown')
+        level = log.get('level', 'unknown')
+        
+        stats['services'][service] = stats['services'].get(service, 0) + 1
+        stats['levels'][level] = stats['levels'].get(level, 0) + 1
+    
+    return web.json_response(stats)
+
+async def background_log_collection():
+    """Background task to collect logs periodically"""
+    while True:
+        try:
+            await log_aggregator.collect_logs()
+            await asyncio.sleep(30)  # Collect logs every 30 seconds
+        except Exception as e:
+            logger.error(f"Error in background log collection: {e}")
+            await asyncio.sleep(60)  # Wait longer on error
+
+async def main():
+    """Main application entry point"""
+    logger.info("Starting log aggregation service...")
+    
+    # Create web application
+    app = web.Application()
+    
+    # Add routes
+    app.router.add_get('/health', health_check)
+    app.router.add_get('/api/v1/logs', get_logs)
+    app.router.add_get('/api/v1/logs/search', search_logs)
+    app.router.add_post('/api/v1/logs/collect', collect_logs)
+    app.router.add_get('/api/v1/logs/stats', get_log_stats)
+    
+    # Start background log collection
+    asyncio.create_task(background_log_collection())
+    
+    # Start web server
+    port = int(os.getenv('PORT', '8015'))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    logger.info(f"Log aggregation service started on port {port}")
+    
+    # Keep service running
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Received shutdown signal")
+    finally:
+        await runner.cleanup()
+
+if __name__ == "__main__":
+    asyncio.run(main())

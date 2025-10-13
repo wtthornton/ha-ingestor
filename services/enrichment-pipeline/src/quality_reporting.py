@@ -223,7 +223,7 @@ class QualityReportingSystem:
     async def _generate_daily_report(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
         """Generate daily quality report"""
         # Get current quality metrics
-        current_metrics = self.quality_metrics.get_current_metrics()
+        current_metrics = self.quality_metrics.get_metrics()
         quality_report = self.quality_metrics.get_quality_report()
         
         # Get alerts for the period

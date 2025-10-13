@@ -1,0 +1,163 @@
+# Context7 KB Fuzzy Matching Configuration
+# Generated: 2025-10-07T16:40:00Z
+
+fuzzy_matching:
+  version: "1.0"
+  last_updated: "2025-10-07T16:40:00Z"
+  
+  library_variants:
+    react:
+      variants: ["react", "reactjs", "react.js", "react-js", "facebook-react"]
+      confidence: 1.0
+      context7_id: "/websites/react_dev"
+    
+    express:
+      variants: ["express", "expressjs", "express.js", "express-js", "node-express"]
+      confidence: 1.0
+      context7_id: "/expressjs/express"
+    
+    mongodb:
+      variants: ["mongodb", "mongo", "mongo-db", "mongoose", "mongodb-driver"]
+      confidence: 0.9
+      context7_id: "/mongodb/docs"
+    
+    vue:
+      variants: ["vue", "vuejs", "vue.js", "vue-js", "vuejs3"]
+      confidence: 1.0
+      context7_id: "/vuejs/vue"
+    
+    angular:
+      variants: ["angular", "angularjs", "angular.js", "angular-js", "ng"]
+      confidence: 0.8
+      context7_id: "/angular/angular"
+    
+    node:
+      variants: ["node", "nodejs", "node.js", "node-js", "nodejs"]
+      confidence: 1.0
+      context7_id: "/nodejs/node"
+  
+  topic_variants:
+    hooks:
+      variants: ["hooks", "react-hooks", "vue-hooks", "angular-hooks", "state-hooks"]
+      confidence: 1.0
+      category: "state-management"
+    
+    routing:
+      variants: ["routing", "router", "navigation", "routes", "url-routing"]
+      confidence: 0.9
+      category: "navigation"
+    
+    authentication:
+      variants: ["auth", "authentication", "login", "signin", "security"]
+      confidence: 0.8
+      category: "security"
+    
+    testing:
+      variants: ["test", "testing", "unit-test", "integration-test", "e2e-test"]
+      confidence: 0.9
+      category: "testing"
+    
+    performance:
+      variants: ["perf", "performance", "optimization", "speed", "efficiency"]
+      confidence: 0.8
+      category: "performance"
+    
+    security:
+      variants: ["security", "auth", "authentication", "authorization", "jwt"]
+      confidence: 0.9
+      category: "security"
+    
+    components:
+      variants: ["components", "component", "ui-components", "react-components"]
+      confidence: 0.9
+      category: "ui"
+    
+    middleware:
+      variants: ["middleware", "middlewares", "express-middleware", "node-middleware"]
+      confidence: 0.9
+      category: "backend"
+  
+  matching_algorithm:
+    exact_match:
+      priority: 1
+      confidence: 1.0
+      description: "Exact library/topic name match"
+    
+    variant_match:
+      priority: 2
+      confidence: 0.9
+      description: "Known variant match"
+    
+    partial_match:
+      priority: 3
+      confidence: 0.7
+      description: "Partial string match"
+    
+    semantic_match:
+      priority: 4
+      confidence: 0.6
+      description: "Semantic similarity match"
+    
+    fuzzy_match:
+      priority: 5
+      confidence: 0.5
+      description: "Fuzzy string match"
+  
+  confidence_scoring:
+    scoring_rules:
+      exact_match: 1.0
+      variant_match: 0.9
+      partial_match: 0.7
+      semantic_match: 0.6
+      fuzzy_match: 0.5
+    
+    threshold_settings:
+      high_confidence: 0.8
+      medium_confidence: 0.6
+      low_confidence: 0.4
+      minimum_confidence: 0.3
+    
+    scoring_factors:
+      - name: "match_type"
+        weight: 0.4
+      - name: "string_similarity"
+        weight: 0.3
+      - name: "semantic_similarity"
+        weight: 0.2
+      - name: "usage_frequency"
+        weight: 0.1
+  
+  fallback_hierarchy:
+    lookup_sequence:
+      - name: "exact_match"
+        action: "check_exact_match"
+        success_action: "return_cached_docs"
+        failure_action: "variant_match"
+      
+      - name: "variant_match"
+        action: "check_variant_match"
+        success_action: "return_cached_docs"
+        failure_action: "semantic_match"
+      
+      - name: "semantic_match"
+        action: "check_semantic_match"
+        success_action: "return_cached_docs"
+        failure_action: "fuzzy_match"
+      
+      - name: "fuzzy_match"
+        action: "check_fuzzy_match"
+        success_action: "return_cached_docs"
+        failure_action: "fetch_from_context7"
+      
+      - name: "fetch_from_context7"
+        action: "call_context7_api"
+        success_action: "cache_and_return"
+        failure_action: "return_error"
+  
+  performance_metrics:
+    total_fuzzy_matches: 0
+    successful_fuzzy_matches: 0
+    fuzzy_match_rate: 0.0
+    avg_confidence_score: 0.0
+    avg_response_time: "0.00s"
+    last_updated: "2025-10-07T16:40:00Z"

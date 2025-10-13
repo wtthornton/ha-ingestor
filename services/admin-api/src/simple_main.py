@@ -11,8 +11,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from simple_health import router as health_router
-from integration_endpoints import router as integration_router
+from src.simple_health import router as health_router
+from src.integration_endpoints import router as integration_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

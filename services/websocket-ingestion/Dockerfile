@@ -1,5 +1,5 @@
 # Multi-stage build for WebSocket Ingestion Service
-FROM python:3.11-alpine AS builder
+FROM python:3.12-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -9,10 +9,11 @@ RUN apk add --no-cache gcc musl-dev linux-headers
 
 # Copy requirements and install Python dependencies
 COPY services/websocket-ingestion/requirements-prod.txt .
-RUN pip install --no-cache-dir --user -r requirements-prod.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --user -r requirements-prod.txt
 
 # Production stage
-FROM python:3.11-alpine AS production
+FROM python:3.12-alpine AS production
 
 # Set working directory
 WORKDIR /app

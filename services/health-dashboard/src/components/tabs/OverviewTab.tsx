@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHealth } from '../../hooks/useHealth';
 import { useStatistics } from '../../hooks/useStatistics';
 import { useDataSources } from '../../hooks/useDataSources';
@@ -6,9 +6,35 @@ import { useRealtimeMetrics } from '../../hooks/useRealtimeMetrics';
 import { StatusCard } from '../StatusCard';
 import { MetricCard } from '../MetricCard';
 import { SkeletonCard } from '../skeletons';
+import { EnhancedHealthStatus } from '../EnhancedHealthStatus';
+import { ServiceHealthResponse } from '../../types/health';
+import { apiService } from '../../services/api';
 import { TabProps } from './types';
 
 export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
+  // Enhanced health monitoring (Epic 17.2)
+  const [enhancedHealth, setEnhancedHealth] = useState<ServiceHealthResponse | null>(null);
+  const [enhancedHealthLoading, setEnhancedHealthLoading] = useState(true);
+
+  // Fetch enhanced health data
+  useEffect(() => {
+    const fetchEnhancedHealth = async () => {
+      try {
+        const data = await apiService.getEnhancedHealth();
+        setEnhancedHealth(data);
+        setEnhancedHealthLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch enhanced health:', error);
+        setEnhancedHealthLoading(false);
+      }
+    };
+
+    fetchEnhancedHealth();
+    const interval = setInterval(fetchEnhancedHealth, 30000); // Refresh every 30s
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Real-time WebSocket metrics (Epic 15.1)
   const {
     metrics: realtimeMetrics,
@@ -28,6 +54,16 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
 
   return (
     <>
+      {/* Enhanced Health Status (Epic 17.2) */}
+      {!enhancedHealthLoading && enhancedHealth && (
+        <div className="mb-8">
+          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Service Health & Dependencies
+          </h2>
+          <EnhancedHealthStatus health={enhancedHealth} darkMode={darkMode} />
+        </div>
+      )}
+
       {/* System Health Status */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">

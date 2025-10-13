@@ -1,13 +1,14 @@
 # Multi-stage build for Air Quality Service
-FROM python:3.11-alpine AS builder
+FROM python:3.12-alpine AS builder
 
 WORKDIR /app
 RUN apk add --no-cache gcc musl-dev linux-headers
 
 COPY services/air-quality-service/requirements-prod.txt .
-RUN pip install --no-cache-dir --user -r requirements-prod.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --user -r requirements-prod.txt
 
-FROM python:3.11-alpine AS production
+FROM python:3.12-alpine AS production
 
 WORKDIR /app
 RUN apk add --no-cache curl
@@ -21,6 +22,9 @@ COPY shared/ ./shared/
 
 RUN chown -R appuser:appgroup /app /home/appuser/.local
 
+# Set environment variables
+ENV PYTHONPATH=/app:/app/src
+ENV PYTHONUNBUFFERED=1
 ENV PATH=/home/appuser/.local/bin:$PATH
 
 USER appuser

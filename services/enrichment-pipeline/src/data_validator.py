@@ -1,501 +1,329 @@
 """
-Data Validation Service for Home Assistant Events
+Data Validation Engine
+Epic 18.1: Complete Data Validation Engine
+
+Comprehensive validation for Home Assistant events before storage.
 """
 
 import logging
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime, timezone
-from dataclasses import dataclass
-from enum import Enum
 import re
-import json
+import time
+from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
 
-class ValidationLevel(Enum):
-    """Validation severity levels"""
-    ERROR = "error"
-    WARNING = "warning"
-    INFO = "info"
-
-
 @dataclass
 class ValidationResult:
-    """Result of a validation check"""
+    """Result of data validation"""
     is_valid: bool
-    level: ValidationLevel
-    message: str
-    field: Optional[str] = None
-    value: Optional[Any] = None
-    expected: Optional[Any] = None
+    errors: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    entity_type: Optional[str] = None
+    domain: Optional[str] = None
+    validation_time_ms: float = 0.0
+    
+    def add_error(self, error: str):
+        """Add validation error"""
+        self.errors.append(error)
+        self.is_valid = False
+    
+    def add_warning(self, warning: str):
+        """Add validation warning"""
+        self.warnings.append(warning)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
+        return {
+            'is_valid': self.is_valid,
+            'errors': self.errors,
+            'warnings': self.warnings,
+            'entity_type': self.entity_type,
+            'domain': self.domain,
+            'validation_time_ms': self.validation_time_ms
+        }
 
 
-class DataValidator:
-    """Comprehensive data validator for Home Assistant events"""
+class DataValidationEngine:
+    """Validation engine for Home Assistant events"""
+    
+    # Entity ID pattern: domain.entity_name
+    ENTITY_ID_PATTERN = re.compile(r'^[a-z_]+\.[a-z0-9_]+$')
+    
+    # Known Home Assistant domains
+    KNOWN_DOMAINS = {
+        'sensor', 'binary_sensor', 'light', 'switch', 'climate', 'cover',
+        'fan', 'lock', 'media_player', 'camera', 'alarm_control_panel',
+        'vacuum', 'water_heater', 'weather', 'device_tracker', 'person',
+        'zone', 'automation', 'script', 'scene', 'input_boolean',
+        'input_number', 'input_select', 'input_text', 'input_datetime',
+        'timer', 'counter', 'sun', 'moon', 'calendar'
+    }
+    
+    # Numeric sensor device classes (expect numeric state)
+    NUMERIC_SENSOR_CLASSES = {
+        'temperature', 'humidity', 'pressure', 'battery', 'power',
+        'energy', 'voltage', 'current', 'frequency', 'illuminance',
+        'signal_strength', 'pm25', 'pm10', 'co2', 'aqi'
+    }
     
     def __init__(self):
-        self.validation_stats = {
-            "total_validations": 0,
-            "valid_events": 0,
-            "invalid_events": 0,
-            "warnings": 0,
-            "errors": 0
-        }
-        
-        # Validation rules configuration
-        self.required_fields = {
-            "event_type": str,
-            "timestamp": str
-        }
-        
-        self.state_changed_required_fields = {
-            "entity_id": str,
-            "state": (str, int, float, bool)
-        }
-        
-        # Value range validations
-        self.temperature_range = (-50, 60)  # Celsius
-        self.humidity_range = (0, 100)  # Percentage
-        self.pressure_range = (800, 1200)  # hPa
-        
-        # Entity ID pattern validation
-        self.entity_id_pattern = re.compile(r'^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$')
-        
-        # Timestamp format patterns
-        self.timestamp_patterns = [
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$'),  # ISO with microseconds (WebSocket format)
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}$'),   # ISO with microseconds (no Z)
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$'),  # ISO with milliseconds
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$'),   # ISO with milliseconds (no Z)
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'),  # ISO without milliseconds
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$'),   # ISO without milliseconds (no Z)
-            re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$'),  # ISO with timezone
-        ]
+        """Initialize validation engine"""
+        self.validation_count = 0
+        self.error_count = 0
+        self.warning_count = 0
+        self.start_time = time.time()
     
-    def validate_event(self, event: Dict[str, Any]) -> List[ValidationResult]:
+    def validate_event(self, event: Dict[str, Any]) -> ValidationResult:
         """
-        Validate a single Home Assistant event
+        Validate a Home Assistant event
         
         Args:
-            event: The event data to validate
+            event: Event dictionary from Home Assistant
             
         Returns:
-            List of validation results
+            ValidationResult with validation status and details
         """
-        results = []
+        start_time = time.time()
+        result = ValidationResult(is_valid=True)
         
         try:
-            # Update validation statistics
-            self.validation_stats["total_validations"] += 1
+            # Extract event data
+            event_data = event.get('data', {})
+            entity_id = event_data.get('entity_id', '')
+            new_state = event_data.get('new_state', {})
             
-            # Required fields validation
-            results.extend(self._validate_required_fields(event))
+            # Validate entity_id
+            if not self._validate_entity_id(entity_id, result):
+                return result
             
-            # Data type validation
-            results.extend(self._validate_data_types(event))
+            # Extract domain from entity_id
+            domain = entity_id.split('.')[0] if '.' in entity_id else ''
+            result.domain = domain
             
-            # Format validation
-            results.extend(self._validate_formats(event))
+            # Validate event structure
+            self._validate_event_structure(event, result)
             
-            # Value range validation
-            results.extend(self._validate_value_ranges(event))
+            # Validate state data
+            if new_state:
+                self._validate_state_data(new_state, domain, result)
+            else:
+                result.add_warning("Missing new_state in event data")
             
-            # Business logic validation
-            results.extend(self._validate_business_logic(event))
-            
-            # Weather enrichment validation
-            results.extend(self._validate_weather_enrichment(event))
-            
-            # Timestamp validation
-            results.extend(self._validate_timestamps(event))
-            
-            # Update statistics based on results
-            self._update_validation_stats(results)
-            
-            return results
+            # Domain-specific validation
+            self._validate_domain_specific(new_state, domain, result)
             
         except Exception as e:
-            logger.error(f"Error during event validation: {e}")
-            self.validation_stats["errors"] += 1
-            return [ValidationResult(
-                is_valid=False,
-                level=ValidationLevel.ERROR,
-                message=f"Validation error: {str(e)}"
-            )]
-    
-    def _validate_required_fields(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate required fields are present"""
-        results = []
+            logger.error(f"Validation error: {e}")
+            result.add_error(f"Validation exception: {str(e)}")
         
-        # Check basic required fields
-        for field, expected_type in self.required_fields.items():
-            if field not in event or event[field] is None:
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message=f"Missing required field: {field}",
-                    field=field,
-                    expected=expected_type.__name__
-                ))
-        
-        # Check state_changed specific required fields
-        if event.get("event_type") == "state_changed":
-            # For processed events from WebSocket service, check if we have the required structure
-            if "new_state" not in event or not event["new_state"]:
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message="Missing required field: new_state",
-                    field="new_state"
-                ))
-            else:
-                new_state = event["new_state"]
-                for field, expected_type in self.state_changed_required_fields.items():
-                    # Handle entity_id mapping - check both new_state.entity_id and top-level entity_id
-                    if field == "entity_id":
-                        entity_id_value = new_state.get(field) or event.get(field)
-                        if entity_id_value is None:
-                            results.append(ValidationResult(
-                                is_valid=False,
-                                level=ValidationLevel.ERROR,
-                                message=f"Missing required field: {field} (checked both new_state.{field} and top-level {field})",
-                                field=f"new_state.{field}",
-                                expected=expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
-                            ))
-                    else:
-                        # For other fields, check in new_state as before
-                        if field not in new_state or new_state[field] is None:
-                            results.append(ValidationResult(
-                                is_valid=False,
-                                level=ValidationLevel.ERROR,
-                                message=f"Missing required field in new_state: {field}",
-                                field=f"new_state.{field}",
-                                expected=expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
-                            ))
-        
-        return results
-    
-    def _validate_data_types(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate data types"""
-        results = []
-        
-        # Validate event_type
-        if "event_type" in event:
-            if not isinstance(event["event_type"], str):
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message="event_type must be a string",
-                    field="event_type",
-                    value=type(event["event_type"]).__name__,
-                    expected="str"
-                ))
-        
-        # Validate timestamp
-        if "timestamp" in event:
-            if not isinstance(event["timestamp"], str):
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message="timestamp must be a string",
-                    field="timestamp",
-                    value=type(event["timestamp"]).__name__,
-                    expected="str"
-                ))
-        
-        # Validate state_changed specific fields
-        if event.get("event_type") == "state_changed" and "new_state" in event:
-            new_state = event["new_state"]
+        finally:
+            # Record validation metrics
+            validation_time_ms = (time.time() - start_time) * 1000
+            result.validation_time_ms = validation_time_ms
             
-            # Validate entity_id - check both new_state.entity_id and top-level entity_id
-            entity_id_value = new_state.get("entity_id") or event.get("entity_id")
-            if entity_id_value is not None:
-                if not isinstance(entity_id_value, str):
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.ERROR,
-                        message="entity_id must be a string",
-                        field="new_state.entity_id",
-                        value=type(entity_id_value).__name__,
-                        expected="str"
-                    ))
-            
-            # Validate state value
-            if "state" in new_state:
-                state_value = new_state["state"]
-                if not isinstance(state_value, (str, int, float, bool)):
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.ERROR,
-                        message="state must be a string, number, or boolean",
-                        field="new_state.state",
-                        value=type(state_value).__name__,
-                        expected="str, int, float, or bool"
-                    ))
+            self.validation_count += 1
+            if not result.is_valid:
+                self.error_count += 1
+            if result.warnings:
+                self.warning_count += 1
         
-        return results
+        return result
     
-    def _validate_formats(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate data formats"""
-        results = []
+    def _validate_entity_id(self, entity_id: str, result: ValidationResult) -> bool:
+        """Validate entity_id format"""
+        if not entity_id:
+            result.add_error("Missing entity_id")
+            return False
         
-        # Validate entity_id format
-        if event.get("event_type") == "state_changed" and "new_state" in event:
-            new_state = event["new_state"]
-            # Check both new_state.entity_id and top-level entity_id
-            entity_id = new_state.get("entity_id") or event.get("entity_id")
-            if entity_id and isinstance(entity_id, str) and not self.entity_id_pattern.match(entity_id):
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message=f"Invalid entity_id format: {entity_id}",
-                    field="new_state.entity_id",
-                    value=entity_id,
-                    expected="domain.entity_name format"
-                ))
+        if not isinstance(entity_id, str):
+            result.add_error(f"entity_id must be string, got {type(entity_id).__name__}")
+            return False
         
-        # Validate timestamp format
-        if "timestamp" in event:
-            timestamp = event["timestamp"]
-            if isinstance(timestamp, str) and not any(pattern.match(timestamp) for pattern in self.timestamp_patterns):
-                results.append(ValidationResult(
-                    is_valid=False,
-                    level=ValidationLevel.ERROR,
-                    message=f"Invalid timestamp format: {timestamp}",
-                    field="timestamp",
-                    value=timestamp,
-                    expected="ISO 8601 UTC format"
-                ))
+        if not self.ENTITY_ID_PATTERN.match(entity_id):
+            result.add_error(f"Invalid entity_id format: {entity_id}")
+            return False
         
-        return results
+        # Check domain
+        domain = entity_id.split('.')[0]
+        if domain not in self.KNOWN_DOMAINS:
+            result.add_warning(f"Unknown domain: {domain}")
+        
+        return True
     
-    def _validate_value_ranges(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate value ranges"""
-        results = []
+    def _validate_event_structure(self, event: Dict[str, Any], result: ValidationResult):
+        """Validate event structure"""
+        # Check for required top-level fields
+        if 'data' not in event:
+            result.add_error("Missing 'data' field in event")
         
-        # Validate weather data ranges
-        if "weather" in event:
-            weather = event["weather"]
-            
-            # Temperature validation
-            if "temperature" in weather:
-                temp = weather["temperature"]
-                if isinstance(temp, (int, float)):
-                    if not (self.temperature_range[0] <= temp <= self.temperature_range[1]):
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.WARNING,
-                            message=f"Temperature out of reasonable range: {temp}°C",
-                            field="weather.temperature",
-                            value=temp,
-                            expected=f"{self.temperature_range[0]} to {self.temperature_range[1]}°C"
-                        ))
-            
-            # Humidity validation
-            if "humidity" in weather:
-                humidity = weather["humidity"]
-                if isinstance(humidity, (int, float)):
-                    if not (self.humidity_range[0] <= humidity <= self.humidity_range[1]):
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.WARNING,
-                            message=f"Humidity out of reasonable range: {humidity}%",
-                            field="weather.humidity",
-                            value=humidity,
-                            expected=f"{self.humidity_range[0]} to {self.humidity_range[1]}%"
-                        ))
-            
-            # Pressure validation
-            if "pressure" in weather:
-                pressure = weather["pressure"]
-                if isinstance(pressure, (int, float)):
-                    if not (self.pressure_range[0] <= pressure <= self.pressure_range[1]):
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.WARNING,
-                            message=f"Pressure out of reasonable range: {pressure}hPa",
-                            field="weather.pressure",
-                            value=pressure,
-                            expected=f"{self.pressure_range[0]} to {self.pressure_range[1]}hPa"
-                        ))
+        if 'event_type' not in event:
+            result.add_warning("Missing 'event_type' field")
         
-        return results
+        # Validate event_type if present
+        event_type = event.get('event_type')
+        if event_type and event_type not in ['state_changed', 'call_service', 'automation_triggered']:
+            result.add_warning(f"Unusual event_type: {event_type}")
     
-    def _validate_business_logic(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate business logic rules"""
-        results = []
+    def _validate_state_data(self, state: Dict[str, Any], domain: str, result: ValidationResult):
+        """Validate state data structure"""
+        # Required fields in state
+        required_fields = ['entity_id', 'state', 'last_changed', 'last_updated']
         
-        # Validate state_changed event structure
-        if event.get("event_type") == "state_changed":
-            # Check if old_state and new_state are consistent
-            if "old_state" in event and "new_state" in event:
-                old_state = event["old_state"]
-                new_state = event["new_state"]
-                
-                # Entity IDs should match
-                if (old_state and new_state and 
-                    old_state.get("entity_id") != new_state.get("entity_id")):
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.ERROR,
-                        message="Entity ID mismatch between old_state and new_state",
-                        field="entity_id_consistency"
-                    ))
-                
-                # Timestamps should be logical
-                if (old_state and new_state and 
-                    "last_updated" in old_state and "last_updated" in new_state):
-                    try:
-                        old_time = datetime.fromisoformat(old_state["last_updated"].replace('Z', '+00:00'))
-                        new_time = datetime.fromisoformat(new_state["last_updated"].replace('Z', '+00:00'))
-                        
-                        if new_time < old_time:
-                            results.append(ValidationResult(
-                                is_valid=False,
-                                level=ValidationLevel.WARNING,
-                                message="new_state timestamp is earlier than old_state timestamp",
-                                field="timestamp_consistency"
-                            ))
-                    except (ValueError, TypeError):
-                        # Timestamp parsing errors are handled elsewhere
-                        pass
+        for field in required_fields:
+            if field not in state:
+                result.add_error(f"Missing required field in state: {field}")
         
-        return results
+        # Validate state value
+        state_value = state.get('state')
+        if state_value is None:
+            result.add_error("State value is None")
+        elif state_value == '':
+            result.add_warning("State value is empty string")
+        
+        # Validate timestamps
+        for ts_field in ['last_changed', 'last_updated']:
+            if ts_field in state:
+                self._validate_timestamp(state[ts_field], ts_field, result)
+        
+        # Validate attributes
+        attributes = state.get('attributes', {})
+        if not isinstance(attributes, dict):
+            result.add_error("attributes must be a dictionary")
     
-    def _validate_weather_enrichment(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate weather enrichment data"""
-        results = []
+    def _validate_timestamp(self, timestamp: Any, field_name: str, result: ValidationResult):
+        """Validate timestamp format"""
+        if not timestamp:
+            result.add_warning(f"{field_name} is empty")
+            return
         
-        if "weather" in event:
-            weather = event["weather"]
-            
-            # Check required weather fields
-            required_weather_fields = ["temperature", "humidity", "pressure", "timestamp"]
-            for field in required_weather_fields:
-                if field not in weather:
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.WARNING,
-                        message=f"Missing weather field: {field}",
-                        field=f"weather.{field}"
-                    ))
-            
-            # Validate weather timestamp
-            if "timestamp" in weather:
-                weather_timestamp = weather["timestamp"]
-                if not any(pattern.match(weather_timestamp) for pattern in self.timestamp_patterns):
-                    results.append(ValidationResult(
-                        is_valid=False,
-                        level=ValidationLevel.WARNING,
-                        message=f"Invalid weather timestamp format: {weather_timestamp}",
-                        field="weather.timestamp",
-                        value=weather_timestamp,
-                        expected="ISO 8601 UTC format"
-                    ))
+        if not isinstance(timestamp, str):
+            result.add_error(f"{field_name} must be string, got {type(timestamp).__name__}")
+            return
         
-        return results
+        # Try to parse ISO 8601 timestamp
+        try:
+            datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            result.add_error(f"Invalid timestamp format for {field_name}: {timestamp}")
     
-    def _validate_timestamps(self, event: Dict[str, Any]) -> List[ValidationResult]:
-        """Validate timestamp consistency and logic"""
-        results = []
+    def _validate_domain_specific(self, state: Dict[str, Any], domain: str, result: ValidationResult):
+        """Domain-specific validation"""
+        if not state:
+            return
         
-        # Check if event timestamp is recent (not too far in the future)
-        if "timestamp" in event and isinstance(event["timestamp"], str):
+        state_value = state.get('state')
+        attributes = state.get('attributes', {})
+        
+        if domain == 'sensor':
+            self._validate_sensor(state_value, attributes, result)
+        elif domain == 'binary_sensor':
+            self._validate_binary_sensor(state_value, result)
+        elif domain == 'light':
+            self._validate_light(state_value, attributes, result)
+        elif domain == 'switch':
+            self._validate_switch(state_value, result)
+        elif domain == 'climate':
+            self._validate_climate(state_value, attributes, result)
+        # Add more domain validations as needed
+    
+    def _validate_sensor(self, state: Any, attributes: Dict[str, Any], result: ValidationResult):
+        """Validate sensor state"""
+        # Check if unavailable
+        if state in ['unavailable', 'unknown']:
+            return  # Valid states
+        
+        device_class = attributes.get('device_class')
+        
+        # Numeric sensors should have numeric state
+        if device_class in self.NUMERIC_SENSOR_CLASSES:
             try:
-                event_time = datetime.fromisoformat(event["timestamp"].replace('Z', '+00:00'))
-                current_time = datetime.now(timezone.utc)
-                
-                # Allow up to 1 hour in the future for clock skew
-                if event_time > current_time:
-                    time_diff = (event_time - current_time).total_seconds()
-                    if time_diff > 3600:  # 1 hour
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.WARNING,
-                            message=f"Event timestamp is too far in the future: {time_diff/3600:.1f} hours",
-                            field="timestamp",
-                            value=event["timestamp"]
-                        ))
-                
-                # Warn if event is very old (more than 24 hours)
-                elif event_time < current_time:
-                    time_diff = (current_time - event_time).total_seconds()
-                    if time_diff > 86400:  # 24 hours
-                        results.append(ValidationResult(
-                            is_valid=False,
-                            level=ValidationLevel.INFO,
-                            message=f"Event timestamp is old: {time_diff/3600:.1f} hours ago",
-                            field="timestamp",
-                            value=event["timestamp"]
-                        ))
-                        
+                float(state)
             except (ValueError, TypeError):
-                # Format validation errors are handled elsewhere
+                result.add_error(f"Numeric sensor has non-numeric state: {state}")
+        
+        # Check for unit_of_measurement
+        if device_class and 'unit_of_measurement' not in attributes:
+            result.add_warning(f"Sensor with device_class {device_class} missing unit_of_measurement")
+        
+        # Validate temperature range
+        if device_class == 'temperature':
+            try:
+                temp = float(state)
+                if temp < -100 or temp > 100:
+                    result.add_warning(f"Temperature value out of typical range: {temp}")
+            except (ValueError, TypeError):
                 pass
-        
-        return results
     
-    def _update_validation_stats(self, results: List[ValidationResult]):
-        """Update validation statistics based on results"""
-        has_errors = any(r.level == ValidationLevel.ERROR for r in results)
-        has_warnings = any(r.level == ValidationLevel.WARNING for r in results)
+    def _validate_binary_sensor(self, state: Any, result: ValidationResult):
+        """Validate binary sensor state"""
+        valid_states = ['on', 'off', 'unavailable', 'unknown']
         
-        if has_errors:
-            self.validation_stats["invalid_events"] += 1
-            self.validation_stats["errors"] += len([r for r in results if r.level == ValidationLevel.ERROR])
-        else:
-            self.validation_stats["valid_events"] += 1
-        
-        if has_warnings:
-            self.validation_stats["warnings"] += len([r for r in results if r.level == ValidationLevel.WARNING])
+        if state not in valid_states:
+            result.add_error(f"Binary sensor has invalid state: {state}")
     
-    def is_event_valid(self, event: Dict[str, Any]) -> bool:
-        """
-        Check if an event passes all validation checks
+    def _validate_light(self, state: Any, attributes: Dict[str, Any], result: ValidationResult):
+        """Validate light state"""
+        valid_states = ['on', 'off', 'unavailable', 'unknown']
         
-        Args:
-            event: The event to validate
-            
-        Returns:
-            True if event is valid, False otherwise
-        """
-        results = self.validate_event(event)
-        return not any(r.level == ValidationLevel.ERROR for r in results)
+        if state not in valid_states:
+            result.add_error(f"Light has invalid state: {state}")
+        
+        # If on, check for brightness
+        if state == 'on' and 'brightness' in attributes:
+            brightness = attributes['brightness']
+            try:
+                b = int(brightness)
+                if b < 0 or b > 255:
+                    result.add_error(f"Brightness out of range (0-255): {b}")
+            except (ValueError, TypeError):
+                result.add_error(f"Invalid brightness value: {brightness}")
     
-    def get_validation_statistics(self) -> Dict[str, Any]:
-        """
-        Get validation statistics
+    def _validate_switch(self, state: Any, result: ValidationResult):
+        """Validate switch state"""
+        valid_states = ['on', 'off', 'unavailable', 'unknown']
         
-        Returns:
-            Dictionary with validation statistics
-        """
-        total = self.validation_stats["total_validations"]
-        if total > 0:
-            success_rate = (self.validation_stats["valid_events"] / total) * 100
-            error_rate = (self.validation_stats["errors"] / total) * 100
-            warning_rate = (self.validation_stats["warnings"] / total) * 100
-        else:
-            success_rate = error_rate = warning_rate = 0
+        if state not in valid_states:
+            result.add_error(f"Switch has invalid state: {state}")
+    
+    def _validate_climate(self, state: Any, attributes: Dict[str, Any], result: ValidationResult):
+        """Validate climate/thermostat state"""
+        valid_states = ['off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only', 'unavailable', 'unknown']
         
+        if state not in valid_states:
+            result.add_warning(f"Unusual climate state: {state}")
+        
+        # Validate temperature settings
+        for temp_attr in ['temperature', 'target_temp_high', 'target_temp_low', 'current_temperature']:
+            if temp_attr in attributes:
+                temp = attributes[temp_attr]
+                try:
+                    t = float(temp)
+                    if t < -50 or t > 50:  # Celsius range
+                        result.add_warning(f"{temp_attr} out of typical range: {t}")
+                except (ValueError, TypeError):
+                    result.add_error(f"Invalid {temp_attr} value: {temp}")
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get validation statistics"""
         return {
-            "total_validations": total,
-            "valid_events": self.validation_stats["valid_events"],
-            "invalid_events": self.validation_stats["invalid_events"],
-            "success_rate": round(success_rate, 2),
-            "error_rate": round(error_rate, 2),
-            "warning_rate": round(warning_rate, 2),
-            "total_errors": self.validation_stats["errors"],
-            "total_warnings": self.validation_stats["warnings"]
+            'validation_count': self.validation_count,
+            'error_count': self.error_count,
+            'warning_count': self.warning_count,
+            'error_rate': self.error_count / self.validation_count if self.validation_count > 0 else 0.0,
+            'warning_rate': self.warning_count / self.validation_count if self.validation_count > 0 else 0.0
         }
-    
-    def reset_statistics(self):
-        """Reset validation statistics"""
-        self.validation_stats = {
-            "total_validations": 0,
-            "valid_events": 0,
-            "invalid_events": 0,
-            "warnings": 0,
-            "errors": 0
-        }
-        logger.info("Validation statistics reset")
+
+
+# Global validator instance
+_validator = None
+
+
+def get_validator() -> DataValidationEngine:
+    """Get or create global validator instance"""
+    global _validator
+    if _validator is None:
+        _validator = DataValidationEngine()
+    return _validator

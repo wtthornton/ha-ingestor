@@ -320,9 +320,28 @@ class StatsEndpoints:
         
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                async with session.get(f"{service_url}/stats?period={period}") as response:
+                # Use different endpoints based on service
+                if service_name == "enrichment-pipeline":
+                    # enrichment-pipeline has /api/v1/stats
+                    stats_url = f"{service_url}/api/v1/stats"
+                elif service_name == "websocket-ingestion":
+                    # websocket-ingestion only has /health, extract stats from it
+                    stats_url = f"{service_url}/health"
+                else:
+                    # Default to /stats
+                    stats_url = f"{service_url}/stats"
+                
+                async with session.get(stats_url) as response:
                     if response.status == 200:
-                        return await response.json()
+                        data = await response.json()
+                        
+                        # Transform service data to stats format
+                        if service_name == "websocket-ingestion":
+                            return self._transform_websocket_health_to_stats(data, period)
+                        elif service_name == "enrichment-pipeline":
+                            return self._transform_enrichment_stats_to_stats(data, period)
+                        
+                        return data
                     else:
                         raise Exception(f"HTTP {response.status}")
         except Exception as e:
@@ -331,6 +350,112 @@ class StatsEndpoints:
                 "metrics": {"error": str(e)},
                 "trends": {},
                 "alerts": [{"service": service_name, "level": "error", "message": str(e)}]
+            }
+    
+    def _transform_websocket_health_to_stats(self, health_data: Dict[str, Any], period: str) -> Dict[str, Any]:
+        """Transform websocket-ingestion health data to stats format"""
+        try:
+            metrics = {
+                "events_per_minute": 0,
+                "error_rate": 0,
+                "response_time_ms": 0,
+                "connection_attempts": 0,
+                "total_events_received": 0
+            }
+            
+            # Extract metrics from health data
+            if "subscription" in health_data:
+                subscription = health_data["subscription"]
+                metrics["events_per_minute"] = subscription.get("event_rate_per_minute", 0)
+                metrics["total_events_received"] = subscription.get("total_events_received", 0)
+            
+            if "connection" in health_data:
+                connection = health_data["connection"]
+                metrics["connection_attempts"] = connection.get("connection_attempts", 0)
+                
+                # Calculate error rate based on failed connections
+                total_attempts = connection.get("connection_attempts", 0)
+                failed_connections = connection.get("failed_connections", 0)
+                if total_attempts > 0:
+                    metrics["error_rate"] = round((failed_connections / total_attempts) * 100, 2)
+            
+            if "weather_enrichment" in health_data:
+                weather = health_data["weather_enrichment"]
+                total_processed = weather.get("total_events_processed", 0)
+                failed_enrichments = weather.get("failed_enrichments", 0)
+                if total_processed > 0:
+                    weather_error_rate = (failed_enrichments / total_processed) * 100
+                    metrics["error_rate"] = max(metrics["error_rate"], weather_error_rate)
+            
+            return {
+                "metrics": metrics,
+                "trends": {
+                    "events_per_minute": [{"timestamp": health_data.get("timestamp"), "value": metrics["events_per_minute"]}],
+                    "error_rate": [{"timestamp": health_data.get("timestamp"), "value": metrics["error_rate"]}]
+                },
+                "alerts": []
+            }
+            
+        except Exception as e:
+            logger.error(f"Error transforming websocket health to stats: {e}")
+            return {
+                "service": "websocket-ingestion",
+                "status": "error",
+                "error": str(e),
+                "timestamp": health_data.get("timestamp", "")
+            }
+    
+    def _transform_enrichment_stats_to_stats(self, stats_data: Dict[str, Any], period: str) -> Dict[str, Any]:
+        """Transform enrichment-pipeline stats data to admin-api stats format"""
+        try:
+            metrics = {
+                "events_per_minute": 0,
+                "error_rate": 0,
+                "response_time_ms": 0,
+                "connection_attempts": 0,
+                "total_events_received": 0
+            }
+            
+            # Extract metrics from enrichment-pipeline data
+            quality_metrics = stats_data.get("quality_metrics", {})
+            validation_stats = stats_data.get("validation_stats", {})
+            influxdb_stats = stats_data.get("influxdb", {})
+            
+            # Calculate events per minute from quality metrics
+            if quality_metrics.get("rates", {}).get("events_per_second", 0) > 0:
+                metrics["events_per_minute"] = quality_metrics["rates"]["events_per_second"] * 60
+            
+            # Calculate error rate from validation stats
+            if validation_stats.get("validation_count", 0) > 0:
+                error_count = validation_stats.get("error_count", 0)
+                total_count = validation_stats.get("validation_count", 0)
+                metrics["error_rate"] = round((error_count / total_count) * 100, 2)
+            
+            # Use InfluxDB write errors as connection attempts metric
+            metrics["connection_attempts"] = influxdb_stats.get("points_written", 0)
+            
+            # Total events from quality metrics
+            metrics["total_events_received"] = quality_metrics.get("totals", {}).get("total_events", 0)
+            
+            # Response time from performance metrics
+            metrics["response_time_ms"] = quality_metrics.get("performance", {}).get("avg_validation_time_ms", 0)
+            
+            return {
+                "metrics": metrics,
+                "trends": {
+                    "events_per_minute": [{"timestamp": stats_data.get("timestamp"), "value": metrics["events_per_minute"]}],
+                    "error_rate": [{"timestamp": stats_data.get("timestamp"), "value": metrics["error_rate"]}]
+                },
+                "alerts": []
+            }
+            
+        except Exception as e:
+            logger.error(f"Error transforming enrichment stats: {e}")
+            return {
+                "service": "enrichment-pipeline",
+                "status": "error",
+                "error": str(e),
+                "timestamp": stats_data.get("timestamp", "")
             }
     
     async def _get_metrics(self, metric_name: Optional[str], service: Optional[str], limit: int) -> List[MetricData]:

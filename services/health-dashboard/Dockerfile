@@ -9,9 +9,9 @@ COPY vite.config.ts ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Install dependencies with cache mount
+# Install dependencies with cache mount and prefer offline
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci && npm cache clean --force
+    npm ci --prefer-offline
 
 # Build stage
 FROM node:18-alpine AS builder

@@ -13,6 +13,7 @@ from event_subscription import EventSubscriptionManager
 from event_processor import EventProcessor
 from event_rate_monitor import EventRateMonitor
 from error_handler import ErrorHandler
+from discovery_service import DiscoveryService
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class ConnectionManager:
         self.event_processor = EventProcessor()
         self.event_rate_monitor = EventRateMonitor()
         self.error_handler = ErrorHandler()
+        self.discovery_service = DiscoveryService()
         
         # Retry configuration
         self.max_retries = 10
@@ -303,6 +305,23 @@ class ConnectionManager:
         logger.info("⏳ Preparing to subscribe to events...")
         await self._subscribe_to_events()
         
+        # Discover devices and entities
+        logger.info("🔍 Starting device and entity discovery...")
+        try:
+            if self.client and self.client.websocket:
+                await self.discovery_service.discover_all(self.client.websocket)
+                
+                # Subscribe to registry update events
+                logger.info("📡 Subscribing to registry update events...")
+                await self.discovery_service.subscribe_to_device_registry_events(self.client.websocket)
+                await self.discovery_service.subscribe_to_entity_registry_events(self.client.websocket)
+            else:
+                logger.error("❌ Cannot run discovery: WebSocket not available")
+        except Exception as e:
+            logger.error(f"❌ Discovery failed (non-fatal): {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+        
         if self.on_connect:
             logger.info("📞 Calling external on_connect callback")
             await self.on_connect()
@@ -329,17 +348,26 @@ class ConnectionManager:
             if message.get("type") == "event":
                 await self.event_subscription.handle_event_message(message)
                 
-                # Process the event
+                # Get event data
                 event_data = message.get("event", {})
-                processed_event = self.event_processor.process_event(event_data)
+                event_type = event_data.get("event_type", "")
                 
-                if processed_event:
-                    # Record for rate monitoring
-                    self.event_rate_monitor.record_event(processed_event)
+                # Handle registry update events
+                if event_type == "device_registry_updated":
+                    await self.discovery_service.handle_device_registry_event(event_data)
+                elif event_type == "entity_registry_updated":
+                    await self.discovery_service.handle_entity_registry_event(event_data)
+                else:
+                    # Process regular events (state_changed, etc)
+                    processed_event = self.event_processor.process_event(event_data)
                     
-                    # Call event handler
-                    if self.on_event:
-                        await self.on_event(processed_event)
+                    if processed_event:
+                        # Record for rate monitoring
+                        self.event_rate_monitor.record_event(processed_event)
+                        
+                        # Call event handler
+                        if self.on_event:
+                            await self.on_event(processed_event)
             
             # Call general message handler
             if self.on_message:

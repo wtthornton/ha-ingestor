@@ -195,15 +195,14 @@ class InfluxDBClientWrapper:
             if old_state and "state" in old_state:
                 point.field("old_state", str(old_state["state"]))
             
-            # Add attributes as fields (normalize to string for InfluxDB type consistency)
+            # Add attributes as fields - preserve normalized types from data_normalizer
+            # Type normalization happens in data_normalizer.py, we just pass through the values
             attributes = new_state.get("attributes", {})
             for key, value in attributes.items():
                 if self._is_valid_field_value(value):
-                    # Always convert to string to avoid InfluxDB field type conflicts
-                    # This ensures consistent schema even if Home Assistant changes attribute types
-                    normalized_value = self._normalize_field_value(value)
-                    # Use a consistent field name prefix to avoid conflicts with existing data
-                    point.field(f"attr_{key}", normalized_value)
+                    # Keep the type as-is from normalization (boolean, float, or string)
+                    # data_normalizer.py already handled type coercion
+                    point.field(f"attr_{key}", value)
             
             # Add entity metadata fields
             entity_metadata = event_data.get("entity_metadata", {})

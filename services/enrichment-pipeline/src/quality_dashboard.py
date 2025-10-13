@@ -62,7 +62,7 @@ class QualityDashboardAPI:
     async def get_current_metrics(self, request: web.Request) -> web.Response:
         """Get current quality metrics"""
         try:
-            metrics = self.quality_metrics.get_current_metrics()
+            metrics = self.quality_metrics.get_metrics()
             return web.json_response({
                 "success": True,
                 "data": metrics,
@@ -443,7 +443,7 @@ class QualityDashboardAPI:
         """Get comprehensive quality status"""
         try:
             # Get current metrics
-            current_metrics = self.quality_metrics.get_current_metrics()
+            current_metrics = self.quality_metrics.get_metrics()
             
             # Get health status
             health_status = self.quality_metrics.get_health_status()

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ServiceCard } from './ServiceCard';
 import { ServiceDetailsModal } from './ServiceDetailsModal';
 import { SkeletonCard } from './skeletons';
+import { apiService, ContainerInfo } from '../services/api';
 import type { ServiceStatus, ServiceDefinition } from '../types';
 
 interface ServicesTabProps {
@@ -13,7 +14,7 @@ const SERVICE_DEFINITIONS: ServiceDefinition[] = [
   // Core Services
   { id: 'websocket-ingestion', name: 'WebSocket Ingestion', icon: '🏠', type: 'core', port: 8001, description: 'Home Assistant WebSocket client' },
   { id: 'enrichment-pipeline', name: 'Enrichment Pipeline', icon: '🔄', type: 'core', port: 8002, description: 'Multi-source data enrichment' },
-  { id: 'data-retention', name: 'Data Retention', icon: '💾', type: 'core', port: 8080, description: 'Storage optimization' },
+  // { id: 'data-retention', name: 'Data Retention', icon: '💾', type: 'core', port: 8080, description: 'Storage optimization' }, // TODO: Enable when service is deployed
   { id: 'admin-api', name: 'Admin API', icon: '🔌', type: 'core', port: 8003, description: 'REST API gateway' },
   { id: 'health-dashboard', name: 'Health Dashboard', icon: '📊', type: 'core', port: 3000, description: 'Web UI' },
   { id: 'influxdb', name: 'InfluxDB', icon: '🗄️', type: 'core', port: 8086, description: 'Time-series database' },
@@ -29,19 +30,27 @@ const SERVICE_DEFINITIONS: ServiceDefinition[] = [
 
 export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
   const [services, setServices] = useState<ServiceStatus[]>([]);
+  const [containers, setContainers] = useState<ContainerInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [selectedService, setSelectedService] = useState<{ service: ServiceStatus; icon: string } | null>(null);
+  const [operatingServices, setOperatingServices] = useState<Set<string>>(new Set());
 
   const loadServices = async () => {
     try {
-      const response = await fetch('/api/v1/services');
-      if (!response.ok) throw new Error('Failed to load services');
+      // Load both services and containers
+      const [servicesResponse, containersData] = await Promise.all([
+        fetch('/api/v1/services'),
+        apiService.getContainers().catch(() => []) // Fallback to empty array if containers fail
+      ]);
       
-      const data = await response.json();
-      setServices(data.services || []);
+      if (!servicesResponse.ok) throw new Error('Failed to load services');
+      
+      const servicesData = await servicesResponse.json();
+      setServices(servicesData.services || []);
+      setContainers(containersData);
       setError('');
       setLastUpdate(new Date());
       setLoading(false);
@@ -71,6 +80,49 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
       type: 'core',
       description: 'Service',
     };
+  };
+
+  const handleContainerOperation = async (
+    serviceName: string, 
+    operation: 'start' | 'stop' | 'restart'
+  ) => {
+    setOperatingServices(prev => new Set(prev).add(serviceName));
+    
+    try {
+      let response;
+      
+      switch (operation) {
+        case 'start':
+          response = await apiService.startContainer(serviceName);
+          break;
+        case 'stop':
+          response = await apiService.stopContainer(serviceName);
+          break;
+        case 'restart':
+          response = await apiService.restartContainer(serviceName);
+          break;
+      }
+      
+      if (response.success) {
+        // Refresh services after operation
+        await loadServices();
+      } else {
+        alert(`Failed to ${operation} container: ${response.message}`);
+      }
+    } catch (err: any) {
+      alert(`Error ${operation}ing container: ${err.message}`);
+    } finally {
+      setOperatingServices(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(serviceName);
+        return newSet;
+      });
+    }
+  };
+
+  const getContainerStatus = (serviceName: string): string => {
+    const container = containers.find(c => c.service_name === serviceName);
+    return container?.status || 'unknown';
   };
 
   const coreServices = services
@@ -224,6 +276,11 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
                 onConfigure={() => {
                   alert(`Configure ${service.service} - Use Configuration tab for now!`);
                 }}
+                onStart={() => handleContainerOperation(service.service, 'start')}
+                onStop={() => handleContainerOperation(service.service, 'stop')}
+                onRestart={() => handleContainerOperation(service.service, 'restart')}
+                containerStatus={getContainerStatus(service.service)}
+                isOperating={operatingServices.has(service.service)}
               />
             </div>
           ))}
@@ -254,6 +311,11 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
                 onConfigure={() => {
                   alert(`Configure ${service.service} - Use Configuration tab for now!`);
                 }}
+                onStart={() => handleContainerOperation(service.service, 'start')}
+                onStop={() => handleContainerOperation(service.service, 'stop')}
+                onRestart={() => handleContainerOperation(service.service, 'restart')}
+                containerStatus={getContainerStatus(service.service)}
+                isOperating={operatingServices.has(service.service)}
               />
             </div>
           ))}

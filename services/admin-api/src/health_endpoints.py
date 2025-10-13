@@ -1,16 +1,33 @@
 """
 Health Monitoring Endpoints
+Epic 17.2: Enhanced Service Health Monitoring
 """
 
 import asyncio
 import logging
+import sys
+import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import aiohttp
 import os
 
+# Add shared directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+
+from shared.types.health import (
+    HealthStatus as HealthStatusEnum,
+    DependencyType,
+    DependencyHealth,
+    create_health_response,
+    determine_overall_status,
+    check_dependency_health
+)
+
+from shared.alert_manager import get_alert_manager, AlertSeverity
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +59,7 @@ class HealthEndpoints:
         """Initialize health endpoints"""
         self.router = APIRouter()
         self.start_time = datetime.now()
+        self.alert_manager = get_alert_manager("admin-api")
         self.service_urls = {
             "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
             "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002"),
@@ -56,34 +74,74 @@ class HealthEndpoints:
         
         @self.router.get("/health")
         async def get_health():
-            """Get simple health status"""
+            """Get enhanced health status with dependency checks"""
             try:
-                # Return a simple health response that always works
                 uptime = (datetime.now() - self.start_time).total_seconds()
                 
-                return {
-                    "status": "healthy",
-                    "timestamp": datetime.now().isoformat(),
-                    "uptime_seconds": uptime,
-                    "version": "1.0.0",
-                    "services": {
-                        "admin-api": {
-                            "status": "healthy",
-                            "last_check": datetime.now().isoformat(),
-                            "response_time_ms": 0
-                        }
-                    },
-                    "dependencies": {
-                        "influxdb": {"status": "healthy"},
-                        "websocket-ingestion": {"status": "healthy"}
-                    },
-                    "metrics": {
+                # Check dependencies
+                dependencies = []
+                
+                # Check InfluxDB connection
+                influxdb_dep = await check_dependency_health(
+                    name="InfluxDB",
+                    dependency_type=DependencyType.DATABASE,
+                    check_func=lambda: self._check_influxdb_health(),
+                    timeout=3.0
+                )
+                dependencies.append(influxdb_dep)
+                
+                # Check WebSocket Ingestion service
+                websocket_dep = await check_dependency_health(
+                    name="WebSocket Ingestion",
+                    dependency_type=DependencyType.API,
+                    check_func=lambda: self._check_service_health(
+                        self.service_urls["websocket-ingestion"] + "/health"
+                    ),
+                    timeout=2.0
+                )
+                dependencies.append(websocket_dep)
+                
+                # Check Enrichment Pipeline service
+                enrichment_dep = await check_dependency_health(
+                    name="Enrichment Pipeline",
+                    dependency_type=DependencyType.API,
+                    check_func=lambda: self._check_service_health(
+                        self.service_urls["enrichment-pipeline"] + "/health"
+                    ),
+                    timeout=2.0
+                )
+                dependencies.append(enrichment_dep)
+                
+                # Determine overall status
+                overall_status = determine_overall_status(dependencies)
+                
+                # Check for alert conditions (Epic 17.4)
+                for dep in dependencies:
+                    if dep.status == HealthStatusEnum.CRITICAL:
+                        self.alert_manager.check_condition(
+                            "service_unhealthy",
+                            "critical",
+                            metadata={
+                                "dependency": dep.name,
+                                "response_time_ms": dep.response_time_ms,
+                                "message": dep.message
+                            }
+                        )
+                
+                # Create standardized health response
+                return create_health_response(
+                    service="admin-api",
+                    status=overall_status,
+                    dependencies=dependencies,
+                    metrics={
                         "uptime_seconds": uptime,
                         "uptime_human": self._format_uptime(uptime),
                         "start_time": self.start_time.isoformat(),
                         "current_time": datetime.now().isoformat()
-                    }
-                }
+                    },
+                    uptime_seconds=uptime,
+                    version="1.0.0"
+                )
                 
             except Exception as e:
                 logger.error(f"Error getting health status: {e}")
@@ -256,6 +314,27 @@ class HealthEndpoints:
             "cpu_usage": self._get_cpu_usage(),
             "disk_usage": self._get_disk_usage()
         }
+    
+    async def _check_influxdb_health(self) -> bool:
+        """Check InfluxDB health"""
+        try:
+            influxdb_url = self.service_urls["influxdb"]
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{influxdb_url}/health") as response:
+                    return response.status == 200
+        except Exception as e:
+            logger.error(f"InfluxDB health check failed: {e}")
+            return False
+    
+    async def _check_service_health(self, service_url: str) -> bool:
+        """Check service health via HTTP"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(service_url) as response:
+                    return response.status == 200
+        except Exception as e:
+            logger.error(f"Service health check failed for {service_url}: {e}")
+            return False
     
     def _format_uptime(self, seconds: float) -> str:
         """Format uptime in human readable format"""

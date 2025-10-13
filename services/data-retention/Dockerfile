@@ -1,5 +1,5 @@
 # Multi-stage build for Data Retention Service
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -15,10 +15,11 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements and install Python dependencies with pre-compiled wheels
 COPY services/data-retention/requirements-prod.txt .
-RUN pip install --no-cache-dir --user -r requirements-prod.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --user -r requirements-prod.txt
 
 # Production stage
-FROM python:3.11-slim AS production
+FROM python:3.12-slim AS production
 
 # Set working directory
 WORKDIR /app
