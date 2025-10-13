@@ -155,7 +155,7 @@
 ### Execution Documents
 1. ✅ `DASHBOARD_ENHANCEMENT_ROADMAP.md` (comprehensive plan)
 2. ✅ `DASHBOARD_REVIEW_VISUAL_SUMMARY.md` (visual analysis)
-3. ✅ `BMAD_EPIC_CREATION_SUMMARY.md` (what was created)
+3. ✅ `../implementation/BMAD_EPIC_CREATION_SUMMARY.md` (what was created)
 4. ✅ `EXECUTIVE_SUMMARY.md` (this document)
 
 ### Screenshots (Playwright)
@@ -255,7 +255,7 @@
 **Need clarification?**
 - Review detailed roadmap: `DASHBOARD_ENHANCEMENT_ROADMAP.md`
 - Review visual analysis: `DASHBOARD_REVIEW_VISUAL_SUMMARY.md`
-- Review BMAD compliance: `BMAD_EPIC_CREATION_SUMMARY.md`
+- Review BMAD compliance: `../implementation/BMAD_EPIC_CREATION_SUMMARY.md`
 
 **Need changes?**
 - Ask @po to create more detailed stories

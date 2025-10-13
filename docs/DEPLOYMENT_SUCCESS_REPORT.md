@@ -558,7 +558,7 @@ docker-compose up -d health-dashboard:previous
 ```
 
 ### Documentation
-- **Comprehensive Summary:** `COMPLETE_DASHBOARD_ENHANCEMENT_SUMMARY.md`
+- **Comprehensive Summary:** `../implementation/COMPLETE_DASHBOARD_ENHANCEMENT_SUMMARY.md`
 - **QA Report:** `qa/DASHBOARD_ENHANCEMENT_QA_REPORT.md`
 - **Roadmap:** `DASHBOARD_ENHANCEMENT_ROADMAP.md`
 - **This Report:** `DEPLOYMENT_SUCCESS_REPORT.md`

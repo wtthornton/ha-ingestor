@@ -384,7 +384,7 @@ http://localhost:3000
 - [Epic 14: UX Polish](epic-14-dashboard-ux-polish.md)
 - [Epic 15: Advanced Features](epic-15-advanced-dashboard-features.md)
 - [Story 13.1: Data Sources](13.1-data-sources-status-dashboard.md)
-- [Complete Integration Summary](../COMPLETE_INTEGRATION_SUMMARY.md)
+- [Complete Integration Summary](../implementation/COMPLETE_INTEGRATION_SUMMARY.md)
 
 ---
 
