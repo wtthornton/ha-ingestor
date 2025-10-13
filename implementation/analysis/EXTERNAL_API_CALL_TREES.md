@@ -53,6 +53,11 @@
 
 **Note**: As of Epic 13, data-api handles all feature queries (sports, events, devices), while admin-api handles system monitoring.
 
+**Epic 12 Update**: Sports data now has InfluxDB persistence via data-api:
+- **Historical queries**: `data-api:8006/api/v1/sports/games/history` (from InfluxDB)
+- **HA automation**: `data-api:8006/api/v1/ha/game-status` (<50ms response)
+- **Live data**: Still via `sports-data:8005` (cache-only, 15s TTL)
+
 ---
 
 ## 📊 Overview
@@ -124,22 +129,33 @@ Dashboard → Admin API → Service → External API (if cache miss) → Respons
          │ Flux queries                             │ HTTP GET
          ▼                                           ▼
 ┌──────────────────────────────────────────────────────────────┐
-│         Admin API Service (Port 8003)                        │
-│  - Gateway for all external data                             │
-│  - Query InfluxDB for historical data                        │
-│  - Proxy requests to sports-data service                     │
-│  - Aggregation and formatting                                │
+│         Data API Service (Port 8006) [EPIC 13]              │
+│  - Gateway for feature data queries                          │
+│  - Query InfluxDB for historical sports data                 │
+│  - HA automation endpoints for sports events                 │
+│  - Events, devices, alerts, metrics endpoints                │
 └────────┬─────────────────────────────────────────────────────┘
-         │ HTTP/REST
-         ▼
-┌──────────────────────────────────────────────────────────────┐
-│         Health Dashboard (Port 3000)                         │
-│  Tabs consuming external data:                               │
-│   - Overview: All metrics summary                            │
-│   - Sports: Live games (sports-data)                         │
-│   - Data Sources: Air quality, carbon, pricing, smart meter  │
-│   - Analytics: Historical trends from InfluxDB               │
-└──────────────────────────────────────────────────────────────┘
+         │               ┌──────────────────────────────────────────────────────────────┐
+         │               │         Admin API Service (Port 8003) [EPIC 13]             │
+         │               │  - System monitoring and control                             │
+         │               │  - Health checks and Docker management                      │
+         │               │  - Configuration and system stats                           │
+         │               └────────┬─────────────────────────────────────────────────────┘
+         │                        │
+         │ HTTP/REST              │ HTTP/REST
+         │ (Feature Data)         │ (System Monitoring)
+         │                        │
+         └────────────────────────┴───► nginx (Port 3000)
+                                  │
+                                  ▼
+                    ┌──────────────────────────────────────────────────────────────┐
+                    │         Health Dashboard (Port 3000)                         │
+                    │  Tabs consuming external data:                               │
+                    │   - Overview: All metrics summary                            │
+                    │   - Sports: Historical data (data-api) + Live games (sports-data) │
+                    │   - Data Sources: Air quality, carbon, pricing, smart meter        │
+                    │   - Analytics: Historical trends from InfluxDB                     │
+                    └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -151,6 +167,7 @@ sequenceDiagram
     participant ExtAPI as External APIs<br/>(AirNow, WattTime, etc.)
     participant Service as External API Service<br/>(Ports 8010-8014)
     participant DB as InfluxDB<br/>(Port 8086)
+    participant DataAPI as Data API<br/>(Port 8006)
     participant AdminAPI as Admin API<br/>(Port 8003)
     participant UI as Dashboard<br/>(Port 3000)
     participant SportsAPI as ESPN API
@@ -169,30 +186,30 @@ sequenceDiagram
     
     Note over UI,DB: Dashboard Queries Historical Data
     
-    UI->>AdminAPI: GET /api/data-sources/air-quality
-    AdminAPI->>DB: Flux query (last 24h)
-    DB-->>AdminAPI: Time-series data
-    AdminAPI->>AdminAPI: Format response
-    AdminAPI-->>UI: JSON response
+    UI->>DataAPI: GET /api/v1/data-sources/air-quality
+    DataAPI->>DB: Flux query (last 24h)
+    DB-->>DataAPI: Time-series data
+    DataAPI->>DataAPI: Format response
+    DataAPI-->>UI: JSON response
     UI->>UI: Render charts
     
     Note over UI,SportsService: Pattern B: On-Demand Pull (Sports Data)
     
-    UI->>AdminAPI: GET /api/sports/live-games?teams=sf,dal
-    AdminAPI->>SportsService: Proxy request
+    UI->>DataAPI: GET /api/v1/sports/live-games?teams=sf,dal
+    DataAPI->>SportsService: Proxy request
     
     alt Cache Hit
         SportsService->>SportsService: Return cached data
-        SportsService-->>AdminAPI: JSON (from cache)
+        SportsService-->>DataAPI: JSON (from cache)
     else Cache Miss
         SportsService->>SportsAPI: GET /scoreboard (no auth)
         SportsAPI-->>SportsService: JSON response
         SportsService->>SportsService: Filter by teams
         SportsService->>SportsService: Cache (15s TTL)
-        SportsService-->>AdminAPI: JSON (filtered)
+        SportsService-->>DataAPI: JSON (filtered)
     end
     
-    AdminAPI-->>UI: JSON response
+    DataAPI-->>UI: JSON response
     UI->>UI: Render live scores
 ```
 
@@ -847,9 +864,9 @@ User opens Sports tab in Dashboard
     ├─► user_teams = localStorage.getItem('selectedTeams')  // ['sf', 'dal']
     │
     └─► apiService.getLiveGames(user_teams)
-        └─► fetch('http://localhost:8003/api/sports/live-games?teams=sf,dal')
+        └─► fetch('http://localhost:8006/api/v1/sports/live-games?teams=sf,dal')
             
-            Admin API: /api/sports/live-games
+            Data API: /api/v1/sports/live-games
             └─► Proxy to sports-data service:
                 └─► GET http://localhost:8005/api/v1/games/live?teams=sf,dal
                     
