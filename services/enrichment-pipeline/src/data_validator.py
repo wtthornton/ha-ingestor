@@ -90,14 +90,29 @@ class DataValidationEngine:
         result = ValidationResult(is_valid=True)
         
         try:
-            # Extract event data
-            event_data = event.get('data', {})
-            entity_id = event_data.get('entity_id', '')
-            new_state = event_data.get('new_state', {})
+            # DEBUG: Log event structure
+            logger.warning(f"[VALIDATOR] validate_event called")
+            logger.warning(f"[VALIDATOR] Event keys: {list(event.keys())}")
+            logger.warning(f"[VALIDATOR] Event type: {event.get('event_type')}")
+            logger.warning(f"[VALIDATOR] Has entity_id: {'entity_id' in event}")
+            logger.warning(f"[VALIDATOR] Has data: {'data' in event}")
+            
+            # Extract entity_id and state data from the event
+            # The WebSocket service already extracts and flattens the structure,
+            # so entity_id is at the top level, not in event['data']['entity_id']
+            entity_id = event.get('entity_id', '')
+            new_state = event.get('new_state', {})
+            old_state = event.get('old_state', {})
+            
+            logger.warning(f"[VALIDATOR] Extracted entity_id: '{entity_id}' (type: {type(entity_id)})")
+            logger.warning(f"[VALIDATOR] Has new_state: {new_state is not None}, Has old_state: {old_state is not None}")
             
             # Validate entity_id
+            logger.warning(f"[VALIDATOR] Calling _validate_entity_id")
             if not self._validate_entity_id(entity_id, result):
+                logger.warning(f"[VALIDATOR] _validate_entity_id FAILED - Errors: {result.errors}")
                 return result
+            logger.warning(f"[VALIDATOR] _validate_entity_id PASSED")
             
             # Extract domain from entity_id
             domain = entity_id.split('.')[0] if '.' in entity_id else ''
@@ -155,9 +170,10 @@ class DataValidationEngine:
     
     def _validate_event_structure(self, event: Dict[str, Any], result: ValidationResult):
         """Validate event structure"""
-        # Check for required top-level fields
-        if 'data' not in event:
-            result.add_error("Missing 'data' field in event")
+        # The WebSocket service already extracts and flattens the event structure,
+        # so we check for entity_id at the top level
+        if 'entity_id' not in event:
+            result.add_error("Missing 'entity_id' field in event")
         
         if 'event_type' not in event:
             result.add_warning("Missing 'event_type' field")
@@ -169,8 +185,10 @@ class DataValidationEngine:
     
     def _validate_state_data(self, state: Dict[str, Any], domain: str, result: ValidationResult):
         """Validate state data structure"""
-        # Required fields in state
-        required_fields = ['entity_id', 'state', 'last_changed', 'last_updated']
+        # Required fields in state object
+        # Note: entity_id is at the event level, not in the state object
+        # The WebSocket service's EventProcessor creates simplified state objects
+        required_fields = ['state', 'last_changed', 'last_updated']
         
         for field in required_fields:
             if field not in state:
@@ -306,6 +324,19 @@ class DataValidationEngine:
                 except (ValueError, TypeError):
                     result.add_error(f"Invalid {temp_attr} value: {temp}")
     
+    def is_event_valid(self, event: Dict[str, Any]) -> bool:
+        """
+        Check if an event is valid (simple boolean check)
+        
+        Args:
+            event: Event dictionary from Home Assistant
+            
+        Returns:
+            True if event is valid, False otherwise
+        """
+        validation_result = self.validate_event(event)
+        return validation_result.is_valid
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get validation statistics"""
         return {

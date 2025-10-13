@@ -2,9 +2,114 @@
 
 Based on the PRD requirements and Home Assistant event structure, here are the core data models:
 
-### HomeAssistantEvent
+## Event Processing Data Models
 
-**Purpose:** Core event model capturing all Home Assistant state changes with enrichment data
+### ProcessedEvent (WebSocket → Enrichment Pipeline)
+
+**Purpose:** Flattened event structure sent from WebSocket Ingestion Service to Enrichment Pipeline
+
+**Key Attributes:**
+- `event_type`: string - Type of event (e.g., "state_changed", "call_service")
+- `entity_id`: string - Home Assistant entity identifier (e.g., "sensor.living_room_temperature")
+- `domain`: string - Entity domain (sensor, switch, light, etc.)
+- `timestamp`: string - ISO 8601 UTC timestamp when event was processed
+- `time_fired`: string - ISO 8601 UTC timestamp when event was fired in Home Assistant
+- `origin`: string - Event origin ("LOCAL" or "REMOTE")
+- `context`: object - Event context with id, parent_id, user_id
+- `new_state`: StateObject - Current state information
+- `old_state`: StateObject - Previous state information (may be null/empty)
+- `state_change`: StateChangeInfo - State change summary
+- `weather`: WeatherContext - Enriched weather information (optional)
+- `weather_enriched`: boolean - Whether weather data was added
+- `weather_location`: string - Location used for weather data
+- `raw_data`: object - Original Home Assistant event data
+
+**TypeScript Interface:**
+```typescript
+interface ProcessedEvent {
+  event_type: string;
+  entity_id: string;
+  domain: string;
+  timestamp: string; // ISO 8601 UTC
+  time_fired?: string; // ISO 8601 UTC
+  origin?: string;
+  context?: {
+    id: string;
+    parent_id: string | null;
+    user_id: string | null;
+  };
+  new_state: StateObject;
+  old_state?: StateObject;
+  state_change?: StateChangeInfo;
+  weather?: WeatherContext;
+  weather_enriched?: boolean;
+  weather_location?: string;
+  raw_data?: any;
+}
+
+interface StateObject {
+  state: string;
+  attributes: Record<string, any>;
+  last_changed: string; // ISO 8601 UTC
+  last_updated: string; // ISO 8601 UTC
+}
+
+interface StateChangeInfo {
+  from: string | null;
+  to: string;
+  changed: boolean;
+}
+```
+
+**Python Pydantic Model:**
+```python
+from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional
+from datetime import datetime
+
+class StateObject(BaseModel):
+    state: str
+    attributes: Dict[str, Any] = Field(default_factory=dict)
+    last_changed: datetime
+    last_updated: datetime
+
+class StateChangeInfo(BaseModel):
+    from_state: Optional[str] = Field(alias="from")
+    to: str
+    changed: bool
+
+class ProcessedEvent(BaseModel):
+    event_type: str
+    entity_id: str
+    domain: str
+    timestamp: datetime
+    time_fired: Optional[datetime] = None
+    origin: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+    new_state: StateObject
+    old_state: Optional[StateObject] = None
+    state_change: Optional[StateChangeInfo] = None
+    weather: Optional[Dict[str, Any]] = None
+    weather_enriched: Optional[bool] = False
+    weather_location: Optional[str] = None
+    raw_data: Optional[Dict[str, Any]] = None
+```
+
+**Relationships:**
+- Produced by WebSocket Ingestion Service's `EventProcessor.extract_event_data()`
+- Consumed by Enrichment Pipeline's `process_event()` method
+- Validated by `DataValidationEngine.validate_event()`
+- Normalized by `DataNormalizer.normalize_event()`
+- Written to InfluxDB measurement "home_assistant_events"
+
+**Important Notes:**
+- `entity_id` is at the **top level**, not nested in state objects
+- State objects (`new_state`, `old_state`) do **not** contain `entity_id` field
+- The structure is **flattened** for efficient HTTP transport between services
+
+### HomeAssistantEvent (Legacy/Display)
+
+**Purpose:** Core event model for display and dashboard consumption
 
 **Key Attributes:**
 - `entity_id`: string - Home Assistant entity identifier (e.g., "sensor.living_room_temperature")
@@ -31,7 +136,7 @@ interface HomeAssistantEvent {
 ```
 
 **Relationships:**
-- Links to WeatherContext for enriched data
+- Derived from ProcessedEvent for dashboard display
 - Maps to InfluxDB measurement "home_assistant_events"
 
 ### WeatherContext

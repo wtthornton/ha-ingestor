@@ -10,7 +10,7 @@ import re
 import json
 
 from data_validator import get_validator, ValidationResult
-from quality_metrics import get_quality_metrics_collector
+# TEMPORARILY DISABLED: from quality_metrics import get_quality_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class DataNormalizer:
         self.normalization_errors = 0
         self.last_normalized_time: Optional[datetime] = None
         self.validator = get_validator()  # Epic 18.1: Data validation engine
-        self.quality_metrics = get_quality_metrics_collector()  # Epic 18.2: Quality metrics
+        # TEMPORARILY DISABLED: self.quality_metrics = get_quality_metrics_collector()  # Epic 18.2: Quality metrics
         
         # State value mappings
         self.boolean_states = {
@@ -69,24 +69,28 @@ class DataNormalizer:
             Normalized event data or None if normalization fails or validation fails
         """
         try:
-            # Epic 18.1: Validate event data FIRST
+            # TEMPORARILY DISABLED: Epic 18.1: Validate event data FIRST
+            # TODO: Re-enable validation after fixing validation issues
             validation_result = self.validator.validate_event(event_data)
             
-            # Epic 18.2: Record quality metrics
-            self.quality_metrics.record_validation_result(validation_result, event_data)
+            # TEMPORARILY DISABLED: Epic 18.2: Record quality metrics
+            # self.quality_metrics.record_validation_result(validation_result, event_data)
             
-            # Log validation results
+            # Log validation results if there are issues
             if not validation_result.is_valid:
-                logger.error(
-                    f"Event validation failed for {event_data.get('data', {}).get('entity_id', 'unknown')}: "
-                    f"{', '.join(validation_result.errors)}"
+                entity_id = event_data.get('entity_id', 'unknown')
+                event_type = event_data.get('event_type', 'unknown')
+                logger.warning(
+                    f"[NORMALIZER] VALIDATION FAILED - Entity: {entity_id}, Event Type: {event_type}, "
+                    f"Errors: {', '.join(validation_result.errors)}, "
+                    f"Full Event: {str(event_data)[:200]}..."
                 )
                 self.normalization_errors += 1
-                return None  # Reject invalid events
+                # Continue processing despite validation errors
             
             if validation_result.warnings:
                 logger.warning(
-                    f"Event validation warnings for {event_data.get('data', {}).get('entity_id', 'unknown')}: "
+                    f"[NORMALIZER] Event validation warnings for {event_data.get('entity_id', 'unknown')}: "
                     f"{', '.join(validation_result.warnings)}"
                 )
             

@@ -569,6 +569,257 @@ Export log data in various formats.
 
 ---
 
+## 🔬 **Enrichment Pipeline API**
+
+### **Base URL**: `http://localhost:8002`
+
+The Enrichment Pipeline API provides endpoints for event processing, validation, normalization, and enrichment. It receives events from the WebSocket Ingestion Service, validates and normalizes them, and writes enriched data to InfluxDB.
+
+### **GET /health**
+Get enrichment pipeline service health status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "enrichment-pipeline",
+  "uptime": "0:15:30.123456",
+  "timestamp": "2025-10-13T02:30:00.000000",
+  "is_running": true,
+  "normalization": {
+    "normalized_events": 1250,
+    "normalization_errors": 2,
+    "last_normalized_time": "2025-10-13T02:29:58.123456"
+  },
+  "validation": {
+    "total_validations": 1252,
+    "valid_count": 1250,
+    "invalid_count": 2,
+    "warning_count": 15
+  },
+  "influxdb": {
+    "connected": true,
+    "url": "http://influxdb:8086",
+    "org": "ha-ingestor",
+    "bucket": "home_assistant_events"
+  }
+}
+```
+
+### **POST /events**
+Submit a single event for processing and enrichment.
+
+**Request Body:**
+```json
+{
+  "event_type": "state_changed",
+  "timestamp": "2025-10-13T02:30:00.123456",
+  "entity_id": "sensor.living_room_temperature",
+  "domain": "sensor",
+  "time_fired": "2025-10-13T02:30:00.123456",
+  "origin": "LOCAL",
+  "context": {
+    "id": "abc123",
+    "parent_id": null,
+    "user_id": null
+  },
+  "old_state": {
+    "state": "22.3",
+    "attributes": {
+      "unit_of_measurement": "°C",
+      "friendly_name": "Living Room Temperature"
+    },
+    "last_changed": "2025-10-13T02:25:00.123456",
+    "last_updated": "2025-10-13T02:29:55.123456"
+  },
+  "new_state": {
+    "state": "22.5",
+    "attributes": {
+      "unit_of_measurement": "°C",
+      "friendly_name": "Living Room Temperature"
+    },
+    "last_changed": "2025-10-13T02:30:00.123456",
+    "last_updated": "2025-10-13T02:30:00.123456"
+  },
+  "state_change": {
+    "from": "22.3",
+    "to": "22.5",
+    "changed": true
+  },
+  "weather": {
+    "temperature": 15.2,
+    "humidity": 65,
+    "condition": "clear"
+  },
+  "weather_enriched": true,
+  "weather_location": "Las Vegas, NV, US",
+  "raw_data": {
+    "event_type": "state_changed",
+    "data": {
+      "entity_id": "sensor.living_room_temperature",
+      "old_state": {},
+      "new_state": {}
+    }
+  }
+}
+```
+
+**Response (Success):**
+```json
+{
+  "status": "success",
+  "event_id": "evt_abc123"
+}
+```
+
+**Response (Failure):**
+```json
+{
+  "status": "failed",
+  "reason": "processing_failed"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Event processed successfully
+- `400 Bad Request`: Invalid event data or missing required fields
+- `500 Internal Server Error`: Processing error occurred
+- `503 Service Unavailable`: Service is not running
+
+### **POST /process-event**
+Alternative endpoint for processing a single event (alias for `/events`).
+
+### **POST /process-events**
+Submit multiple events for batch processing.
+
+**Request Body:**
+```json
+{
+  "events": [
+    {
+      "event_type": "state_changed",
+      "entity_id": "sensor.temperature",
+      ...
+    },
+    {
+      "event_type": "state_changed",
+      "entity_id": "sensor.humidity",
+      ...
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "processed": 2,
+  "failed": 0,
+  "results": [
+    {"event_id": "evt_1", "status": "success"},
+    {"event_id": "evt_2", "status": "success"}
+  ]
+}
+```
+
+### **GET /status**
+Get enrichment pipeline processing statistics and status.
+
+**Response:**
+```json
+{
+  "is_running": true,
+  "start_time": "2025-10-13T02:00:00.000000",
+  "uptime_seconds": 1800.5,
+  "normalization": {
+    "normalized_events": 1250,
+    "normalization_errors": 2,
+    "success_rate": 99.84
+  },
+  "validation": {
+    "total_validations": 1252,
+    "valid_count": 1250,
+    "invalid_count": 2,
+    "warning_count": 15,
+    "validation_rate": 99.84
+  },
+  "influxdb_writes": {
+    "total_writes": 1250,
+    "successful_writes": 1248,
+    "failed_writes": 2,
+    "success_rate": 99.84
+  }
+}
+```
+
+### **Event Structure Requirements**
+
+The Enrichment Pipeline expects events in a **flattened structure** where key fields are at the top level of the event object. This structure is produced by the WebSocket Ingestion Service's `EventProcessor`.
+
+#### Required Fields:
+- `event_type` (string): Type of event (e.g., "state_changed", "call_service")
+- `entity_id` (string): Entity identifier in format `domain.object_id` (e.g., "sensor.temperature")
+- `domain` (string): Home Assistant domain (e.g., "sensor", "light", "switch")
+
+#### State Change Events - Required Fields:
+- `new_state` (object): Current state information
+  - `state` (string): The state value
+  - `attributes` (object): State attributes
+  - `last_changed` (string): ISO timestamp when state last changed
+  - `last_updated` (string): ISO timestamp when state was last updated
+- `old_state` (object): Previous state (same structure as new_state, may be null/empty)
+
+#### Optional Fields:
+- `timestamp` (string): Event processing timestamp
+- `time_fired` (string): When the event was fired in Home Assistant
+- `origin` (string): Event origin (e.g., "LOCAL", "REMOTE")
+- `context` (object): Event context with id, parent_id, user_id
+- `state_change` (object): State change summary with from, to, changed fields
+- `weather` (object): Weather enrichment data
+- `weather_enriched` (boolean): Whether weather data was added
+- `weather_location` (string): Location used for weather data
+- `raw_data` (object): Original Home Assistant event data
+
+#### Validation Rules:
+1. **Entity ID Format**: Must match pattern `domain.object_id` (e.g., `sensor.temperature`)
+2. **Known Domains**: Warns if domain is not in the known domains list
+3. **State Value**: Must not be null (empty string is allowed)
+4. **Timestamps**: Should be valid ISO 8601 format
+5. **Event Structure**: Top-level fields are validated, nested state objects are validated separately
+
+#### Example Valid Event:
+```json
+{
+  "event_type": "state_changed",
+  "entity_id": "light.living_room",
+  "domain": "light",
+  "new_state": {
+    "state": "on",
+    "attributes": {
+      "brightness": 255,
+      "color_mode": "rgb"
+    },
+    "last_changed": "2025-10-13T02:30:00Z",
+    "last_updated": "2025-10-13T02:30:00Z"
+  },
+  "old_state": {
+    "state": "off",
+    "attributes": {},
+    "last_changed": "2025-10-13T02:25:00Z",
+    "last_updated": "2025-10-13T02:25:00Z"
+  }
+}
+```
+
+#### Common Validation Errors:
+- `Missing entity_id`: Event must include entity_id at top level
+- `Invalid entity_id format`: Entity ID must match `domain.object_id` pattern
+- `Missing required field in state`: State objects must include state, last_changed, last_updated
+- `State value is None`: State value cannot be null
+
+---
+
 ## 🗄️ **Data Retention API**
 
 ### **Base URL**: `http://localhost:8080`
