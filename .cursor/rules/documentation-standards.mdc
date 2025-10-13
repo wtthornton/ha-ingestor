@@ -7,6 +7,16 @@ description: Documentation standards and formatting guidelines
 
 ## Markdown Guidelines
 
+### File Location (CRITICAL - Read First)
+**BEFORE creating ANY .md file, determine correct location:**
+- **Reference documentation** → `docs/` (guides, manuals, API docs)
+- **Implementation notes** → `implementation/` (status, summaries, plans)
+- **Analysis/diagnosis** → `implementation/analysis/`
+- **Verification results** → `implementation/verification/`
+- **Root directory** → ONLY README.md and config files
+
+See [project-structure.mdc](mdc:.cursor/rules/project-structure.mdc) for complete file organization rules.
+
 ### File Structure
 - Use clear, descriptive filenames
 - Include a title (H1) at the top of each document

@@ -41,12 +41,21 @@ export default defineConfig(({ command, mode }) => {
       open: true,
       cors: true,
       proxy: {
+        // WebSocket proxy
+        '/ws': {
+          target: 'ws://ha-ingestor-admin-dev:8004',
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+        },
+        // Sports API proxy
         '/api/sports': {
           target: 'http://localhost:8005',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api\/sports/, '/api/v1'),
         },
+        // General API proxy
         '/api': {
           target: 'http://ha-ingestor-admin-dev:8004',
           changeOrigin: true,

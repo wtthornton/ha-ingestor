@@ -14,12 +14,16 @@ ha-ingestor/
 │   └── core-config.yaml           # BMAD configuration
 ├── .cursor/                       # Cursor IDE rules and configuration
 │   └── rules/                     # AI agent rules
-├── docs/                          # Project documentation
+├── docs/                          # Project documentation (REFERENCE ONLY)
 │   ├── architecture/              # Architecture documentation
 │   ├── prd/                       # Product Requirements (sharded)
 │   ├── stories/                   # Development stories
 │   ├── qa/                        # Quality assurance documents
 │   └── kb/                        # Knowledge base cache
+├── implementation/                # Implementation notes and status (NOT docs)
+│   ├── analysis/                  # Technical analysis and diagnosis
+│   ├── verification/              # Test and verification results
+│   └── archive/                   # Old/superseded implementation notes
 ├── services/                      # 12 Microservices (Alpine-based)
 │   ├── admin-api/                 # FastAPI REST API gateway (Port 8003)
 │   ├── health-dashboard/          # React frontend (12 tabs, Port 3000)
@@ -222,6 +226,57 @@ infrastructure/
 └── influxdb/                      # InfluxDB configuration
     ├── influxdb.conf              # InfluxDB server configuration
     └── init-influxdb.sh           # InfluxDB initialization script
+```
+
+## Critical: docs/ vs implementation/
+
+### Understanding the Difference
+
+**`docs/` = Reference Documentation**
+- **Purpose**: Permanent, reusable documentation for the project
+- **Audience**: Developers, users, stakeholders (long-term reference)
+- **Lifecycle**: Updated as project evolves, not tied to specific sessions
+- **Examples**: Architecture docs, PRD, user guides, API documentation
+
+**`implementation/` = Implementation Notes**
+- **Purpose**: Session notes, status reports, and implementation artifacts
+- **Audience**: Development team (short-term tracking)
+- **Lifecycle**: Created during development, archived after completion
+- **Examples**: Status reports, completion summaries, fix reports, analysis
+
+### When to Use Each
+
+| File Type | Location | Reason |
+|-----------|----------|--------|
+| Architecture documentation | `docs/architecture/` | Long-term reference |
+| User manual | `docs/` | Permanent documentation |
+| API documentation | `docs/` | Reference guide |
+| Deployment guide | `docs/` | Reusable instructions |
+| Status report | `implementation/` | Session artifact |
+| Completion summary | `implementation/` | Implementation tracking |
+| Fix report | `implementation/` | Development notes |
+| Analysis/diagnosis | `implementation/analysis/` | Technical investigation |
+| Verification results | `implementation/verification/` | Test results |
+
+### Implementation Directory Structure
+
+```
+implementation/
+├── analysis/                      # Technical analysis and diagnosis
+│   ├── *_ANALYSIS.md             # System/API analysis
+│   ├── *_DIAGNOSIS.md            # Problem diagnosis
+│   └── *_CALL_TREE.md            # Code flow analysis
+├── verification/                  # Test and verification results
+│   ├── *_VERIFICATION_RESULTS.md # Test results
+│   └── *_VERIFICATION.md         # Verification reports
+├── archive/                       # Old/superseded notes
+│   └── [dated folders]           # Organized by date/epic
+├── *_COMPLETE.md                 # Completion reports
+├── *_STATUS.md                   # Status reports
+├── *_SUMMARY.md                  # Session summaries
+├── *_PLAN.md                     # Implementation plans
+├── *_FIX_*.md                    # Fix reports
+└── EPIC_*_*.md                   # Epic-related notes
 ```
 
 ## Documentation Directory Structure

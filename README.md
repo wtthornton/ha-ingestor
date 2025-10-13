@@ -37,6 +37,52 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 - Home Assistant instance with long-lived access token
 - OpenWeatherMap API key (optional, for weather data)
 
+### 🔑 Authentication Setup
+
+**Important:** The `.env` file contains all required tokens and API keys. Before deployment, ensure you have:
+
+#### Home Assistant Token
+1. **Access Home Assistant**: Open your Home Assistant instance in a browser
+2. **Generate Token**: Go to Profile → Long-Lived Access Tokens → Create Token
+3. **Name it**: Give it a descriptive name (e.g., "HA Ingestor")
+4. **Copy Token**: Save the generated token immediately (it won't be shown again)
+5. **Update .env**: Set `HOME_ASSISTANT_TOKEN=your_token_here`
+
+#### Required Environment Variables
+The `.env` file should contain:
+```bash
+# Home Assistant Configuration
+HOME_ASSISTANT_URL=http://your-ha-ip:8123
+HOME_ASSISTANT_TOKEN=your_long_lived_access_token
+
+# Optional: Weather API (for data enrichment)
+WEATHER_API_KEY=your_openweathermap_api_key
+WEATHER_DEFAULT_LOCATION=Your City,State,Country
+
+# Database Configuration
+INFLUXDB_URL=http://localhost:8086
+INFLUXDB_TOKEN=your_influxdb_token
+INFLUXDB_BUCKET=home_assistant_events
+```
+
+#### Token Validation
+Before deployment, validate your tokens:
+```bash
+# Test Home Assistant connection
+python tests/test_local_ha_connection.py
+
+# Test all API keys
+python tests/test_api_keys.py
+
+# Full system integration test
+python tests/test_system_integration.py
+```
+
+**Common Issues:**
+- **401 Unauthorized**: Token is invalid or expired - generate a new one
+- **Connection Failed**: Check Home Assistant URL and network connectivity
+- **Permission Denied**: Ensure token has proper permissions for WebSocket access
+
 ### Setup
 
 #### 🚀 Quick Start with Deployment Wizard (Recommended)
@@ -420,9 +466,12 @@ Test all services:
    - Check logs: `./scripts/view-logs.sh`
 
 2. **Home Assistant connection issues:**
-   - Verify `HOME_ASSISTANT_URL` and `HOME_ASSISTANT_TOKEN`
-   - Check Home Assistant is accessible
-   - Ensure token has proper permissions
+   - Verify `HOME_ASSISTANT_URL` and `HOME_ASSISTANT_TOKEN` in `.env`
+   - Check Home Assistant is accessible: `curl http://your-ha-ip:8123`
+   - Test token validity: `python tests/test_local_ha_connection.py`
+   - Ensure token has proper permissions for WebSocket access
+   - **401 Unauthorized**: Generate a new Long-Lived Access Token
+   - **Connection Failed**: Check network connectivity and firewall settings
 
 3. **WebSocket connection issues:**
    - Check WebSocket service logs: `docker-compose logs websocket-ingestion`

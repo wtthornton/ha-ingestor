@@ -52,3 +52,117 @@ Use `@agent-name` to activate specific BMAD agents:
 2. Development phase uses IDE agents for implementation
 3. Documents are sharded for better navigation
 4. QA gates ensure quality before story completion
+
+## File Organization Rules - MANDATORY
+
+### Directory Purpose and Usage
+
+#### `docs/` - Reference Documentation ONLY
+- **Purpose**: Permanent, reusable documentation for the project
+- **Allowed**:
+  - Architecture documentation (`docs/architecture/`)
+  - PRD and epics (`docs/prd/`)
+  - User stories (`docs/stories/`)
+  - QA assessments and gates (`docs/qa/`)
+  - Knowledge base cache (`docs/kb/`)
+  - Reference guides (API_DOCUMENTATION.md, TROUBLESHOOTING_GUIDE.md)
+  - User manuals (USER_MANUAL.md, QUICK_START.md)
+  - Deployment guides (DEPLOYMENT_GUIDE.md)
+- **FORBIDDEN**:
+  - Status reports (DEPLOYMENT_COMPLETE.md, *_STATUS.md)
+  - Session summaries (*_SUMMARY.md for implementation work)
+  - Fix reports (*_FIX_*.md, *_FIXES_SUMMARY.md)
+  - Completion reports (*_COMPLETE.md, EPIC_*_COMPLETE.md)
+  - Implementation notes (*_IMPLEMENTATION_*.md)
+  - Analysis/diagnosis reports (*_ANALYSIS.md, *_DIAGNOSIS.md)
+  - Verification results (*_VERIFICATION_RESULTS.md)
+
+#### `implementation/` - Implementation Notes and Status
+- **Purpose**: Session notes, status reports, and implementation artifacts
+- **Allowed**:
+  - Status reports (DEPLOYMENT_COMPLETE.md, *_STATUS.md)
+  - Completion reports (EPIC_*_COMPLETE.md, *_COMPLETE.md)
+  - Session summaries (SESSION_*.md, *_SUMMARY.md)
+  - Implementation plans (*_PLAN.md, *_IMPLEMENTATION_*.md)
+  - Fix reports (*_FIX_*.md, *_FIXES_SUMMARY.md)
+  - Analysis reports (*_ANALYSIS.md) → `implementation/analysis/`
+  - Diagnosis results (*_DIAGNOSIS.md) → `implementation/analysis/`
+  - Verification results (*_VERIFICATION_RESULTS.md) → `implementation/verification/`
+- **Subdirectories**:
+  - `implementation/analysis/` - Technical analysis and diagnosis
+  - `implementation/verification/` - Test and verification results
+  - `implementation/archive/` - Old/superseded implementation notes
+
+#### Root Directory - Configuration Files ONLY
+- **Purpose**: Project configuration and entry points
+- **Allowed ONLY**:
+  - README.md (project overview)
+  - package.json, package-lock.json
+  - docker-compose*.yml
+  - .env*, .gitignore, .dockerignore
+  - License, configuration files
+- **FORBIDDEN**:
+  - ANY .md files except README.md
+  - Status reports, summaries, analysis, or implementation notes
+
+### File Creation Rules - MANDATORY FOR ALL AGENTS
+
+When creating ANY of these file types, you MUST place them in the correct location:
+
+1. **Status/Completion Reports** → `implementation/`
+   - Pattern: *_COMPLETE.md, *_STATUS.md, EPIC_*_COMPLETE.md
+   - Examples: DEPLOYMENT_COMPLETE.md, IMPLEMENTATION_STATUS.md
+
+2. **Session Summaries** → `implementation/`
+   - Pattern: SESSION_*.md, *_SUMMARY.md (implementation-related)
+   - Examples: SESSION_COMPLETE_*.md, EPIC_*_SUMMARY.md
+
+3. **Fix/Enhancement Reports** → `implementation/`
+   - Pattern: *_FIX_*.md, *_FIXES_SUMMARY.md
+   - Examples: DASHBOARD_FIX_SUMMARY.md, UX_FIXES_SUCCESS_SUMMARY.md
+
+4. **Analysis/Diagnosis** → `implementation/analysis/`
+   - Pattern: *_ANALYSIS.md, *_DIAGNOSIS.md, *_CALL_TREE.md
+   - Examples: API_DATA_SOURCE_ANALYSIS.md, DATA_FLOW_CALL_TREE.md
+
+5. **Verification Results** → `implementation/verification/`
+   - Pattern: *_VERIFICATION_RESULTS.md, *_VERIFICATION.md
+   - Examples: GUI_VERIFICATION_RESULTS.md, UI_API_VERIFICATION_RESULTS.md
+
+6. **Implementation Plans** → `implementation/`
+   - Pattern: *_PLAN.md, *_IMPLEMENTATION_*.md
+   - Examples: HEALTH_DASHBOARD_FIX_PLAN.md, *_IMPLEMENTATION_PLAN.md
+
+7. **Reference Documentation** → `docs/`
+   - Pattern: Guides, manuals, API docs
+   - Examples: API_DOCUMENTATION.md, TROUBLESHOOTING_GUIDE.md, USER_MANUAL.md
+
+### CRITICAL RULE: Never Create Files at Root
+
+**BEFORE creating ANY .md file (except README.md):**
+1. Determine file type from patterns above
+2. Create in appropriate directory
+3. Use proper subdirectories (analysis/, verification/)
+4. NEVER default to root directory
+
+### Example Decision Tree
+
+```
+Creating a new .md file?
+├─ Is it README.md? → Root (ONLY exception)
+├─ Is it a status/completion report? → implementation/
+├─ Is it a session summary? → implementation/
+├─ Is it a fix/enhancement report? → implementation/
+├─ Is it analysis/diagnosis? → implementation/analysis/
+├─ Is it verification results? → implementation/verification/
+├─ Is it an implementation plan? → implementation/
+├─ Is it a reference guide/manual? → docs/
+└─ When in doubt → Ask user or default to implementation/
+```
+
+## Enforcement
+
+- All BMAD agents MUST follow these rules
+- Any .md file created at root (except README.md) is a violation
+- Code review should check for misplaced files
+- Periodic cleanup to move misplaced files to correct locations

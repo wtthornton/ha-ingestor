@@ -431,6 +431,14 @@ async def on_startup():
         logger.warning(f"Failed to initialize InfluxDB: {e}")
         logger.warning("Statistics will fall back to direct service calls")
     
+    # Start WebSocket broadcast loop for real-time dashboard updates
+    try:
+        logger.info("Starting WebSocket broadcast loop...")
+        await admin_api_service.websocket_endpoints.start_broadcast_loop()
+        logger.info("WebSocket broadcast loop started successfully")
+    except Exception as e:
+        logger.error(f"Failed to start WebSocket broadcast loop: {e}")
+    
     logger.info("Admin API service started on 0.0.0.0:8004")
 
 
@@ -438,6 +446,13 @@ async def on_startup():
 async def on_shutdown():
     """Handle application shutdown"""
     logger.info("Shutting down Admin API service...")
+    
+    # Stop WebSocket broadcast loop
+    try:
+        admin_api_service.websocket_endpoints.stop_broadcast_loop()
+        logger.info("WebSocket broadcast loop stopped")
+    except Exception as e:
+        logger.error(f"Error stopping WebSocket broadcast loop: {e}")
     
     # Close InfluxDB connection
     try:

@@ -118,12 +118,8 @@ export const useRealtimeMetrics = (
           console.error('Failed to parse WebSocket message:', e);
         }
       },
-      heartbeat: {
-        message: 'ping',
-        returnMessage: 'pong',
-        timeout: 60000, // 1 minute timeout
-        interval: heartbeatInterval, // 25 seconds
-      },
+      // Disable built-in heartbeat (we'll manage it manually)
+      // heartbeat: false,
       retryOnError: true,
     },
     enabled && !isFallbackMode

@@ -1,37 +1,23 @@
 export interface HealthStatus {
+  service: string;
   status: 'healthy' | 'degraded' | 'unhealthy';
-  services: {
-    [key: string]: {
-      status: 'healthy' | 'degraded' | 'unhealthy';
-      response_time?: number;
-      last_error?: string;
-    };
-  };
-  metrics: {
-    websocket_connection: {
-      status: 'connected' | 'disconnected';
-      last_message_time: string;
-      connection_uptime: number;
-    };
-    event_processing: {
-      status: 'healthy' | 'degraded' | 'unhealthy';
-      events_per_minute: number;
-      last_event_time: string;
-      processing_lag: number;
-    };
-    weather_enrichment: {
-      enabled: boolean;
-      cache_hits: number;
-      api_calls: number;
-      last_error?: string;
-    };
-    influxdb_storage: {
-      is_connected: boolean;
-      last_write_time: string;
-      write_errors: number;
-    };
-  };
   timestamp: string;
+  uptime_seconds: number;
+  version: string;
+  dependencies: Array<{
+    name: string;
+    type: string;
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    response_time_ms: number;
+    message: string;
+    details: any;
+  }>;
+  metrics: {
+    uptime_seconds: number;
+    uptime_human: string;
+    start_time: string;
+    current_time: string;
+  };
 }
 
 export interface DataSourceHealth {
@@ -76,10 +62,20 @@ export interface Statistics {
   timestamp: string;
   period: string;
   metrics: {
-    total_events: number;
-    events_per_minute: number;
-    processing_time_avg: number;
-    error_rate: number;
+    'websocket-ingestion': {
+      events_per_minute: number;
+      error_rate: number;
+      response_time_ms: number;
+      connection_attempts: number;
+      total_events_received: number;
+    };
+    'enrichment-pipeline': {
+      events_per_minute: number;
+      error_rate: number;
+      response_time_ms: number;
+      connection_attempts: number;
+      total_events_received: number;
+    };
   };
   trends: {
     [key: string]: any;
@@ -89,6 +85,7 @@ export interface Statistics {
     message: string;
     severity: 'info' | 'warning' | 'error';
   }>;
+  source: string;
 }
 
 // Service Management Types (Phase 1, 2, 3)

@@ -51,6 +51,10 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
   const statistics = realtimeMetrics?.statistics || httpStats;
   const healthLoading = realtimeMetrics === null && httpHealthLoading;
   const statsLoading = realtimeMetrics === null && httpStatsLoading;
+  
+  // Extract metrics from the actual API response structure
+  const websocketMetrics = statistics?.metrics?.['websocket-ingestion'];
+  const enrichmentMetrics = statistics?.metrics?.['enrichment-pipeline'];
 
   return (
     <>
@@ -92,29 +96,29 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
             <div className="contents content-fade-in">
               <StatusCard
                 title="Overall Status"
-                status={health?.overall_status || 'unhealthy'}
-                value={health?.overall_status}
+                status={health?.status === 'healthy' ? 'healthy' : 'unhealthy'}
+                value={health?.status || 'unknown'}
               />
               
               <StatusCard
                 title="WebSocket Connection"
-                status={health?.ingestion_service?.websocket_connection?.is_connected ? 'connected' : 'disconnected'}
-                value={health?.ingestion_service?.websocket_connection?.connection_attempts || 0}
+                status={health?.dependencies?.find(dep => dep.name === 'WebSocket Ingestion')?.status === 'healthy' ? 'connected' : 'disconnected'}
+                value={websocketMetrics?.connection_attempts || 0}
                 subtitle="connection attempts"
               />
               
               <StatusCard
                 title="Event Processing"
-                status={health?.ingestion_service?.event_processing?.status || 'unhealthy'}
-                value={health?.ingestion_service?.event_processing?.events_per_minute || 0}
+                status={websocketMetrics?.events_per_minute > 0 ? 'healthy' : 'unhealthy'}
+                value={websocketMetrics?.events_per_minute || 0}
                 subtitle="events/min"
               />
               
               <StatusCard
                 title="Database Storage"
-                status={health?.ingestion_service?.influxdb_storage?.is_connected ? 'connected' : 'disconnected'}
-                value={health?.ingestion_service?.influxdb_storage?.write_errors || 0}
-                subtitle="write errors"
+                status={health?.dependencies?.find(dep => dep.name === 'InfluxDB')?.status === 'healthy' ? 'connected' : 'disconnected'}
+                value={websocketMetrics?.error_rate || 0}
+                subtitle="error rate %"
               />
             </div>
           )}
@@ -138,28 +142,28 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
             <div className="contents content-fade-in">
               <MetricCard
                 title="Total Events"
-                value={health?.ingestion_service?.event_processing?.total_events || 0}
+                value={websocketMetrics?.total_events_received || 0}
                 unit="events"
                 isLive={true}
               />
               
               <MetricCard
                 title="Events per Minute"
-                value={health?.ingestion_service?.event_processing?.events_per_minute || 0}
+                value={websocketMetrics?.events_per_minute || 0}
                 unit="events/min"
                 isLive={true}
               />
               
               <MetricCard
                 title="Error Rate"
-                value={health?.ingestion_service?.event_processing?.error_rate || 0}
+                value={websocketMetrics?.error_rate || 0}
                 unit="%"
               />
               
               <MetricCard
-                title="Weather API Calls"
-                value={health?.ingestion_service?.weather_enrichment?.api_calls || 0}
-                unit="calls"
+                title="Enrichment Pipeline"
+                value={enrichmentMetrics?.connection_attempts || 0}
+                unit="attempts"
                 isLive={true}
               />
             </div>
@@ -179,25 +183,22 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
         <div className="mt-4 flex justify-center space-x-6 text-xs">
           <a 
             href="/api/health" 
-            target="_blank" 
-            rel="noopener noreferrer"
             className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} transition-colors duration-200`}
+            aria-label="View API health endpoint"
           >
             🔗 API Health
           </a>
           <a 
             href="/api/statistics" 
-            target="_blank" 
-            rel="noopener noreferrer"
             className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} transition-colors duration-200`}
+            aria-label="View API statistics endpoint"
           >
             📊 API Statistics
           </a>
           <a 
             href="/api/data-sources" 
-            target="_blank" 
-            rel="noopener noreferrer"
             className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} transition-colors duration-200`}
+            aria-label="View data sources endpoint"
           >
             🌐 Data Sources
           </a>
