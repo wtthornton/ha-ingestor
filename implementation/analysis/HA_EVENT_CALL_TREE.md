@@ -25,16 +25,26 @@ This document traces the complete journey of a Home Assistant event from its ori
 │ - Connection Management                        │
 │ - Event Subscription                           │
 │ - Initial Processing                           │
+│ - Weather Enrichment (inline)                  │
 │ - Async Queue Management                       │
 │ - Batch Processing                             │
-└────────┬───────────────────────────────────────┘
-         │
-         ├──────────► (Optional) Enrichment Pipeline (Port 8002)
-         │            - Data Normalization
-         │            - Data Validation
-         │            - Quality Metrics
-         │
-         ▼
+└────────┬───────────────────┬───────────────────┘
+         │                   │
+         │ Path A (Always)   │ Path B (Optional)
+         │ Direct Write      │ HTTP POST
+         │                   │
+         ▼                   ▼
+         │         ┌─────────────────────────┐
+         │         │ Enrichment Pipeline     │
+         │         │ (Port 8002) [OPTIONAL]  │
+         │         │ - Data Normalization    │
+         │         │ - Data Validation       │
+         │         │ - Quality Metrics       │
+         │         └──────────┬──────────────┘
+         │                    │
+         └────────────────────┴─► Both paths write to InfluxDB
+                              │
+                              ▼
 ┌────────────────────────────────────────────────┐
 │ InfluxDB (Port 8086)                          │
 │ - Time-Series Database                         │
@@ -401,6 +411,25 @@ InfluxDBBatchWriter.write_batch(events)
 ---
 
 ### Phase 4: Optional Enrichment Pipeline
+
+**Why Optional?** The Enrichment Pipeline is a separate microservice that provides additional data normalization and validation. However, events are **already written to InfluxDB directly** by the websocket-ingestion service (via batch processor). The enrichment pipeline adds:
+- Data validation and quality checks
+- Unit normalization (e.g., °C → celsius)
+- Data quality metrics and alerts
+- Additional normalization beyond basic processing
+
+**Enabled/Disabled via**:
+- Environment variable: `ENRICHMENT_SERVICE_URL`
+- HTTP client initialization in websocket-ingestion service
+- Can be completely removed from Docker Compose without breaking the system
+
+**Configuration** (in `services/websocket-ingestion/src/main.py`):
+```python
+# Line 338: Only sends if HTTP client is configured
+if self.http_client:
+    for event in batch:
+        success = await self.http_client.send_event(event)
+```
 
 #### 4.1 Enrichment Service Processing
 
@@ -1030,14 +1059,31 @@ This call tree demonstrates the complete journey of a Home Assistant event:
 
 1. **WebSocket Reception** (~1ms): Event arrives from HA via WebSocket
 2. **Validation & Extraction** (~0.1ms): Event data validated and structured
-3. **Async Queue** (~0.01ms): Event added to processing queue
-4. **Batch Accumulation** (~5s): Events accumulated into batches of 1,000
-5. **Database Write** (~50ms): Batch written to InfluxDB time-series database
-6. **API Query** (~20ms): Dashboard queries events via REST API
-7. **Frontend Render** (~16ms): React components display events with 60 FPS
+3. **Weather Enrichment** (~50ms, optional): Inline weather data added to events
+4. **Async Queue** (~0.01ms): Event added to processing queue
+5. **Batch Accumulation** (~5s): Events accumulated into batches of 1,000
+6. **Database Write** (~50ms): Batch written to InfluxDB time-series database
+   - **Path A (Always)**: Direct write from websocket-ingestion service
+   - **Path B (Optional)**: Via enrichment-pipeline service for additional normalization
+7. **API Query** (~20ms): Dashboard queries events via REST API
+8. **Frontend Render** (~16ms): React components display events with 60 FPS
 
 **Total End-to-End Latency**: ~5-6 seconds (dominated by batching strategy)
 **Real-time Updates**: <100ms via WebSocket streaming
+
+### Key Architectural Notes
+
+1. **Dual Write Paths**: Events are written to InfluxDB via two parallel paths:
+   - **Primary Path**: websocket-ingestion → InfluxDB (always active)
+   - **Enhancement Path**: websocket-ingestion → enrichment-pipeline → InfluxDB (optional, configurable)
+
+2. **Enrichment Pipeline is Optional** because:
+   - Events are already persisted to InfluxDB by websocket-ingestion
+   - It provides **additional** processing (normalization, validation, quality metrics)
+   - Can be disabled or removed without breaking core functionality
+   - Useful for data quality monitoring and standardization
+
+3. **Weather Enrichment** (OpenWeatherMap API) happens inline in websocket-ingestion service and is separate from the enrichment-pipeline service
 
 The system is designed for high throughput (10,000+ events/sec) with low resource usage through batching, async processing, and efficient data structures.
 
