@@ -1,32 +1,107 @@
-# Epic List
+# Epic List - Complete Project History
 
-**Epic 1: Foundation & Core Infrastructure**
+## Foundation Epics (1-4)
+
+**Epic 1: Foundation & Core Infrastructure** ✅ **COMPLETE**
 Establish project setup, Docker orchestration, and basic Home Assistant WebSocket connection with authentication and health monitoring.
 
-**Epic 2: Data Capture & Normalization**
+**Epic 2: Data Capture & Normalization** ✅ **COMPLETE**
 Implement comprehensive event capture from Home Assistant WebSocket API with data normalization, error handling, and automatic reconnection capabilities.
 
-**Epic 3: Data Enrichment & Storage**
+**Epic 3: Data Enrichment & Storage** ✅ **COMPLETE**
 Integrate weather API enrichment and implement InfluxDB storage with optimized schema for Home Assistant events and pattern analysis.
 
-**Epic 4: Production Readiness & Monitoring**
+**Epic 4: Production Readiness & Monitoring** ✅ **COMPLETE**
 Implement comprehensive logging, health monitoring, retention policies, and production deployment capabilities with Docker Compose orchestration.
 
-**Epic 5-15: [Previous Epics]**
-Admin interface, enhanced dashboards, sports data, UX improvements, and advanced features.
+## Dashboard & Interface Epics (5-9)
 
-**Epic 16: Code Quality & Maintainability Improvements**
+**Epic 5: Admin Interface & Frontend** ✅ **COMPLETE**
+Build React-based health dashboard with real-time monitoring, system status, and configuration management.
+
+**Epic 6: Critical Infrastructure Stabilization** ✅ **COMPLETE**
+Address critical infrastructure issues, WebSocket stability, and deployment reliability.
+
+**Epic 7: Quality Monitoring & Stabilization** ✅ **COMPLETE**
+Implement data quality monitoring, validation metrics, and alerting system.
+
+**Epic 8: Monitoring & Alerting Enhancement** ✅ **COMPLETE**
+Enhanced monitoring capabilities with structured logging, correlation IDs, and alert management.
+
+**Epic 9: Optimization & Testing** ✅ **COMPLETE**
+Performance optimization, Docker image optimization (Alpine migration), and comprehensive testing.
+
+## Sports Data Integration Epics (10-12)
+
+**Epic 10: Sports API Integration (Archived)** ✅ **COMPLETE** 🗄️ **ARCHIVED**
+API-SPORTS.io integration with comprehensive player stats, injuries, and historical data. Archived in favor of free ESPN API (Epic 11).
+
+**Epic 11: Sports Data Integration (ESPN)** ✅ **COMPLETE**
+Free ESPN API integration for NFL/NHL game tracking with team-based filtering and live game status.
+
+**Epic 12: Sports Data InfluxDB Persistence** ✅ **COMPLETE**
+Persist sports data to InfluxDB with 2-year retention, historical query endpoints, and Home Assistant automation integration.
+
+## Architecture & API Separation Epic (13)
+
+**Epic 13: Admin API Service Separation** ✅ **COMPLETE**
+Major architectural refactoring to separate admin-api into two specialized services:
+- **admin-api (8003)**: System monitoring, health checks, Docker management (~22 endpoints)
+- **data-api (8006)**: Feature data hub - events, devices, sports, analytics, alerts (~40 endpoints)
+
+This separation improves performance, enables independent scaling, and reduces single points of failure.
+
+## Dashboard Enhancement Epics (14-15)
+
+**Epic 14: Dashboard UX Polish** ✅ **COMPLETE**
+Enhanced dashboard user experience with improved navigation, modern styling, and mobile responsiveness.
+
+**Epic 15: Advanced Dashboard Features** ✅ **COMPLETE**
+Advanced dashboard capabilities including customizable layouts, data export, and historical analysis.
+
+## Quality & Monitoring Epics (16-18)
+
+**Epic 16: Code Quality & Maintainability Improvements** ✅ **COMPLETE**
 Improve code maintainability for the personal home automation project. Simplify Dashboard component, add basic test coverage, and enhance security setup documentation.
 
-**Epic 17: Essential Monitoring & Observability**
+**Epic 17: Essential Monitoring & Observability** ✅ **COMPLETE**
 Implement essential monitoring and observability features to ensure the Home Assistant Ingestor system is production-ready with proper visibility into system health, performance, and issues.
 
-**Epic 18: Data Quality & Validation Completion**
+**Epic 18: Data Quality & Validation Completion** ✅ **COMPLETE**
 Complete the data quality and validation system that was identified as incomplete in QA assessments. This epic focuses on implementing the missing data quality components without over-engineering the solution.
 
-**Epic 19: Device & Entity Discovery**
-Discover and maintain complete inventory of all devices, entities, and integrations connected to Home Assistant. Provides visibility into system topology, enables troubleshooting, and establishes foundation for advanced monitoring features. ✅ **COMPLETE**
+## Device Discovery & Visualization Epics (19-20)
 
-**Epic 20: Devices Dashboard**
+**Epic 19: Device & Entity Discovery** ✅ **COMPLETE**
+Discover and maintain complete inventory of all devices, entities, and integrations connected to Home Assistant. Provides visibility into system topology, enables troubleshooting, and establishes foundation for advanced monitoring features.
+
+**Epic 20: Devices Dashboard** ✅ **COMPLETE**
 Interactive dashboard tab to browse and visualize Home Assistant devices, entities, and integrations. Reuses proven Dependencies Tab pattern for excellent UX. Provides easy exploration and system understanding.
+
+## Integration Completion Epic (21)
+
+**Epic 21: Dashboard API Integration Fix & Feature Completion** ✅ **COMPLETE**
+Complete integration of dashboard with Epic 13's data-api service structure and Epic 12's sports persistence features. Fixed broken/missing API connections across all 12 dashboard tabs, connecting:
+- Sports tab to historical game data and InfluxDB persistence
+- Events tab to query endpoints
+- Analytics tab to real-time metrics
+- Alerts tab to alert management system
+- WebSocket to correct data-api endpoint
+
+---
+
+## Summary
+
+- **Total Epics**: 21+
+- **Completed**: 21
+- **Active Services**: 16
+- **API Endpoints**: ~62 (22 admin-api + 40 data-api)
+- **Dashboard Tabs**: 12
+- **External Data Services**: 6 (carbon, electricity, air quality, calendar, smart meter, weather)
+
+---
+
+**Last Updated**: October 13, 2025  
+**Status**: Production Ready
+**Next Epic**: TBD based on user needs
 

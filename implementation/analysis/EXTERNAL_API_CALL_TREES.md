@@ -1,11 +1,18 @@
 # External API Services Call Tree Analysis
 ## Dashboard → Admin API → External Data Sources
 
-**Document Version**: 1.1  
+**Document Version**: 1.2 (Verified 2025-10-13)  
 **Created**: 2025-10-13  
-**Last Updated**: 2025-10-13 (Epic 13 - data-api separation)  
+**Last Updated**: 2025-10-13 (Epic 12 & 13 - Sports InfluxDB Persistence + data-api separation)  
+**Verification Status**: ✅ Accurate - Verified against actual implementation  
 **Purpose**: Detailed call trees for all external API services showing complete data flow patterns
 
+> **Epic 12 Update**: Sports data service now has **InfluxDB persistence** (Hybrid Pattern A+B)
+> - Live game cache: 15-second TTL (Pattern B - on-demand)
+> - Historical storage: InfluxDB with 2-year retention (Pattern A - persistent)
+> - New endpoints: Historical queries, HA automation, webhooks
+> - Background task: Event detection every 15 seconds
+>
 > **Epic 13 Update**: External API queries now routed through **data-api:8006** instead of admin-api:8003
 > - Sports data queries: `data-api:8006/api/v1/sports/*`
 > - Historical data queries moved to data-api for better scalability
@@ -29,12 +36,14 @@
 | Question | Answer | Section |
 |----------|--------|---------|
 | How many external services? | 6 services | [Service Catalog](#-service-catalog) |
-| What are the two patterns? | Push (continuous) & Pull (on-demand) | [Overview](#-overview) |
-| Which services push to InfluxDB? | Air Quality, Carbon, Electricity, Smart Meter, Calendar | [Pattern A](#pattern-a-continuous-push-to-influxdb) |
-| Which services use direct queries? | Sports Data | [Pattern B](#pattern-b-on-demand-pull-queries) |
+| What are the two patterns? | Push (continuous), Pull (on-demand), **Hybrid (Epic 12)** | [Overview](#-overview) |
+| Which services push to InfluxDB? | Air Quality, Carbon, Electricity, Smart Meter, Calendar, **Sports (Epic 12)** | [Pattern A](#pattern-a-continuous-push-to-influxdb) |
+| Which services use direct queries? | Sports Data (with cache + InfluxDB) | [Pattern B](#pattern-b-on-demand-pull-queries) |
 | How often do services fetch data? | 5-60 minutes (varies by service) | [Service Details](#-service-specific-call-trees) |
 | Are caching strategies used? | Yes, all services implement caching | [Caching](#-caching-strategies) |
 | How to query external data? | Via **data-api** endpoints (Epic 13) | [API Layer](#phase-3-data-api-gateway-epic-13) |
+| **Does sports data persist?** | **Yes, InfluxDB 2-year retention (Epic 12)** | [Sports Persistence](#epic-12-sports-data-influxdb-persistence) |
+| **Are webhooks supported?** | **Yes, HA automation webhooks (Epic 12)** | [Webhooks](#sports-webhooks-for-ha-automation) |
 
 ---
 
@@ -53,10 +62,13 @@
 
 **Note**: As of Epic 13, data-api handles all feature queries (sports, events, devices), while admin-api handles system monitoring.
 
-**Epic 12 Update**: Sports data now has InfluxDB persistence via data-api:
-- **Historical queries**: `data-api:8006/api/v1/sports/games/history` (from InfluxDB)
-- **HA automation**: `data-api:8006/api/v1/ha/game-status` (<50ms response)
-- **Live data**: Still via `sports-data:8005` (cache-only, 15s TTL)
+**Epic 12 Implementation**: Sports-data service now implements **Hybrid Pattern (A+B)**:
+- **Live Games (Pattern B)**: Cache-first with 15s TTL, on-demand ESPN API calls → `sports-data:8005`
+- **Persistence (Pattern A)**: All fetched data written to InfluxDB asynchronously, 2-year retention
+- **Historical Queries**: `data-api:8006/api/v1/sports/games/history` (SQL queries from InfluxDB)
+- **HA Automation**: `data-api:8006/api/v1/ha/game-status/{team}` (<50ms response)
+- **Webhooks**: Event detection background task triggers webhooks on game start/end/score changes
+- **Statistics**: Win/loss records, season schedules, game timelines computed from InfluxDB data
 
 ---
 
@@ -80,19 +92,28 @@ External API → Service (periodic fetch) → InfluxDB → Admin API → Dashboa
 - **Caching**: Short-term cache for API failures
 - **Use Case**: Time-series data, trending, historical analysis
 
-#### Pattern B: On-Demand Pull Queries
+#### Pattern B: On-Demand Pull Queries (Hybrid with Pattern A - Epic 12)
 **Services**: Sports Data
 
 ```
-Dashboard → Admin API → Service → External API (if cache miss) → Response
+Dashboard → Data API → Service → External API (if cache miss) → Response
+                                     ↓
+                                InfluxDB Write (async, non-blocking)
 ```
 
 **Characteristics**:
 - **Request-Driven**: Data fetched only when requested
 - **Short-TTL Cache**: 15-second cache for live games, 5-minute for upcoming
-- **No InfluxDB Storage**: Transient data, not persisted
+- **✨ InfluxDB Storage (Epic 12)**: All fetched data persisted asynchronously (2-year retention)
 - **Low API Usage**: Optimized to stay within free tier limits
-- **Use Case**: Real-time data that changes frequently
+- **Use Case**: Real-time data that changes frequently + historical analysis
+
+**Epic 12 Enhancements**:
+- **Hybrid Pattern**: Combines on-demand pull (Pattern B) with persistent storage (Pattern A)
+- **Non-Blocking Writes**: InfluxDB writes don't impact API response times
+- **Historical Queries**: SQL queries from InfluxDB for season stats, timelines, schedules
+- **Background Events**: Event detector monitors game state changes every 15 seconds
+- **Webhooks**: HMAC-signed webhooks for HA automations (game start, end, score changes)
 
 ---
 
@@ -104,35 +125,44 @@ Dashboard → Admin API → Service → External API (if cache miss) → Respons
 │  AirNow │ WattTime │ Awattar │ ESPN │ Google │ Smart Meter │
 └────┬─────────┬─────────┬────────┬───────┬──────────┬────────┘
      │         │         │        │       │          │
-     │ Pattern A: Continuous Push  │       │ Pattern B: Pull  │
-     │ (60min) │ (15min) │ (60min)│(5min) │ (15min)  │(on-demand)
+     │ Pattern A: Continuous Push  │       │ Hybrid Pattern (A+B) │
+     │ (60min) │ (15min) │ (60min)│(5min) │ (15min)  │(on-demand + persist)
      ▼         ▼         ▼        ▼       ▼          ▼
-┌────────────────────────────────────┐   ┌─────────────────────┐
-│    External API Services           │   │   Sports Data       │
-│  (Ports: 8010-8014)               │   │   Service (8005)    │
-│  - Periodic fetching               │   │   - On-demand only  │
-│  - Background loops                │   │   - Cache-first     │
-│  - Error handling                  │   │   - No persistence  │
-└────────┬───────────────────────────┘   └──────────┬──────────┘
+┌────────────────────────────────────┐   ┌─────────────────────────────┐
+│    External API Services           │   │   Sports Data Service       │
+│  (Ports: 8010-8014)               │   │   (Port 8005) [EPIC 12]     │
+│  - Periodic fetching               │   │   - On-demand queries       │
+│  - Background loops                │   │   - 15s cache (live games)  │
+│  - Error handling                  │   │   - Async InfluxDB writes   │
+│                                    │   │   - Event detector (15s)    │
+│                                    │   │   - Webhook system          │
+└────────┬───────────────────────────┘   └──────────┬──────────────────┘
          │                                           │
-         │ Write continuously                        │ No write
-         ▼                                           │
-┌────────────────────────────────────┐              │
-│      InfluxDB (Port 8086)         │              │
-│  Measurements:                     │              │
-│   - air_quality                    │              │
-│   - carbon_intensity               │              │
-│   - electricity_pricing            │              │
-│   - smart_meter                    │              │
-│   - occupancy_prediction           │              │
-└────────┬───────────────────────────┘              │
-         │ Flux queries                             │ HTTP GET
+         │ Write continuously                        │ Write async (Epic 12)
          ▼                                           ▼
+┌────────────────────────────────────────────────────────────┐
+│      InfluxDB (Port 8086)                                  │
+│  Measurements:                                             │
+│   - air_quality, carbon_intensity, electricity_pricing    │
+│   - smart_meter, occupancy_prediction                      │
+│   - nfl_scores, nhl_scores [EPIC 12] (2-year retention)  │
+│                                                            │
+│  Epic 12 Sports Schema:                                   │
+│   Tags: game_id, season, week, home_team, away_team       │
+│   Fields: home_score, away_score, quarter, time_remaining │
+└────────┬───────────────────────────────────────────────────┘
+         │ Flux/SQL queries                          
+         ▼                                           
 ┌──────────────────────────────────────────────────────────────┐
 │         Data API Service (Port 8006) [EPIC 13]              │
 │  - Gateway for feature data queries                          │
-│  - Query InfluxDB for historical sports data                 │
-│  - HA automation endpoints for sports events                 │
+│  - Sports Endpoints [EPIC 12]:                               │
+│    • /api/v1/sports/games/history (InfluxDB queries)        │
+│    • /api/v1/sports/games/timeline/{id} (score progression) │
+│    • /api/v1/sports/games/schedule/{team} (season schedule) │
+│    • /api/v1/ha/game-status/{team} (<50ms status)           │
+│    • /api/v1/ha/game-context/{team} (rich context)          │
+│    • /api/v1/ha/webhooks/* (webhook management)             │
 │  - Events, devices, alerts, metrics endpoints                │
 └────────┬─────────────────────────────────────────────────────┘
          │               ┌──────────────────────────────────────────────────────────────┐
@@ -152,7 +182,9 @@ Dashboard → Admin API → Service → External API (if cache miss) → Respons
                     │         Health Dashboard (Port 3000)                         │
                     │  Tabs consuming external data:                               │
                     │   - Overview: All metrics summary                            │
-                    │   - Sports: Historical data (data-api) + Live games (sports-data) │
+                    │   - Sports [EPIC 12]: Historical data, season stats, live games │
+                    │     • Query history from InfluxDB (win/loss, schedules)     │
+                    │     • Real-time polling for live game updates               │
                     │   - Data Sources: Air quality, carbon, pricing, smart meter        │
                     │   - Analytics: Historical trends from InfluxDB                     │
                     └──────────────────────────────────────────────────────────────┘
@@ -193,37 +225,74 @@ sequenceDiagram
     DataAPI-->>UI: JSON response
     UI->>UI: Render charts
     
-    Note over UI,SportsService: Pattern B: On-Demand Pull (Sports Data)
+    Note over UI,SportsService: Hybrid Pattern (A+B): Sports Data [EPIC 12]
     
+    Note over UI,DB: Live Games Query (Pattern B - Cache-First)
     UI->>DataAPI: GET /api/v1/sports/live-games?teams=sf,dal
     DataAPI->>SportsService: Proxy request
     
     alt Cache Hit
-        SportsService->>SportsService: Return cached data
+        SportsService->>SportsService: Return cached data (15s TTL)
         SportsService-->>DataAPI: JSON (from cache)
     else Cache Miss
         SportsService->>SportsAPI: GET /scoreboard (no auth)
         SportsAPI-->>SportsService: JSON response
         SportsService->>SportsService: Filter by teams
         SportsService->>SportsService: Cache (15s TTL)
+        
+        Note over SportsService,DB: Epic 12: Async InfluxDB Write (Pattern A)
+        par Async Write (non-blocking)
+            SportsService->>DB: Write nfl_scores/nhl_scores
+            Note right of DB: Tags: game_id, season,<br/>home_team, away_team<br/>Fields: scores, quarter
+            DB-->>SportsService: Write confirmation
+        end
+        
         SportsService-->>DataAPI: JSON (filtered)
     end
     
     DataAPI-->>UI: JSON response
     UI->>UI: Render live scores
+    
+    Note over UI,DB: Historical Query (Epic 12 - InfluxDB)
+    UI->>DataAPI: GET /api/v1/sports/games/history?team=Patriots&season=2025
+    DataAPI->>DB: SQL Query (SELECT * FROM nfl_scores...)
+    DB-->>DataAPI: Time-series game data
+    DataAPI->>DataAPI: Calculate stats (wins/losses)
+    DataAPI-->>UI: JSON (games + statistics)
+    UI->>UI: Render season stats
+    
+    Note over SportsService,DB: Background Event Detection (Epic 12 - Every 15s)
+    loop Every 15 seconds
+        SportsService->>DB: Query current game state
+        DB-->>SportsService: Latest scores
+        SportsService->>SportsService: Compare with previous state
+        alt Game Event Detected
+            SportsService->>SportsService: Create webhook event
+            SportsService->>SportsService: Deliver webhooks (HMAC signed)
+            Note right of SportsService: Events: game_start,<br/>game_end,<br/>score_change
+        end
+    end
 ```
 
 ---
 
 ## 🗂️ Service Catalog
 
-### 1. Sports Data Service (Port 8005)
+### 1. Sports Data Service (Port 8005) [EPIC 12 ENHANCED]
 - **Provider**: ESPN API (Free, no API key)
 - **Sports**: NFL, NHL
-- **Pattern**: Pull (on-demand)
-- **Features**: Team filtering, live scores, upcoming games
+- **Pattern**: **Hybrid (A+B)** - On-Demand Pull + InfluxDB Persistence
+- **Features**: Team filtering, live scores, upcoming games, **historical queries**, **HA automation**, **webhooks**
 - **Caching**: 15s (live), 5min (upcoming)
-- **Storage**: None (transient)
+- **Storage**: **InfluxDB (`nfl_scores`, `nhl_scores`) - 2-year retention**
+
+**Epic 12 Enhancements:**
+- ✨ **InfluxDB Persistence**: All fetched data persisted asynchronously
+- ✨ **Historical Queries**: SQL queries for season stats, win/loss records, game timelines
+- ✨ **HA Automation**: Fast status endpoints (<50ms) for Home Assistant automations
+- ✨ **Webhooks**: HMAC-signed webhooks for game start, end, and score changes
+- ✨ **Background Events**: Event detector monitors game state every 15 seconds
+- ✨ **Statistics Engine**: Calculate wins, losses, win percentage, point differentials
 
 ### 2. Air Quality Service (Port 8012)
 - **Provider**: AirNow API

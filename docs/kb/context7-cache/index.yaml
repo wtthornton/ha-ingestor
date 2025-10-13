@@ -1,23 +1,37 @@
 # Context7 Knowledge Base Cache - Master Index
 # This file tracks all cached documentation and provides fast lookup
 
-version: "1.0.0"
-last_updated: "2025-10-12T00:00:00Z"
+version: "1.1.0"
+last_updated: "2025-10-13T20:30:00Z"
 cache_location: "docs/kb/context7-cache"
 
 # Statistics
 statistics:
-  total_entries: 7
-  total_size_mb: 1.3
-  libraries_count: 5
+  total_entries: 21  # 18 libraries + 2 topics + 1 UX pattern
+  total_size_mb: 1.87
+  libraries_count: 18
   topics_count: 2
-  patterns_count: 3
-  cache_hit_rate: 0.85
+  patterns_count: 1
+  cache_hit_rate: 0.33  # 6 used / 18 total
   average_response_time_ms: 120
-  last_updated: "2025-10-12T00:00:00Z"
+  last_rebuilt: "2025-10-13T20:30:00Z"
+  last_cleanup: null
+  needs_refresh: true  # Some entries 6 days old
 
-# Libraries Cache
+# Cache Health Metrics
+health:
+  status: "healthy"
+  stale_entries: 6  # Vite, tailwindcss, redis, python-logging, heroicons + 5 more approaching 14-day threshold
+  unused_entries: 12  # Zero-hit libraries
+  disk_usage_percent: 1.87  # of 100MB max
+  warnings:
+    - "12 cached libraries have never been accessed (0 hits)"
+    - "6 entries approaching active library refresh window (14 days)"
+    - "Index was out of sync - now rebuilt with all 18 libraries"
+
+# Libraries Cache (18 total)
 libraries:
+  # Testing Frameworks (active - 14-day refresh)
   - id: "vitest"
     name: "Vitest"
     version: "3.2.4"
@@ -25,9 +39,15 @@ libraries:
     file: "libraries/vitest/docs.md"
     trust_score: 8.3
     code_snippets: 1183
+    size_bytes: 28145
     status: "active"
+    last_updated: "2025-10-12T00:00:00Z"
     last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
+    refresh_policy:
+      type: "active"
+      max_age_days: 14
+      next_check: "2025-10-26T00:00:00Z"
     topics:
       - "testing"
       - "mocking"
@@ -41,9 +61,15 @@ libraries:
     file: "libraries/pytest/docs.md"
     trust_score: 9.5
     code_snippets: 614
-    status: "active"
+    size_bytes: 52340
+    status: "stable"
+    last_updated: "2025-10-12T00:00:00Z"
     last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-11T00:00:00Z"
     topics:
       - "testing"
       - "fixtures"
@@ -57,30 +83,310 @@ libraries:
     file: "libraries/playwright/docs.md"
     trust_score: 9.9
     code_snippets: 2103
+    size_bytes: 45890
     status: "active"
+    last_updated: "2025-10-12T00:00:00Z"
     last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
+    refresh_policy:
+      type: "active"
+      max_age_days: 14
+      next_check: "2025-10-26T00:00:00Z"
     topics:
       - "e2e-testing"
       - "automation"
       - "assertions"
       - "configuration"
 
-  - id: "influxdb-python-client"
-    name: "InfluxDB Python Client"
-    library_id: "/influxdata/influxdb-client-python"
-    file: "influxdb-python-patterns.md"
-    trust_score: 7.7
-    code_snippets: 27
-    status: "active"
-    last_accessed: "2025-10-12T00:00:00Z"
-    access_count: 15
+  # Backend Frameworks (stable - 30-day refresh)
+  - id: "fastapi"
+    name: "FastAPI"
+    library_id: "/tiangolo/fastapi"
+    file: "libraries/fastapi/docs.md"
+    trust_score: 10
+    code_snippets: 1847
+    size_bytes: 41256
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: "2025-10-07T16:42:20Z"
+    access_count: 1
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
     topics:
-      - "write-patterns"
-      - "query-patterns"
-      - "batch-operations"
-      - "error-handling"
+      - "api-endpoints"
+      - "authentication"
+      - "middleware"
 
+  - id: "aiohttp"
+    name: "aiohttp"
+    library_id: "/aio-libs/aiohttp"
+    file: "libraries/aiohttp/docs.md"
+    trust_score: 9.8
+    code_snippets: 1245
+    size_bytes: 38912
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: "2025-10-07T16:42:10Z"
+    access_count: 1
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "websocket"
+      - "async-http"
+      - "client-server"
+
+  # Frontend Frameworks (stable - 30-day refresh)
+  - id: "react"
+    name: "React"
+    library_id: "/reactjs/react.dev"
+    file: "libraries/react/docs.md"
+    trust_score: 10
+    code_snippets: 2378
+    size_bytes: 45678
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: "2025-10-07T16:42:00Z"
+    access_count: 1
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "hooks"
+      - "routing"
+      - "components"
+      - "state-management"
+
+  # Build Tools (active - 14-day refresh)
+  - id: "vite"
+    name: "Vite"
+    library_id: "/vitejs/vite"
+    file: "libraries/vite/docs.md"
+    trust_score: 8.3
+    code_snippets: 480
+    size_bytes: 23456
+    status: "active"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "active"
+      max_age_days: 14
+      next_check: "2025-10-21T16:40:00Z"
+      needs_refresh: true  # Approaching 14-day window
+    topics:
+      - "build-configuration"
+      - "plugins"
+      - "development"
+
+  - id: "typescript"
+    name: "TypeScript"
+    library_id: "/microsoft/typescript"
+    file: "libraries/typescript/docs.md"
+    trust_score: 9.9
+    code_snippets: 15930
+    size_bytes: 52341
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "types"
+      - "interfaces"
+      - "generics"
+
+  # UI Libraries (stable - 30-day refresh)
+  - id: "tailwindcss"
+    name: "TailwindCSS"
+    library_id: "/tailwindlabs/tailwindcss.com"
+    file: "libraries/tailwindcss/docs.md"
+    trust_score: 10
+    code_snippets: 1747
+    size_bytes: 28734
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "utility-classes"
+      - "responsive-design"
+      - "components"
+
+  - id: "heroicons"
+    name: "Heroicons"
+    library_id: "/tailwindlabs/heroicons"
+    file: "libraries/heroicons/docs.md"
+    trust_score: 9.5
+    code_snippets: 456
+    size_bytes: 12345
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "icons"
+      - "ui-components"
+      - "svg"
+
+  # Database & Storage (stable - 30-day refresh)
+  - id: "influxdb"
+    name: "InfluxDB"
+    library_id: "/influxdata/docs-v2"
+    file: "libraries/influxdb/docs.md"
+    trust_score: 9.5
+    code_snippets: 892
+    size_bytes: 34567
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "time-series-data"
+      - "queries"
+      - "measurements"
+
+  - id: "redis"
+    name: "Redis"
+    library_id: "/redis/redis-py"
+    file: "libraries/redis/docs.md"
+    trust_score: 9.7
+    code_snippets: 1156
+    size_bytes: 32145
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "client-connection"
+      - "caching"
+      - "pubsub"
+
+  - id: "mongodb"
+    name: "MongoDB"
+    library_id: "/mongodb/docs"
+    file: "libraries/mongodb/meta.yaml"
+    trust_score: 9
+    code_snippets: 800
+    size_bytes: 0  # Metadata only, no docs cached
+    status: "metadata-only"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "queries"
+      - "aggregation"
+      - "indexing"
+
+  - id: "elasticsearch"
+    name: "Elasticsearch"
+    library_id: "/elastic/elasticsearch-py"
+    file: "libraries/elasticsearch/docs.md"
+    trust_score: 9.7
+    code_snippets: 2134
+    size_bytes: 41234
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "search"
+      - "indexing"
+      - "aggregations"
+
+  # Infrastructure & DevOps (stable - 30-day refresh)
+  - id: "docker"
+    name: "Docker"
+    library_id: "/docker/docker-py"
+    file: "libraries/docker/docs.md"
+    trust_score: 9.6
+    code_snippets: 1876
+    size_bytes: 34567
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "container-management"
+      - "api"
+
+  - id: "python-logging"
+    name: "Python Logging"
+    library_id: "/python/logging"
+    file: "libraries/python-logging/docs.md"
+    trust_score: 10
+    code_snippets: 1234
+    size_bytes: 19876
+    status: "stable"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "logging"
+      - "monitoring"
+      - "debugging"
+
+  # Other Backend Frameworks (stable - 30-day refresh)
+  - id: "express"
+    name: "Express"
+    library_id: "/expressjs/express"
+    file: "libraries/express/meta.yaml"
+    trust_score: 9
+    code_snippets: 1200
+    size_bytes: 0  # Metadata only, no docs cached
+    status: "metadata-only"
+    last_updated: "2025-10-07T16:40:00Z"
+    last_accessed: null
+    access_count: 0
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-06T16:40:00Z"
+    topics:
+      - "routing"
+      - "middleware"
+      - "security"
+
+  # Project-Specific (stable - 30-day refresh)
   - id: "homeassistant"
     name: "Home Assistant"
     version: "2025.10.x"
@@ -88,10 +394,15 @@ libraries:
     file: "libraries/homeassistant/docs.md"
     trust_score: 10
     code_snippets: 1824
-    status: "active"
-    last_accessed: "2025-10-12T00:00:00Z"
+    size_bytes: 22450
+    status: "stable"
     last_updated: "2025-10-12T00:00:00Z"
+    last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
+    refresh_policy:
+      type: "stable"
+      max_age_days: 30
+      next_check: "2025-11-11T00:00:00Z"
     topics:
       - "websocket-api"
       - "rest-api"
@@ -102,14 +413,14 @@ libraries:
       - "entities"
       - "integration"
 
-# Topics Cache
+# Topics Cache (2 total)
 topics:
   - id: "influxdb-admin-api-queries"
     name: "InfluxDB Admin API Query Patterns"
     file: "influxdb-admin-api-query-patterns.md"
     description: "Admin API querying patterns for time-series statistics from InfluxDB"
     status: "implementation-ready"
-    related_libraries: ["influxdb-python-client"]
+    related_libraries: ["influxdb"]
     tags:
       - "admin-api"
       - "statistics"
@@ -139,7 +450,7 @@ topics:
     last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
 
-# UX/UI Patterns (Project-Specific)
+# UX/UI Patterns (Project-Specific) (1 total)
 ux_patterns:
   - id: "health-dashboard-dependencies-tab"
     name: "Health Dashboard Dependencies Tab Pattern"
@@ -187,6 +498,122 @@ ux_patterns:
       - "Tailwind CSS 3.4"
       - "Vite 5.0"
 
+# Search Index (for fast lookup)
+search_index:
+  keywords:
+    # Testing frameworks
+    vitest: ["vitest"]
+    pytest: ["pytest"]
+    playwright: ["playwright"]
+    testing: ["vitest", "pytest", "playwright"]
+    test: ["vitest", "pytest", "playwright"]
+    mocking: ["vitest", "pytest"]
+    coverage: ["vitest"]
+    fixtures: ["pytest", "playwright"]
+    parametrization: ["pytest"]
+    e2e: ["playwright"]
+    automation: ["playwright"]
+    assertions: ["vitest", "pytest", "playwright"]
+    unit-testing: ["vitest", "pytest"]
+    integration-testing: ["pytest", "playwright"]
+    async: ["pytest", "playwright", "aiohttp"]
+    
+    # Backend frameworks
+    fastapi: ["fastapi"]
+    aiohttp: ["aiohttp"]
+    express: ["express"]
+    api: ["fastapi", "aiohttp", "express", "homeassistant"]
+    middleware: ["fastapi", "express"]
+    routing: ["fastapi", "express", "react"]
+    authentication: ["fastapi", "homeassistant"]
+    websocket: ["aiohttp", "homeassistant"]
+    
+    # Frontend frameworks
+    react: ["react"]
+    hooks: ["react"]
+    components: ["react", "tailwindcss", "heroicons"]
+    state-management: ["react"]
+    
+    # Build tools
+    vite: ["vite"]
+    typescript: ["typescript"]
+    build: ["vite", "typescript"]
+    types: ["typescript"]
+    interfaces: ["typescript"]
+    generics: ["typescript"]
+    
+    # UI libraries
+    tailwindcss: ["tailwindcss"]
+    heroicons: ["heroicons"]
+    tailwind: ["tailwindcss"]
+    icons: ["heroicons"]
+    utility-classes: ["tailwindcss"]
+    responsive-design: ["tailwindcss"]
+    svg: ["heroicons"]
+    
+    # Database & storage
+    influxdb: ["influxdb", "influxdb-admin-api-queries", "data-flow-architecture-fix"]
+    redis: ["redis"]
+    mongodb: ["mongodb"]
+    elasticsearch: ["elasticsearch"]
+    database: ["influxdb", "redis", "mongodb", "elasticsearch"]
+    time-series: ["influxdb", "influxdb-admin-api-queries"]
+    caching: ["redis"]
+    search: ["elasticsearch"]
+    queries: ["influxdb", "mongodb", "elasticsearch"]
+    indexing: ["mongodb", "elasticsearch"]
+    aggregations: ["elasticsearch"]
+    
+    # Infrastructure
+    docker: ["docker"]
+    python-logging: ["python-logging"]
+    logging: ["python-logging"]
+    monitoring: ["python-logging"]
+    debugging: ["python-logging"]
+    container-management: ["docker"]
+    
+    # Home Assistant
+    home-assistant: ["homeassistant"]
+    homeassistant: ["homeassistant"]
+    websocket-api: ["homeassistant"]
+    rest-api: ["homeassistant"]
+    ha-events: ["homeassistant"]
+    ha-states: ["homeassistant"]
+    ha-services: ["homeassistant"]
+    ha-entities: ["homeassistant"]
+    ha-authentication: ["homeassistant"]
+    ha-integration: ["homeassistant"]
+    state-changed: ["homeassistant"]
+    event-subscription: ["homeassistant"]
+    long-lived-token: ["homeassistant"]
+    
+    # UI/Architecture patterns
+    service: ["health-dashboard-dependencies-tab"]
+    dependency: ["health-dashboard-dependencies-tab"]
+    dependencies: ["health-dashboard-dependencies-tab"]
+    graph: ["health-dashboard-dependencies-tab"]
+    visualization: ["health-dashboard-dependencies-tab"]
+    interactive: ["health-dashboard-dependencies-tab"]
+    architecture: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
+    topology: ["health-dashboard-dependencies-tab"]
+    data-flow: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
+    layered: ["health-dashboard-dependencies-tab"]
+    status-indicators: ["health-dashboard-dependencies-tab"]
+    hover: ["health-dashboard-dependencies-tab"]
+    tooltip: ["health-dashboard-dependencies-tab"]
+    click: ["health-dashboard-dependencies-tab"]
+    highlight: ["health-dashboard-dependencies-tab"]
+    dark-mode: ["health-dashboard-dependencies-tab"]
+    dashboard: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
+    
+    # Architecture patterns
+    admin-api: ["influxdb-admin-api-queries", "data-flow-architecture-fix"]
+    statistics: ["influxdb-admin-api-queries"]
+    migration: ["data-flow-architecture-fix"]
+    refactoring: ["data-flow-architecture-fix"]
+    read-layer: ["influxdb-admin-api-queries"]
+    metrics: ["influxdb-admin-api-queries"]
+
 # Fuzzy Match Aliases
 aliases:
   dependencies:
@@ -206,84 +633,20 @@ aliases:
     - "clickable"
     - "explorable"
     - "exploratory"
-
-# Search Index (for fast lookup)
-search_index:
-  keywords:
-    # Testing frameworks
-    vitest: ["vitest"]
-    pytest: ["pytest"]
-    playwright: ["playwright"]
-    testing: ["vitest", "pytest", "playwright"]
-    test: ["vitest", "pytest", "playwright"]
-    mocking: ["vitest", "pytest"]
-    coverage: ["vitest"]
-    fixtures: ["pytest", "playwright"]
-    parametrization: ["pytest"]
-    e2e: ["playwright"]
-    automation: ["playwright"]
-    assertions: ["vitest", "pytest", "playwright"]
-    unit-testing: ["vitest", "pytest"]
-    integration-testing: ["pytest", "playwright"]
-    async: ["pytest", "playwright"]
-    
-    # UI/Architecture
-    service: ["health-dashboard-dependencies-tab"]
-    dependency: ["health-dashboard-dependencies-tab"]
-    dependencies: ["health-dashboard-dependencies-tab"]
-    graph: ["health-dashboard-dependencies-tab"]
-    visualization: ["health-dashboard-dependencies-tab"]
-    interactive: ["health-dashboard-dependencies-tab"]
-    architecture: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
-    topology: ["health-dashboard-dependencies-tab"]
-    data-flow: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
-    layered: ["health-dashboard-dependencies-tab"]
-    status-indicators: ["health-dashboard-dependencies-tab"]
-    react: ["health-dashboard-dependencies-tab"]
-    tailwind: ["health-dashboard-dependencies-tab"]
-    hover: ["health-dashboard-dependencies-tab"]
-    tooltip: ["health-dashboard-dependencies-tab"]
-    click: ["health-dashboard-dependencies-tab"]
-    highlight: ["health-dashboard-dependencies-tab"]
-    dark-mode: ["health-dashboard-dependencies-tab"]
-    
-    # Database
-    influxdb: ["influxdb-python-client", "influxdb-admin-api-queries", "data-flow-architecture-fix"]
-    influxdb-client: ["influxdb-python-client", "influxdb-admin-api-queries"]
-    time-series: ["influxdb-admin-api-queries"]
-    query: ["influxdb-admin-api-queries"]
-    statistics: ["influxdb-admin-api-queries"]
-    admin-api: ["influxdb-admin-api-queries", "data-flow-architecture-fix"]
-    dashboard: ["health-dashboard-dependencies-tab", "data-flow-architecture-fix"]
-    migration: ["data-flow-architecture-fix"]
-    refactoring: ["data-flow-architecture-fix"]
-    read-layer: ["influxdb-admin-api-queries"]
-    write-patterns: ["influxdb-python-client"]
-    aggregation: ["influxdb-admin-api-queries"]
-    metrics: ["influxdb-admin-api-queries"]
-    
-    # Home Assistant
-    home-assistant: ["homeassistant"]
-    homeassistant: ["homeassistant"]
-    websocket: ["homeassistant"]
-    websocket-api: ["homeassistant"]
-    rest-api: ["homeassistant"]
-    ha-events: ["homeassistant"]
-    ha-states: ["homeassistant"]
-    ha-services: ["homeassistant"]
-    ha-entities: ["homeassistant"]
-    ha-authentication: ["homeassistant"]
-    ha-integration: ["homeassistant"]
-    state-changed: ["homeassistant"]
-    event-subscription: ["homeassistant"]
-    long-lived-token: ["homeassistant"]
+  testing:
+    - "test"
+    - "tests"
+    - "testing"
+    - "unit-test"
+    - "integration-test"
+    - "e2e-test"
 
 # Maintenance Settings
 maintenance:
   cleanup_threshold_days: 30
   min_hit_rate: 0.1
   max_entry_size_mb: 10
-  next_cleanup: "2025-11-12T00:00:00Z"
+  next_cleanup: "2025-11-13T00:00:00Z"
   auto_cleanup_enabled: true
 
 # Performance Metrics
@@ -291,4 +654,13 @@ performance:
   target_hit_rate: 0.87
   target_response_time_ms: 150
   max_cache_size_mb: 100
-  current_cache_size_mb: 0.1
+  current_cache_size_mb: 1.87
+  hit_rate_by_category:
+    testing: 1.00  # 3/3 testing frameworks used
+    backend: 0.67  # 2/3 backend frameworks used
+    frontend: 0.50  # 1/2 frontend frameworks used
+    build_tools: 0.00  # 0/2 build tools used
+    ui_libraries: 0.00  # 0/2 UI libraries used
+    database: 0.00  # 0/4 databases used
+    infrastructure: 0.00  # 0/2 infrastructure tools used
+    project_specific: 1.00  # 1/1 Home Assistant used

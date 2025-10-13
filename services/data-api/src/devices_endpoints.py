@@ -78,7 +78,7 @@ class IntegrationsListResponse(BaseModel):
 router = APIRouter(tags=["Devices & Entities"])
 
 
-# InfluxDB client (initialized on startup)
+# InfluxDB client (initialized on first use to avoid circular imports)
 influxdb_client = InfluxDBQueryClient()
 
 
@@ -105,6 +105,10 @@ async def list_devices(
             filters["area_id"] = area_id
         
         # Query devices from InfluxDB
+        # Ensure client is connected
+        if not influxdb_client.is_connected:
+            await influxdb_client.connect()
+        
         query = _build_devices_query(filters, limit)
         results = await influxdb_client._execute_query(query)
         
@@ -149,9 +153,13 @@ async def get_device(device_id: str):
         Device details
     """
     try:
+        # Ensure client is connected
+        if not influxdb_client.is_connected:
+            await influxdb_client.connect()
+        
         # Query specific device
         query = f'''
-            from(bucket: "devices")
+            from(bucket: "home_assistant_events")
                 |> range(start: -90d)
                 |> filter(fn: (r) => r["_measurement"] == "devices")
                 |> filter(fn: (r) => r["device_id"] == "{device_id}")
@@ -213,6 +221,10 @@ async def list_entities(
             filters["device_id"] = device_id
         
         # Query entities from InfluxDB
+        # Ensure client is connected
+        if not influxdb_client.is_connected:
+            await influxdb_client.connect()
+        
         query = _build_entities_query(filters, limit)
         results = await influxdb_client._execute_query(query)
         
@@ -257,9 +269,13 @@ async def get_entity(entity_id: str):
         Entity details
     """
     try:
+        # Ensure client is connected
+        if not influxdb_client.is_connected:
+            await influxdb_client.connect()
+        
         # Query specific entity
         query = f'''
-            from(bucket: "entities")
+            from(bucket: "home_assistant_events")
                 |> range(start: -90d)
                 |> filter(fn: (r) => r["_measurement"] == "entities")
                 |> filter(fn: (r) => r["entity_id"] == "{entity_id}")
@@ -309,6 +325,10 @@ async def list_integrations(
     """
     try:
         # Query config entries from InfluxDB
+        # Ensure client is connected
+        if not influxdb_client.is_connected:
+            await influxdb_client.connect()
+        
         query = f'''
             from(bucket: "home_assistant_events")
                 |> range(start: -90d)
@@ -349,7 +369,7 @@ async def list_integrations(
 def _build_devices_query(filters: Dict[str, str], limit: int) -> str:
     """Build Flux query for devices with filters"""
     query = f'''
-        from(bucket: "devices")
+        from(bucket: "home_assistant_events")
             |> range(start: -90d)
             |> filter(fn: (r) => r["_measurement"] == "devices")
     '''
@@ -370,7 +390,7 @@ def _build_devices_query(filters: Dict[str, str], limit: int) -> str:
 def _build_entities_query(filters: Dict[str, str], limit: int) -> str:
     """Build Flux query for entities with filters"""
     query = f'''
-        from(bucket: "entities")
+        from(bucket: "home_assistant_events")
             |> range(start: -90d)
             |> filter(fn: (r) => r["_measurement"] == "entities")
     '''

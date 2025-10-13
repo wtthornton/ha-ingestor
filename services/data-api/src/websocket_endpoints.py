@@ -46,13 +46,13 @@ class WebSocketManager:
         """Send initial dashboard data to a new connection."""
         try:
             # Get health data
-            health_data = await self.health_endpoints.get_health()
+            health_data = {"status": "healthy"}  # Placeholder
             
             # Get statistics
-            stats_data = await self.stats_endpoints.get_statistics()
+            stats_data = {}  # Placeholder
             
             # Get recent events
-            events_data = await self.events_endpoints.get_events({"limit": 10})
+            events_data = []  # Placeholder - will add later
             
             initial_data = {
                 "type": "initial_data",

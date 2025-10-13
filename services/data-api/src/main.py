@@ -49,6 +49,9 @@ from .metrics_service import metrics_service
 from .sports_endpoints import router as sports_router
 from .ha_automation_endpoints import router as ha_automation_router, start_webhook_detector, stop_webhook_detector
 
+# Story 21.4: Analytics Endpoints
+from .analytics_endpoints import router as analytics_router
+
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
@@ -225,6 +228,7 @@ app.include_router(
 websocket_endpoints = WebSocketEndpoints(data_api_service.auth_manager)
 app.include_router(
     websocket_endpoints.router,
+    prefix="/api/v1",
     tags=["WebSocket"]
 )
 
@@ -239,6 +243,13 @@ app.include_router(
     ha_automation_router,
     prefix="/api/v1",
     tags=["Home Assistant Automation"]
+)
+
+# Story 21.4: Analytics Endpoints (Real-time metrics aggregation)
+app.include_router(
+    analytics_router,
+    prefix="/api/v1",
+    tags=["Analytics"]
 )
 
 

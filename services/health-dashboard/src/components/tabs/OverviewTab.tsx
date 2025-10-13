@@ -3,6 +3,7 @@ import { useHealth } from '../../hooks/useHealth';
 import { useStatistics } from '../../hooks/useStatistics';
 import { useDataSources } from '../../hooks/useDataSources';
 import { useRealtimeMetrics } from '../../hooks/useRealtimeMetrics';
+import { useAlerts } from '../../hooks/useAlerts';
 import { StatusCard } from '../StatusCard';
 import { MetricCard } from '../MetricCard';
 import { SkeletonCard } from '../skeletons';
@@ -35,6 +36,13 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch critical alerts for banner (Story 21.6)
+  const { alerts, summary } = useAlerts({
+    filters: { severity: 'critical' },
+    pollInterval: 30000,
+    autoRefresh: true
+  });
+
   // Real-time WebSocket metrics (Epic 15.1)
   const {
     metrics: realtimeMetrics,
@@ -56,8 +64,61 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
   const websocketMetrics = statistics?.metrics?.['websocket-ingestion'];
   const enrichmentMetrics = statistics?.metrics?.['enrichment-pipeline'];
 
+  // Calculate critical alert counts
+  const criticalAlerts = alerts.filter(a => a.severity === 'critical' && a.status === 'active');
+  const totalCritical = summary?.critical || criticalAlerts.length;
+
   return (
     <>
+      {/* Critical Alerts Banner (Story 21.6) */}
+      {totalCritical > 0 && (
+        <div className={`mb-6 rounded-lg shadow-md p-6 border-2 ${
+          darkMode 
+            ? 'bg-red-900/20 border-red-500/50' 
+            : 'bg-red-50 border-red-300'
+        }`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <span className="text-3xl">🚨</span>
+              <div>
+                <h3 className={`text-lg font-bold ${darkMode ? 'text-red-200' : 'text-red-800'} mb-1`}>
+                  {totalCritical} Critical {totalCritical === 1 ? 'Alert' : 'Alerts'} Requiring Immediate Attention
+                </h3>
+                <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                  System health is degraded. Review and resolve critical issues immediately.
+                </p>
+                {criticalAlerts.slice(0, 3).map(alert => (
+                  <div key={alert.id} className={`mt-2 text-sm ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+                    <span className="font-medium">• {alert.service}:</span> {alert.message}
+                  </div>
+                ))}
+                {totalCritical > 3 && (
+                  <p className={`mt-2 text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                    ... and {totalCritical - 3} more
+                  </p>
+                )}
+              </div>
+            </div>
+            <a
+              href="#alerts"
+              onClick={(e) => {
+                e.preventDefault();
+                // Navigate to Alerts tab (would need to implement tab switching)
+                const alertsTab = document.querySelector('[data-tab="alerts"]') as HTMLElement;
+                if (alertsTab) alertsTab.click();
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                darkMode
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
+            >
+              View All Alerts →
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Health Status (Epic 17.2) */}
       {!enhancedHealthLoading && enhancedHealth && (
         <div className="mb-8">

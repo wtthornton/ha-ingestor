@@ -9,7 +9,7 @@ WORKDIR /app
 RUN apk add --no-cache gcc musl-dev python3-dev libffi-dev openssl-dev cargo
 
 # Copy requirements
-COPY requirements-prod.txt .
+COPY services/data-api/requirements-prod.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements-prod.txt
@@ -29,10 +29,10 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
 # Copy shared utilities
-COPY ../../shared /app/shared
+COPY shared/ /app/shared
 
 # Copy application code
-COPY src/ /app/src/
+COPY services/data-api/src/ /app/src/
 
 # Expose port
 EXPOSE 8006

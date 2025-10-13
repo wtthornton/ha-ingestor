@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MiniChart } from './charts/MiniChart';
-import { getMockAnalyticsData, type AnalyticsData } from '../mocks/analyticsMock';
+import type { AnalyticsData } from '../mocks/analyticsMock';
 import { SkeletonCard } from './skeletons';
 
 interface AnalyticsPanelProps {
@@ -65,17 +65,23 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ darkMode }) => {
 
   const fetchAnalytics = async () => {
     try {
-      // Mock data for now - will be replaced with real API call
-      // TODO: Replace with actual API call to /api/v1/analytics?range={timeRange}
-      const mockData = getMockAnalyticsData(timeRange);
+      // Fetch real analytics data from data-api
+      const response = await fetch(`/api/v1/analytics?range=${timeRange}`);
       
-      setAnalytics(mockData);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      setAnalytics(data);
       setError(null);
       setLastUpdate(new Date());
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch analytics');
       setLoading(false);
+      console.error('Error fetching analytics:', err);
     }
   };
 

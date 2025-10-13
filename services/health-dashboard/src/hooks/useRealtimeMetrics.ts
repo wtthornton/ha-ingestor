@@ -45,7 +45,9 @@ export interface UseRealtimeMetricsReturn {
   reconnect: () => void;
 }
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8003/ws';
+// Story 21.1: Connect to data-api WebSocket via nginx proxy
+// nginx routes /api/v1/ws → data-api:8006/api/v1/ws (Epic 13)
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/api/v1/ws';
 const HTTP_HEALTH_URL = '/api/health';
 const HTTP_STATS_URL = '/api/statistics';
 

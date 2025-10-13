@@ -82,6 +82,113 @@ router = APIRouter(tags=["Sports Data"])
 influxdb_client = InfluxDBQueryClient()
 
 
+@router.get("/sports/games/live")
+async def get_live_games(
+    team_ids: Optional[str] = Query(None, description="Comma-separated team IDs"),
+    league: Optional[str] = Query(None, description="NFL or NHL")
+):
+    """
+    Get currently live games
+    
+    Story 21.2: Live games endpoint for Sports Tab
+    
+    This is a passthrough to the sports-data service for real-time game data.
+    For historical data, use /sports/games/history endpoint.
+    """
+    try:
+        # For now, return empty array (sports-data service integration needed)
+        # TODO: Integrate with sports-data service or external API
+        return {
+            "games": [],
+            "count": 0,
+            "status": "no_live_games",
+            "message": "Live games integration coming soon"
+        }
+    except Exception as e:
+        logger.error(f"Error fetching live games: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch live games: {str(e)}")
+
+
+@router.get("/sports/games/upcoming")
+async def get_upcoming_games(
+    team_ids: Optional[str] = Query(None, description="Comma-separated team IDs"),
+    hours: int = Query(default=24, description="Hours ahead to look for games"),
+    league: Optional[str] = Query(None, description="NFL or NHL")
+):
+    """
+    Get upcoming games
+    
+    Story 21.2: Upcoming games endpoint for Sports Tab
+    
+    This is a passthrough to the sports-data service for scheduled games.
+    For historical data, use /sports/games/history endpoint.
+    """
+    try:
+        # For now, return empty array (sports-data service integration needed)
+        # TODO: Integrate with sports-data service or external API
+        return {
+            "games": [],
+            "count": 0,
+            "hours": hours,
+            "message": "Upcoming games integration coming soon"
+        }
+    except Exception as e:
+        logger.error(f"Error fetching upcoming games: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch upcoming games: {str(e)}")
+
+
+@router.get("/sports/teams")
+async def get_teams(
+    league: Optional[str] = Query(None, description="NFL or NHL")
+):
+    """
+    Get available teams
+    
+    Story 21.2: Teams endpoint for Setup Wizard
+    """
+    try:
+        # For now, return sample teams
+        nfl_teams = [
+            {"id": "BAL", "name": "Baltimore Ravens", "league": "NFL"},
+            {"id": "BUF", "name": "Buffalo Bills", "league": "NFL"},
+            {"id": "CIN", "name": "Cincinnati Bengals", "league": "NFL"},
+            {"id": "CLE", "name": "Cleveland Browns", "league": "NFL"},
+            {"id": "DEN", "name": "Denver Broncos", "league": "NFL"},
+            {"id": "HOU", "name": "Houston Texans", "league": "NFL"},
+            {"id": "IND", "name": "Indianapolis Colts", "league": "NFL"},
+            {"id": "JAX", "name": "Jacksonville Jaguars", "league": "NFL"},
+            {"id": "KC", "name": "Kansas City Chiefs", "league": "NFL"},
+            {"id": "LAC", "name": "Los Angeles Chargers", "league": "NFL"},
+            {"id": "LV", "name": "Las Vegas Raiders", "league": "NFL"},
+            {"id": "MIA", "name": "Miami Dolphins", "league": "NFL"},
+            {"id": "NE", "name": "New England Patriots", "league": "NFL"},
+            {"id": "NYJ", "name": "New York Jets", "league": "NFL"},
+            {"id": "PIT", "name": "Pittsburgh Steelers", "league": "NFL"},
+            {"id": "TEN", "name": "Tennessee Titans", "league": "NFL"},
+        ]
+        
+        nhl_teams = [
+            {"id": "BOS", "name": "Boston Bruins", "league": "NHL"},
+            {"id": "BUF", "name": "Buffalo Sabres", "league": "NHL"},
+            {"id": "DET", "name": "Detroit Red Wings", "league": "NHL"},
+            {"id": "FLA", "name": "Florida Panthers", "league": "NHL"},
+            {"id": "MTL", "name": "Montreal Canadiens", "league": "NHL"},
+            {"id": "OTT", "name": "Ottawa Senators", "league": "NHL"},
+            {"id": "TB", "name": "Tampa Bay Lightning", "league": "NHL"},
+            {"id": "TOR", "name": "Toronto Maple Leafs", "league": "NHL"},
+        ]
+        
+        if league == "NFL":
+            return {"teams": nfl_teams, "count": len(nfl_teams)}
+        elif league == "NHL":
+            return {"teams": nhl_teams, "count": len(nhl_teams)}
+        else:
+            return {"teams": nfl_teams + nhl_teams, "count": len(nfl_teams) + len(nhl_teams)}
+    except Exception as e:
+        logger.error(f"Error fetching teams: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch teams: {str(e)}")
+
+
 @router.get("/sports/games/history", response_model=GameListResponse)
 async def get_game_history(
     team: str = Query(..., description="Team name or abbreviation"),

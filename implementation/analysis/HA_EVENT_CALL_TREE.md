@@ -1,10 +1,13 @@
 # Home Assistant Event Call Tree Analysis
 ## Complete Data Flow: HA → Database → Dashboard
 
-**Document Version**: 2.0  
+**Document Version**: 2.2  
 **Created**: 2025-10-13  
-**Last Updated**: 2025-10-13 (Epic 12 & 13 - data-api separation)  
+**Last Updated**: 2025-10-13 (Enhanced Epic 13 notes in Phase 5 for clarity)  
+**Previous Updates**: v2.1 - Epic 12 & 13 (Sports InfluxDB Persistence + data-api separation)  
 **Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system
+
+> **Epic 12 Note**: While this document focuses on Home Assistant event flow, the sports-data service now also writes to InfluxDB (similar to Pattern A services) and supports webhooks for HA automations. See [EXTERNAL_API_CALL_TREES.md](./EXTERNAL_API_CALL_TREES.md) for sports data flow details.
 
 ---
 
@@ -31,6 +34,7 @@
 | What's the throughput? | 10,000+ events/sec | [Performance](#-performance-characteristics) |
 | Where's weather enrichment? | Inline in websocket-ingestion | [Phase 2](#phase-2-event-processing--queue-management) |
 | How many write paths? | 2 (Primary + Enhancement) | [Overview](#-overview) |
+| **Do sports events persist?** | **Yes, via sports-data service (Epic 12)** | [EXTERNAL_API_CALL_TREES.md](./EXTERNAL_API_CALL_TREES.md) |
 
 ---
 
@@ -93,7 +97,9 @@ This document traces the complete journey of a Home Assistant event from its ori
 │ InfluxDB (Port 8086)                          │
 │ - Time-Series Database                         │
 │ - Measurements: home_assistant_events          │
+│ - Sports Data: nfl_scores, nhl_scores [Epic 12] │
 │ - Retention: 1 year raw, 5 years aggregated   │
+│ - Sports: 2 years retention [Epic 12]         │
 └────────┬───────────────────────────────────────┘
          │
          │ Flux Query Language
@@ -104,7 +110,10 @@ This document traces the complete journey of a Home Assistant event from its ori
 │ - Feature Data Hub                             │
 │ - Events Endpoints (8 routes)                  │
 │ - Devices & Entities (5 routes)                │
-│ - Sports & HA Automation (9 routes)            │
+│ - Sports & HA Automation (9 routes) [Epic 12]  │
+│   • Historical queries from InfluxDB           │
+│   • HA automation endpoints (<50ms)            │
+│   • Webhook management                         │
 │ - WebSocket Streaming                          │
 └────────┬───────────────────────────────────────┘
          │               ┌────────────────────────────────────────────────┐
@@ -581,14 +590,20 @@ EnrichmentPipelineService.process_event(event_data)
 
 ### Phase 5: Data Retrieval by Data API (Epic 13)
 
-> **Epic 13 Update**: Event queries moved from admin-api to new data-api service.
-> - **Previous**: `admin-api:8003/api/events`
-> - **Current**: `data-api:8006/api/v1/events`
-> - **Reason**: Separation of feature data (data-api) from system monitoring (admin-api)
+> **🚨 CRITICAL EPIC 13 UPDATE**: Event queries **MOVED** from admin-api to new data-api service.
+> 
+> **Old Path (Deprecated):** `admin-api:8003/api/events` ❌  
+> **New Path (Current):** `data-api:8006/api/v1/events` ✅  
+> 
+> **Reason:** Epic 13 separated:
+> - **data-api (8006)** → Feature data queries (events, devices, sports, analytics)
+> - **admin-api (8003)** → System monitoring & control (health, docker, config)
+> 
+> **Impact:** All dashboard event queries now route to data-api:8006 instead of admin-api:8003
 
 #### 5.1 API Request Handling
 
-**File**: `services/data-api/src/events_endpoints.py` (migrated from admin-api in Epic 13)
+**File**: `services/data-api/src/events_endpoints.py` (✅ Migrated from admin-api in Epic 13)
 
 ```python
 EventsEndpoints (FastAPI Router)

@@ -53,22 +53,44 @@ This directory contains the comprehensive architectural documentation for the Ho
 
 ### Services
 
+#### Core Services
+
 | Service | Technology | Port | Purpose |
 |---------|-----------|------|---------|
 | **websocket-ingestion** | Python/aiohttp | 8001 | Home Assistant WebSocket client |
-| **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and weather enrichment |
+| **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and multi-source enrichment |
+| **admin-api** | Python/FastAPI | 8003→8004 | System monitoring, health checks, Docker management |
+| **data-api** | Python/FastAPI | 8006 | **Feature data hub** (events, devices, sports, analytics, alerts) |
 | **data-retention** | Python/FastAPI | 8080 | Data lifecycle and cleanup management |
-| **admin-api** | Python/FastAPI | 8003 | Administration REST API |
-| **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface |
-| **weather-api** | Python/FastAPI | Internal | Weather data integration |
+| **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface (12 tabs) |
+| **sports-data** | Python/FastAPI | 8005 | ESPN sports API integration (NFL/NHL) |
 | **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage |
+
+#### External Data Services
+
+| Service | Technology | Port | Purpose |
+|---------|-----------|------|---------|
+| **carbon-intensity** | Python/FastAPI | 8010 | Carbon intensity data |
+| **electricity-pricing** | Python/FastAPI | 8011 | Electricity pricing data |
+| **air-quality** | Python/FastAPI | 8012 | Air quality monitoring |
+| **calendar** | Python/FastAPI | 8013 | Calendar integration |
+| **smart-meter** | Python/FastAPI | 8014 | Smart meter data |
+| **weather-api** | Python/FastAPI | Internal | Weather data integration |
+| **log-aggregator** | Python/FastAPI | 8015 | Centralized log collection |
+
+**Note:** As of Epic 13, the API layer was separated into two services:
+- **admin-api (8003)**: System monitoring, health checks, Docker container management
+- **data-api (8006)**: Feature data queries (events, devices, sports, analytics, alerts)
 
 ### Data Flow
 
 ```
 Home Assistant → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
                                            ↑
-                                    Weather API
+                                    Weather API + External Data Services
+
+Dashboard → nginx → admin-api (system monitoring)
+                 └→ data-api (feature queries) → InfluxDB
 ```
 
 ### Key Architectural Patterns
@@ -85,7 +107,7 @@ Home Assistant → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
 - **React 18.2** + **TypeScript 5.2** - Type-safe UI development
 - **TailwindCSS 3.4** - Utility-first styling
 - **Vite 5.0** - Fast build tooling
-- **Vitest 1.0** - Component testing
+- **Vitest 3.2** - Component testing
 
 ### Backend Stack
 - **Python 3.11** - Async/await support
@@ -96,7 +118,7 @@ Home Assistant → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
 ### Data & Infrastructure
 - **InfluxDB 2.7** - Time-series database
 - **Docker Compose 2.20+** - Service orchestration
-- **Playwright 1.55** - E2E testing
+- **Playwright 1.56** - E2E testing
 - **GitHub Actions** - CI/CD pipeline
 
 ## 🔒 Security Architecture

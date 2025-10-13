@@ -16,7 +16,7 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 | **Database** | InfluxDB | 2.7 | Time-series data storage | Purpose-built for time-series data and Home Assistant events |
 | **File Storage** | Local Docker Volumes | - | Persistent data storage | Simple local storage with Docker Compose |
 | **Authentication** | Long-lived Access Tokens | - | Home Assistant authentication | HA's standard auth method for WebSocket connections |
-| **Frontend Testing** | Vitest | 3.2.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support |
+| **Frontend Testing** | Vitest | 3.2.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support (upgraded from 1.0.4) |
 | **Backend Testing** | pytest | 7.4.3+ | Backend service testing | Simple, comprehensive testing for Python services |
 | **E2E Testing** | Playwright | 1.56.0 | End-to-end testing | Modern, reliable E2E testing for full application |
 | **Build Tool** | Docker | 24+ | Containerization | Standard deployment with multi-stage builds |
@@ -45,9 +45,9 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 - **Docker Volumes**: Simple, reliable local storage for development and production
 
 ### Testing Strategy
-- **Vitest 3.2**: Fast, modern testing for React components with TypeScript support and enhanced performance
+- **Vitest 3.2.4**: Fast, modern testing for React components with TypeScript support and enhanced performance (major upgrade from 1.0.4)
 - **pytest 7.4+**: Comprehensive testing framework for Python services
-- **Playwright 1.56**: Reliable E2E testing across multiple browsers with latest features
+- **Playwright 1.56.0**: Reliable E2E testing across multiple browsers with latest features
 
 ### Deployment
 - **Docker Compose**: Simple orchestration for local development and production deployment

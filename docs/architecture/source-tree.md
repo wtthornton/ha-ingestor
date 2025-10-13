@@ -24,8 +24,9 @@ ha-ingestor/
 │   ├── analysis/                  # Technical analysis and diagnosis
 │   ├── verification/              # Test and verification results
 │   └── archive/                   # Old/superseded implementation notes
-├── services/                      # 12 Microservices (Alpine-based)
-│   ├── admin-api/                 # FastAPI REST API gateway (Port 8003)
+├── services/                      # 13 Microservices (Alpine-based)
+│   ├── admin-api/                 # System monitoring & control API (Port 8003) [Epic 13]
+│   ├── data-api/                  # Feature data hub API (Port 8006) [Epic 13]
 │   ├── health-dashboard/          # React frontend (12 tabs, Port 3000)
 │   ├── websocket-ingestion/       # WebSocket client service (Port 8001)
 │   ├── enrichment-pipeline/       # Data processing service (Port 8002)
@@ -71,26 +72,69 @@ ha-ingestor/
 
 ## Services Directory Structure
 
-### Admin API Service (`services/admin-api/`)
+> **Epic 13 Note**: The API layer was separated into two services:
+> - **admin-api (8003)** → System monitoring, health checks, Docker management
+> - **data-api (8006)** → Feature data queries (events, devices, sports, analytics)
+> 
+> This separation improves scalability and allows independent scaling of monitoring vs data access layers.
+
+### Admin API Service (`services/admin-api/`) [Epic 13]
+**Purpose:** System monitoring and control
+**Port:** 8003
+
 ```
 admin-api/
 ├── src/
 │   ├── main.py                    # FastAPI application entry point
 │   ├── auth.py                    # Authentication and authorization
-│   ├── health_endpoints.py        # Health check endpoints
+│   ├── health_endpoints.py        # Health check endpoints (Epic 17.2)
 │   ├── stats_endpoints.py         # Statistics endpoints
 │   ├── config_endpoints.py        # Configuration endpoints
-│   ├── events_endpoints.py        # Events endpoints
-│   ├── monitoring_endpoints.py    # Monitoring endpoints
+│   ├── docker_endpoints.py        # Docker management (Epic 13 Story 13.1)
+│   ├── monitoring_endpoints.py    # Monitoring endpoints (Epic 17.3)
 │   ├── websocket_endpoints.py     # WebSocket endpoints
 │   ├── logging_service.py         # Logging service
-│   ├── metrics_service.py         # Metrics collection
-│   └── alerting_service.py        # Alert management
+│   ├── metrics_service.py         # Metrics collection (Epic 17.4)
+│   ├── alerting_service.py        # Alert management (Epic 17.4)
+│   ├── events_endpoints.py        # Events endpoints (DEPRECATED - moved to data-api)
+│   └── devices_endpoints.py       # Devices endpoints (DEPRECATED - moved to data-api)
 ├── tests/                         # Service-specific tests
 ├── Dockerfile                     # Production Docker image
 ├── Dockerfile.dev                 # Development Docker image
 └── requirements.txt               # Python dependencies
 ```
+
+### Data API Service (`services/data-api/`) [Epic 13 NEW]
+**Purpose:** Feature data hub for events, devices, sports, and analytics
+**Port:** 8006
+
+```
+data-api/
+├── src/
+│   ├── main.py                    # FastAPI application entry point
+│   ├── events_endpoints.py        # Event queries (migrated from admin-api)
+│   ├── devices_endpoints.py       # Device & entity browsing (migrated from admin-api)
+│   ├── sports_endpoints.py        # Sports data queries (Epic 12 Story 12.2)
+│   ├── ha_automation_endpoints.py # HA automation integration (Epic 12 Story 12.3)
+│   ├── alert_endpoints.py         # Alert management (Epic 13 Story 13.3)
+│   ├── metrics_endpoints.py       # Metrics endpoints (Epic 13 Story 13.3)
+│   ├── integration_endpoints.py   # Integration management (Epic 13 Story 13.3)
+│   ├── websocket_endpoints.py     # WebSocket streaming
+│   ├── alerting_service.py        # Alerting service
+│   └── metrics_service.py         # Metrics service
+├── tests/                         # Service-specific tests
+├── Dockerfile                     # Production Docker image
+├── Dockerfile.dev                 # Development Docker image
+└── requirements.txt               # Python dependencies
+```
+
+**Epic 13 API Endpoints:**
+- **Events:** `/events`, `/events/{id}`, `/events/search`, `/events/stats`
+- **Devices:** `/api/devices`, `/api/devices/{id}`, `/api/entities`, `/api/entities/{id}`
+- **Sports:** `/api/v1/sports/games/history`, `/api/v1/sports/games/timeline/{id}`, `/api/v1/sports/schedule/{team}`
+- **HA Automation:** `/api/v1/ha/game-status/{team}`, `/api/v1/ha/game-context/{team}`, `/api/v1/ha/webhooks/*`
+- **Integrations:** `/api/v1/integrations`, `/api/v1/services`
+- **WebSocket:** `/ws` (real-time streaming)
 
 ### Health Dashboard Service (`services/health-dashboard/`)
 ```

@@ -5,8 +5,9 @@
  * Epic 13.3: Alert Management System
  */
 
-import React, { useState, useEffect } from 'react';
-import { getMockAlerts, type Alert } from '../mocks/alertsMock';
+import React, { useState, useMemo } from 'react';
+import type { Alert } from '../types/alerts';
+import { useAlerts } from '../hooks/useAlerts';
 import { SkeletonCard, SkeletonList } from './skeletons';
 
 interface AlertsPanelProps {
@@ -14,35 +15,15 @@ interface AlertsPanelProps {
 }
 
 export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
   const [selectedService, setSelectedService] = useState<string>('all');
   const [showAcknowledged, setShowAcknowledged] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  const fetchAlerts = async () => {
-    try {
-      // Mock data for now - will be replaced with real API call
-      // TODO: Replace with actual API call to /api/v1/alerts?hours=24
-      const mockAlerts = getMockAlerts();
-      
-      setAlerts(mockAlerts);
-      setError(null);
-      setLastUpdate(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, []);
+  // Fetch alerts with real API
+  const { alerts, summary, loading, error, lastUpdate, refresh, acknowledgeAlert, resolveAlert } = useAlerts({
+    pollInterval: 60000,
+    autoRefresh: true
+  });
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -90,25 +71,28 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
     }
   };
 
-  const handleAcknowledge = (alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId 
-        ? { ...alert, acknowledged: true, acknowledgedBy: 'admin', acknowledgedAt: new Date().toISOString() }
-        : alert
-    ));
+  const handleAcknowledge = async (alertId: string) => {
+    await acknowledgeAlert(alertId);
   };
 
-  const filteredAlerts = alerts.filter(alert => {
-    if (selectedSeverity !== 'all' && alert.severity !== selectedSeverity) return false;
-    if (selectedService !== 'all' && alert.service !== selectedService) return false;
-    if (!showAcknowledged && alert.acknowledged) return false;
-    return true;
-  });
+  const handleResolve = async (alertId: string) => {
+    await resolveAlert(alertId);
+  };
 
-  const services = [...new Set(alerts.map(a => a.service))];
-  const criticalCount = alerts.filter(a => a.severity === 'critical' && !a.acknowledged).length;
-  const errorCount = alerts.filter(a => a.severity === 'error' && !a.acknowledged).length;
-  const warningCount = alerts.filter(a => a.severity === 'warning' && !a.acknowledged).length;
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter(alert => {
+      if (selectedSeverity !== 'all' && alert.severity !== selectedSeverity) return false;
+      if (selectedService !== 'all' && alert.service !== selectedService) return false;
+      if (!showAcknowledged && alert.status === 'acknowledged') return false;
+      return true;
+    });
+  }, [alerts, selectedSeverity, selectedService, showAcknowledged]);
+
+  const services = useMemo(() => [...new Set(alerts.map(a => a.service))], [alerts]);
+  
+  const criticalCount = summary?.critical || alerts.filter(a => a.severity === 'critical' && a.status === 'active').length;
+  const warningCount = summary?.warning || alerts.filter(a => a.severity === 'warning' && a.status === 'active').length;
+  const errorCount = alerts.filter(a => a.severity === 'warning' && a.status !== 'resolved').length; // Using warning for error count since API doesn't have 'error' severity
 
   if (loading) {
     return (
@@ -145,7 +129,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
             </p>
           </div>
           <button
-            onClick={fetchAlerts}
+            onClick={refresh}
             className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
           >
             Retry
@@ -171,7 +155,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
           </div>
           <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             <p className="text-sm">Last updated</p>
-            <p className="text-sm font-medium">{lastUpdate.toLocaleTimeString()}</p>
+            <p className="text-sm font-medium">{lastUpdate?.toLocaleTimeString() || 'Never'}</p>
           </div>
         </div>
 
@@ -283,7 +267,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
             <div
               key={alert.id}
               className={`rounded-lg shadow-md p-6 border ${getSeverityColor(alert.severity)} ${
-                alert.acknowledged ? 'opacity-60' : ''
+                alert.status === 'acknowledged' || alert.status === 'resolved' ? 'opacity-60' : ''
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -292,41 +276,84 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {alert.title}
+                        {alert.name}
                       </h3>
                       <span className={`text-xs px-2 py-1 rounded uppercase ${
                         darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
                       }`}>
                         {alert.severity}
                       </span>
+                      {alert.status !== 'active' && (
+                        <span className={`text-xs px-2 py-1 rounded uppercase ${
+                          alert.status === 'resolved' 
+                            ? (darkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700')
+                            : (darkMode ? 'bg-yellow-900/30 text-yellow-300' : 'bg-yellow-100 text-yellow-700')
+                        }`}>
+                          {alert.status}
+                        </span>
+                      )}
                     </div>
                     <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                       {alert.message}
                     </p>
                     <div className={`flex items-center gap-4 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <span>🏷️ {alert.service}</span>
-                      <span>🕐 {formatTimestamp(alert.timestamp)}</span>
-                      {alert.acknowledged && (
+                      {alert.created_at && <span>🕐 {formatTimestamp(alert.created_at)}</span>}
+                      {alert.metric && <span>📊 {alert.metric}</span>}
+                      {alert.status === 'acknowledged' && alert.acknowledged_at && (
                         <span className="text-green-500">
-                          ✓ Acknowledged by {alert.acknowledgedBy}
+                          ✓ Acknowledged {formatTimestamp(alert.acknowledged_at)}
+                        </span>
+                      )}
+                      {alert.status === 'resolved' && alert.resolved_at && (
+                        <span className="text-blue-500">
+                          ✓ Resolved {formatTimestamp(alert.resolved_at)}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                {!alert.acknowledged && (
-                  <button
-                    onClick={() => handleAcknowledge(alert.id)}
-                    aria-label={`Acknowledge alert: ${alert.title}`}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                      darkMode
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
-                  >
-                    Acknowledge
-                  </button>
-                )}
+                <div className="flex gap-2">
+                  {alert.status === 'active' && (
+                    <>
+                      <button
+                        onClick={() => handleAcknowledge(alert.id)}
+                        aria-label={`Acknowledge alert: ${alert.name}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                          darkMode
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                            : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        }`}
+                      >
+                        Acknowledge
+                      </button>
+                      <button
+                        onClick={() => handleResolve(alert.id)}
+                        aria-label={`Resolve alert: ${alert.name}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                          darkMode
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-green-500 hover:bg-green-600 text-white'
+                        }`}
+                      >
+                        Resolve
+                      </button>
+                    </>
+                  )}
+                  {alert.status === 'acknowledged' && (
+                    <button
+                      onClick={() => handleResolve(alert.id)}
+                      aria-label={`Resolve alert: ${alert.name}`}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                        darkMode
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                    >
+                      Resolve
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))

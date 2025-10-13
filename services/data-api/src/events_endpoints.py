@@ -64,77 +64,8 @@ class EventsEndpoints:
     def _add_routes(self):
         """Add events routes"""
         
-        @self.router.get("/events", response_model=List[EventData])
-        async def get_recent_events(
-            limit: int = Query(100, description="Maximum number of events to return"),
-            offset: int = Query(0, description="Number of events to skip"),
-            entity_id: Optional[str] = Query(None, description="Filter by entity ID"),
-            event_type: Optional[str] = Query(None, description="Filter by event type"),
-            start_time: Optional[datetime] = Query(None, description="Start time filter"),
-            end_time: Optional[datetime] = Query(None, description="End time filter"),
-            service: Optional[str] = Query(None, description="Specific service to query")
-        ):
-            """Get recent events with optional filtering"""
-            try:
-                # Build filter
-                event_filter = EventFilter(
-                    entity_id=entity_id,
-                    event_type=event_type,
-                    start_time=start_time,
-                    end_time=end_time
-                )
-                
-                if service and service in self.service_urls:
-                    # Get events from specific service
-                    events = await self._get_service_events(service, event_filter, limit, offset)
-                else:
-                    # Get events from all services
-                    events = await self._get_all_events(event_filter, limit, offset)
-                
-                return events
-                
-            except Exception as e:
-                logger.error(f"Error getting recent events: {e}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to get recent events"
-                )
-        
-        @self.router.get("/events/{event_id}", response_model=EventData)
-        async def get_event_by_id(event_id: str):
-            """Get a specific event by ID"""
-            try:
-                event = await self._get_event_by_id(event_id)
-                if not event:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Event {event_id} not found"
-                    )
-                
-                return event
-                
-            except HTTPException:
-                raise
-            except Exception as e:
-                logger.error(f"Error getting event {event_id}: {e}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to get event"
-                )
-        
-        @self.router.post("/events/search", response_model=List[EventData])
-        async def search_events(search: EventSearch):
-            """Search events with text query"""
-            try:
-                events = await self._search_events(search)
-                return events
-                
-            except Exception as e:
-                logger.error(f"Error searching events: {e}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to search events"
-                )
+        # IMPORTANT: Register specific routes BEFORE parameterized routes
+        # to prevent path parameter matching issues
         
         @self.router.get("/events/stats", response_model=Dict[str, Any])
         async def get_events_stats(
@@ -155,6 +86,37 @@ class EventsEndpoints:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Failed to get events statistics"
+                )
+        
+        @self.router.post("/events/search", response_model=List[EventData])
+        async def search_events(search: EventSearch):
+            """Search events with text query"""
+            try:
+                events = await self._search_events(search)
+                return events
+                
+            except Exception as e:
+                logger.error(f"Error searching events: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to search events"
+                )
+        
+        @self.router.get("/events/stream", response_model=Dict[str, Any])
+        async def get_events_stream(
+            duration: int = Query(60, description="Stream duration in seconds"),
+            entity_id: Optional[str] = Query(None, description="Filter by entity ID")
+        ):
+            """Get real-time event stream"""
+            try:
+                stream_data = await self._get_events_stream(duration, entity_id)
+                return stream_data
+                
+            except Exception as e:
+                logger.error(f"Error getting events stream: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to get events stream"
                 )
         
         @self.router.get("/events/entities", response_model=List[Dict[str, Any]])
@@ -199,21 +161,64 @@ class EventsEndpoints:
                     detail="Failed to get event types"
                 )
         
-        @self.router.get("/events/stream", response_model=Dict[str, Any])
-        async def get_events_stream(
-            duration: int = Query(60, description="Stream duration in seconds"),
-            entity_id: Optional[str] = Query(None, description="Filter by entity ID")
+        # General /events route - should come after specific routes
+        @self.router.get("/events", response_model=List[EventData])
+        async def get_recent_events(
+            limit: int = Query(100, description="Maximum number of events to return"),
+            offset: int = Query(0, description="Number of events to skip"),
+            entity_id: Optional[str] = Query(None, description="Filter by entity ID"),
+            event_type: Optional[str] = Query(None, description="Filter by event type"),
+            start_time: Optional[datetime] = Query(None, description="Start time filter"),
+            end_time: Optional[datetime] = Query(None, description="End time filter"),
+            service: Optional[str] = Query(None, description="Specific service to query")
         ):
-            """Get real-time event stream"""
+            """Get recent events with optional filtering"""
             try:
-                stream_data = await self._get_events_stream(duration, entity_id)
-                return stream_data
+                # Build filter
+                event_filter = EventFilter(
+                    entity_id=entity_id,
+                    event_type=event_type,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+                
+                if service and service in self.service_urls:
+                    # Get events from specific service
+                    events = await self._get_service_events(service, event_filter, limit, offset)
+                else:
+                    # Get events from all services
+                    events = await self._get_all_events(event_filter, limit, offset)
+                
+                return events
                 
             except Exception as e:
-                logger.error(f"Error getting events stream: {e}")
+                logger.error(f"Error getting recent events: {e}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to get events stream"
+                    detail="Failed to get recent events"
+                )
+        
+        # Parameterized route MUST be last to avoid matching specific routes
+        @self.router.get("/events/{event_id}", response_model=EventData)
+        async def get_event_by_id(event_id: str):
+            """Get a specific event by ID"""
+            try:
+                event = await self._get_event_by_id(event_id)
+                if not event:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Event {event_id} not found"
+                    )
+                
+                return event
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error getting event {event_id}: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to get event"
                 )
     
     async def _get_all_events(self, event_filter: EventFilter, limit: int, offset: int) -> List[EventData]:
