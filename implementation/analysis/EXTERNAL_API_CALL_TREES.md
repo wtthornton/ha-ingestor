@@ -1,9 +1,15 @@
 # External API Services Call Tree Analysis
 ## Dashboard → Admin API → External Data Sources
 
-**Document Version**: 1.0  
+**Document Version**: 1.1  
 **Created**: 2025-10-13  
+**Last Updated**: 2025-10-13 (Epic 13 - data-api separation)  
 **Purpose**: Detailed call trees for all external API services showing complete data flow patterns
+
+> **Epic 13 Update**: External API queries now routed through **data-api:8006** instead of admin-api:8003
+> - Sports data queries: `data-api:8006/api/v1/sports/*`
+> - Historical data queries moved to data-api for better scalability
+> - admin-api now focuses solely on system monitoring
 
 ---
 
@@ -28,7 +34,7 @@
 | Which services use direct queries? | Sports Data | [Pattern B](#pattern-b-on-demand-pull-queries) |
 | How often do services fetch data? | 5-60 minutes (varies by service) | [Service Details](#-service-specific-call-trees) |
 | Are caching strategies used? | Yes, all services implement caching | [Caching](#-caching-strategies) |
-| How to query external data? | Via admin-api endpoints | [API Layer](#phase-3-admin-api-gateway) |
+| How to query external data? | Via **data-api** endpoints (Epic 13) | [API Layer](#phase-3-data-api-gateway-epic-13) |
 
 ---
 
@@ -36,12 +42,16 @@
 
 | Service | Port | Purpose | Data Pattern | Fetch Interval | Required |
 |---------|------|---------|--------------|----------------|----------|
-| sports-data | 8005 | NFL/NHL game data | Pull (on-demand) | Per request | Optional |
+| **data-api** | **8006** | **Feature data hub (queries)** | **API Gateway** | **Per request** | **Yes** |
+| admin-api | 8003 | System monitoring & control | API Gateway | Per request | Yes |
+| sports-data | 8005 | NFL/NHL game data (cache) | Pull (on-demand) | Per request | Optional |
 | air-quality-service | 8012 | AQI from AirNow API | Push (continuous) | 60 min | Optional |
 | carbon-intensity-service | 8010 | Grid carbon from WattTime | Push (continuous) | 15 min | Optional |
 | electricity-pricing-service | 8011 | Real-time pricing | Push (continuous) | 60 min | Optional |
 | calendar-service | 8013 | Google Calendar occupancy | Push (continuous) | 15 min | Optional |
 | smart-meter-service | 8014 | Power consumption | Push (continuous) | 5 min | Optional |
+
+**Note**: As of Epic 13, data-api handles all feature queries (sports, events, devices), while admin-api handles system monitoring.
 
 ---
 

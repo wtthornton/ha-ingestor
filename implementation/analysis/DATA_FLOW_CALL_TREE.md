@@ -1,6 +1,17 @@
 # 🔄 **Complete Data Flow Call Tree: Home Assistant → GUI**
 
-## 🚨 **CRITICAL ISSUE IDENTIFIED: Authentication Failure**
+> **⚠️ HISTORICAL DOCUMENT**: This document captured a specific authentication troubleshooting session and is **NOT** current architecture.
+> 
+> **For current architecture**, see:
+> - [HA_EVENT_CALL_TREE.md](./HA_EVENT_CALL_TREE.md) - Complete current event flow (updated for Epic 13)
+> - [EXTERNAL_API_CALL_TREES.md](./EXTERNAL_API_CALL_TREES.md) - External API integrations
+> - [HA_WEBSOCKET_CALL_TREE.md](../../docs/HA_WEBSOCKET_CALL_TREE.md) - WebSocket technical details
+>
+> **Status**: This issue was **resolved**. This document is kept for historical reference only.
+
+---
+
+## 🚨 **CRITICAL ISSUE IDENTIFIED: Authentication Failure** (RESOLVED)
 
 The WebSocket service is **failing to authenticate** with Home Assistant, causing the entire data pipeline to be empty.
 

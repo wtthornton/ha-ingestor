@@ -1,9 +1,9 @@
 # Home Assistant Event Call Tree Analysis
 ## Complete Data Flow: HA → Database → Dashboard
 
-**Document Version**: 1.1  
+**Document Version**: 2.0  
 **Created**: 2025-10-13  
-**Last Updated**: 2025-10-13  
+**Last Updated**: 2025-10-13 (Epic 12 & 13 - data-api separation)  
 **Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system
 
 ---
@@ -25,7 +25,7 @@
 |----------|--------|---------|
 | Where do events enter? | websocket-ingestion:8001 | [Phase 1](#phase-1-event-reception-from-home-assistant) |
 | Where are events stored? | InfluxDB:8086 | [Phase 3](#phase-3-database-write-operations) |
-| How to query events? | admin-api:8003/api/events | [Phase 5](#phase-5-data-retrieval-by-admin-api) |
+| How to query events? | **data-api:8006/api/v1/events** (Epic 13) | [Phase 5](#phase-5-data-retrieval-by-data-api-epic-13) |
 | How long is latency? | ~5-6s (batching), <100ms (WebSocket) | [Summary](#-summary) |
 | Is enrichment required? | No, optional enhancement | [Phase 4](#phase-4-optional-enrichment-pipeline) |
 | What's the throughput? | 10,000+ events/sec | [Performance](#-performance-characteristics) |
@@ -41,9 +41,13 @@
 | Home Assistant | 8123 | External event source | Yes |
 | websocket-ingestion | 8001 | Event reception & processing | Yes |
 | enrichment-pipeline | 8002 | Optional data normalization | No |
-| admin-api | 8003 | REST API & WebSocket streaming | Yes |
-| health-dashboard | 3000 | Frontend UI | Yes |
+| **data-api** | **8006** | **Feature data hub (events, devices, sports)** | **Yes** |
+| admin-api | 8003 | System monitoring & control | Yes |
+| sports-data | 8005 | Sports cache service | Optional |
+| health-dashboard | 3000 | Frontend UI (nginx) | Yes |
 | InfluxDB | 8086 | Time-series database | Yes |
+
+**Epic 13 Update**: admin-api separated into data-api (43 feature endpoints) + admin-api (22 system endpoints)
 
 ---
 
@@ -96,22 +100,33 @@ This document traces the complete journey of a Home Assistant event from its ori
          │
          ▼
 ┌────────────────────────────────────────────────┐
-│ Admin API Service (Port 8003)                 │
-│ - REST API Gateway                             │
-│ - Statistics Endpoints                         │
-│ - Events Endpoints                             │
+│ Data API Service (Port 8006) [EPIC 13]       │
+│ - Feature Data Hub                             │
+│ - Events Endpoints (8 routes)                  │
+│ - Devices & Entities (5 routes)                │
+│ - Sports & HA Automation (9 routes)            │
 │ - WebSocket Streaming                          │
 └────────┬───────────────────────────────────────┘
-         │
-         │ HTTP/REST + WebSocket
-         │
-         ▼
-┌────────────────────────────────────────────────┐
-│ Health Dashboard (Port 3000)                  │
-│ - React Frontend                               │
-│ - Real-time Updates                            │
-│ - 12 Tabs with Visualizations                 │
-└────────────────────────────────────────────────┘
+         │               ┌────────────────────────────────────────────────┐
+         │               │ Admin API Service (Port 8003) [EPIC 13]      │
+         │               │ - System Monitoring                            │
+         │               │ - Health Checks (6 routes)                     │
+         │               │ - Docker Management (7 routes)                 │
+         │               └────────┬───────────────────────────────────────┘
+         │                        │
+         │ HTTP/REST              │ HTTP/REST
+         │ WebSocket              │ (System Monitoring)
+         │                        │
+         └────────────────────────┴───► nginx (Port 3000)
+                                  │
+                                  ▼
+                    ┌────────────────────────────────────────────────┐
+                    │ Health Dashboard (Port 3000)                  │
+                    │ - React Frontend (nginx)                       │
+                    │ - Routes to data-api for features              │
+                    │ - Routes to admin-api for monitoring           │
+                    │ - 12 Tabs with Visualizations                 │
+                    └────────────────────────────────────────────────┘
 ```
 
 ### Sequence Diagram (Mermaid)
@@ -564,11 +579,16 @@ EnrichmentPipelineService.process_event(event_data)
 
 ---
 
-### Phase 5: Data Retrieval by Admin API
+### Phase 5: Data Retrieval by Data API (Epic 13)
+
+> **Epic 13 Update**: Event queries moved from admin-api to new data-api service.
+> - **Previous**: `admin-api:8003/api/events`
+> - **Current**: `data-api:8006/api/v1/events`
+> - **Reason**: Separation of feature data (data-api) from system monitoring (admin-api)
 
 #### 5.1 API Request Handling
 
-**File**: `services/admin-api/src/events_endpoints.py`
+**File**: `services/data-api/src/events_endpoints.py` (migrated from admin-api in Epic 13)
 
 ```python
 EventsEndpoints (FastAPI Router)
