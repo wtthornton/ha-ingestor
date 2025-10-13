@@ -199,6 +199,49 @@ services:
       retries: 3
       start_period: 30s
 
+  data-api:
+    build:
+      context: .
+      dockerfile: services/data-api/Dockerfile
+    container_name: ha-ingestor-data-api
+    restart: unless-stopped
+    ports:
+      - "8006:8006"
+    environment:
+      - DATA_API_HOST=0.0.0.0
+      - DATA_API_PORT=8006
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_AUTH=false
+      - API_KEY=${API_KEY:-}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=data-api,environment=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   data-retention:
     build:
       context: .

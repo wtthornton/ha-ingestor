@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../services/api';
+import { dataApi } from '../services/api';  // Epic 13 Story 13.2: Use data-api for devices/entities
 
 export interface Device {
   device_id: string;
@@ -44,18 +44,15 @@ export function useDevices() {
       setLoading(true);
       setError(null);
       
-      const params = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
-        });
-      }
+      // Epic 13 Story 13.2: Use dataApi.getDevices()
+      const response = await dataApi.getDevices({
+        limit: 100,
+        manufacturer: filters?.manufacturer,
+        model: filters?.model,
+        area_id: filters?.area_id
+      });
       
-      const queryString = params.toString();
-      const url = queryString ? `/api/devices?${queryString}` : '/api/devices';
-      
-      const response = await apiService.get(url);
-      setDevices(response.data.devices || []);
+      setDevices(response.devices || []);
     } catch (err: any) {
       console.error('Error fetching devices:', err);
       setError(err.message || 'Failed to fetch devices');
@@ -67,18 +64,15 @@ export function useDevices() {
 
   const fetchEntities = useCallback(async (filters?: Record<string, string>) => {
     try {
-      const params = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
-        });
-      }
+      // Epic 13 Story 13.2: Use dataApi.getEntities()
+      const response = await dataApi.getEntities({
+        limit: 100,
+        domain: filters?.domain,
+        platform: filters?.platform,
+        device_id: filters?.device_id
+      });
       
-      const queryString = params.toString();
-      const url = queryString ? `/api/entities?${queryString}` : '/api/entities';
-      
-      const response = await apiService.get(url);
-      setEntities(response.data.entities || []);
+      setEntities(response.entities || []);
     } catch (err: any) {
       console.error('Error fetching entities:', err);
       setEntities([]);
@@ -87,8 +81,9 @@ export function useDevices() {
 
   const fetchIntegrations = useCallback(async () => {
     try {
-      const response = await apiService.get('/api/integrations');
-      setIntegrations(response.data.integrations || []);
+      // Epic 13 Story 13.2: Use dataApi.getIntegrations()
+      const response = await dataApi.getIntegrations(100);
+      setIntegrations(response.integrations || []);
     } catch (err: any) {
       console.error('Error fetching integrations:', err);
       setIntegrations([]);

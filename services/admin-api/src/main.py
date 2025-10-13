@@ -38,7 +38,7 @@ from .integration_endpoints import router as integration_router
 from .devices_endpoints import router as devices_router
 from .metrics_endpoints import create_metrics_router
 from .alert_endpoints import create_alert_router
-from .auth import AuthManager
+from shared.auth import AuthManager  # Moved to shared
 from .logging_service import logging_service
 from .metrics_service import metrics_service
 from .alerting_service import alerting_service

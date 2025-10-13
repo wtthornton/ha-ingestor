@@ -45,10 +45,17 @@ export interface APIKeyTestResponse {
   timestamp: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Epic 13 Story 13.2: Separated API clients for admin vs data APIs
+const ADMIN_API_BASE_URL = import.meta.env.VITE_ADMIN_API_URL || '/api';
+const DATA_API_BASE_URL = import.meta.env.VITE_DATA_API_URL || '/api';  // Will use nginx routing
 
-class ApiService {
-  private async fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
+/**
+ * Base API client with error handling
+ */
+class BaseApiClient {
+  constructor(protected baseUrl: string) {}
+
+  protected async fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
     try {
       const response = await fetch(url, options);
       if (!response.ok) {
@@ -60,21 +67,31 @@ class ApiService {
       throw error;
     }
   }
+}
+
+/**
+ * Admin API Client - System Monitoring & Control
+ * Routes to admin-api service (port 8003/8004)
+ */
+class AdminApiClient extends BaseApiClient {
+  constructor() {
+    super(ADMIN_API_BASE_URL);
+  }
 
   async getHealth(): Promise<HealthStatus> {
-    return this.fetchWithErrorHandling<HealthStatus>(`${API_BASE_URL}/health`);
+    return this.fetchWithErrorHandling<HealthStatus>(`${this.baseUrl}/health`);
   }
 
   async getEnhancedHealth(): Promise<ServiceHealthResponse> {
-    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${API_BASE_URL}/health`);
+    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${this.baseUrl}/health`);
   }
 
   async getStatistics(period: string = '1h'): Promise<Statistics> {
-    return this.fetchWithErrorHandling<Statistics>(`${API_BASE_URL}/stats?period=${period}`);
+    return this.fetchWithErrorHandling<Statistics>(`${this.baseUrl}/stats?period=${period}`);
   }
 
   async getServicesHealth(): Promise<{ [key: string]: any }> {
-    return this.fetchWithErrorHandling<{ [key: string]: any }>(`${API_BASE_URL}/health/services`);
+    return this.fetchWithErrorHandling<{ [key: string]: any }>(`${this.baseUrl}/health/services`);
   }
 
   // New data source health endpoints
@@ -105,52 +122,52 @@ class ApiService {
     };
   }
 
-  // Docker Management API methods
+  // Docker Management API methods (System Admin)
   async getContainers(): Promise<ContainerInfo[]> {
-    return this.fetchWithErrorHandling<ContainerInfo[]>(`${API_BASE_URL}/v1/docker/containers`);
+    return this.fetchWithErrorHandling<ContainerInfo[]>(`${this.baseUrl}/v1/docker/containers`);
   }
 
   async startContainer(serviceName: string): Promise<ContainerOperationResponse> {
     return this.fetchWithErrorHandling<ContainerOperationResponse>(
-      `${API_BASE_URL}/v1/docker/containers/${serviceName}/start`,
+      `${this.baseUrl}/v1/docker/containers/${serviceName}/start`,
       { method: 'POST' }
     );
   }
 
   async stopContainer(serviceName: string): Promise<ContainerOperationResponse> {
     return this.fetchWithErrorHandling<ContainerOperationResponse>(
-      `${API_BASE_URL}/v1/docker/containers/${serviceName}/stop`,
+      `${this.baseUrl}/v1/docker/containers/${serviceName}/stop`,
       { method: 'POST' }
     );
   }
 
   async restartContainer(serviceName: string): Promise<ContainerOperationResponse> {
     return this.fetchWithErrorHandling<ContainerOperationResponse>(
-      `${API_BASE_URL}/v1/docker/containers/${serviceName}/restart`,
+      `${this.baseUrl}/v1/docker/containers/${serviceName}/restart`,
       { method: 'POST' }
     );
   }
 
   async getContainerLogs(serviceName: string, tail: number = 100): Promise<{ logs: string }> {
     return this.fetchWithErrorHandling<{ logs: string }>(
-      `${API_BASE_URL}/v1/docker/containers/${serviceName}/logs?tail=${tail}`
+      `${this.baseUrl}/v1/docker/containers/${serviceName}/logs?tail=${tail}`
     );
   }
 
   async getContainerStats(serviceName: string): Promise<ContainerStats> {
     return this.fetchWithErrorHandling<ContainerStats>(
-      `${API_BASE_URL}/v1/docker/containers/${serviceName}/stats`
+      `${this.baseUrl}/v1/docker/containers/${serviceName}/stats`
     );
   }
 
-  // API Key Management methods
+  // API Key Management methods (System Admin)
   async getAPIKeys(): Promise<APIKeyInfo[]> {
-    return this.fetchWithErrorHandling<APIKeyInfo[]>(`${API_BASE_URL}/v1/docker/api-keys`);
+    return this.fetchWithErrorHandling<APIKeyInfo[]>(`${this.baseUrl}/v1/docker/api-keys`);
   }
 
   async updateAPIKey(service: string, apiKey: string): Promise<ContainerOperationResponse> {
     return this.fetchWithErrorHandling<ContainerOperationResponse>(
-      `${API_BASE_URL}/v1/docker/api-keys/${service}`,
+      `${this.baseUrl}/v1/docker/api-keys/${service}`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +178,7 @@ class ApiService {
 
   async testAPIKey(service: string, apiKey: string): Promise<APIKeyTestResponse> {
     return this.fetchWithErrorHandling<APIKeyTestResponse>(
-      `${API_BASE_URL}/v1/docker/api-keys/${service}/test`,
+      `${this.baseUrl}/v1/docker/api-keys/${service}/test`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,4 +188,124 @@ class ApiService {
   }
 }
 
-export const apiService = new ApiService();
+/**
+ * Data API Client - Feature Data Hub
+ * Routes to data-api service (port 8006)
+ * Epic 13 Story 13.2: Events, Devices, Sports, Analytics, HA Automation
+ */
+class DataApiClient extends BaseApiClient {
+  constructor() {
+    super(DATA_API_BASE_URL);
+  }
+
+  // Events endpoints (Story 13.2)
+  async getEvents(params: {
+    limit?: number;
+    offset?: number;
+    entity_id?: string;
+    event_type?: string;
+    start_time?: string;
+    end_time?: string;
+  } = {}): Promise<any[]> {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.offset) queryParams.append('offset', params.offset.toString());
+    if (params.entity_id) queryParams.append('entity_id', params.entity_id);
+    if (params.event_type) queryParams.append('event_type', params.event_type);
+    if (params.start_time) queryParams.append('start_time', params.start_time);
+    if (params.end_time) queryParams.append('end_time', params.end_time);
+
+    const url = `${this.baseUrl}/v1/events${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling<any[]>(url);
+  }
+
+  async getEventById(eventId: string): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/events/${eventId}`);
+  }
+
+  async searchEvents(query: string, fields: string[] = ['entity_id', 'event_type'], limit: number = 100): Promise<any[]> {
+    return this.fetchWithErrorHandling<any[]>(
+      `${this.baseUrl}/v1/events/search`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, fields, limit })
+      }
+    );
+  }
+
+  async getEventsStats(period: string = '1h'): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/events/stats?period=${period}`);
+  }
+
+  // Devices & Entities endpoints (Story 13.2)
+  async getDevices(params: {
+    limit?: number;
+    manufacturer?: string;
+    model?: string;
+    area_id?: string;
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.manufacturer) queryParams.append('manufacturer', params.manufacturer);
+    if (params.model) queryParams.append('model', params.model);
+    if (params.area_id) queryParams.append('area_id', params.area_id);
+
+    const url = `${this.baseUrl}/devices${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling<any>(url);
+  }
+
+  async getDeviceById(deviceId: string): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/devices/${deviceId}`);
+  }
+
+  async getEntities(params: {
+    limit?: number;
+    domain?: string;
+    platform?: string;
+    device_id?: string;
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.domain) queryParams.append('domain', params.domain);
+    if (params.platform) queryParams.append('platform', params.platform);
+    if (params.device_id) queryParams.append('device_id', params.device_id);
+
+    const url = `${this.baseUrl}/entities${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling<any>(url);
+  }
+
+  async getEntityById(entityId: string): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/entities/${entityId}`);
+  }
+
+  async getIntegrations(limit: number = 100): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/integrations?limit=${limit}`);
+  }
+
+  // Sports endpoints (Story 13.4 - Coming soon)
+  async getLiveGames(teamIds?: string, league?: string): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (teamIds) queryParams.append('team_ids', teamIds);
+    if (league) queryParams.append('league', league);
+    
+    const url = `${this.baseUrl}/v1/sports/games/live${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling<any>(url);
+  }
+
+  async getSportsHistory(team: string, season?: number): Promise<any> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('team', team);
+    if (season) queryParams.append('season', season.toString());
+
+    const url = `${this.baseUrl}/v1/sports/games/history?${queryParams.toString()}`;
+    return this.fetchWithErrorHandling<any>(url);
+  }
+}
+
+// Export API client instances
+export const adminApi = new AdminApiClient();  // System monitoring
+export const dataApi = new DataApiClient();    // Feature data
+
+// Legacy export for backward compatibility (uses admin API)
+export const apiService = adminApi;

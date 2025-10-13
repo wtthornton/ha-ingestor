@@ -12,7 +12,7 @@ import os
 from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 
-from .influxdb_client import AdminAPIInfluxDBClient
+from shared.influxdb_query_client import InfluxDBQueryClient as AdminAPIInfluxDBClient
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,49 @@
 # Home Assistant Event Call Tree Analysis
 ## Complete Data Flow: HA → Database → Dashboard
 
-**Document Version**: 1.0  
+**Document Version**: 1.1  
 **Created**: 2025-10-13  
+**Last Updated**: 2025-10-13  
 **Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system
+
+---
+
+## 🔗 Related Documentation
+
+- [Architecture Overview](../../docs/architecture.md)
+- [Tech Stack](../../docs/architecture/tech-stack.md)
+- [Source Tree Structure](../../docs/architecture/source-tree.md)
+- [Data Models](../../docs/architecture/data-models.md)
+- [Coding Standards](../../docs/architecture/coding-standards.md)
+- [Troubleshooting Guide](../../docs/TROUBLESHOOTING_GUIDE.md)
+
+---
+
+## 🔍 Quick Reference
+
+| Question | Answer | Section |
+|----------|--------|---------|
+| Where do events enter? | websocket-ingestion:8001 | [Phase 1](#phase-1-event-reception-from-home-assistant) |
+| Where are events stored? | InfluxDB:8086 | [Phase 3](#phase-3-database-write-operations) |
+| How to query events? | admin-api:8003/api/events | [Phase 5](#phase-5-data-retrieval-by-admin-api) |
+| How long is latency? | ~5-6s (batching), <100ms (WebSocket) | [Summary](#-summary) |
+| Is enrichment required? | No, optional enhancement | [Phase 4](#phase-4-optional-enrichment-pipeline) |
+| What's the throughput? | 10,000+ events/sec | [Performance](#-performance-characteristics) |
+| Where's weather enrichment? | Inline in websocket-ingestion | [Phase 2](#phase-2-event-processing--queue-management) |
+| How many write paths? | 2 (Primary + Enhancement) | [Overview](#-overview) |
+
+---
+
+## 🔌 Service Ports Reference
+
+| Service | Port | Purpose | Required |
+|---------|------|---------|----------|
+| Home Assistant | 8123 | External event source | Yes |
+| websocket-ingestion | 8001 | Event reception & processing | Yes |
+| enrichment-pipeline | 8002 | Optional data normalization | No |
+| admin-api | 8003 | REST API & WebSocket streaming | Yes |
+| health-dashboard | 3000 | Frontend UI | Yes |
+| InfluxDB | 8086 | Time-series database | Yes |
 
 ---
 
@@ -73,6 +113,55 @@ This document traces the complete journey of a Home Assistant event from its ori
 │ - 12 Tabs with Visualizations                 │
 └────────────────────────────────────────────────┘
 ```
+
+### Sequence Diagram (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant HA as Home Assistant
+    participant WS as WebSocket Ingestion<br/>(Port 8001)
+    participant Queue as Async Queue<br/>(10 workers)
+    participant Batch as Batch Processor<br/>(1000 events)
+    participant EP as Enrichment Pipeline<br/>(Port 8002, Optional)
+    participant DB as InfluxDB<br/>(Port 8086)
+    participant API as Admin API<br/>(Port 8003)
+    participant UI as Dashboard<br/>(Port 3000)
+    
+    Note over HA,WS: Phase 1: Event Reception
+    HA->>WS: WebSocket: state_changed event
+    WS->>WS: Validate & Extract (~0.1ms)
+    
+    Note over WS,Batch: Phase 2: Processing & Queue
+    WS->>Queue: Add to async queue (~0.01ms)
+    Queue->>Batch: Worker processes event
+    Batch->>Batch: Accumulate to 1000 or 5s timeout
+    
+    Note over Batch,DB: Phase 3: Database Write (Dual Paths)
+    par Path A: Direct Write (Always)
+        Batch->>DB: Write batch directly (~50ms)
+    and Path B: Enhanced Write (Optional)
+        Batch->>EP: HTTP POST event data
+        EP->>EP: Normalize & Validate
+        EP->>DB: Write normalized data (~50ms)
+    end
+    
+    Note over UI,DB: Phase 5-6: Query & Display
+    UI->>API: GET /api/events
+    API->>DB: Flux Query (~20ms)
+    DB-->>API: Event data (JSON)
+    API-->>UI: REST Response
+    UI->>UI: React render (~16ms)
+    
+    Note over API,UI: Real-time Updates
+    API--)UI: WebSocket: metrics_update
+    UI->>UI: Update dashboard (< 100ms)
+```
+
+**Key Timing Notes**:
+- **Batch Delay**: Events wait up to 5 seconds for batch accumulation
+- **End-to-End Latency**: ~5-6 seconds (dominated by batching)
+- **Real-time Updates**: <100ms via WebSocket (bypasses batching)
+- **Database Write**: ~50ms per batch (1,000 events)
 
 ---
 
@@ -1089,10 +1178,55 @@ The system is designed for high throughput (10,000+ events/sec) with low resourc
 
 ---
 
-**Document Maintenance**: Update this document when:
+## 📝 Change Log
+
+### Version 1.1 (2025-10-13)
+**Enhancements**:
+- Added Related Documentation section with cross-references
+- Added Quick Reference table for common questions
+- Added Service Ports Reference table
+- Added Mermaid sequence diagram for visual representation
+- Added Key Timing Notes for latency breakdown
+- Added Change Log section for version tracking
+- Updated document version from 1.0 to 1.1
+
+**Clarifications**:
+- Emphasized dual write paths (Primary + Enhancement)
+- Clarified enrichment-pipeline is optional
+- Distinguished inline weather enrichment from enrichment-pipeline service
+- Added anchor links in Quick Reference table
+
+### Version 1.0 (2025-10-13)
+**Initial Release**:
+- Complete event flow documentation from HA to Dashboard
+- Detailed call trees for all 6 phases
+- Performance characteristics and metrics
+- Troubleshooting guide with debug steps
+- Monitoring and observability guidelines
+- Key data structures and optimization points
+
+---
+
+## 📋 Document Maintenance
+
+**Update this document when**:
 - New services are added to the pipeline
 - Event processing logic changes
 - Database schema is modified
 - API endpoints are added/changed
 - Performance characteristics change significantly
+- Architectural decisions are made affecting event flow
+
+**Review Schedule**:
+- After each major release
+- When performance benchmarks are updated
+- When new monitoring requirements are added
+
+**Maintenance Checklist**:
+- [ ] Verify all file paths are current
+- [ ] Update performance metrics if changed
+- [ ] Check all cross-references resolve correctly
+- [ ] Update sequence diagram if flow changes
+- [ ] Add entry to Change Log for updates
+- [ ] Increment version number appropriately
 
