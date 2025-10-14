@@ -11,7 +11,8 @@ This document serves as the main entry point for the Home Assistant Ingestor arc
 ## Quick Summary
 
 **System Type:** Microservices-based real-time data ingestion system  
-**Tech Stack:** Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, Docker  
+**Tech Stack:** Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, SQLite 3.45+, Docker  
+**Database:** Hybrid architecture (InfluxDB for time-series, SQLite for metadata)  
 **Deployment:** Docker Compose with optimized Alpine images  
 **Purpose:** Capture Home Assistant events, enrich with weather context, store in time-series database
 
@@ -21,10 +22,17 @@ This document serves as the main entry point for the Home Assistant Ingestor arc
 graph TB
     HA[Home Assistant] -->|WebSocket| WS[WebSocket Ingestion<br/>Port: 8001]
     WS --> ENRICH[Enrichment Pipeline<br/>Port: 8002]
-    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Port: 8086)]
+    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Time-Series<br/>Port: 8086)]
     
     DASH[Health Dashboard<br/>Port: 3000] -->|REST API| ADMIN[Admin API<br/>Port: 8003]
+    DASH -->|Data API| DATA[Data API<br/>Port: 8006]
+    DASH -->|Sports API| SPORTS[Sports Data<br/>Port: 8005]
+    
     ADMIN --> INFLUX
+    DATA --> INFLUX
+    DATA --> SQLITE1[(SQLite<br/>metadata.db<br/>Devices/Entities)]
+    SPORTS --> INFLUX
+    SPORTS --> SQLITE2[(SQLite<br/>webhooks.db<br/>Webhooks)]
     
     WEATHER[Weather API<br/>Internal] --> ENRICH
     CARBON[Carbon Intensity<br/>Port: 8010] --> ENRICH
@@ -40,9 +48,16 @@ graph TB
         WS
         ENRICH
         ADMIN
+        DATA
+        SPORTS
         DASH
         RETENTION
+    end
+    
+    subgraph "Databases - Epic 22 Hybrid Architecture"
         INFLUX
+        SQLITE1
+        SQLITE2
     end
     
     subgraph "External Data Services"
@@ -64,9 +79,12 @@ graph TB
 | **websocket-ingestion** | Python/aiohttp | 8001 | Home Assistant WebSocket client |
 | **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and multi-source enrichment |
 | **data-retention** | Python/FastAPI | 8080 | Enhanced data lifecycle, tiered retention, S3 archival |
-| **admin-api** | Python/FastAPI | 8003 | Administration REST API |
+| **admin-api** | Python/FastAPI | 8003 | System monitoring & control REST API |
+| **data-api** | Python/FastAPI | 8006 | Feature data hub (events, devices, sports, analytics) |
+| **sports-data** | Python/FastAPI | 8005 | NFL/NHL game data with InfluxDB persistence |
 | **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface |
-| **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage |
+| **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage (events, metrics, sports) |
+| **sqlite** | SQLite 3.45+ | N/A | Metadata storage (devices, entities, webhooks) - Epic 22 |
 
 ### External Data Services
 
