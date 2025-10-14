@@ -33,7 +33,7 @@ from .config_endpoints import ConfigEndpoints
 from .events_endpoints import EventsEndpoints
 from .docker_endpoints import DockerEndpoints
 from .monitoring_endpoints import MonitoringEndpoints
-from .websocket_endpoints import WebSocketEndpoints
+# WebSocket endpoints removed - using HTTP polling only
 from .integration_endpoints import router as integration_router
 from .devices_endpoints import router as devices_router
 from .metrics_endpoints import create_metrics_router
@@ -98,7 +98,7 @@ class AdminAPIService:
         self.events_endpoints = EventsEndpoints()
         self.docker_endpoints = DockerEndpoints()
         self.monitoring_endpoints = MonitoringEndpoints(self.auth_manager)
-        self.websocket_endpoints = WebSocketEndpoints(self.auth_manager)
+        # WebSocket endpoints removed - using HTTP polling only
         
         # FastAPI app
         self.app: Optional[FastAPI] = None
@@ -275,11 +275,7 @@ class AdminAPIService:
             dependencies=[Depends(self.auth_manager.get_current_user)] if self.enable_auth else []
         )
         
-        # WebSocket endpoints
-        self.app.include_router(
-            self.websocket_endpoints.router,
-            tags=["WebSocket"]
-        )
+        # WebSocket endpoints removed - dashboard uses HTTP polling for simplicity
         
         # Integration Management endpoints
         self.app.include_router(

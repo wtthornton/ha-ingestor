@@ -64,7 +64,13 @@ class HealthEndpoints:
             "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
             "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002"),
             "influxdb": os.getenv("INFLUXDB_URL", "http://localhost:8086"),
-            "weather-api": "https://api.openweathermap.org/data/2.5"
+            "weather-api": "https://api.openweathermap.org/data/2.5",
+            # Data source services
+            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://localhost:8010"),
+            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://localhost:8011"),
+            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://localhost:8012"),
+            "calendar-service": os.getenv("CALENDAR_URL", "http://localhost:8013"),
+            "smart-meter-service": os.getenv("SMART_METER_URL", "http://localhost:8014")
         }
         
         self._add_routes()

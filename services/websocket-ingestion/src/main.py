@@ -31,6 +31,7 @@ from batch_processor import BatchProcessor
 from memory_manager import MemoryManager
 from weather_enrichment import WeatherEnrichmentService
 from http_client import SimpleHTTPClient
+from influxdb_wrapper import InfluxDBConnectionManager
 
 # Load environment variables
 load_dotenv()
@@ -60,6 +61,9 @@ class WebSocketIngestionService:
         # HTTP client for enrichment service
         self.http_client: Optional[SimpleHTTPClient] = None
         
+        # InfluxDB connection for device/entity registry storage
+        self.influxdb_manager: Optional[InfluxDBConnectionManager] = None
+        
         # Get configuration from environment
         self.home_assistant_url = os.getenv('HOME_ASSISTANT_URL')
         self.home_assistant_token = os.getenv('HOME_ASSISTANT_TOKEN')
@@ -79,6 +83,12 @@ class WebSocketIngestionService:
         
         # Enrichment service configuration
         self.enrichment_service_url = os.getenv('ENRICHMENT_SERVICE_URL', 'http://enrichment-pipeline:8002')
+        
+        # InfluxDB configuration for device/entity registry storage
+        self.influxdb_url = os.getenv('INFLUXDB_URL', 'http://influxdb:8086')
+        self.influxdb_token = os.getenv('INFLUXDB_TOKEN')
+        self.influxdb_org = os.getenv('INFLUXDB_ORG', 'homeassistant')
+        self.influxdb_bucket = os.getenv('INFLUXDB_BUCKET', 'home_assistant_events')
         
         if self.home_assistant_enabled and (not self.home_assistant_url or not self.home_assistant_token):
             raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
@@ -153,11 +163,26 @@ class WebSocketIngestionService:
             # Set up batch processor handler
             self.batch_processor.add_batch_handler(self._process_batch)
             
+            # Initialize InfluxDB manager for device/entity registry storage
+            self.influxdb_manager = InfluxDBConnectionManager(
+                url=self.influxdb_url,
+                token=self.influxdb_token,
+                org=self.influxdb_org,
+                bucket=self.influxdb_bucket
+            )
+            await self.influxdb_manager.start()
+            log_with_context(
+                logger, "INFO", "InfluxDB manager started",
+                operation="influxdb_connection",
+                correlation_id=corr_id
+            )
+            
             # Initialize connection manager (only if Home Assistant is enabled)
             if self.home_assistant_enabled:
                 self.connection_manager = ConnectionManager(
                     self.home_assistant_url,
-                    self.home_assistant_token
+                    self.home_assistant_token,
+                    influxdb_manager=self.influxdb_manager
                 )
                 
                 # Set up event handlers
@@ -217,6 +242,10 @@ class WebSocketIngestionService:
         # Stop weather enrichment service
         if self.weather_enrichment:
             await self.weather_enrichment.stop()
+        
+        # Stop InfluxDB manager
+        if self.influxdb_manager:
+            await self.influxdb_manager.stop()
         
         # HTTP client cleanup is handled by context manager in main()
         

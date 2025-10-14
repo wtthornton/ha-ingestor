@@ -5,8 +5,7 @@
  * Epic 15.2: Live Event Stream & Log Viewer
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRealtimeMetrics } from '../hooks/useRealtimeMetrics';
+import React, { useState, useRef } from 'react';
 
 interface Event {
   id: string;
@@ -23,7 +22,8 @@ interface EventStreamViewerProps {
 }
 
 export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }) => {
-  const [events, setEvents] = useState<Event[]>([]);
+  // TODO: Implement HTTP polling for events from /api/v1/events endpoint
+  const [events] = useState<Event[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [selectedService, setSelectedService] = useState<string>('all');
@@ -33,29 +33,6 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
   
   const eventsEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { metrics } = useRealtimeMetrics({ enabled: true });
-
-  // Update events from WebSocket
-  useEffect(() => {
-    if (metrics?.events && !isPaused) {
-      setEvents(prev => {
-        const newEvents = metrics.events.map((e: any, idx: number) => ({
-          id: e.id || `event-${Date.now()}-${idx}`,
-          timestamp: e.timestamp || new Date().toISOString(),
-          service: e.service || 'unknown',
-          type: e.event_type || e.type || 'event',
-          severity: e.severity || 'info',
-          message: e.message || JSON.stringify(e),
-          details: e.details || e
-        }));
-        
-        // Combine and limit to 1000 events (buffer management)
-        const combined = [...newEvents, ...prev].slice(0, 1000);
-        return combined;
-      });
-    }
-  }, [metrics, isPaused]);
 
   // Auto-scroll to bottom
   useEffect(() => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useRealtimeMetrics } from '../hooks/useRealtimeMetrics';
-import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 import { AlertBanner } from './AlertBanner';
+import { ErrorBoundary } from './ErrorBoundary';
 import * as Tabs from './tabs';
 
 // Tab configuration
@@ -42,12 +41,6 @@ export const Dashboard: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedTab, setSelectedTab] = useState('overview');
   
-  // Real-time WebSocket metrics
-  const {
-    connectionState: wsConnectionState,
-    reconnect: wsReconnect
-  } = useRealtimeMetrics({ enabled: true });
-  
   // Apply theme to document
   useEffect(() => {
     if (darkMode) {
@@ -81,13 +74,6 @@ export const Dashboard: React.FC = () => {
             
             {/* Controls - Mobile Optimized */}
             <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2 sm:gap-3">
-              {/* Connection Status Indicator */}
-              <ConnectionStatusIndicator 
-                connectionState={wsConnectionState}
-                darkMode={darkMode}
-                onReconnect={wsReconnect}
-              />
-              
               {/* Theme Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
@@ -170,8 +156,15 @@ export const Dashboard: React.FC = () => {
         {/* Alert Banner (Epic 17.4) */}
         <AlertBanner darkMode={darkMode} />
         
-        {/* Tab Content */}
-        <TabComponent darkMode={darkMode} />
+        {/* Tab Content - Wrapped with Error Boundary */}
+        <ErrorBoundary
+          onError={(error, errorInfo) => {
+            console.error('Tab rendering error:', error);
+            console.error('Stack:', errorInfo.componentStack);
+          }}
+        >
+          <TabComponent darkMode={darkMode} />
+        </ErrorBoundary>
       </main>
     </div>
   );

@@ -41,7 +41,7 @@ from .devices_endpoints import router as devices_router
 from .alert_endpoints import AlertEndpoints
 from .metrics_endpoints import create_metrics_router
 from .integration_endpoints import router as integration_router
-from .websocket_endpoints import WebSocketEndpoints
+# WebSocket endpoints removed - using HTTP polling only
 from .alerting_service import alerting_service
 from .metrics_service import metrics_service
 
@@ -225,12 +225,7 @@ app.include_router(
     tags=["Integrations"]
 )
 
-websocket_endpoints = WebSocketEndpoints(data_api_service.auth_manager)
-app.include_router(
-    websocket_endpoints.router,
-    prefix="/api/v1",
-    tags=["WebSocket"]
-)
+# WebSocket endpoints removed - dashboard uses HTTP polling for simplicity
 
 # Story 13.4: Sports Data & HA Automation (Epic 12 + 13 Convergence)
 app.include_router(

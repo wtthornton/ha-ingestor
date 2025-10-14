@@ -1,37 +1,6 @@
-/* Shimmer Animation for Skeleton Loaders */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
+/* Animation Utilities for Phase 3 Polish */
 
-.shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    #f0f0f0 0%,
-    #f8f8f8 20%,
-    #f0f0f0 40%,
-    #f0f0f0 100%
-  );
-  background-size: 1000px 100%;
-}
-
-.dark .shimmer {
-  background: linear-gradient(
-    to right,
-    #1f2937 0%,
-    #374151 20%,
-    #1f2937 40%,
-    #1f2937 100%
-  );
-  background-size: 1000px 100%;
-}
-
-/* Fade-in Animation */
+/* Fade In Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -43,73 +12,10 @@
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-/* Smooth Fade-in for content replacing skeletons */
-@keyframes contentFadeIn {
+@keyframes fadeInScale {
   from {
     opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.content-fade-in {
-  animation: contentFadeIn 0.4s ease-in-out;
-}
-
-/* Micro-animations for Story 14.2 */
-
-/* Card Hover Effect */
-.card-hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-}
-
-.dark .card-hover:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-}
-
-/* Button Press Animation */
-.button-press {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.button-press:active {
-  transform: scale(0.95);
-}
-
-/* Pulse Animation for Live Updates */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.pulse-animation {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Status Color Transitions */
-.status-transition {
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-}
-
-/* Number Counter Animation */
-@keyframes numberCount {
-  from {
-    opacity: 0;
-    transform: scale(1.2);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -117,31 +23,10 @@
   }
 }
 
-.number-count {
-  animation: numberCount 0.3s ease-out;
-}
-
-/* Icon Entrance Animation */
-@keyframes iconEntrance {
-  from {
-    opacity: 0;
-    transform: scale(0.8) rotate(-10deg);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-.icon-entrance {
-  animation: iconEntrance 0.3s ease-out;
-}
-
-/* Slide Down Animation */
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -149,15 +34,10 @@
   }
 }
 
-.slide-down {
-  animation: slideDown 0.3s ease-out;
-}
-
-/* Slide Up Animation */
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -165,93 +45,107 @@
   }
 }
 
-.slide-up {
-  animation: slideUp 0.3s ease-out;
+/* Modal Animations */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* Stagger Animation for Lists */
-.stagger-item {
-  opacity: 0;
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(100px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Utility Classes */
+.animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-.stagger-item:nth-child(1) { animation-delay: 0.05s; }
-.stagger-item:nth-child(2) { animation-delay: 0.1s; }
-.stagger-item:nth-child(3) { animation-delay: 0.15s; }
-.stagger-item:nth-child(4) { animation-delay: 0.2s; }
-.stagger-item:nth-child(5) { animation-delay: 0.25s; }
-.stagger-item:nth-child(6) { animation-delay: 0.3s; }
-.stagger-item:nth-child(7) { animation-delay: 0.35s; }
-.stagger-item:nth-child(8) { animation-delay: 0.4s; }
-
-/* Smooth Collapse/Expand */
-.collapse-expand {
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
+.animate-fade-in-scale {
+  animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Tab Transition */
-.tab-transition {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
 }
 
-/* Success/Error State Animations */
-@keyframes successPulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
 }
 
-.success-pulse {
-  animation: successPulse 0.5s ease-out;
+.animate-modal-backdrop {
+  animation: modalFadeIn 0.2s ease-out forwards;
 }
 
-@keyframes errorShake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-5px);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(5px);
-  }
+.animate-modal-content {
+  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.error-shake {
-  animation: errorShake 0.5s ease-out;
+/* Hover Transitions */
+.transition-all-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Loading Spinner Variations */
-@keyframes spin {
+.transition-transform-smooth {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-colors-smooth {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Card Hover Effects */
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Sparkline Draw Animation */
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 1000;
+  }
   to {
-    transform: rotate(360deg);
+    stroke-dashoffset: 0;
   }
 }
 
-.spinner {
-  animation: spin 1s linear infinite;
+.sparkline-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 1s ease-out forwards;
 }
 
-@keyframes spinPulse {
-  0%, 100% {
-    transform: rotate(0deg) scale(1);
+/* Number Count Up Animation */
+@keyframes countUp {
+  from {
+    opacity: 0.5;
+    transform: scale(1.1);
   }
-  50% {
-    transform: rotate(180deg) scale(1.1);
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.spinner-pulse {
-  animation: spinPulse 1.5s ease-in-out infinite;
+.animate-count-up {
+  animation: countUp 0.4s ease-out forwards;
+}
+
+/* Focus Styles for Accessibility */
+.focus-visible-ring:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* Reduced Motion Support */
@@ -263,19 +157,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
-  .shimmer,
-  .pulse-animation,
-  .spinner,
-  .spinner-pulse {
-    animation: none !important;
-  }
 }
 
-/* Performance Optimization */
-.gpu-accelerated {
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+/* Stagger Animation for Lists */
+.stagger-item {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }

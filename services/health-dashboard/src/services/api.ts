@@ -79,15 +79,15 @@ class AdminApiClient extends BaseApiClient {
   }
 
   async getHealth(): Promise<HealthStatus> {
-    return this.fetchWithErrorHandling<HealthStatus>(`${this.baseUrl}/health`);
+    return this.fetchWithErrorHandling<HealthStatus>(`${this.baseUrl}/v1/health`);
   }
 
   async getEnhancedHealth(): Promise<ServiceHealthResponse> {
-    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${this.baseUrl}/health`);
+    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${this.baseUrl}/v1/health`);
   }
 
   async getStatistics(period: string = '1h'): Promise<Statistics> {
-    return this.fetchWithErrorHandling<Statistics>(`${this.baseUrl}/stats?period=${period}`);
+    return this.fetchWithErrorHandling<Statistics>(`${this.baseUrl}/v1/stats?period=${period}`);
   }
 
   async getServicesHealth(): Promise<{ [key: string]: any }> {
@@ -105,21 +105,66 @@ class AdminApiClient extends BaseApiClient {
   }
 
   async getAllDataSources(): Promise<{
-    carbonIntensity: DataSourceHealth;
-    electricityPricing: DataSourceHealth;
-    airQuality: DataSourceHealth;
-    calendar: DataSourceHealth;
-    smartMeter: DataSourceHealth;
+    carbonIntensity: DataSourceHealth | null;
+    electricityPricing: DataSourceHealth | null;
+    airQuality: DataSourceHealth | null;
+    calendar: DataSourceHealth | null;
+    smartMeter: DataSourceHealth | null;
   }> {
-    // Only check optional services if they're configured to run
-    // For now, return null for all optional services to avoid connection errors
-    return {
-      carbonIntensity: null,
-      electricityPricing: null,
-      airQuality: null,
-      calendar: null,
-      smartMeter: null,
-    };
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const servicesData = await response.json();
+      
+      // Map backend service names to frontend expected names
+      const serviceMapping = {
+        'carbon-intensity-service': 'carbonIntensity',
+        'electricity-pricing-service': 'electricityPricing', 
+        'air-quality-service': 'airQuality',
+        'calendar-service': 'calendar',
+        'smart-meter-service': 'smartMeter'
+      };
+      
+      const result = {
+        carbonIntensity: null,
+        electricityPricing: null,
+        airQuality: null,
+        calendar: null,
+        smartMeter: null,
+      };
+      
+      // Map the services data to our expected format
+      for (const [backendName, frontendName] of Object.entries(serviceMapping)) {
+        if (servicesData[backendName]) {
+          const serviceData = servicesData[backendName];
+          result[frontendName as keyof typeof result] = {
+            status: serviceData.status === 'healthy' ? 'healthy' : 'degraded',
+            service: serviceData.name,
+            uptime_seconds: 0, // Not provided by admin-api health check
+            last_successful_fetch: null, // Not provided by admin-api health check
+            total_fetches: 0, // Not provided by admin-api health check
+            failed_fetches: 0, // Not provided by admin-api health check
+            success_rate: 1.0, // Not provided by admin-api health check
+            timestamp: serviceData.last_check
+          };
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch data sources:', error);
+      // Return null for all services on error
+      return {
+        carbonIntensity: null,
+        electricityPricing: null,
+        airQuality: null,
+        calendar: null,
+        smartMeter: null,
+      };
+    }
   }
 
   // Docker Management API methods (System Admin)

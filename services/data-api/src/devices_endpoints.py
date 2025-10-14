@@ -115,6 +115,11 @@ async def list_devices(
         # Convert results to response models
         devices = []
         for record in results:
+            # Convert timestamp to string if needed
+            timestamp = record.get("_time", datetime.now())
+            if not isinstance(timestamp, str):
+                timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+            
             device = DeviceResponse(
                 device_id=record.get("device_id", ""),
                 name=record.get("name", "Unknown"),
@@ -123,7 +128,7 @@ async def list_devices(
                 sw_version=record.get("sw_version"),
                 area_id=record.get("area_id"),
                 entity_count=int(record.get("entity_count", 0)),
-                timestamp=record.get("_time", datetime.now().isoformat())
+                timestamp=timestamp
             )
             devices.append(device)
         
@@ -175,6 +180,11 @@ async def get_device(device_id: str):
             )
         
         record = results[0]
+        # Convert timestamp to string if needed
+        timestamp = record.get("_time", datetime.now())
+        if not isinstance(timestamp, str):
+            timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+        
         device = DeviceResponse(
             device_id=record.get("device_id", device_id),
             name=record.get("name", "Unknown"),
@@ -183,7 +193,7 @@ async def get_device(device_id: str):
             sw_version=record.get("sw_version"),
             area_id=record.get("area_id"),
             entity_count=int(record.get("entity_count", 0)),
-            timestamp=record.get("_time", datetime.now().isoformat())
+            timestamp=timestamp
         )
         
         return device
@@ -231,6 +241,11 @@ async def list_entities(
         # Convert results to response models
         entities = []
         for record in results:
+            # Convert timestamp to string if needed
+            timestamp = record.get("_time", datetime.now())
+            if not isinstance(timestamp, str):
+                timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+            
             entity = EntityResponse(
                 entity_id=record.get("entity_id", ""),
                 device_id=record.get("device_id"),
@@ -239,7 +254,7 @@ async def list_entities(
                 unique_id=record.get("unique_id"),
                 area_id=record.get("area_id"),
                 disabled=bool(record.get("disabled", False)),
-                timestamp=record.get("_time", datetime.now().isoformat())
+                timestamp=timestamp
             )
             entities.append(entity)
         
@@ -291,6 +306,11 @@ async def get_entity(entity_id: str):
             )
         
         record = results[0]
+        # Convert timestamp to string if needed
+        timestamp = record.get("_time", datetime.now())
+        if not isinstance(timestamp, str):
+            timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+        
         entity = EntityResponse(
             entity_id=record.get("entity_id", entity_id),
             device_id=record.get("device_id"),
@@ -299,7 +319,7 @@ async def get_entity(entity_id: str):
             unique_id=record.get("unique_id"),
             area_id=record.get("area_id"),
             disabled=bool(record.get("disabled", False)),
-            timestamp=record.get("_time", datetime.now().isoformat())
+            timestamp=timestamp
         )
         
         return entity
@@ -342,13 +362,18 @@ async def list_integrations(
         # Convert results to response models
         integrations = []
         for record in results:
+            # Convert timestamp to string if needed
+            timestamp = record.get("_time", datetime.now())
+            if not isinstance(timestamp, str):
+                timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+            
             integration = IntegrationResponse(
                 entry_id=record.get("entry_id", ""),
                 domain=record.get("domain", "unknown"),
                 title=record.get("title", "Unknown"),
                 state=record.get("state", "unknown"),
                 version=int(record.get("version", 1)),
-                timestamp=record.get("_time", datetime.now().isoformat())
+                timestamp=timestamp
             )
             integrations.append(integration)
         

@@ -19,13 +19,40 @@ The system prioritizes simplicity and reliability over complex interfaces. Users
 - **Log Viewer:** Structured logging output for troubleshooting and monitoring
 - **Data Query Interface:** Future web interface for querying historical data and basic pattern visualization
 
-### Accessibility: None
+### Accessibility: WCAG 2.1 AA Compliant
+
+**Implementation Status**: ✅ Complete (October 2025)
+
+The Health Dashboard now implements comprehensive accessibility features:
+- **Keyboard Navigation**: Full keyboard support (Tab, Enter, Space, Esc)
+- **Screen Reader**: ARIA labels, live regions, semantic HTML
+- **Focus Management**: Visible focus indicators, modal focus trapping
+- **Color Contrast**: 4.5:1 minimum ratio (WCAG AA)
+- **Reduced Motion**: Respects user motion preferences
+- **Touch Targets**: 44x44px minimum (WCAG AAA)
+
+**Reference**: [Frontend Specification - Accessibility Standards](../architecture/frontend-specification.md#accessibility-standards)
 
 ### Branding
 
-The system should maintain a clean, technical aesthetic that aligns with Home Assistant's open-source, community-driven approach. Focus on functionality over visual design, with clear, readable interfaces that prioritize information density and technical accuracy.
+The system maintains a clean, modern aesthetic that balances technical functionality with professional polish:
+
+**Visual Identity**:
+- **Professional yet Approachable** - Clean design with delightful micro-interactions
+- **Status-First Design** - Color-coded health indicators (🟢 Green, 🟡 Yellow, 🔴 Red)
+- **Technical Accuracy** - Information density without overwhelming users
+- **Progressive Disclosure** - Summary at-a-glance, details on demand
+
+**Design System**:
+- **Colors**: Status-based palette (green/yellow/red/gray/blue)
+- **Typography**: Clear hierarchy (36px hero → 12px captions)
+- **Spacing**: Consistent 24px grid system
+- **Animations**: Subtle, purposeful (200-400ms)
+- **Dark Mode**: Full support throughout
+
+**Reference**: [Frontend Specification - Design System](../architecture/frontend-specification.md#design-system)
 
 ### Target Device and Platforms: Web Responsive
 
 The system will primarily run on Linux servers, Windows with WSL2, or macOS with Docker Desktop. Any future web interfaces should be responsive and work across desktop and mobile devices for monitoring and configuration.
-
+

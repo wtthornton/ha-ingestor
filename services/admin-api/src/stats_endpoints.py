@@ -416,29 +416,32 @@ class StatsEndpoints:
                 "total_events_received": 0
             }
             
-            # Extract metrics from enrichment-pipeline data
-            quality_metrics = stats_data.get("quality_metrics", {})
-            validation_stats = stats_data.get("validation_stats", {})
+            # Extract metrics from enrichment-pipeline data (actual API structure)
+            normalization = stats_data.get("normalization", {})
             influxdb_stats = stats_data.get("influxdb", {})
+            validation_stats = stats_data.get("validation_stats", {})
             
-            # Calculate events per minute from quality metrics
-            if quality_metrics.get("rates", {}).get("events_per_second", 0) > 0:
-                metrics["events_per_minute"] = quality_metrics["rates"]["events_per_second"] * 60
+            # Calculate events per minute from uptime and normalized events
+            uptime_seconds = stats_data.get("uptime", 0)
+            normalized_events = normalization.get("normalized_events", 0)
+            if uptime_seconds > 0 and normalized_events > 0:
+                # Convert uptime to minutes and calculate rate
+                uptime_minutes = uptime_seconds / 60
+                metrics["events_per_minute"] = round(normalized_events / uptime_minutes, 2)
             
-            # Calculate error rate from validation stats
-            if validation_stats.get("validation_count", 0) > 0:
-                error_count = validation_stats.get("error_count", 0)
-                total_count = validation_stats.get("validation_count", 0)
-                metrics["error_rate"] = round((error_count / total_count) * 100, 2)
+            # Calculate error rate from normalization errors
+            normalization_errors = normalization.get("normalization_errors", 0)
+            if normalized_events > 0:
+                metrics["error_rate"] = round((normalization_errors / normalized_events) * 100, 2)
             
-            # Use InfluxDB write errors as connection attempts metric
+            # Connection attempts = points written to InfluxDB
             metrics["connection_attempts"] = influxdb_stats.get("points_written", 0)
             
-            # Total events from quality metrics
-            metrics["total_events_received"] = quality_metrics.get("totals", {}).get("total_events", 0)
+            # Total events = normalized events
+            metrics["total_events_received"] = normalized_events
             
-            # Response time from performance metrics
-            metrics["response_time_ms"] = quality_metrics.get("performance", {}).get("avg_validation_time_ms", 0)
+            # Response time = average processing time (placeholder - not available in current API)
+            metrics["response_time_ms"] = 0
             
             return {
                 "metrics": metrics,

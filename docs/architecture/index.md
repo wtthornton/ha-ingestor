@@ -29,6 +29,7 @@ This directory contains the comprehensive architectural documentation for the Ho
 
 - **[Development Workflow](development-workflow.md)** - Developer setup and contribution guide
 - **[Coding Standards](coding-standards.md)** - Code quality standards and best practices
+- **[Frontend Specification](frontend-specification.md)** - UI/UX design system, component patterns, and accessibility standards
 - **[Configuration Management](configuration-management.md)** - Environment and configuration guidelines
 - **[API Guidelines](api-guidelines.md)** - REST API design standards and conventions
 

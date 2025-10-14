@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ConnectionManager:
     """Manages WebSocket connection with automatic retry and reconnection"""
     
-    def __init__(self, base_url: str, token: str):
+    def __init__(self, base_url: str, token: str, influxdb_manager=None):
         self.base_url = base_url
         self.token = token
         self.client: Optional[HomeAssistantWebSocketClient] = None
@@ -34,7 +34,7 @@ class ConnectionManager:
         self.event_processor = EventProcessor()
         self.event_rate_monitor = EventRateMonitor()
         self.error_handler = ErrorHandler()
-        self.discovery_service = DiscoveryService()
+        self.discovery_service = DiscoveryService(influxdb_manager=influxdb_manager)
         
         # Retry configuration
         self.max_retries = 10

@@ -6,6 +6,50 @@ This document provides quick access to approved UI/UX patterns for the project.
 
 ---
 
+## ✅ System Health Dashboard: Overview Tab Pattern
+
+**Status:** ✅ Production-tested, User-approved  
+**Source:** http://localhost:3000/ - Overview Tab  
+**Full Documentation:** [context7-cache/ux-patterns/overview-tab-glanceable-dashboard-pattern.md](context7-cache/ux-patterns/overview-tab-glanceable-dashboard-pattern.md)
+
+### Quick Summary
+
+Comprehensive system health dashboard with hero status, component cards, sparkline trends, and progressive disclosure.
+
+### When to Use
+
+- System health monitoring dashboards
+- Application status pages
+- Real-time operations centers
+- Service monitoring overviews
+- Infrastructure health displays
+- Microservices dashboards
+
+### Key Features
+
+🎯 **Hero Status** - Large, clear "Is system OK?" indicator  
+📊 **Component Cards** - 3-pillar architecture (Ingestion, Processing, Storage)  
+📈 **Sparkline Trends** - Lightweight performance visualization  
+↗️ **Trend Indicators** - Real-time metric change arrows  
+🔍 **Progressive Disclosure** - Click cards for detailed metrics  
+♿ **WCAG 2.1 AA** - Full accessibility compliance  
+🎬 **Smooth Animations** - Professional polish  
+⚡ **Performance Optimized** - React.memo, 34% smaller bundle  
+🌙 **Dark mode** - Full theme support  
+📱 **Responsive** - Mobile-first design  
+
+### Technology Stack
+
+```
+React 18.2
+TypeScript 5.2
+Tailwind CSS 3.4
+Vite 5.0
+Native SVG (no charting libs)
+```
+
+---
+
 ## ✅ Service Visualization: Dependencies Tab Pattern
 
 **Status:** ✅ Production-tested, User-approved  
@@ -88,6 +132,7 @@ const colors = {
 
 | Pattern | Status | Use For | Complexity |
 |---------|--------|---------|------------|
+| **Overview Tab - Glanceable Dashboard** | ✅ Approved | System health, status overviews, monitoring | High |
 | **Dependencies Tab** | ✅ Approved | Service graphs, data flow | Medium |
 | *More patterns coming soon* | | | |
 
@@ -157,7 +202,21 @@ See: `docs/kb/context7-cache/ux-patterns/health-dashboard-dependencies-tab-patte
 
 ---
 
-**Last Updated:** 2025-10-12  
-**Maintained By:** BMAD Agents  
+**Last Updated:** 2025-10-13  
+**Maintained By:** BMAD Agents (Sally @ux-expert, James @dev)  
 **Quick Access:** `docs/kb/ux-pattern-quick-reference.md`
+
+---
+
+## 🎨 Design System Reference
+
+For complete design system documentation including:
+- Color palette and status colors
+- Typography scale and hierarchy
+- Spacing system
+- Component patterns
+- Animation guidelines
+- Accessibility standards
+
+**See:** [docs/architecture/frontend-specification.md](../../architecture/frontend-specification.md)
 

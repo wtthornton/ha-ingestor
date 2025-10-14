@@ -6,15 +6,14 @@
  */
 
 import React from 'react';
-import { useRealtimeMetrics } from '../../hooks/useRealtimeMetrics';
 
 interface EventsWidgetProps {
   darkMode: boolean;
 }
 
 export const EventsWidget: React.FC<EventsWidgetProps> = ({ darkMode }) => {
-  const { metrics } = useRealtimeMetrics({ enabled: true });
-  const events = metrics?.events?.slice(0, 5) || [];
+  // TODO: Implement HTTP polling for events from /api/v1/events endpoint
+  const events: any[] = [];
 
   return (
     <div className="h-full flex flex-col">

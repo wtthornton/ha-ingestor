@@ -285,7 +285,8 @@ class DiscoveryService:
         
         devices_data = await self.discover_devices(websocket)
         entities_data = await self.discover_entities(websocket)
-        config_entries_data = await self.discover_config_entries(websocket)
+        # TEMPORARY: Skip config entries - command not supported in this HA version
+        config_entries_data = []  # await self.discover_config_entries(websocket)
         
         logger.info("=" * 80)
         logger.info("✅ DISCOVERY COMPLETE")
@@ -360,7 +361,7 @@ class DiscoveryService:
             # Batch write devices
             if devices:
                 device_points = [d.to_influx_point() for d in devices]
-                success = await self.influxdb_manager.batch_write_devices(device_points, bucket="devices")
+                success = await self.influxdb_manager.batch_write_devices(device_points, bucket="home_assistant_events")
                 if success:
                     logger.info(f"✅ Stored {len(devices)} devices in InfluxDB")
                 else:
@@ -369,7 +370,7 @@ class DiscoveryService:
             # Batch write entities
             if entities:
                 entity_points = [e.to_influx_point() for e in entities]
-                success = await self.influxdb_manager.batch_write_entities(entity_points, bucket="entities")
+                success = await self.influxdb_manager.batch_write_entities(entity_points, bucket="home_assistant_events")
                 if success:
                     logger.info(f"✅ Stored {len(entities)} entities in InfluxDB")
                 else:
@@ -485,7 +486,7 @@ class DiscoveryService:
                     device = Device.from_ha_device(device_data)
                     device.validate()
                     point = device.to_influx_point()
-                    await self.influxdb_manager.write_device(point, bucket="devices")
+                    await self.influxdb_manager.write_device(point, bucket="home_assistant_events")
                     logger.info(f"✅ Stored device update in InfluxDB")
                 except Exception as e:
                     logger.warning(f"⚠️  Failed to store device update: {e}")
@@ -525,7 +526,7 @@ class DiscoveryService:
                     entity = Entity.from_ha_entity(entity_data)
                     entity.validate()
                     point = entity.to_influx_point()
-                    await self.influxdb_manager.write_entity(point, bucket="entities")
+                    await self.influxdb_manager.write_entity(point, bucket="home_assistant_events")
                     logger.info(f"✅ Stored entity update in InfluxDB")
                 except Exception as e:
                     logger.warning(f"⚠️  Failed to store entity update: {e}")
