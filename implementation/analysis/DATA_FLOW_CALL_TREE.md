@@ -3,11 +3,16 @@
 > **⚠️ HISTORICAL DOCUMENT**: This document captured a specific authentication troubleshooting session and is **NOT** current architecture.
 > 
 > **For current architecture**, see:
-> - [HA_EVENT_CALL_TREE.md](./HA_EVENT_CALL_TREE.md) - Complete current event flow (updated for Epic 13)
+> - [HA_EVENT_CALL_TREE.md](./HA_EVENT_CALL_TREE.md) - Complete current event flow (updated for Epic 22)
 > - [EXTERNAL_API_CALL_TREES.md](./EXTERNAL_API_CALL_TREES.md) - External API integrations
-> - [HA_WEBSOCKET_CALL_TREE.md](../../docs/HA_WEBSOCKET_CALL_TREE.md) - WebSocket technical details
+> - [Database Schema](../../docs/architecture/database-schema.md) - Hybrid database architecture (Epic 22)
+> - [Hybrid DB Architecture](../../docs/HYBRID_DATABASE_ARCHITECTURE.md) - Quick reference
 >
 > **Status**: This issue was **resolved**. This document is kept for historical reference only.
+>
+> **Epic 22 Note**: Current system uses **hybrid database architecture**:
+> - InfluxDB for time-series event data
+> - SQLite for metadata (devices, entities, webhooks)
 
 ---
 
@@ -63,13 +68,26 @@ Enrichment Pipeline Service
     └── Returns: connection_attempts=1039, events_per_minute=0
 ```
 
-### **4. InfluxDB (Port 8086)**
+### **4. Databases (Hybrid Architecture - Epic 22)**
+
+**InfluxDB (Port 8086) - Time-Series:**
 ```
 InfluxDB Database
 ├── Bucket: home_assistant_events
 ├── Measurement: home_assistant_events
 ├── Measurement: service_metrics
-└── ❌ EMPTY: No data being written due to authentication failure
+├── Measurement: nfl_scores, nhl_scores (Epic 12)
+└── ✅ NOW STORING: Events flowing correctly (issue resolved)
+```
+
+**SQLite (Epic 22) - Metadata:**
+```
+SQLite Databases
+├── data-api/metadata.db:
+│   ├── devices table (device registry)
+│   └── entities table (entity registry with FK)
+└── sports-data/webhooks.db:
+    └── webhooks table (game event subscriptions)
 ```
 
 ### **5. Admin API (Port 8003)**
