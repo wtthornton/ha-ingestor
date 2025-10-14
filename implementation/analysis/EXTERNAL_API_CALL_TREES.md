@@ -141,39 +141,43 @@ Dashboard → Data API → Service → External API (if cache miss) → Response
 └────┬─────────┬─────────┬────────┬───────┬──────────┬────────┘
      │         │         │        │       │          │
      │ Pattern A: Continuous Push  │       │ Pattern B: Cache Only │
-     │ (60min) │ (15min) │ (60min)│(5min) │ (15min)  │(ESPN API, no persist)
+     │ (60min) │ (15min) │ (60min)│(5min) │ (15min)  │(ESPN API)
      ▼         ▼         ▼        ▼       ▼          ▼
 ┌────────────────────────────────────┐   ┌─────────────────────────────┐
 │    External API Services           │   │   Sports Data Service       │
 │  (Ports: 8010-8014)               │   │   (Port 8005) ✅ v1.0       │
-│  - Periodic fetching               │   │   ✅ ESPN API (free)        │
-│  - Background loops                │   │   ✅ On-demand queries      │
-│  - Error handling                  │   │   ✅ 15s/5min cache TTL    │
-│  - InfluxDB persistence            │   │   ✅ Team filtering         │
-│                                    │   │   ⏳ NO InfluxDB (planned) │
-└────────┬───────────────────────────┘   └──────────┬──────────────────┘
-         │                                           │
-         │ Write continuously                        │ NO persistence
-         ▼                                           ▼
-┌────────────────────────────────────────────────────────────┐
-│      InfluxDB (Port 8086) - Time-Series Data              │
-│  Measurements:                                             │
-│   ✅ home_assistant_events (from websocket-ingestion)     │
-│   ✅ air_quality, carbon_intensity, electricity_pricing   │
-│   ✅ smart_meter, occupancy_prediction                     │
-│   ✅ nfl_scores, nhl_scores (Epic 12 ✅ 2-year retention) │
-│      Tags: game_id, season, week, home_team, away_team    │
-│      Fields: home_score, away_score, quarter, time        │
-└────────┬───────────────────────────────────────────────────┘
+│  ✅ Periodic fetching              │   │   ✅ ESPN API (free)        │
+│  ✅ Background loops               │   │   ✅ On-demand queries      │
+│  ✅ Error handling                 │   │   ✅ 15s/5min cache TTL    │
+│  ✅ InfluxDB persistence           │   │   ✅ Team filtering         │
+│                                    │   │   ✅ InfluxDB persistence  │
+│                                    │   │   ✅ SQLite webhooks        │
+└────────┬───────────────────────────┘   └──────┬──────────┬───────────┘
+         │                                     │          │
+         │ Write continuously                  │          │
+         ▼                                     │          │
+┌─────────────────────────────────────────────┐│          │
+│      InfluxDB (Port 8086) - Time-Series    ││          │
+│  Measurements:                             ││          │
+│   ✅ home_assistant_events                 ││          │
+│   ✅ air_quality, carbon_intensity         ││          │
+│   ✅ electricity_pricing, smart_meter      ││          │
+│   ✅ nfl_scores, nhl_scores (Epic 12)     │◄──────────┘
+│      Tags: game_id, season, week, teams   │
+│      Fields: scores, quarter, time        │
+└────────┬───────────────────────────────────┘
          │
-┌────────┴───────────────────────────────────────────────────┐
-│      SQLite (Epic 22 ✅) - Metadata Storage                │
-│  data-api/metadata.db:                                     │
-│   ✅ devices - Device registry (5-10x faster queries)     │
-│   ✅ entities - Entity registry (FK to devices)            │
-│  sports-data/webhooks.db:                                  │
-│   ✅ webhooks - Game event subscriptions (ACID safe)       │
-└────────┬───────────────────────────────────────────────────┘
+┌────────┴───────────────────────────────────┐
+│      SQLite (Epic 22 ✅) - Metadata        │
+│  data-api/metadata.db:                    │
+│   ✅ devices - Device registry (5-10x)    │
+│   ✅ entities - Entity registry (FK)      │
+│  sports-data/webhooks.db:                 │◄──────────┐
+│   ✅ webhooks - Game subscriptions        │           │
+└───────────────────────────────────────────┘           │
+                                                        │
+                                                        │ Write webhooks
+                                                        ▼
          │ Flux/SQL queries                          
          ▼                                           
 ┌──────────────────────────────────────────────────────────────┐
