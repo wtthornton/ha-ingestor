@@ -183,7 +183,111 @@ async def get_device(device_id: str, db: AsyncSession = Depends(get_db)):
         raise
     except Exception as e:
         logger.error(f"Error getting device {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve device: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve device: {str(e)}"        )
+
+
+# Epic 23.5: Device Reliability Endpoint
+@router.get("/api/devices/reliability", response_model=Dict[str, Any])
+async def get_device_reliability(
+    period: str = Query(default="7d", description="Time period for analysis (1d, 7d, 30d)"),
+    group_by: str = Query(default="manufacturer", description="Group by manufacturer or model")
+):
+    """
+    Get device reliability metrics grouped by manufacturer or model
+    
+    Epic 23.5: Analyzes event data from InfluxDB to identify device reliability patterns
+    
+    Returns:
+    - Event counts by manufacturer/model
+    - Coverage percentage (% of events with device metadata)
+    - Top manufacturers/models by event volume
+    """
+    try:
+        from influxdb_client import InfluxDBClient
+        
+        # Get InfluxDB configuration
+        influxdb_url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
+        influxdb_token = os.getenv("INFLUXDB_TOKEN")
+        influxdb_org = os.getenv("INFLUXDB_ORG", "homeassistant")
+        influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
+        
+        # Create client
+        client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=influxdb_org)
+        query_api = client.query_api()
+        
+        # Build query based on group_by parameter
+        field_name = "manufacturer" if group_by == "manufacturer" else "model"
+        
+        query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -{period})
+          |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r["_field"] == "{field_name}")
+          |> group(columns: ["_value"])
+          |> count()
+          |> sort(desc: true)
+        '''
+        
+        result = query_api.query(query)
+        
+        # Parse results
+        reliability_data = []
+        total_events = 0
+        
+        for table in result:
+            for record in table.records:
+                group_value = record.values.get("_value", "Unknown")
+                count = record.get_value()
+                total_events += count
+                
+                reliability_data.append({
+                    field_name: group_value,
+                    "event_count": count,
+                    "percentage": 0  # Will calculate after total is known
+                })
+        
+        # Calculate percentages
+        for item in reliability_data:
+            if total_events > 0:
+                item["percentage"] = round((item["event_count"] / total_events) * 100, 2)
+        
+        # Get total event count for coverage calculation
+        total_query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -{period})
+          |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> count()
+        '''
+        
+        total_result = query_api.query(total_query)
+        all_events_count = 0
+        for table in total_result:
+            for record in table.records:
+                all_events_count += record.get_value()
+        
+        # Calculate coverage
+        coverage = round((total_events / all_events_count) * 100, 2) if all_events_count > 0 else 0
+        
+        client.close()
+        
+        return {
+            "period": period,
+            "group_by": group_by,
+            "total_events_analyzed": total_events,
+            "total_events_in_period": all_events_count,
+            "metadata_coverage_percentage": coverage,
+            "reliability_data": reliability_data[:20],  # Top 20
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting device reliability: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get device reliability metrics: {str(e)}"
+        )
 
 
 @router.get("/api/entities", response_model=EntitiesListResponse)

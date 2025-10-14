@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 class EventProcessor:
     """Processes and validates Home Assistant events"""
     
-    def __init__(self):
+    def __init__(self, discovery_service=None):
         self.processed_events = 0
         self.validation_errors = 0
         self.last_processed_time: Optional[datetime] = None
+        # Epic 23.2: Discovery service for device/area lookups
+        self.discovery_service = discovery_service
         
         # Event validation rules
         self.required_fields = {
@@ -225,12 +227,75 @@ class EventProcessor:
             origin = event_data.get("origin")
             context = event_data.get("context", {})
         
+        # Epic 23.1: Extract context.parent_id for automation causality tracking
+        context_id = context.get("id") if context else None
+        context_parent_id = context.get("parent_id") if context else None
+        context_user_id = context.get("user_id") if context else None
+        
+        # Epic 23.2: Look up device_id and area_id for spatial analytics
+        device_id = None
+        area_id = None
+        device_metadata = None
+        if self.discovery_service and entity_id:
+            device_id = self.discovery_service.get_device_id(entity_id)
+            area_id = self.discovery_service.get_area_id(entity_id, device_id)
+            
+            if device_id:
+                logger.debug(f"Found device_id {device_id} for entity {entity_id}")
+                # Epic 23.5: Look up device metadata for reliability analysis
+                device_metadata = self.discovery_service.get_device_metadata(device_id)
+                if device_metadata:
+                    logger.debug(f"Found device metadata for device {device_id}: "
+                               f"{device_metadata.get('manufacturer')}/{device_metadata.get('model')}")
+            
+            if area_id:
+                logger.debug(f"Found area_id {area_id} for entity {entity_id}")
+        
+        # Epic 23.3: Calculate duration_in_state for time-based analytics
+        duration_in_state = None
+        if old_state and "last_changed" in old_state and new_state and "last_changed" in new_state:
+            try:
+                # Parse timestamps (handle both with and without 'Z' suffix)
+                old_time_str = old_state["last_changed"].replace("Z", "+00:00")
+                new_time_str = new_state["last_changed"].replace("Z", "+00:00")
+                
+                old_time = datetime.fromisoformat(old_time_str)
+                new_time = datetime.fromisoformat(new_time_str)
+                
+                # Calculate duration in seconds
+                duration_seconds = (new_time - old_time).total_seconds()
+                
+                # Validation: Warn for negative or very long durations
+                if duration_seconds < 0:
+                    logger.warning(f"Negative duration calculated: {duration_seconds}s for entity {entity_id}")
+                    duration_in_state = 0  # Clamp to 0
+                elif duration_seconds > 604800:  # 7 days in seconds
+                    logger.warning(f"Very long duration detected: {duration_seconds}s ({duration_seconds/86400:.1f} days) for entity {entity_id}")
+                    duration_in_state = duration_seconds  # Keep the value but log warning
+                else:
+                    duration_in_state = duration_seconds
+                    
+            except Exception as e:
+                logger.error(f"Error calculating duration_in_state for {entity_id}: {e}")
+                duration_in_state = None
+        
         return {
             "entity_id": entity_id,
             "domain": entity_id.split(".")[0] if entity_id else None,
             "time_fired": time_fired,
             "origin": origin,
             "context": context,
+            # Epic 23.1: Add individual context fields for InfluxDB storage
+            "context_id": context_id,
+            "context_parent_id": context_parent_id,
+            "context_user_id": context_user_id,
+            # Epic 23.2: Add device_id and area_id for spatial analytics
+            "device_id": device_id,
+            "area_id": area_id,
+            # Epic 23.5: Add device metadata for reliability analysis
+            "device_metadata": device_metadata,
+            # Epic 23.3: Add duration_in_state for time-based analytics
+            "duration_in_state": duration_in_state,
             "old_state": {
                 "state": old_state.get("state") if old_state else None,
                 "attributes": old_state.get("attributes", {}) if old_state else {},

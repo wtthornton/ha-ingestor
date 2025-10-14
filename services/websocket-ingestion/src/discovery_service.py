@@ -22,6 +22,14 @@ class DiscoveryService:
         self.pending_responses: Dict[int, asyncio.Future] = {}
         self.influxdb_manager = influxdb_manager
         
+        # Epic 23.2: Device and area mapping caches for event enrichment
+        self.entity_to_device: Dict[str, str] = {}  # entity_id → device_id
+        self.device_to_area: Dict[str, str] = {}    # device_id → area_id
+        self.entity_to_area: Dict[str, str] = {}    # entity_id → area_id (direct assignment)
+        self.device_metadata: Dict[str, Dict[str, Any]] = {}  # device_id → {manufacturer, model, sw_version}
+        
+        logger.info("Discovery service initialized with device/area mapping caches")
+        
     def _get_next_id(self) -> int:
         """Get next message ID"""
         self.message_id_counter += 1
@@ -70,6 +78,28 @@ class DiscoveryService:
             device_count = len(devices)
             
             logger.info(f"✅ Discovered {device_count} devices")
+            
+            # Epic 23.2: Build device → area mapping cache
+            # Epic 23.5: Build device metadata cache
+            for device in devices:
+                device_id = device.get("id")
+                if device_id:
+                    # Store device → area mapping
+                    area_id = device.get("area_id")
+                    if area_id:
+                        self.device_to_area[device_id] = area_id
+                    
+                    # Epic 23.5: Store device metadata (manufacturer, model, version)
+                    self.device_metadata[device_id] = {
+                        "manufacturer": device.get("manufacturer"),
+                        "model": device.get("model"),
+                        "sw_version": device.get("sw_version"),
+                        "name": device.get("name"),
+                        "name_by_user": device.get("name_by_user")
+                    }
+            
+            logger.info(f"📍 Cached {len(self.device_to_area)} device → area mappings")
+            logger.info(f"🏷️  Cached {len(self.device_metadata)} device metadata entries")
             
             # Log sample device if available
             if devices:
@@ -132,6 +162,23 @@ class DiscoveryService:
             entity_count = len(entities)
             
             logger.info(f"✅ Discovered {entity_count} entities")
+            
+            # Epic 23.2: Build entity → device and entity → area mapping caches
+            for entity in entities:
+                entity_id = entity.get("entity_id")
+                if entity_id:
+                    # Store entity → device mapping
+                    device_id = entity.get("device_id")
+                    if device_id:
+                        self.entity_to_device[entity_id] = device_id
+                    
+                    # Store entity → area mapping (direct assignment)
+                    area_id = entity.get("area_id")
+                    if area_id:
+                        self.entity_to_area[entity_id] = area_id
+            
+            logger.info(f"🔗 Cached {len(self.entity_to_device)} entity → device mappings")
+            logger.info(f"📍 Cached {len(self.entity_to_area)} entity → area mappings (direct)")
             
             # Log sample entity if available
             if entities:
@@ -531,9 +578,90 @@ class DiscoveryService:
                 except Exception as e:
                     logger.warning(f"⚠️  Failed to store entity update: {e}")
             
+            # Epic 23.2: Update mapping caches on entity registry events
+            if entity_id and entity_data:
+                device_id = entity_data.get("device_id")
+                if device_id:
+                    self.entity_to_device[entity_id] = device_id
+                
+                area_id = entity_data.get("area_id")
+                if area_id:
+                    self.entity_to_area[entity_id] = area_id
+                
+                logger.debug(f"Updated mapping cache for entity {entity_id}")
+            
             return True
             
         except Exception as e:
             logger.error(f"❌ Error handling entity registry event: {e}")
             return False
+    
+    # Epic 23.2: Helper methods for device/area lookup
+    def get_device_id(self, entity_id: str) -> Optional[str]:
+        """
+        Get device_id for an entity
+        
+        Args:
+            entity_id: The entity ID to look up
+            
+        Returns:
+            device_id if found, None otherwise
+        """
+        return self.entity_to_device.get(entity_id)
+    
+    def get_area_id(self, entity_id: str, device_id: Optional[str] = None) -> Optional[str]:
+        """
+        Get area_id for an entity or device
+        
+        Checks in this order:
+        1. Entity direct area assignment
+        2. Device area assignment (if device_id provided or looked up)
+        
+        Args:
+            entity_id: The entity ID to look up
+            device_id: Optional device ID (will be looked up if not provided)
+            
+        Returns:
+            area_id if found, None otherwise
+        """
+        # Check entity-level area first (direct assignment)
+        entity_area = self.entity_to_area.get(entity_id)
+        if entity_area:
+            return entity_area
+        
+        # Fallback to device-level area
+        if not device_id:
+            device_id = self.get_device_id(entity_id)
+        
+        if device_id:
+            return self.device_to_area.get(device_id)
+        
+        return None
+    
+    # Epic 23.5: Helper method for device metadata lookup
+    def get_device_metadata(self, device_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get device metadata (manufacturer, model, sw_version)
+        
+        Args:
+            device_id: The device ID to look up
+            
+        Returns:
+            Device metadata dict if found, None otherwise
+        """
+        return self.device_metadata.get(device_id)
+    
+    def get_cache_statistics(self) -> Dict[str, int]:
+        """
+        Get statistics about mapping caches
+        
+        Returns:
+            Dictionary with cache statistics
+        """
+        return {
+            "entity_to_device_mappings": len(self.entity_to_device),
+            "device_to_area_mappings": len(self.device_to_area),
+            "entity_to_area_mappings": len(self.entity_to_area),
+            "device_metadata_entries": len(self.device_metadata)
+        }
 

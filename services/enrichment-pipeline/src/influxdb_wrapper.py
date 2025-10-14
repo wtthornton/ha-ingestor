@@ -155,6 +155,15 @@ class InfluxDBClientWrapper:
                 if entity_metadata.get("entity_category"):
                     point.tag("entity_category", entity_metadata["entity_category"])
             
+            # Epic 23.2: Add device_id and area_id as tags for spatial analytics
+            device_id = event_data.get("device_id")
+            if device_id:
+                point.tag("device_id", device_id)
+            
+            area_id = event_data.get("area_id")
+            if area_id:
+                point.tag("area_id", area_id)
+            
             # Add fields based on event type
             if event_type == "state_changed":
                 point = self._add_state_changed_fields(point, event_data)
@@ -212,6 +221,34 @@ class InfluxDBClientWrapper:
                 point.field("unit_of_measurement", entity_metadata["unit_of_measurement"])
             if entity_metadata.get("icon"):
                 point.field("icon", entity_metadata["icon"])
+            
+            # Epic 23.1: Add context fields for automation causality tracking
+            context_id = event_data.get("context_id")
+            if context_id:
+                point.field("context_id", context_id)
+            
+            context_parent_id = event_data.get("context_parent_id")
+            if context_parent_id:
+                point.field("context_parent_id", context_parent_id)
+            
+            context_user_id = event_data.get("context_user_id")
+            if context_user_id:
+                point.field("context_user_id", context_user_id)
+            
+            # Epic 23.3: Add duration_in_state for time-based analytics
+            duration_in_state = event_data.get("duration_in_state")
+            if duration_in_state is not None:
+                point.field("duration_in_state_seconds", float(duration_in_state))
+            
+            # Epic 23.5: Add device metadata for reliability analysis
+            device_metadata = event_data.get("device_metadata")
+            if device_metadata:
+                if device_metadata.get("manufacturer"):
+                    point.field("manufacturer", str(device_metadata["manufacturer"]))
+                if device_metadata.get("model"):
+                    point.field("model", str(device_metadata["model"]))
+                if device_metadata.get("sw_version"):
+                    point.field("sw_version", str(device_metadata["sw_version"]))
             
             return point
             

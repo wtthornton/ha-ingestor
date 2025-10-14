@@ -29,6 +29,9 @@ This system uses a **hybrid database architecture** optimizing for different dat
 - `integration` - HA integration source (zwave, mqtt, zigbee, etc.)
 - `weather_condition` - Current weather condition (clear, cloudy, rain, etc.)
 - `time_of_day` - Time period (morning, afternoon, evening, night)
+- **[Epic 23.2]** `device_id` - Physical device identifier for device-level aggregation
+- **[Epic 23.2]** `area_id` - Room/area ID for spatial analytics
+- **[Epic 23.4]** `entity_category` - Entity classification (null, diagnostic, config)
 
 #### Fields (measurements and values):
 - `state_value` - Current state value (string)
@@ -41,6 +44,13 @@ This system uses a **hybrid database architecture** optimizing for different dat
 - `weather_humidity` - Current humidity percentage (float)
 - `weather_pressure` - Current atmospheric pressure in hPa (float)
 - `unit_of_measurement` - Unit of measurement (string)
+- **[Epic 23.1]** `context_id` - Event context identifier for correlation (string)
+- **[Epic 23.1]** `context_parent_id` - Parent automation context for causality tracking (string)
+- **[Epic 23.1]** `context_user_id` - User who triggered the event (string)
+- **[Epic 23.3]** `duration_in_state_seconds` - Time entity was in previous state (float)
+- **[Epic 23.5]** `manufacturer` - Device manufacturer for reliability analysis (string)
+- **[Epic 23.5]** `model` - Device model for reliability analysis (string)
+- **[Epic 23.5]** `sw_version` - Device firmware version for version correlation (string)
 
 ### Schema Examples
 
@@ -52,6 +62,8 @@ Tags:
   domain: sensor
   device_class: temperature
   area: living_room
+  device_id: aeotec_multisensor_6        ← Epic 23.2
+  area_id: living_room                   ← Epic 23.2
   weather_condition: clear
   time_of_day: evening
 Fields:
@@ -61,6 +73,12 @@ Fields:
   weather_humidity: 65.0
   weather_pressure: 1013.25
   unit_of_measurement: "°C"
+  context_id: "abc123"                   ← Epic 23.1
+  context_parent_id: "automation_xyz"    ← Epic 23.1
+  duration_in_state_seconds: 123.45      ← Epic 23.3
+  manufacturer: "Aeotec"                 ← Epic 23.5
+  model: "ZW100 MultiSensor 6"           ← Epic 23.5
+  sw_version: "1.10"                     ← Epic 23.5
 Timestamp: 2024-12-19T15:30:00Z
 ```
 

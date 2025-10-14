@@ -3,7 +3,7 @@ Simple Webhook Model for SQLite Storage
 Story 22.3 - Minimal implementation, no Alembic needed
 """
 
-from sqlalchemy import Column, String, Integer, DateTime, Boolean, create_engine
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, create_engine, text
 from sqlalchemy.orm import declarative_base
 from datetime import datetime
 
@@ -39,9 +39,9 @@ def init_webhook_db(db_path: str = "data/webhooks.db"):
     
     # Enable WAL mode
     with engine.connect() as conn:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute(text("PRAGMA journal_mode=WAL"))
+        conn.execute(text("PRAGMA synchronous=NORMAL"))
+        conn.execute(text("PRAGMA foreign_keys=ON"))
         conn.commit()
     
     # Create tables

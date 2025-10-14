@@ -4,6 +4,7 @@ Connection Manager for Home Assistant WebSocket with Retry Logic
 
 import asyncio
 import logging
+import os
 import random
 from typing import Optional, Callable, Dict, Any
 from datetime import datetime, timedelta
@@ -31,15 +32,17 @@ class ConnectionManager:
         
         # Event management components
         self.event_subscription = EventSubscriptionManager()
-        self.event_processor = EventProcessor()
         self.event_rate_monitor = EventRateMonitor()
         self.error_handler = ErrorHandler()
         self.discovery_service = DiscoveryService(influxdb_manager=influxdb_manager)
+        # Epic 23.2: Pass discovery_service to event_processor for device/area enrichment
+        self.event_processor = EventProcessor(discovery_service=self.discovery_service)
         
-        # Retry configuration
-        self.max_retries = 10
+        # Retry configuration (configurable via environment)
+        # -1 = infinite retries (recommended for production)
+        self.max_retries = int(os.getenv('WEBSOCKET_MAX_RETRIES', '-1'))
         self.base_delay = 1  # seconds
-        self.max_delay = 60  # seconds
+        self.max_delay = int(os.getenv('WEBSOCKET_MAX_RETRY_DELAY', '300'))  # 5 minutes default
         self.backoff_multiplier = 2
         self.jitter_range = 0.1  # 10% jitter
         self.current_retry_count = 0
@@ -164,13 +167,16 @@ class ConnectionManager:
     
     async def _reconnect_loop(self):
         """Loop for automatic reconnection with exponential backoff and jitter"""
-        while self.is_running and self.current_retry_count < self.max_retries:
+        # Support infinite retries when max_retries = -1
+        while self.is_running and (self.max_retries == -1 or self.current_retry_count < self.max_retries):
             try:
                 self._increment_retry_count()
                 self.connection_attempts += 1
                 delay = self._calculate_delay()
                 
-                logger.info(f"Reconnection attempt {self.current_retry_count}/{self.max_retries} in {delay:.1f}s")
+                # Format retry message (show "∞" for infinite retries)
+                retry_display = "∞" if self.max_retries == -1 else str(self.max_retries)
+                logger.info(f"Reconnection attempt {self.current_retry_count}/{retry_display} in {delay:.1f}s")
                 await asyncio.sleep(delay)
                 
                 if not self.is_running:
@@ -205,7 +211,8 @@ class ConnectionManager:
                 }
                 self.error_handler.log_error(e, context)
         
-        if self.current_retry_count >= self.max_retries:
+        # Only stop if we have a retry limit (not infinite)
+        if self.max_retries != -1 and self.current_retry_count >= self.max_retries:
             logger.error(f"Maximum reconnection attempts ({self.max_retries}) reached")
             self.is_running = False
     

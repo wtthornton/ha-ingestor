@@ -8,7 +8,7 @@ Based on Context7 KB best practices for FastAPI + SQLite.
 import os
 import logging
 from typing import AsyncGenerator
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -155,18 +155,18 @@ async def check_db_health() -> dict:
     try:
         async with AsyncSessionLocal() as session:
             # Test connection with simple query
-            result = await session.execute("SELECT 1")
+            result = await session.execute(text("SELECT 1"))
             result.scalar()
             
             # Get journal mode
-            journal_result = await session.execute("PRAGMA journal_mode")
+            journal_result = await session.execute(text("PRAGMA journal_mode"))
             journal_mode = journal_result.scalar()
             
             # Get database size
-            page_count_result = await session.execute("PRAGMA page_count")
+            page_count_result = await session.execute(text("PRAGMA page_count"))
             page_count = page_count_result.scalar() or 0
             
-            page_size_result = await session.execute("PRAGMA page_size")
+            page_size_result = await session.execute(text("PRAGMA page_size"))
             page_size = page_size_result.scalar() or 4096
             
             db_size_mb = (page_count * page_size) / (1024 * 1024)

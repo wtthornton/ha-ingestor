@@ -16,6 +16,13 @@ Based on the PRD requirements and Home Assistant event structure, here are the c
 - `time_fired`: string - ISO 8601 UTC timestamp when event was fired in Home Assistant
 - `origin`: string - Event origin ("LOCAL" or "REMOTE")
 - `context`: object - Event context with id, parent_id, user_id
+- **[Epic 23.1]** `context_id`: string - Event context identifier for tracing
+- **[Epic 23.1]** `context_parent_id`: string - Parent context for automation causality tracking
+- **[Epic 23.1]** `context_user_id`: string - User who triggered the event
+- **[Epic 23.2]** `device_id`: string - Physical device identifier for device-level analytics
+- **[Epic 23.2]** `area_id`: string - Room/area location for spatial analytics
+- **[Epic 23.3]** `duration_in_state`: number - Seconds entity was in previous state
+- **[Epic 23.5]** `device_metadata`: object - Device manufacturer, model, software version
 - `new_state`: StateObject - Current state information
 - `old_state`: StateObject - Previous state information (may be null/empty)
 - `state_change`: StateChangeInfo - State change summary
@@ -37,6 +44,21 @@ interface ProcessedEvent {
     id: string;
     parent_id: string | null;
     user_id: string | null;
+  };
+  // Epic 23.1: Context hierarchy tracking
+  context_id?: string;
+  context_parent_id?: string;
+  context_user_id?: string;
+  // Epic 23.2: Device and area linkage
+  device_id?: string;
+  area_id?: string;
+  // Epic 23.3: Time-based analytics
+  duration_in_state?: number; // seconds
+  // Epic 23.5: Device metadata
+  device_metadata?: {
+    manufacturer?: string;
+    model?: string;
+    sw_version?: string;
   };
   new_state: StateObject;
   old_state?: StateObject;
