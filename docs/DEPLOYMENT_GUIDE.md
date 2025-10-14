@@ -1,6 +1,25 @@
-# 🚀 Home Assistant Ingestor - Deployment Guide
+# 🚀 Home Assistant Data Ingestor & API Hub - Deployment Guide
 
-## 📋 **Quick Start**
+## 📋 **System Overview**
+
+### **What You're Deploying**
+
+**Primary System**: API Data Hub for Home Automation
+- Provides RESTful APIs for Home Assistant automations
+- Event-driven webhooks for instant notifications  
+- Time-series data storage (InfluxDB) for analytics
+- Multi-source data integration (HA events, sports, weather, energy, etc.)
+
+**Secondary System**: Admin Monitoring Dashboard
+- Web interface for system health monitoring
+- Configuration management
+- Service control and deployment
+- API usage tracking
+
+**Deployment Model**: Single-home, self-hosted
+- One deployment per home
+- Local network or VPN access
+- Not designed for public internet
 
 ### **Prerequisites**
 - Docker 20.10+ and Docker Compose 2.0+
@@ -8,6 +27,7 @@
 - 20GB storage minimum (50GB recommended)
 - Stable internet connection
 - Home Assistant instance with long-lived access token
+- **Use Case**: Home automation API hub (not user-facing app)
 
 ---
 
@@ -125,6 +145,70 @@ docker-compose -f docker-compose.prod.yml up -d
 .\scripts\validate-optimized-images.ps1  # Windows
 ```
 
+## 🏈 **Epic 12: Sports Data Configuration** (NEW)
+
+### **Sports Data Service with InfluxDB Persistence**
+
+Epic 12 adds sports data persistence, historical queries, and Home Assistant automation webhooks.
+
+**Environment Variables (`infrastructure/env.sports.template`):**
+
+```bash
+# InfluxDB Persistence (Story 12.1)
+INFLUXDB_ENABLED=true                          # Enable/disable persistence
+INFLUXDB_URL=http://influxdb:8086              # InfluxDB server
+INFLUXDB_TOKEN=your-influxdb-token             # Auth token
+INFLUXDB_DATABASE=sports_data                  # Database name
+INFLUXDB_RETENTION_DAYS=730                    # 2 years retention
+
+# Circuit Breaker (Story 12.1)
+CIRCUIT_BREAKER_FAILURE_THRESHOLD=3            # Failures before circuit opens
+CIRCUIT_BREAKER_TIMEOUT_SECONDS=60             # Recovery timeout
+
+# Event Detection (Story 12.3)
+# Event detector runs automatically (15s interval)
+# No additional configuration needed
+```
+
+**Quick Setup:**
+
+```bash
+# 1. Copy sports environment template
+cp infrastructure/env.sports.template .env.sports
+
+# 2. Edit .env.sports and set your InfluxDB token
+# INFLUXDB_TOKEN=your-actual-token-here
+
+# 3. Start services
+docker-compose up -d sports-data influxdb
+
+# 4. Verify deployment
+curl http://localhost:8005/health
+
+# 5. Register webhook (optional - for HA automations)
+curl -X POST "http://localhost:8005/api/v1/webhooks/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "http://homeassistant.local:8123/api/webhook/game_events",
+    "events": ["game_started", "score_changed", "game_ended"],
+    "secret": "your-secure-secret-min-16-chars",
+    "team": "ne",
+    "sport": "nfl"
+  }'
+```
+
+**Features:**
+- ✅ InfluxDB persistence (2-year retention)
+- ✅ Historical query endpoints
+- ✅ HA automation endpoints (<50ms)
+- ✅ Event-driven webhooks (HMAC-signed)
+- ✅ Background event detection (15s interval)
+
+**Home Assistant Integration:**
+See `services/sports-data/README.md` for complete automation examples.
+
+---
+
 ## 🔧 **Configuration**
 
 ### **Required Environment Variables**
@@ -132,6 +216,11 @@ docker-compose -f docker-compose.prod.yml up -d
 # Home Assistant Configuration
 HA_URL=ws://your-ha-instance:8123/api/websocket
 HA_ACCESS_TOKEN=your_long_lived_access_token
+
+# Network Resilience Configuration (NEW - Optional)
+# Service automatically recovers from network outages
+WEBSOCKET_MAX_RETRIES=-1              # -1 = infinite retry (recommended)
+WEBSOCKET_MAX_RETRY_DELAY=300         # Max 5 minutes between retries
 
 # Weather API Configuration
 WEATHER_API_KEY=your_openweathermap_api_key

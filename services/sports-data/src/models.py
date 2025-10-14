@@ -84,11 +84,14 @@ class GameList(BaseModel):
 
 class HealthCheck(BaseModel):
     """Health check response"""
+    model_config = {'extra': 'allow'}  # Allow extra fields like influxdb
+    
     status: str
     service: str
     timestamp: str
     cache_status: bool
     api_status: bool
+    influxdb: Optional[Dict[str, Any]] = None
 
 
 class UserTeams(BaseModel):

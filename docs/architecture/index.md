@@ -2,13 +2,99 @@
 
 ## Overview
 
-This directory contains the comprehensive architectural documentation for the Home Assistant Ingestor system. This microservices-based real-time data ingestion platform captures Home Assistant events, enriches them with weather context, and stores them in InfluxDB for analysis.
+This directory contains the comprehensive architectural documentation for the Home Assistant Ingestor system. This is an **API-first data hub and ingestion platform** for single-home automation systems, providing RESTful APIs, event-driven webhooks, and time-series data storage for Home Assistant and external integrations.
 
 ## Quick Reference
 
 **Technology Stack**: Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, Docker  
-**Deployment**: Docker Compose with optimized Alpine images  
-**Architecture Style**: Microservices with event-driven processing  
+**Deployment**: Single-tenant Docker Compose with optimized Alpine images  
+**Architecture Style**: Microservices with event-driven processing and API-first design
+
+---
+
+## 🏛️ **System Classification**
+
+### **System Type**
+- **Primary**: Data Ingestor + API Platform
+- **Secondary**: Admin Monitoring Dashboard
+
+### **Primary Users (API Consumers)**
+1. **Home Assistant Automations**
+   - Webhook triggers (game events, threshold alerts)
+   - Fast status APIs (<50ms response for conditional logic)
+   - Entity sensor integration
+   - Event-driven scene triggers
+
+2. **External Integration Systems**
+   - Cloud analytics dashboards
+   - Mobile applications (via REST APIs)
+   - Voice assistants ("What's the score?")
+   - Third-party home automation platforms
+
+3. **Analytics & Reporting Platforms**
+   - Historical data queries (season stats, trends)
+   - Time-series analysis (energy patterns, weather correlations)
+   - Custom reporting dashboards
+   - Data export for machine learning
+
+### **Secondary Users (Admin Interface)**
+1. **Home Administrator**
+   - System health monitoring (occasional viewing)
+   - Configuration management (infrequent updates)
+   - Service deployment and control
+   - API usage tracking
+
+**Usage Pattern**: Admin dashboard opened occasionally (not continuous viewing)
+
+### **Deployment Scope**
+
+**Single-Home, Self-Hosted Platform**
+- Small homes: 50-200 HA entities, basic automation
+- Medium homes: 200-500 HA entities, moderate integration
+- Large homes: 500-1000 HA entities, advanced automation
+- Extra-large homes: 1000+ HA entities, complex integrations
+
+**Characteristics**:
+- Single tenant per deployment
+- No multi-user access control needed
+- Self-hosted on local network
+- Optional cloud API access via VPN/tunnel
+- Not designed for public internet exposure
+
+### **Key Design Principles**
+
+1. **API-First Architecture**
+   - Every data source exposed via REST APIs
+   - Fast endpoints optimized for automation (<50ms SLA)
+   - Historical query APIs for analytics
+   - Webhook system for event-driven integrations
+   - Admin dashboard is secondary interface (monitoring only)
+
+2. **Event-Driven Over Polling**
+   - Webhooks push events to consumers (don't make them poll)
+   - Background event detection (sports scores, threshold alerts) ✅ Epic 12
+   - HMAC-signed secure webhook delivery ✅ Epic 12
+   - Reliable retry logic with exponential backoff (1s, 2s, 4s) ✅ Epic 12
+
+3. **Single-Tenant Optimization**
+   - No multi-user scaling concerns
+   - Simplified security model (local network trust)
+   - Direct database access (no query isolation needed)
+   - Resource allocation for single home workload
+
+4. **Data Persistence First**
+   - InfluxDB as source of truth for all time-series data
+   - Historical queries more important than real-time dashboard
+   - API performance > dashboard UX
+   - Long-term retention for analytics
+
+### **What This System Is NOT**
+
+- ❌ User-facing sports tracking app (it's a data hub for automations)
+- ❌ Multi-tenant SaaS platform (single home per deployment)
+- ❌ Public web application (admin tool on local network)
+- ❌ High-frequency trading system (home automation scale)
+- ❌ Mission-critical infrastructure (home comfort, not life-safety)  
 
 ## 📚 Architecture Documentation
 

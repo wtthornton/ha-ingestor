@@ -7,10 +7,10 @@ cache_location: "docs/kb/context7-cache"
 
 # Statistics
 statistics:
-  total_entries: 21  # 18 libraries + 2 topics + 1 UX pattern
-  total_size_mb: 1.87
+  total_entries: 22  # 18 libraries + 3 topics + 1 UX pattern
+  total_size_mb: 1.92
   libraries_count: 18
-  topics_count: 2
+  topics_count: 3
   patterns_count: 1
   cache_hit_rate: 0.33  # 6 used / 18 total
   average_response_time_ms: 120
@@ -449,6 +449,34 @@ topics:
     created: "2025-10-12T00:00:00Z"
     last_accessed: "2025-10-12T00:00:00Z"
     access_count: 1
+  
+  - id: "sports-api-integration"
+    name: "Sports API Integration Patterns"
+    file: "sports-api-integration-patterns.md"
+    description: "Production patterns for sports data ingestion with InfluxDB persistence, async writes, event detection, and HMAC webhooks"
+    status: "implementation-ready"
+    priority: "high"
+    complexity: "medium-high"
+    estimated_effort_weeks: 9
+    tags:
+      - "sports-api"
+      - "influxdb"
+      - "async-writes"
+      - "webhooks"
+      - "hmac"
+      - "background-tasks"
+      - "event-detection"
+      - "caching"
+      - "espn-api"
+    created: "2025-10-14T00:00:00Z"
+    last_accessed: "2025-10-14T00:00:00Z"
+    access_count: 1
+    related_libraries: ["fastapi", "influxdb", "aiohttp"]
+    use_cases:
+      - "Real-time sports data tracking"
+      - "Historical game analysis"
+      - "Home Assistant automation"
+      - "Webhook event notifications"
 
 # UX/UI Patterns (Project-Specific) (1 total)
 ux_patterns:
@@ -552,17 +580,29 @@ search_index:
     svg: ["heroicons"]
     
     # Database & storage
-    influxdb: ["influxdb", "influxdb-admin-api-queries", "data-flow-architecture-fix"]
+    influxdb: ["influxdb", "influxdb-admin-api-queries", "data-flow-architecture-fix", "sports-api-integration"]
     redis: ["redis"]
     mongodb: ["mongodb"]
     elasticsearch: ["elasticsearch"]
     database: ["influxdb", "redis", "mongodb", "elasticsearch"]
-    time-series: ["influxdb", "influxdb-admin-api-queries"]
-    caching: ["redis"]
+    time-series: ["influxdb", "influxdb-admin-api-queries", "sports-api-integration"]
+    caching: ["redis", "sports-api-integration"]
     search: ["elasticsearch"]
-    queries: ["influxdb", "mongodb", "elasticsearch"]
+    queries: ["influxdb", "mongodb", "elasticsearch", "sports-api-integration"]
     indexing: ["mongodb", "elasticsearch"]
     aggregations: ["elasticsearch"]
+    
+    # Sports & External APIs
+    sports: ["sports-api-integration"]
+    espn: ["sports-api-integration"]
+    webhooks: ["sports-api-integration"]
+    hmac: ["sports-api-integration"]
+    background-tasks: ["sports-api-integration", "fastapi"]
+    event-detection: ["sports-api-integration"]
+    async-writes: ["sports-api-integration"]
+    nfl: ["sports-api-integration"]
+    nhl: ["sports-api-integration"]
+    game-data: ["sports-api-integration"]
     
     # Infrastructure
     docker: ["docker"]

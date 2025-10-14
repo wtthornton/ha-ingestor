@@ -7,3 +7,6 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.1
 
+# InfluxDB v3 client for time-series persistence (Story 12.1)
+influxdb3-python>=0.3.0
+

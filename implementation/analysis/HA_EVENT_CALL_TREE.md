@@ -1,11 +1,12 @@
 # Home Assistant Event Call Tree Analysis
 ## Complete Data Flow: HA → Database → Dashboard
 
-**Document Version**: 2.2  
+**Document Version**: 2.3  
 **Created**: 2025-10-13  
-**Last Updated**: 2025-10-13 (Enhanced Epic 13 notes in Phase 5 for clarity)  
-**Previous Updates**: v2.1 - Epic 12 & 13 (Sports InfluxDB Persistence + data-api separation)  
-**Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system
+**Last Updated**: 2025-10-14 (Code verification update - corrected batch sizes and processing flow)  
+**Previous Updates**: v2.2 - Enhanced Epic 13 notes; v2.1 - Epic 12 & 13 (Sports InfluxDB Persistence + data-api separation)  
+**Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system  
+**Verification Status**: ✅ Verified against actual code implementation
 
 > **Epic 12 Note**: While this document focuses on Home Assistant event flow, the sports-data service now also writes to InfluxDB (similar to Pattern A services) and supports webhooks for HA automations. See [EXTERNAL_API_CALL_TREES.md](./EXTERNAL_API_CALL_TREES.md) for sports data flow details.
 
@@ -145,10 +146,10 @@ sequenceDiagram
     participant HA as Home Assistant
     participant WS as WebSocket Ingestion<br/>(Port 8001)
     participant Queue as Async Queue<br/>(10 workers)
-    participant Batch as Batch Processor<br/>(1000 events)
+    participant Batch as Batch Processor<br/>(100 events/5s)
     participant EP as Enrichment Pipeline<br/>(Port 8002, Optional)
     participant DB as InfluxDB<br/>(Port 8086)
-    participant API as Admin API<br/>(Port 8003)
+    participant API as Data API<br/>(Port 8006)
     participant UI as Dashboard<br/>(Port 3000)
     
     Note over HA,WS: Phase 1: Event Reception
@@ -158,7 +159,7 @@ sequenceDiagram
     Note over WS,Batch: Phase 2: Processing & Queue
     WS->>Queue: Add to async queue (~0.01ms)
     Queue->>Batch: Worker processes event
-    Batch->>Batch: Accumulate to 1000 or 5s timeout
+    Batch->>Batch: Accumulate to 100 or 5s timeout
     
     Note over Batch,DB: Phase 3: Database Write (Dual Paths)
     par Path A: Direct Write (Always)
@@ -185,7 +186,7 @@ sequenceDiagram
 - **Batch Delay**: Events wait up to 5 seconds for batch accumulation
 - **End-to-End Latency**: ~5-6 seconds (dominated by batching)
 - **Real-time Updates**: <100ms via WebSocket (bypasses batching)
-- **Database Write**: ~50ms per batch (1,000 events)
+- **Database Write**: ~50ms per batch (up to 100 events)
 
 ---
 
@@ -389,10 +390,10 @@ BatchProcessor
 ├─► add_event(event_data)
 │   ├─► async with self.batch_lock:
 │   │   ├─► self.current_batch.append(event_data)
-│   │   ├─► if len(current_batch) >= batch_size (1000):
+│   │   ├─► if len(current_batch) >= batch_size (100):
 │   │   │   └─► _process_batch()
 │   │   │
-│   │   └─► if batch_timeout (5 seconds) exceeded:
+│   │   └─► if batch_timeout (5.0 seconds) exceeded:
 │   │       └─► _process_batch()
 │   │
 │   └─► return queued status
@@ -409,9 +410,9 @@ BatchProcessor
 ```
 
 **Batch Configuration**:
-- **Batch Size**: 1,000 events
-- **Batch Timeout**: 5 seconds
-- **Retry Logic**: 3 attempts with exponential backoff
+- **Batch Size**: 100 events (default, configurable via BATCH_SIZE env var)
+- **Batch Timeout**: 5.0 seconds (configurable via BATCH_TIMEOUT env var)
+- **Retry Logic**: 3 attempts with 1.0 second base delay
 
 ---
 
@@ -490,7 +491,7 @@ InfluxDBBatchWriter.write_batch(events)
 │   ├─► InfluxDBConnectionManager.get_write_api()
 │   │   └─► influxdb_client.write_api(
 │   │         write_options=WriteOptions(
-│   │           batch_size=1000,
+│   │           batch_size=100,
 │   │           flush_interval=5000
 │   │         )
 │   │       )
@@ -516,10 +517,10 @@ InfluxDBBatchWriter.write_batch(events)
 ```
 
 **Write Performance**:
-- **Batch Size**: Up to 1,000 points
-- **Flush Interval**: 5 seconds
+- **Batch Size**: Up to 100 points (configurable)
+- **Flush Interval**: 5 seconds (5000ms)
 - **Write Precision**: Milliseconds
-- **Retry Strategy**: Exponential backoff (1s, 2s, 4s)
+- **Retry Strategy**: Linear backoff (1s, 2s, 3s) with 3 attempts
 
 ---
 
@@ -1185,11 +1186,11 @@ This call tree demonstrates the complete journey of a Home Assistant event:
 2. **Validation & Extraction** (~0.1ms): Event data validated and structured
 3. **Weather Enrichment** (~50ms, optional): Inline weather data added to events
 4. **Async Queue** (~0.01ms): Event added to processing queue
-5. **Batch Accumulation** (~5s): Events accumulated into batches of 1,000
+5. **Batch Accumulation** (~5s): Events accumulated into batches of 100 (or 5s timeout)
 6. **Database Write** (~50ms): Batch written to InfluxDB time-series database
    - **Path A (Always)**: Direct write from websocket-ingestion service
    - **Path B (Optional)**: Via enrichment-pipeline service for additional normalization
-7. **API Query** (~20ms): Dashboard queries events via REST API
+7. **API Query** (~20ms): Dashboard queries events via data-api REST API
 8. **Frontend Render** (~16ms): React components display events with 60 FPS
 
 **Total End-to-End Latency**: ~5-6 seconds (dominated by batching strategy)
@@ -1214,6 +1215,16 @@ The system is designed for high throughput (10,000+ events/sec) with low resourc
 ---
 
 ## 📝 Change Log
+
+### Version 2.3 (2025-10-14)
+**Code Verification Update**:
+- ✅ Verified all call trees against actual code implementation
+- Corrected batch size: 100 events (not 1000) - configurable via BATCH_SIZE env var
+- Corrected batch timeout: 5.0 seconds - configurable via BATCH_TIMEOUT env var
+- Updated retry strategy: Linear backoff with 3 attempts (1s, 2s, 3s)
+- Updated sequence diagram to reflect correct batch processor parameters
+- Added verification status badge to document header
+- Verified connection manager retry logic with infinite retries support
 
 ### Version 1.1 (2025-10-13)
 **Enhancements**:

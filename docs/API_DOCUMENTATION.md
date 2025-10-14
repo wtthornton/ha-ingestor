@@ -1,43 +1,95 @@
 # 📚 Home Assistant Ingestor - API Documentation
 
+## 🎯 **System Purpose**
+
+### **API Data Hub for Home Automation**
+
+This system is an **API-first platform** designed to serve:
+
+**Primary Consumers** (External Systems):
+1. **Home Assistant Automations** - Webhook triggers, fast status APIs (<50ms), entity sensors
+2. **External Analytics Platforms** - Historical queries, trends, statistics
+3. **Cloud Integrations** - Mobile apps, voice assistants, custom dashboards
+4. **Third-Party Systems** - API access to all collected data sources
+
+**Secondary Consumer** (Admin Interface):
+- Home administrator monitoring dashboard (occasional viewing)
+
+**Deployment**: Single-tenant, self-hosted (one per home, small to xlarge)
+
+---
+
 ## 🌐 **API Overview**
 
 ### **Base URLs**
 
-**Core Services**
+**Epic 13 API Separation** (Current Architecture):
 
-**Admin API (Primary)**
+**Data API (Feature Data Hub)** - **Primary API for External Consumers** ⭐
+```
+http://localhost:8006/api/v1
+```
+**Purpose**: Feature data queries (events, devices, sports, analytics, alerts)  
+**Consumers**: Home Assistant, external integrations, analytics platforms  
+**Performance**: Optimized for automation (<50ms target)
+
+**Admin API (System Monitoring)**
 ```
 http://localhost:8003/api/v1
 ```
+**Purpose**: System health, Docker management, configuration  
+**Consumers**: Admin dashboard, monitoring tools  
+**Performance**: General purpose
+
+**Sports Data Service** (Internal, proxied via data-api)
+```
+http://localhost:8005/api/v1
+```
+**Purpose**: ESPN sports data integration (NFL/NHL)  
+**Consumers**: data-api (proxied), future webhook system
 
 **Data Retention API**
 ```
 http://localhost:8080
 ```
+**Purpose**: Data lifecycle management, cleanup policies
 
-**Enrichment Pipeline API**
+**Enrichment Pipeline API** (Internal)
 ```
 http://localhost:8002
 ```
+**Purpose**: Data normalization and validation
 
-**WebSocket Ingestion API**
+**WebSocket Ingestion API** (Internal)
 ```
 http://localhost:8001
 ```
+**Purpose**: Home Assistant WebSocket connection
 
-**External Data Services (Internal)**
-- Carbon Intensity Service: `http://carbon-intensity-service:8010` (internal only)
-- Electricity Pricing Service: `http://electricity-pricing-service:8011` (internal only)
-- Air Quality Service: `http://air-quality-service:8012` (internal only)
-- Calendar Service: `http://calendar-service:8013` (internal only)
-- Smart Meter Service: `http://smart-meter-service:8014` (internal only)
-- Weather API Service: `http://weather-api:8000` (internal only)
+**External Data Services (Internal Only)**
+- Carbon Intensity Service: `http://carbon-intensity-service:8010`
+- Electricity Pricing Service: `http://electricity-pricing-service:8011`
+- Air Quality Service: `http://air-quality-service:8012`
+- Calendar Service: `http://calendar-service:8013`
+- Smart Meter Service: `http://smart-meter-service:8014`
+- Weather API Service: `http://weather-api:8000`
 
 ### **Authentication**
-All API endpoints require authentication using an API key:
+
+**Local Network**: Optional (trusted network)
+```bash
+# No auth required for local access (single home deployment)
+```
+
+**Remote Access**: API key required
 ```bash
 Authorization: Bearer <your-api-key>
+```
+
+**Webhook Delivery**: HMAC-SHA256 signatures
+```bash
+X-Webhook-Signature: <hmac-sha256-hex>
+X-Webhook-Event: score_changed
 ```
 
 ### **Response Format**
@@ -49,6 +101,170 @@ All API responses follow this format:
   "message": "Operation completed successfully"
 }
 ```
+
+### **Performance SLAs**
+
+**For Home Assistant Automations** (Critical Path):
+- Status endpoints: <50ms (e.g., `/api/v1/ha/game-status/{team}`)
+- Event webhooks: <5s delivery (with retries)
+- Entity sensor updates: <100ms
+
+**For Analytics Platforms** (Non-Critical):
+- Historical queries: <500ms
+- Statistical aggregations: <1s
+- Bulk exports: <10s
+
+**For Admin Dashboard** (Monitoring):
+- Health checks: <200ms
+- Statistics: <1s
+- Service management: <2s
+
+---
+
+## 🔌 **API Consumer Integration Examples**
+
+### **Use Case 1: Home Assistant Automation (Primary)**
+
+**Scenario**: Flash living room lights when 49ers score
+
+```yaml
+# Home Assistant configuration.yaml
+automation:
+  - alias: "49ers Score Alert"
+    trigger:
+      # Option A: Webhook (Epic 12 - recommended)
+      platform: webhook
+      webhook_id: sports_score_change
+      local_only: true
+    condition:
+      - condition: template
+        value_template: "{{ trigger.json.team == 'sf' }}"
+      - condition: template
+        value_template: "{{ trigger.json.score_diff.home > 0 }}"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          effect: flash
+          rgb_color: [170, 0, 0]  # 49ers red
+          flash: long
+
+  - alias: "Game Day Scene"
+    trigger:
+      # Option B: State change (Epic 12 - entity sensor)
+      platform: state
+      entity_id: sensor.49ers_game_status
+      to: "playing"
+    action:
+      - scene: scene.game_day
+      - service: notify.mobile_app
+        data:
+          message: "49ers game started!"
+```
+
+**API Endpoints Needed** (Epic 12):
+- POST webhook to HA when score changes
+- GET /api/v1/ha/game-status/sf (<50ms)
+- Entity sensor integration
+
+---
+
+### **Use Case 2: External Analytics Dashboard**
+
+**Scenario**: Cloud dashboard queries historical sports data
+
+```python
+# External Python app
+import requests
+
+API_BASE = "http://home-ingestor.local:8006/api/v1"
+
+# Get season statistics
+response = requests.get(
+    f"{API_BASE}/sports/teams/sf/stats",
+    params={"season": 2025}
+)
+
+stats = response.json()
+# {
+#   "wins": 10,
+#   "losses": 3,
+#   "avg_points_scored": 27.4,
+#   "avg_points_allowed": 19.2,
+#   "point_differential": 8.2,
+#   "win_percentage": 0.769
+# }
+
+# Get game timeline
+response = requests.get(
+    f"{API_BASE}/sports/games/401547413/timeline"
+)
+
+timeline = response.json()
+# [
+#   {"time": "2025-10-14T13:00:00Z", "home": 0, "away": 0, "quarter": 1},
+#   {"time": "2025-10-14T13:15:00Z", "home": 7, "away": 0, "quarter": 1},
+#   ...
+# ]
+```
+
+**API Endpoints Needed** (Epic 12 Phase 2):
+- GET /api/v1/sports/teams/{team}/stats
+- GET /api/v1/sports/games/{id}/timeline
+- GET /api/v1/sports/games/history
+
+---
+
+### **Use Case 3: Voice Assistant Integration**
+
+**Scenario**: "Alexa, what's the 49ers score?"
+
+```javascript
+// Alexa skill backend
+const axios = require('axios');
+
+exports.handler = async function(event) {
+    const team = event.request.intent.slots.team.value; // "49ers"
+    
+    // Query fast status API
+    const response = await axios.get(
+        `http://home-ingestor.local:8006/api/v1/ha/game-status/${team}`,
+        { timeout: 500 }  // Must respond in <500ms for voice
+    );
+    
+    const status = response.data;
+    
+    if (status.status === "no_game") {
+        return {
+            response: {
+                outputSpeech: {
+                    type: "PlainText",
+                    text: `The ${team} are not playing right now.`
+                }
+            }
+        };
+    }
+    
+    return {
+        response: {
+            outputSpeech: {
+                type: "PlainText",
+                text: `The ${team} are ${status.is_winning ? "winning" : "losing"} 
+                       ${status.score.team} to ${status.score.opponent} 
+                       in the ${status.quarter} quarter.`
+            }
+        }
+    };
+};
+```
+
+**API Requirements**:
+- Response time: <50ms (voice UX)
+- Always available (even during HA restarts)
+- Simple JSON format
+
+---
 
 ## 🔍 **Admin API Endpoints**
 
@@ -983,6 +1199,428 @@ Export metrics data.
 **Response:**
 - **JSON**: Returns JSON object with metrics
 - **CSV**: Returns CSV file download
+
+## 🏈 **Sports Data Service API** (Epic 12)
+
+### **Base URL**
+```
+http://localhost:8005/api/v1
+```
+
+**Purpose:** ESPN sports data with InfluxDB persistence, historical queries, and Home Assistant automation webhooks
+
+**Features:**
+- Real-time NFL/NHL game data
+- 2-year historical data storage
+- Team statistics and season records
+- Event-driven webhooks (game_started, score_changed, game_ended)
+- Fast HA automation endpoints (<50ms)
+
+---
+
+### **Real-Time Endpoints**
+
+#### **GET /api/v1/games/live**
+Get currently live games for selected teams.
+
+**Query Parameters:**
+- `league` (string, optional): "NFL" or "NHL"
+- `team_ids` (string, optional): Comma-separated team IDs (e.g., "ne,sf,dal")
+
+**Response:**
+```json
+{
+  "games": [
+    {
+      "id": "401547402",
+      "league": "NFL",
+      "status": "live",
+      "home_team": {"abbreviation": "ne", "name": "Patriots"},
+      "away_team": {"abbreviation": "kc", "name": "Chiefs"},
+      "score": {"home": 21, "away": 17},
+      "period": {"current": 3, "time_remaining": "10:32"}
+    }
+  ],
+  "count": 1,
+  "filtered_by_teams": ["ne", "kc"]
+}
+```
+
+#### **GET /api/v1/games/upcoming**
+Get upcoming games in next N hours.
+
+**Query Parameters:**
+- `league` (string, optional): "NFL" or "NHL"
+- `hours` (int, default: 24): Hours to look ahead
+- `team_ids` (string, optional): Comma-separated team IDs
+
+---
+
+### **Historical Query Endpoints** (Story 12.2)
+
+#### **GET /api/v1/games/history**
+Query historical games with filters.
+
+**Query Parameters:**
+- `sport` (string, default: "nfl"): "nfl" or "nhl"
+- `team` (string, optional): Team name filter
+- `season` (string, optional): Season year (e.g., "2025")
+- `status` (string, optional): "scheduled", "live", or "finished"
+- `page` (int, default: 1): Page number
+- `page_size` (int, default: 100): Results per page (max 1000)
+
+**Response:**
+```json
+{
+  "games": [
+    {
+      "game_id": "401547402",
+      "sport": "nfl",
+      "season": "2025",
+      "week": "5",
+      "home_team": "Patriots",
+      "away_team": "Chiefs",
+      "home_score": 21,
+      "away_score": 17,
+      "status": "finished",
+      "time": "2025-10-14T13:00:00Z"
+    }
+  ],
+  "total": 16,
+  "page": 1,
+  "page_size": 100,
+  "total_pages": 1
+}
+```
+
+**Performance:** <100ms for typical queries (single season, single team)
+
+#### **GET /api/v1/games/timeline/{game_id}**
+Get score progression for a specific game.
+
+**Path Parameters:**
+- `game_id` (string, required): Unique game identifier
+
+**Query Parameters:**
+- `sport` (string, default: "nfl"): "nfl" or "nhl"
+
+**Response:**
+```json
+{
+  "game_id": "401547402",
+  "home_team": "Patriots",
+  "away_team": "Chiefs",
+  "timeline": [
+    {
+      "time": "2025-10-14T13:00:00Z",
+      "home_score": 0,
+      "away_score": 0,
+      "quarter": "1",
+      "time_remaining": "15:00"
+    },
+    {
+      "time": "2025-10-14T13:15:00Z",
+      "home_score": 7,
+      "away_score": 0,
+      "quarter": "1",
+      "time_remaining": "10:32"
+    }
+  ],
+  "final_score": {"home": 21, "away": 17},
+  "duration_minutes": 180
+}
+```
+
+#### **GET /api/v1/games/schedule/{team}**
+Get full season schedule for a team with statistics.
+
+**Path Parameters:**
+- `team` (string, required): Team name (e.g., "Patriots")
+
+**Query Parameters:**
+- `season` (string, required): Season year (e.g., "2025")
+- `sport` (string, default: "nfl"): "nfl" or "nhl"
+
+**Response:**
+```json
+{
+  "team": "Patriots",
+  "season": "2025",
+  "games": [...],
+  "statistics": {
+    "games_played": 16,
+    "wins": 12,
+    "losses": 4,
+    "ties": 0,
+    "win_percentage": 0.750,
+    "points_for": 384,
+    "points_against": 312,
+    "point_differential": 72
+  }
+}
+```
+
+---
+
+### **Home Assistant Automation Endpoints** (Story 12.3)
+
+#### **GET /api/v1/ha/game-status/{team}**
+Quick game status check for HA automations.
+
+**Path Parameters:**
+- `team` (string, required): Team abbreviation (e.g., "ne", "sf")
+
+**Query Parameters:**
+- `sport` (string, default: "nfl"): "nfl" or "nhl"
+
+**Response:**
+```json
+{
+  "team": "ne",
+  "status": "playing",  // "playing", "upcoming", or "none"
+  "game_id": "401547402",
+  "opponent": "kc",
+  "start_time": "2025-10-14T13:00:00Z"
+}
+```
+
+**Performance:** <50ms (optimized for automation conditionals)
+
+**Use Case:** HA automation conditions
+```yaml
+condition:
+  - condition: template
+    value_template: "{{ states.sensor.patriots_status.state == 'playing' }}"
+```
+
+#### **GET /api/v1/ha/game-context/{team}**
+Full game context for advanced automations.
+
+**Path Parameters:**
+- `team` (string, required): Team abbreviation
+
+**Query Parameters:**
+- `sport` (string, default: "nfl"): "nfl" or "nhl"
+
+**Response:**
+```json
+{
+  "team": "ne",
+  "status": "playing",
+  "current_game": {
+    "id": "401547402",
+    "score": {"home": 21, "away": 17},
+    "quarter": 3,
+    "time_remaining": "10:32"
+  },
+  "next_game": null
+}
+```
+
+---
+
+### **Webhook Management Endpoints** (Story 12.3)
+
+#### **POST /api/v1/webhooks/register**
+Register webhook for game event notifications.
+
+**Request Body:**
+```json
+{
+  "url": "http://homeassistant.local:8123/api/webhook/your_webhook_id",
+  "events": ["game_started", "score_changed", "game_ended"],
+  "secret": "your-secure-secret-min-16-chars",
+  "team": "ne",
+  "sport": "nfl"
+}
+```
+
+**Response:**
+```json
+{
+  "webhook_id": "uuid-generated-id",
+  "url": "http://homeassistant.local:8123/api/webhook/your_webhook_id",
+  "events": ["game_started", "score_changed", "game_ended"],
+  "team": "ne",
+  "message": "Webhook registered successfully"
+}
+```
+
+**Webhook Payload (Delivered to your URL):**
+```json
+{
+  "event": "score_changed",
+  "event_type": "score_changed",
+  "game_id": "401547402",
+  "league": "NFL",
+  "home_team": "ne",
+  "away_team": "kc",
+  "score": {"home": 21, "away": 17},
+  "status": "live",
+  "home_diff": 7,
+  "away_diff": 0,
+  "previous_score": {"home": 14, "away": 17},
+  "timestamp": "2025-10-14T14:23:15Z"
+}
+```
+
+**Webhook Headers:**
+```
+Content-Type: application/json
+X-Webhook-Signature: hmac-sha256-signature
+X-Webhook-Event: score_changed
+X-Webhook-Timestamp: 2025-10-14T14:23:15Z
+X-Webhook-ID: uuid-generated-id
+User-Agent: SportsDataService/2.0
+```
+
+**HMAC Signature Verification:**
+```python
+import hmac
+import hashlib
+
+def verify_signature(payload: str, signature: str, secret: str) -> bool:
+    expected = hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
+
+**Event Types:**
+- `game_started` - When game goes live
+- `score_changed` - When score changes during game
+- `game_ended` - When game becomes final
+
+**Delivery:**
+- Fire-and-forget (non-blocking)
+- 3 retries with exponential backoff (1s, 2s, 4s)
+- 5-second timeout
+- HMAC-SHA256 signed
+
+#### **GET /api/v1/webhooks/list**
+List all registered webhooks.
+
+**Response:**
+```json
+{
+  "webhooks": [
+    {
+      "id": "uuid",
+      "url": "http://homeassistant.local:8123/api/webhook/test",
+      "events": ["game_started", "score_changed"],
+      "secret": "***",  // Hidden for security
+      "team": "ne",
+      "created_at": "2025-10-14T17:20:15.464239",
+      "total_calls": 42,
+      "failed_calls": 0,
+      "enabled": true
+    }
+  ]
+}
+```
+
+#### **DELETE /api/v1/webhooks/{webhook_id}**
+Unregister a webhook.
+
+**Path Parameters:**
+- `webhook_id` (string, required): Webhook identifier
+
+**Response:** 204 No Content
+
+---
+
+### **Health Endpoint**
+
+#### **GET /health**
+Service health check with InfluxDB status (Story 12.1).
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "sports-data",
+  "timestamp": "2025-10-14T17:14:41.858820",
+  "cache_status": true,
+  "api_status": true,
+  "influxdb": {
+    "enabled": true,
+    "writes_success": 1234,
+    "writes_failed": 0,
+    "last_error": null,
+    "circuit_breaker": "closed"
+  }
+}
+```
+
+---
+
+### **Home Assistant Integration Example**
+
+**Step 1: Register Webhook**
+```bash
+curl -X POST "http://localhost:8005/api/v1/webhooks/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "http://homeassistant.local:8123/api/webhook/patriots_game",
+    "events": ["game_started", "score_changed", "game_ended"],
+    "secret": "your-secure-secret-min-16-chars",
+    "team": "ne",
+    "sport": "nfl"
+  }'
+```
+
+**Step 2: Create HA Automation**
+```yaml
+automation:
+  - alias: "Patriots Score - Flash Lights"
+    trigger:
+      - platform: webhook
+        webhook_id: "patriots_game"
+    condition:
+      - "{{ trigger.json.event == 'score_changed' }}"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          flash: long
+          rgb_color: [0, 32, 91]  # Patriots blue
+```
+
+**Step 3: Query Status in Automations**
+```yaml
+sensor:
+  - platform: rest
+    name: "Patriots Game Status"
+    resource: http://localhost:8005/api/v1/ha/game-status/ne?sport=nfl
+    scan_interval: 300
+    value_template: "{{ value_json.status }}"
+```
+
+**Result:** ⚡ Lights flash when Patriots score! (11-16s latency)
+
+---
+
+### **Event Detection**
+
+**Background Process:**
+- Checks for game events every 15 seconds
+- Compares current vs previous game state
+- Triggers webhooks on state changes
+
+**Events Detected:**
+- Game status changes (scheduled → live → final)
+- Score changes during live games
+- Game start/end transitions
+
+**Latency:** 11-16 seconds total
+- ESPN API lag: ~10 seconds
+- Detection check: 0-15 seconds
+- Webhook delivery: ~1 second
+
+---
 
 ## 🚨 **Error Responses**
 

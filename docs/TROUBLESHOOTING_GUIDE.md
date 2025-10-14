@@ -188,11 +188,61 @@ docker-compose -f docker-compose.complete.yml up -d
 
 ### **2. WebSocket Connection Issues**
 
+#### **✅ Infinite Retry Feature (NEW - October 14, 2025)**
+**Status**: ✅ **IMPLEMENTED** - Service now automatically recovers from network outages
+
+The WebSocket service now includes **infinite retry strategy** by default:
+
+**Features:**
+- 🔄 **Never gives up** - Service retries forever when network is unavailable
+- 📈 **Smart backoff** - Exponential backoff up to 5 minutes between attempts
+- 🎯 **Automatic recovery** - Connects automatically when network returns
+- 🚀 **No manual restart** - Works even if started without internet
+- 🔍 **Clear logging** - Shows "Attempt X/∞" in logs
+
+**Default Configuration:**
+```bash
+WEBSOCKET_MAX_RETRIES=-1        # -1 = infinite (recommended)
+WEBSOCKET_MAX_RETRY_DELAY=300   # Max 5 minutes between retries
+```
+
+**What This Solves:**
+- ✅ Service startup before network available
+- ✅ Extended Home Assistant downtime
+- ✅ Temporary network interruptions
+- ✅ Network outages lasting hours/days
+
+**Monitoring:**
+```bash
+# Check retry status
+docker logs ha-ingestor-websocket --tail 20
+
+# Look for messages like:
+# "Reconnection attempt 15/∞ in 300.0s"
+
+# Check health status
+curl http://localhost:8001/health
+```
+
+**To Disable (not recommended):**
+```bash
+# In .env or docker-compose.yml
+WEBSOCKET_MAX_RETRIES=10  # Reverts to old 10-attempt limit
+```
+
+**Related Documentation:**
+- `implementation/INFINITE_RETRY_IMPLEMENTATION_COMPLETE.md` - Complete implementation details
+- `implementation/NETWORK_RESILIENCE_SIMPLE_FIX.md` - Simple explanation
+
+---
+
 #### **Problem**: WebSocket connection to Home Assistant fails
 **Symptoms:**
 - "WebSocket connection failed" errors
 - No events being captured
 - Service shows as unhealthy
+
+**Note**: With infinite retry enabled (default), the service will keep trying. Check if it's a configuration issue rather than waiting for recovery.
 
 **Solutions:**
 ```bash
@@ -364,6 +414,245 @@ netstat -tulpn | grep -E "(3000|8080|8086)"
 curl -I http://localhost:8080/api/v1/health
 curl -I http://localhost:3000
 ```
+
+## 🏈 **Epic 12: Sports Data Service Troubleshooting** (NEW)
+
+### **Story 12.1: InfluxDB Persistence Issues**
+
+#### **Problem: InfluxDB writes not working**
+
+**Symptoms:**
+- Health endpoint shows `influxdb.enabled = false`
+- Or `influxdb.circuit_breaker = open`
+- Games not persisted to InfluxDB
+
+**Solutions:**
+
+1. **Check InfluxDB Token:**
+```bash
+# Verify token is set
+docker-compose logs sports-data | grep INFLUXDB_TOKEN
+
+# Expected: Token should not show "not set" error
+# If error: Add token to environment
+```
+
+2. **Enable InfluxDB:**
+```bash
+# Check if enabled
+docker-compose logs sports-data | grep "InfluxDB:"
+
+# Expected: "InfluxDB: enabled"
+# If disabled: Set INFLUXDB_ENABLED=true
+```
+
+3. **Circuit Breaker Stuck Open:**
+```bash
+# Check health endpoint
+curl http://localhost:8005/health | jq '.influxdb.circuit_breaker'
+
+# If "open": Wait 60 seconds for auto-recovery
+# Or restart service
+docker-compose restart sports-data
+```
+
+4. **Verify InfluxDB Connection:**
+```bash
+# Test InfluxDB directly
+curl http://localhost:8086/health
+
+# Should return 200 OK
+# If fails: Check InfluxDB is running
+docker-compose ps influxdb
+```
+
+**Fix:**
+```bash
+# Full fix procedure
+1. Set INFLUXDB_TOKEN in environment
+2. docker-compose restart sports-data
+3. curl http://localhost:8005/health
+4. Verify influxdb.enabled = true
+```
+
+---
+
+### **Story 12.2: Historical Query Issues**
+
+#### **Problem: Historical queries return 503**
+
+**Symptoms:**
+- `/api/v1/games/history` returns 503 Service Unavailable
+- Error: "Historical queries not available"
+
+**Root Cause:** InfluxDB query client not initialized
+
+**Solutions:**
+
+1. **Check InfluxDB Token:**
+```bash
+# Historical queries need InfluxDB token
+docker-compose logs sports-data | grep "Historical queries:"
+
+# Expected: "Historical queries: enabled"
+# If disabled: Configure INFLUXDB_TOKEN
+```
+
+2. **Verify InfluxDB Has Data:**
+```bash
+# Check if InfluxDB has sports data
+docker exec ha-ingestor-influxdb influx query \
+  'SELECT * FROM sports_data.nfl_scores LIMIT 1'
+
+# If empty: No historical data yet (normal for new installation)
+# Games will populate as they're fetched
+```
+
+#### **Problem: Queries return empty results**
+
+**Symptoms:**
+- Queries succeed (200 OK) but return no games
+
+**Root Cause:** No data in InfluxDB yet
+
+**Solution:**
+```bash
+# Historical queries need data first
+# Data accumulates as games are fetched
+
+# Check if service is writing data
+curl http://localhost:8005/health | jq '.influxdb'
+
+# Expected: writes_success > 0
+# If 0: Wait for games to be fetched (cache misses trigger writes)
+```
+
+---
+
+### **Story 12.3: Webhook & Event Detection Issues**
+
+#### **Problem: Webhooks not firing**
+
+**Symptoms:**
+- No webhooks received in Home Assistant
+- Events not detected
+
+**Solutions:**
+
+1. **Check Event Detector Status:**
+```bash
+docker-compose logs sports-data | grep "Event detector"
+
+# Expected: "Event detector started (checking every 15s)"
+# Should see periodic checks for events
+```
+
+2. **Verify Webhook Registration:**
+```bash
+curl http://localhost:8005/api/v1/webhooks/list
+
+# Verify your webhook is listed and enabled: true
+```
+
+3. **Check for Live Games:**
+```bash
+# Event detector only triggers for live games
+curl 'http://localhost:8005/api/v1/games/live?league=nfl&team_ids=ne'
+
+# If no games: Normal - events only fire during actual games
+```
+
+4. **Test Webhook Delivery:**
+```bash
+# Check logs for webhook delivery attempts
+docker-compose logs sports-data | grep "Webhook"
+
+# Look for: "Webhook delivered" or "Webhook failed"
+```
+
+#### **Problem: Webhook delivery fails**
+
+**Symptoms:**
+- Logs show "Webhook delivery failed"
+- `failed_calls` count increasing
+
+**Solutions:**
+
+1. **Verify URL is Accessible:**
+```bash
+# Test webhook URL from sports-data container
+docker exec ha-ingestor-sports-data \
+  wget -O- http://homeassistant.local:8123/api/webhook/test
+
+# If fails: Check network connectivity, HA URL
+```
+
+2. **Check Home Assistant Webhook:**
+```yaml
+# Ensure webhook is registered in HA configuration.yaml
+webhook:
+  your_webhook_id:
+```
+
+3. **Verify HMAC Secret:**
+```bash
+# Ensure secret matches between registration and HA
+# Secret must be minimum 16 characters
+```
+
+4. **Check Webhook Logs:**
+```bash
+# View detailed webhook logs
+docker-compose logs sports-data | grep "webhook_id"
+```
+
+#### **Problem: Events not detected**
+
+**Symptoms:**
+- Live games happening but no events triggered
+
+**Root Cause:** Event detector needs game state changes
+
+**Explanation:**
+- Event detector compares current vs previous state
+- First check establishes baseline (no event)
+- Second check (15s later) detects changes (triggers event)
+- **This is normal behavior!**
+
+**Expected Latency:**
+- ESPN API lag: ~10 seconds (score appears on ESPN)
+- Detection check: 0-15 seconds (15s interval)
+- Webhook delivery: ~1 second
+- **Total: 11-16 seconds** (acceptable for automation use case)
+
+---
+
+### **Epic 12: Quick Diagnostic Commands**
+
+```bash
+# 1. Check overall service health
+curl http://localhost:8005/health | jq
+
+# 2. Check if event detector is running
+docker-compose logs sports-data | grep "Event detector"
+
+# 3. List registered webhooks
+curl http://localhost:8005/api/v1/webhooks/list | jq
+
+# 4. Check InfluxDB status
+curl http://localhost:8005/health | jq '.influxdb'
+
+# 5. Test HA endpoint
+curl 'http://localhost:8005/api/v1/ha/game-status/ne?sport=nfl' | jq
+
+# 6. View recent logs
+docker-compose logs --tail=50 sports-data
+
+# 7. Check webhook file
+docker exec ha-ingestor-sports-data cat /app/data/webhooks.json | jq
+```
+
+---
 
 ## 📊 **Performance Troubleshooting**
 
