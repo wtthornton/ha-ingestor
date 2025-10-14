@@ -35,6 +35,10 @@ from shared.correlation_middleware import FastAPICorrelationMiddleware
 from shared.auth import AuthManager
 from shared.influxdb_query_client import InfluxDBQueryClient
 
+# Story 22.1: SQLite database
+from .database import init_db, check_db_health
+import pathlib
+
 # Import endpoint routers (Stories 13.2-13.4)
 from .events_endpoints import EventsEndpoints
 from .devices_endpoints import router as devices_router
@@ -161,6 +165,17 @@ data_api_service = DataAPIService()
 async def lifespan(app: FastAPI):
     """Handle application lifecycle"""
     # Startup
+    # Ensure data directory exists
+    pathlib.Path("./data").mkdir(exist_ok=True)
+    
+    # Initialize SQLite database
+    try:
+        await init_db()
+        logger.info("SQLite database initialized")
+    except Exception as e:
+        logger.error(f"SQLite initialization failed: {e}")
+        # Don't crash - service can run without SQLite initially
+    
     await data_api_service.startup()
     yield
     # Shutdown
@@ -270,10 +285,11 @@ async def health_check():
     """
     Health check endpoint
     
-    Returns service health status including InfluxDB connection
+    Returns service health status including InfluxDB and SQLite connections
     """
     uptime = (datetime.now() - data_api_service.start_time).total_seconds()
     influxdb_status = data_api_service.influxdb_client.get_connection_status()
+    sqlite_status = await check_db_health()
     
     return {
         "status": "healthy" if data_api_service.is_running else "unhealthy",
@@ -288,7 +304,8 @@ async def health_check():
                 "query_count": influxdb_status["query_count"],
                 "avg_query_time_ms": influxdb_status["avg_query_time_ms"],
                 "success_rate": influxdb_status["success_rate"]
-            }
+            },
+            "sqlite": sqlite_status
         },
         "authentication": {
             "enabled": data_api_service.enable_auth

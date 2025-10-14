@@ -10,3 +10,6 @@ httpx==0.25.1
 # InfluxDB v3 client for time-series persistence (Story 12.1)
 influxdb3-python>=0.3.0
 
+# SQLite for webhook storage (Story 22.3)
+sqlalchemy==2.0.25
+

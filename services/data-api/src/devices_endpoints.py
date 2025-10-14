@@ -1,6 +1,7 @@
 """
 Devices and Entities Endpoints for Data API
 Migrated from admin-api as part of Epic 13 Story 13.2
+Story 22.2: Updated to use SQLite storage
 """
 
 import logging
@@ -12,9 +13,15 @@ from datetime import datetime
 # Add shared directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from shared.influxdb_query_client import InfluxDBQueryClient
+
+# Story 22.2: SQLite models and database
+from .database import get_db
+from .models import Device, Entity
 
 logger = logging.getLogger(__name__)
 
@@ -87,59 +94,58 @@ async def list_devices(
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of devices to return"),
     manufacturer: Optional[str] = Query(default=None, description="Filter by manufacturer"),
     model: Optional[str] = Query(default=None, description="Filter by model"),
-    area_id: Optional[str] = Query(default=None, description="Filter by area/room")
+    area_id: Optional[str] = Query(default=None, description="Filter by area/room"),
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    List all discovered devices from Home Assistant
+    List all discovered devices from Home Assistant (SQLite storage)
     
-    Returns devices with their metadata, optionally filtered by manufacturer, model, or area.
+    Story 22.2: Simple, fast SQLite queries with JOIN for entity counts
     """
     try:
-        # Build filters
-        filters = {}
+        # Build query with entity count
+        query = select(Device, func.count(Entity.entity_id).label('entity_count'))\
+            .outerjoin(Entity, Device.device_id == Entity.device_id)\
+            .group_by(Device.device_id)
+        
+        # Apply filters (simple WHERE clauses)
         if manufacturer:
-            filters["manufacturer"] = manufacturer
+            query = query.where(Device.manufacturer == manufacturer)
         if model:
-            filters["model"] = model
+            query = query.where(Device.model == model)
         if area_id:
-            filters["area_id"] = area_id
+            query = query.where(Device.area_id == area_id)
         
-        # Query devices from InfluxDB
-        # Ensure client is connected
-        if not influxdb_client.is_connected:
-            await influxdb_client.connect()
+        # Apply limit
+        query = query.limit(limit)
         
-        query = _build_devices_query(filters, limit)
-        results = await influxdb_client._execute_query(query)
+        # Execute
+        result = await db.execute(query)
+        rows = result.all()
         
-        # Convert results to response models
-        devices = []
-        for record in results:
-            # Convert timestamp to string if needed
-            timestamp = record.get("_time", datetime.now())
-            if not isinstance(timestamp, str):
-                timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
-            
-            device = DeviceResponse(
-                device_id=record.get("device_id", ""),
-                name=record.get("name", "Unknown"),
-                manufacturer=record.get("manufacturer", "Unknown"),
-                model=record.get("model", "Unknown"),
-                sw_version=record.get("sw_version"),
-                area_id=record.get("area_id"),
-                entity_count=int(record.get("entity_count", 0)),
-                timestamp=timestamp
+        # Convert to response
+        device_responses = [
+            DeviceResponse(
+                device_id=device.device_id,
+                name=device.name,
+                manufacturer=device.manufacturer or "Unknown",
+                model=device.model or "Unknown",
+                sw_version=device.sw_version,
+                area_id=device.area_id,
+                entity_count=entity_count,
+                timestamp=device.last_seen.isoformat() if device.last_seen else datetime.now().isoformat()
             )
-            devices.append(device)
+            for device, entity_count in rows
+        ]
         
         return DevicesListResponse(
-            devices=devices,
-            count=len(devices),
+            devices=device_responses,
+            count=len(device_responses),
             limit=limit
         )
         
     except Exception as e:
-        logger.error(f"Error listing devices: {e}")
+        logger.error(f"Error listing devices from SQLite: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve devices: {str(e)}"
@@ -147,65 +153,37 @@ async def list_devices(
 
 
 @router.get("/api/devices/{device_id}", response_model=DeviceResponse)
-async def get_device(device_id: str):
-    """
-    Get details for a specific device
-    
-    Args:
-        device_id: Device identifier
-        
-    Returns:
-        Device details
-    """
+async def get_device(device_id: str, db: AsyncSession = Depends(get_db)):
+    """Get device by ID (SQLite) - Story 22.2"""
     try:
-        # Ensure client is connected
-        if not influxdb_client.is_connected:
-            await influxdb_client.connect()
+        # Simple SELECT with entity count
+        query = select(Device, func.count(Entity.entity_id).label('entity_count'))\
+            .outerjoin(Entity, Device.device_id == Entity.device_id)\
+            .where(Device.device_id == device_id)\
+            .group_by(Device.device_id)
         
-        # Query specific device
-        query = f'''
-            from(bucket: "home_assistant_events")
-                |> range(start: -90d)
-                |> filter(fn: (r) => r["_measurement"] == "devices")
-                |> filter(fn: (r) => r["device_id"] == "{device_id}")
-                |> last()
-        '''
+        result = await db.execute(query)
+        row = result.first()
         
-        results = await influxdb_client._execute_query(query)
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
         
-        if not results:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Device {device_id} not found"
-            )
-        
-        record = results[0]
-        # Convert timestamp to string if needed
-        timestamp = record.get("_time", datetime.now())
-        if not isinstance(timestamp, str):
-            timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
-        
-        device = DeviceResponse(
-            device_id=record.get("device_id", device_id),
-            name=record.get("name", "Unknown"),
-            manufacturer=record.get("manufacturer", "Unknown"),
-            model=record.get("model", "Unknown"),
-            sw_version=record.get("sw_version"),
-            area_id=record.get("area_id"),
-            entity_count=int(record.get("entity_count", 0)),
-            timestamp=timestamp
+        device, entity_count = row
+        return DeviceResponse(
+            device_id=device.device_id,
+            name=device.name,
+            manufacturer=device.manufacturer or "Unknown",
+            model=device.model or "Unknown",
+            sw_version=device.sw_version,
+            area_id=device.area_id,
+            entity_count=entity_count,
+            timestamp=device.last_seen.isoformat() if device.last_seen else datetime.now().isoformat()
         )
-        
-        return device
-        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting device {device_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve device: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve device: {str(e)}")
 
 
 @router.get("/api/entities", response_model=EntitiesListResponse)
@@ -213,125 +191,80 @@ async def list_entities(
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of entities to return"),
     domain: Optional[str] = Query(default=None, description="Filter by domain (light, sensor, etc)"),
     platform: Optional[str] = Query(default=None, description="Filter by platform"),
-    device_id: Optional[str] = Query(default=None, description="Filter by device ID")
+    device_id: Optional[str] = Query(default=None, description="Filter by device ID"),
+    db: AsyncSession = Depends(get_db)
 ):
-    """
-    List all discovered entities from Home Assistant
-    
-    Returns entities with their configuration, optionally filtered by domain, platform, or device.
-    """
+    """List entities (SQLite) - Story 22.2"""
     try:
-        # Build filters
-        filters = {}
+        # Build query
+        query = select(Entity)
+        
+        # Apply filters
         if domain:
-            filters["domain"] = domain
+            query = query.where(Entity.domain == domain)
         if platform:
-            filters["platform"] = platform
+            query = query.where(Entity.platform == platform)
         if device_id:
-            filters["device_id"] = device_id
+            query = query.where(Entity.device_id == device_id)
         
-        # Query entities from InfluxDB
-        # Ensure client is connected
-        if not influxdb_client.is_connected:
-            await influxdb_client.connect()
+        # Apply limit
+        query = query.limit(limit)
         
-        query = _build_entities_query(filters, limit)
-        results = await influxdb_client._execute_query(query)
+        # Execute
+        result = await db.execute(query)
+        entities_data = result.scalars().all()
         
-        # Convert results to response models
-        entities = []
-        for record in results:
-            # Convert timestamp to string if needed
-            timestamp = record.get("_time", datetime.now())
-            if not isinstance(timestamp, str):
-                timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
-            
-            entity = EntityResponse(
-                entity_id=record.get("entity_id", ""),
-                device_id=record.get("device_id"),
-                domain=record.get("domain", "unknown"),
-                platform=record.get("platform", "unknown"),
-                unique_id=record.get("unique_id"),
-                area_id=record.get("area_id"),
-                disabled=bool(record.get("disabled", False)),
-                timestamp=timestamp
+        # Convert to response
+        entity_responses = [
+            EntityResponse(
+                entity_id=entity.entity_id,
+                device_id=entity.device_id,
+                domain=entity.domain,
+                platform=entity.platform or "unknown",
+                unique_id=entity.unique_id,
+                area_id=entity.area_id,
+                disabled=entity.disabled,
+                timestamp=entity.created_at.isoformat() if entity.created_at else datetime.now().isoformat()
             )
-            entities.append(entity)
+            for entity in entities_data
+        ]
         
         return EntitiesListResponse(
-            entities=entities,
-            count=len(entities),
+            entities=entity_responses,
+            count=len(entity_responses),
             limit=limit
         )
-        
     except Exception as e:
-        logger.error(f"Error listing entities: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve entities: {str(e)}"
-        )
+        logger.error(f"Error listing entities from SQLite: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve entities: {str(e)}")
 
 
 @router.get("/api/entities/{entity_id}", response_model=EntityResponse)
-async def get_entity(entity_id: str):
-    """
-    Get details for a specific entity
-    
-    Args:
-        entity_id: Entity identifier (e.g., light.living_room)
-        
-    Returns:
-        Entity details
-    """
+async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
+    """Get entity by ID (SQLite) - Story 22.2"""
     try:
-        # Ensure client is connected
-        if not influxdb_client.is_connected:
-            await influxdb_client.connect()
+        # Simple SELECT
+        result = await db.execute(select(Entity).where(Entity.entity_id == entity_id))
+        entity = result.scalar_one_or_none()
         
-        # Query specific entity
-        query = f'''
-            from(bucket: "home_assistant_events")
-                |> range(start: -90d)
-                |> filter(fn: (r) => r["_measurement"] == "entities")
-                |> filter(fn: (r) => r["entity_id"] == "{entity_id}")
-                |> last()
-        '''
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found")
         
-        results = await influxdb_client._execute_query(query)
-        
-        if not results:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Entity {entity_id} not found"
-            )
-        
-        record = results[0]
-        # Convert timestamp to string if needed
-        timestamp = record.get("_time", datetime.now())
-        if not isinstance(timestamp, str):
-            timestamp = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
-        
-        entity = EntityResponse(
-            entity_id=record.get("entity_id", entity_id),
-            device_id=record.get("device_id"),
-            domain=record.get("domain", "unknown"),
-            platform=record.get("platform", "unknown"),
-            unique_id=record.get("unique_id"),
-            area_id=record.get("area_id"),
-            disabled=bool(record.get("disabled", False)),
-            timestamp=timestamp
+        return EntityResponse(
+            entity_id=entity.entity_id,
+            device_id=entity.device_id,
+            domain=entity.domain,
+            platform=entity.platform or "unknown",
+            unique_id=entity.unique_id,
+            area_id=entity.area_id,
+            disabled=entity.disabled,
+            timestamp=entity.created_at.isoformat() if entity.created_at else datetime.now().isoformat()
         )
-        
-        return entity
-        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting entity {entity_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve entity: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve entity: {str(e)}")
 
 
 @router.get("/api/integrations", response_model=IntegrationsListResponse)

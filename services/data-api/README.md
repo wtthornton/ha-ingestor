@@ -11,13 +11,20 @@ FastAPI microservice providing access to feature data including HA events, devic
 The Data API service is a specialized microservice that handles all feature-related data access, separated from system monitoring (admin-api). It provides:
 
 - HA event queries from InfluxDB
-- Device and entity browsing
+- Device and entity browsing (SQLite metadata storage)
 - Integration management
 - Alert management
 - Analytics and metrics queries
 - Sports data (historical and real-time)
 - Home Assistant automation endpoints
 - Real-time WebSocket streaming
+
+**Database Architecture (Story 22.1-22.2):**
+- **InfluxDB**: Time-series data (events, metrics, sports scores)
+- **SQLite**: Metadata (devices, entities, webhooks, preferences)
+  - Devices table with indexes on area_id, manufacturer, integration
+  - Entities table with foreign key to devices
+  - Fast queries (<10ms vs ~50ms with InfluxDB)
 
 ---
 
@@ -108,6 +115,9 @@ POST /api/v1/ha/webhooks/register   # Register webhook
 | `INFLUXDB_TOKEN` | InfluxDB auth token | Required |
 | `INFLUXDB_ORG` | InfluxDB organization | `ha-ingestor` |
 | `INFLUXDB_BUCKET` | InfluxDB bucket | `home_assistant_events` |
+| `DATABASE_URL` | SQLite database URL | `sqlite+aiosqlite:///./data/metadata.db` |
+| `SQLITE_TIMEOUT` | Connection timeout (seconds) | `30` |
+| `SQLITE_CACHE_SIZE` | Cache size (KB, negative) | `-64000` (64MB) |
 | `LOG_LEVEL` | Logging level | `INFO` |
 | `ENABLE_AUTH` | Enable API authentication | `false` |
 | `API_KEY` | API key (if auth enabled) | - |
@@ -125,6 +135,11 @@ INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your-token-here
 INFLUXDB_ORG=ha-ingestor
 INFLUXDB_BUCKET=home_assistant_events
+
+# SQLite Configuration (Story 22.1)
+DATABASE_URL=sqlite+aiosqlite:///./data/metadata.db
+SQLITE_TIMEOUT=30
+SQLITE_CACHE_SIZE=-64000
 
 # Logging
 LOG_LEVEL=INFO

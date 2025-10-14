@@ -60,6 +60,9 @@ services:
       - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
       - LOG_FORMAT=json
       - LOG_OUTPUT=both
+      # WebSocket Retry Configuration
+      - WEBSOCKET_MAX_RETRIES=${WEBSOCKET_MAX_RETRIES:--1}  # -1 = infinite retry (recommended)
+      - WEBSOCKET_MAX_RETRY_DELAY=${WEBSOCKET_MAX_RETRY_DELAY:-300}  # Max 5 minutes between retries
       # Weather API Configuration
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
@@ -214,10 +217,15 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - DATABASE_URL=sqlite+aiosqlite:///./data/metadata.db
+      - SQLITE_TIMEOUT=30
+      - SQLITE_CACHE_SIZE=-64000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - ENABLE_AUTH=false
       - API_KEY=${API_KEY:-}
       - CORS_ORIGINS=http://localhost:3000,http://localhost
+    volumes:
+      - sqlite-data:/app/data
     depends_on:
       influxdb:
         condition: service_healthy
@@ -657,6 +665,7 @@ volumes:
   influxdb_config:
   data_retention_backups:
   ha_ingestor_logs:
+  sqlite-data:
 
 networks:
   ha-ingestor-network:

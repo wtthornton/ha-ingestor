@@ -1,14 +1,64 @@
-# HA Ingestor
+# Home Assistant Data Ingestor & API Hub
 
-A comprehensive Home Assistant data ingestion system that captures, normalizes, and stores Home Assistant events in InfluxDB with weather data enrichment.
+**Enterprise-grade data ingestion platform and API hub for single-home automation systems**
+
+A comprehensive Home Assistant data ingestion system that captures, normalizes, and stores Home Assistant events with multi-source data enrichment. Uses **hybrid database architecture** (InfluxDB for time-series, SQLite for metadata) delivering 5-10x faster queries. Provides RESTful APIs and event-driven webhooks for Home Assistant automations, external integrations, and cloud analytics platforms.
 
 [![System Health](https://img.shields.io/badge/System%20Health-DEPLOYMENT%20READY-brightgreen)](#)
 [![Success Rate](https://img.shields.io/badge/Success%20Rate-75%25-green)](#)
 [![Critical Issues](https://img.shields.io/badge/Critical%20Issues-0-brightgreen)](#)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-brightgreen)](#)
 
-## 🎯 **Recent Updates (October 2025)**
+---
 
+## 🏠 **System Purpose & Audience**
+
+### **What This System Is**
+
+**Primary Purpose**: Centralized data hub providing APIs and webhooks to:
+- ✅ Home Assistant automations (webhooks, entity sensors, fast status APIs)
+- ✅ External analytics platforms (historical queries, trends, statistics)
+- ✅ Cloud integrations (mobile apps, voice assistants, dashboards)
+- ✅ Third-party home automation systems (API access to all data sources)
+
+**Secondary Purpose**: Admin dashboard for:
+- 🔧 System monitoring and health checks
+- ⚙️ Configuration management
+- 🐳 Service control and deployment
+- 📊 Data source status and API usage tracking
+
+### **Target Scale**
+
+**Deployment Model**: Single-tenant, self-hosted
+- Small homes: 50-200 HA entities
+- Medium homes: 200-500 HA entities  
+- Large homes: 500-1000 HA entities
+- Extra-large homes: 1000+ HA entities
+
+**Not Designed For**:
+- ❌ Multi-tenant SaaS platforms
+- ❌ Direct end-user consumption
+- ❌ Public internet exposure
+- ❌ High-frequency trading or mission-critical systems
+
+### **Architecture Philosophy**
+
+**API-First Design**: Every data source exposed via REST APIs
+- Fast endpoints (<50ms) for real-time automation
+- Historical query APIs for analytics
+- Webhook system for event-driven integrations
+- Admin dashboard as monitoring tool (not primary interface)
+
+**Event-Driven**: Webhooks over polling for automation systems
+- Push notifications for game events (sports)
+- Push notifications for threshold alerts (air quality, pricing)
+- Reliable HMAC-signed webhook delivery
+- Background event detection (15-second intervals)
+
+## 🎯 **Recent Updates (January 2025)**
+
+✅ **Hybrid Database Architecture (Epic 22)** - SQLite added for metadata storage with 5-10x faster queries  
+✅ **Network Resilience Enhancement** - Infinite retry strategy ensures automatic recovery from network outages  
 ✅ **Data Enrichment Platform Complete** - 5 new external data services fully integrated  
 ✅ **Advanced Storage Optimization** - Tiered retention, materialized views, and S3 archival  
 ✅ **Multi-Source Data Integration** - Carbon intensity, electricity pricing, air quality, calendar, and smart meter data  
@@ -54,6 +104,10 @@ The `.env` file should contain:
 # Home Assistant Configuration
 HOME_ASSISTANT_URL=http://your-ha-ip:8123
 HOME_ASSISTANT_TOKEN=your_long_lived_access_token
+
+# WebSocket Retry Configuration (optional - defaults shown)
+WEBSOCKET_MAX_RETRIES=-1              # -1 = infinite retry (recommended)
+WEBSOCKET_MAX_RETRY_DELAY=300         # Max 5 minutes between retries
 
 # Optional: Weather API (for data enrichment)
 WEATHER_API_KEY=your_openweathermap_api_key
@@ -174,9 +228,11 @@ This project follows security best practices:
 #### WebSocket Ingestion Service
 - Connects to Home Assistant WebSocket API
 - Subscribes to state_changed events
-- Handles authentication and reconnection
+- **Infinite retry strategy** - Never gives up on reconnection
+- Handles authentication and reconnection automatically
 - Enhanced logging with correlation IDs
 - Weather enrichment integration
+- **Network resilient** - Recovers from extended outages
 - Port: 8001 (external)
 
 #### Enrichment Pipeline Service
@@ -275,6 +331,12 @@ This project follows security best practices:
 - Tiered storage with downsampling
 - Web interface for data exploration
 - Port: 8086
+
+#### SQLite Databases (Epic 22)
+- **metadata.db** (data-api) - Device and entity registry (5-10x faster queries)
+- **webhooks.db** (sports-data) - Webhook subscriptions (concurrent-safe storage)
+- WAL mode enabled for concurrent access
+- ACID transactions for data integrity
 
 ## Development
 

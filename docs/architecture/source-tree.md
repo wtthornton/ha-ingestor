@@ -31,7 +31,7 @@ ha-ingestor/
 │   ├── websocket-ingestion/       # WebSocket client service (Port 8001)
 │   ├── enrichment-pipeline/       # Data processing service (Port 8002)
 │   ├── data-retention/            # Data lifecycle management (Port 8080)
-│   ├── sports-data/               # ESPN sports API service (Port 8005)
+│   ├── sports-data/               # ESPN sports API service (Port 8005) [SQLite webhooks - Epic 22.3]
 │   ├── log-aggregator/            # Centralized logging (Port 8015)
 │   ├── weather-api/               # Weather integration (Internal)
 │   ├── carbon-intensity-service/  # Carbon data (Port 8010)
@@ -107,13 +107,19 @@ admin-api/
 ### Data API Service (`services/data-api/`) [Epic 13 NEW]
 **Purpose:** Feature data hub for events, devices, sports, and analytics
 **Port:** 8006
+**Databases:** InfluxDB (time-series) + SQLite (metadata) [Epic 22]
 
 ```
 data-api/
 ├── src/
 │   ├── main.py                    # FastAPI application entry point
+│   ├── database.py                # SQLite async configuration (Epic 22.1)
+│   ├── models/                    # SQLAlchemy models (Epic 22.2)
+│   │   ├── __init__.py            # Model exports
+│   │   ├── device.py              # Device model
+│   │   └── entity.py              # Entity model
 │   ├── events_endpoints.py        # Event queries (migrated from admin-api)
-│   ├── devices_endpoints.py       # Device & entity browsing (migrated from admin-api)
+│   ├── devices_endpoints.py       # Device & entity browsing (Epic 22.2: SQLite)
 │   ├── sports_endpoints.py        # Sports data queries (Epic 12 Story 12.2)
 │   ├── ha_automation_endpoints.py # HA automation integration (Epic 12 Story 12.3)
 │   ├── alert_endpoints.py         # Alert management (Epic 13 Story 13.3)
@@ -121,11 +127,18 @@ data-api/
 │   ├── integration_endpoints.py   # Integration management (Epic 13 Story 13.3)
 │   ├── websocket_endpoints.py     # WebSocket streaming
 │   ├── alerting_service.py        # Alerting service
+│   ├── influxdb_client.py         # InfluxDB query client
 │   └── metrics_service.py         # Metrics service
+├── alembic/                       # Database migrations (Epic 22.1)
+│   ├── env.py                     # Alembic environment
+│   └── versions/                  # Migration scripts
 ├── tests/                         # Service-specific tests
+│   ├── test_database.py           # SQLite tests (Epic 22.1)
+│   └── test_models.py             # Model tests (Epic 22.2)
 ├── Dockerfile                     # Production Docker image
 ├── Dockerfile.dev                 # Development Docker image
-└── requirements.txt               # Python dependencies
+├── alembic.ini                    # Alembic configuration
+└── requirements.txt               # Python dependencies (includes SQLAlchemy)
 ```
 
 **Epic 13 API Endpoints:**

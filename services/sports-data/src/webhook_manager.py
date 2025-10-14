@@ -3,8 +3,7 @@ Simple Webhook Manager with HMAC Signing
 
 Manages webhook subscriptions and secure delivery.
 Story 12.3 - Adaptive Event Monitor + Webhooks
-
-Based on Context7 KB best practices.
+Story 22.3 - SQLite storage (simple, no Alembic)
 """
 
 import os
@@ -17,7 +16,10 @@ import aiohttp
 from typing import Dict, List, Optional
 from datetime import datetime
 from pathlib import Path
+from sqlalchemy import create_engine, select, update, delete
+from sqlalchemy.orm import sessionmaker
 
+from .webhook_model import Webhook, init_webhook_db
 
 logger = logging.getLogger(__name__)
 
@@ -26,21 +28,21 @@ class WebhookManager:
     """
     Simple webhook manager with HMAC-SHA256 signatures.
     
-    Features:
-    - HMAC-SHA256 signing (industry standard)
-    - 5-second timeout
-    - Retry with exponential backoff
-    - Fire-and-forget delivery
-    - JSON file persistence
+    Story 22.3: Now uses SQLite for concurrent-safe storage
     """
     
-    def __init__(self, storage_file: str = "data/webhooks.json"):
-        """Initialize webhook manager"""
-        self.storage_file = storage_file
+    def __init__(self, db_path: str = "data/webhooks.db"):
+        """Initialize webhook manager with SQLite"""
+        self.db_path = db_path
         self.webhooks: Dict[str, dict] = {}
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # Load from file
+        # Initialize SQLite database
+        Path("data").mkdir(exist_ok=True)
+        self.engine = init_webhook_db(db_path)
+        self.SessionLocal = sessionmaker(bind=self.engine)
+        
+        # Load from SQLite
         self._load_webhooks()
     
     async def startup(self):
@@ -54,25 +56,27 @@ class WebhookManager:
         """Cleanup"""
         if self.session:
             await self.session.close()
-        self._save_webhooks()
+        # SQLite auto-saves, no manual save needed
         logger.info("Webhook manager stopped")
     
     def register(self, url: str, events: List[str], secret: str, team: Optional[str] = None) -> str:
-        """
-        Register webhook endpoint.
-        
-        Args:
-            url: Webhook URL
-            events: Event types to subscribe (game_started, score_changed, game_ended)
-            secret: Shared secret for HMAC (min 16 chars)
-            team: Optional team filter
-            
-        Returns:
-            webhook_id
-        """
+        """Register webhook (SQLite)"""
         import uuid
         webhook_id = str(uuid.uuid4())
         
+        # Insert into SQLite
+        with self.SessionLocal() as session:
+            webhook = Webhook(
+                webhook_id=webhook_id,
+                url=url,
+                events=json.dumps(events),
+                secret=secret,
+                team=team
+            )
+            session.add(webhook)
+            session.commit()
+        
+        # Update in-memory cache
         self.webhooks[webhook_id] = {
             'url': url,
             'events': events,
@@ -86,19 +90,22 @@ class WebhookManager:
             'enabled': True
         }
         
-        self._save_webhooks()
         logger.info(f"Webhook registered: {webhook_id} -> {url}")
-        
         return webhook_id
     
     def unregister(self, webhook_id: str) -> bool:
-        """Remove webhook"""
+        """Remove webhook (SQLite)"""
+        with self.SessionLocal() as session:
+            result = session.execute(delete(Webhook).where(Webhook.webhook_id == webhook_id))
+            session.commit()
+            deleted = result.rowcount > 0
+        
         if webhook_id in self.webhooks:
             del self.webhooks[webhook_id]
-            self._save_webhooks()
+        
+        if deleted:
             logger.info(f"Webhook unregistered: {webhook_id}")
-            return True
-        return False
+        return deleted
     
     def get_all(self) -> List[dict]:
         """Get all webhooks (without secrets)"""
@@ -194,31 +201,48 @@ class WebhookManager:
             if attempt < 2:
                 await asyncio.sleep(2 ** attempt)
         
-        # All failed
+        # All failed - update stats in SQLite
         config['failed_calls'] += 1
         config['last_failure'] = datetime.utcnow().isoformat()
+        
+        try:
+            with self.SessionLocal() as session:
+                session.execute(
+                    update(Webhook)
+                    .where(Webhook.webhook_id == webhook_id)
+                    .values(
+                        failed_calls=Webhook.failed_calls + 1,
+                        last_failure=config['last_failure']
+                    )
+                )
+                session.commit()
+        except Exception as e:
+            logger.error(f"Failed to update webhook stats: {e}")
+        
         logger.error(f"Webhook delivery failed after 3 attempts: {webhook_id}")
     
     def _load_webhooks(self):
-        """Load webhooks from JSON file"""
+        """Load webhooks from SQLite"""
         try:
-            path = Path(self.storage_file)
-            if path.exists():
-                with open(path, 'r') as f:
-                    self.webhooks = json.load(f)
-                logger.info(f"Loaded {len(self.webhooks)} webhooks")
+            with self.SessionLocal() as session:
+                webhooks = session.execute(select(Webhook)).scalars().all()
+                
+                for webhook in webhooks:
+                    self.webhooks[webhook.webhook_id] = {
+                        'url': webhook.url,
+                        'events': json.loads(webhook.events),
+                        'secret': webhook.secret,
+                        'team': webhook.team,
+                        'created_at': webhook.created_at.isoformat() if webhook.created_at else None,
+                        'total_calls': webhook.total_calls,
+                        'failed_calls': webhook.failed_calls,
+                        'last_success': webhook.last_success,
+                        'last_failure': webhook.last_failure,
+                        'enabled': webhook.enabled
+                    }
+                
+                logger.info(f"Loaded {len(self.webhooks)} webhooks from SQLite")
         except Exception as e:
-            logger.error(f"Failed to load webhooks: {e}")
+            logger.error(f"Failed to load webhooks from SQLite: {e}")
             self.webhooks = {}
-    
-    def _save_webhooks(self):
-        """Save webhooks to JSON file"""
-        try:
-            path = Path(self.storage_file)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with open(path, 'w') as f:
-                json.dump(self.webhooks, f, indent=2)
-            logger.debug("Webhooks saved")
-        except Exception as e:
-            logger.error(f"Failed to save webhooks: {e}")
 

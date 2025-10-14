@@ -12,6 +12,9 @@ aiohttp==3.9.1
 # Database
 influxdb-client==1.38.0
 influxdb-client-3
+sqlalchemy==2.0.25
+aiosqlite==0.20.0
+alembic==1.13.1
 
 # Data Validation
 pydantic==2.4.2

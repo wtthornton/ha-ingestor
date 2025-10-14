@@ -39,6 +39,12 @@ class EventFilter(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     tags: Dict[str, str] = {}
+    # Epic 23.2: Device and area filtering
+    device_id: Optional[str] = None
+    area_id: Optional[str] = None
+    # Epic 23.4: Entity classification filtering
+    entity_category: Optional[str] = None
+    exclude_category: Optional[str] = None
 
 
 class EventSearch(BaseModel):
@@ -161,6 +167,40 @@ class EventsEndpoints:
                     detail="Failed to get event types"
                 )
         
+        # Epic 23.1: Automation Trace Endpoint
+        @self.router.get("/events/automation-trace/{context_id}", response_model=List[Dict[str, Any]])
+        async def trace_automation_chain(
+            context_id: str,
+            max_depth: int = Query(10, description="Maximum chain depth to traverse"),
+            include_details: bool = Query(True, description="Include event details")
+        ):
+            """
+            Trace automation chain by following context.parent_id relationships
+            
+            This endpoint finds all events in an automation chain by:
+            1. Starting with the provided context_id
+            2. Finding all events that have this context_id as their parent
+            3. Recursively following the chain up to max_depth levels
+            
+            Args:
+                context_id: The context ID to trace
+                max_depth: Maximum depth to traverse (default: 10)
+                include_details: Whether to include full event details (default: True)
+            
+            Returns:
+                List of events in the automation chain, ordered by depth
+            """
+            try:
+                chain = await self._trace_automation_chain(context_id, max_depth, include_details)
+                return chain
+                
+            except Exception as e:
+                logger.error(f"Error tracing automation chain: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to trace automation chain: {str(e)}"
+                )
+        
         # General /events route - should come after specific routes
         @self.router.get("/events", response_model=List[EventData])
         async def get_recent_events(
@@ -170,16 +210,36 @@ class EventsEndpoints:
             event_type: Optional[str] = Query(None, description="Filter by event type"),
             start_time: Optional[datetime] = Query(None, description="Start time filter"),
             end_time: Optional[datetime] = Query(None, description="End time filter"),
-            service: Optional[str] = Query(None, description="Specific service to query")
+            service: Optional[str] = Query(None, description="Specific service to query"),
+            # Epic 23.2: Device and area filtering
+            device_id: Optional[str] = Query(None, description="Filter by device ID"),
+            area_id: Optional[str] = Query(None, description="Filter by area ID (room)"),
+            # Epic 23.4: Entity classification filtering
+            entity_category: Optional[str] = Query(None, description="Filter by entity category (config, diagnostic)"),
+            exclude_category: Optional[str] = Query(None, description="Exclude entity category (config, diagnostic)")
         ):
-            """Get recent events with optional filtering"""
+            """
+            Get recent events with optional filtering
+            
+            Epic 23.2: Supports filtering by device_id and area_id for spatial analytics
+            - device_id: Filter events from a specific device
+            - area_id: Filter events from a specific room/area
+            
+            Epic 23.4: Supports filtering by entity_category to show/hide diagnostic and config entities
+            - entity_category: Include only entities with this category
+            - exclude_category: Exclude entities with this category (commonly 'diagnostic')
+            """
             try:
                 # Build filter
                 event_filter = EventFilter(
                     entity_id=entity_id,
                     event_type=event_type,
                     start_time=start_time,
-                    end_time=end_time
+                    end_time=end_time,
+                    device_id=device_id,
+                    area_id=area_id,
+                    entity_category=entity_category,
+                    exclude_category=exclude_category
                 )
                 
                 if service and service in self.service_urls:
@@ -487,6 +547,20 @@ class EventsEndpoints:
             if event_filter.event_type:
                 query += f'|> filter(fn: (r) => r.event_type == "{event_filter.event_type}")'
             
+            # Epic 23.2: Add device_id and area_id filtering for spatial analytics
+            if event_filter.device_id:
+                query += f'|> filter(fn: (r) => r.device_id == "{event_filter.device_id}")'
+            if event_filter.area_id:
+                query += f'|> filter(fn: (r) => r.area_id == "{event_filter.area_id}")'
+            
+            # Epic 23.4: Add entity_category filtering
+            if event_filter.entity_category:
+                query += f'|> filter(fn: (r) => r.entity_category == "{event_filter.entity_category}")'
+            
+            # Epic 23.4: Add exclude_category filtering (commonly used to hide diagnostic entities)
+            if event_filter.exclude_category:
+                query += f'|> filter(fn: (r) => r.entity_category != "{event_filter.exclude_category}")'
+            
             query += f'|> sort(columns: ["_time"], desc: true)'
             query += f'|> limit(n: {limit + offset})'
             
@@ -519,6 +593,121 @@ class EventsEndpoints:
             
         except Exception as e:
             logger.error(f"Error querying InfluxDB: {e}")
+            return []
+    
+    async def _trace_automation_chain(self, context_id: str, max_depth: int, include_details: bool) -> List[Dict[str, Any]]:
+        """
+        Trace automation chain by following context.parent_id relationships
+        
+        Epic 23.1: Implementation of automation causality tracking
+        
+        Args:
+            context_id: Starting context ID
+            max_depth: Maximum depth to traverse
+            include_details: Whether to include full event details
+        
+        Returns:
+            List of events in the automation chain
+        """
+        try:
+            from influxdb_client import InfluxDBClient
+            
+            # Initialize InfluxDB client
+            influxdb_url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
+            influxdb_token = os.getenv("INFLUXDB_TOKEN")
+            influxdb_org = os.getenv("INFLUXDB_ORG", "homeassistant")
+            influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
+            
+            client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=influxdb_org)
+            query_api = client.query_api()
+            
+            chain = []
+            visited_contexts = set()
+            current_context = context_id
+            depth = 0
+            
+            while current_context and depth < max_depth:
+                # Avoid circular references
+                if current_context in visited_contexts:
+                    logger.warning(f"Circular reference detected in automation chain: {current_context}")
+                    break
+                
+                visited_contexts.add(current_context)
+                
+                # Query for events with this context_parent_id (children)
+                query = f'''
+                from(bucket: "{influxdb_bucket}")
+                    |> range(start: -30d)
+                    |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+                    |> filter(fn: (r) => r["_field"] == "context_parent_id")
+                    |> filter(fn: (r) => r["_value"] == "{current_context}")
+                    |> limit(n: 100)
+                '''
+                
+                result = query_api.query(query)
+                
+                found_events = []
+                next_context = None
+                
+                for table in result:
+                    for record in table.records:
+                        # Get the event context_id for next iteration
+                        event_context_id = record.values.get("context_id")
+                        
+                        if include_details:
+                            # Query full event details
+                            event_detail_query = f'''
+                            from(bucket: "{influxdb_bucket}")
+                                |> range(start: -30d)
+                                |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+                                |> filter(fn: (r) => r["context_id"] == "{event_context_id}")
+                                |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+                                |> limit(n: 1)
+                            '''
+                            detail_result = query_api.query(event_detail_query)
+                            
+                            for detail_table in detail_result:
+                                for detail_record in detail_table.records:
+                                    event_info = {
+                                        "depth": depth,
+                                        "context_id": event_context_id,
+                                        "context_parent_id": current_context,
+                                        "timestamp": detail_record.get_time().isoformat(),
+                                        "entity_id": detail_record.values.get("entity_id", "unknown"),
+                                        "event_type": detail_record.values.get("event_type", "unknown"),
+                                        "state": detail_record.values.get("state"),
+                                        "old_state": detail_record.values.get("old_state")
+                                    }
+                                    found_events.append(event_info)
+                        else:
+                            # Minimal info
+                            event_info = {
+                                "depth": depth,
+                                "context_id": event_context_id,
+                                "context_parent_id": current_context,
+                                "timestamp": record.get_time().isoformat()
+                            }
+                            found_events.append(event_info)
+                        
+                        # Use first event's context_id for next iteration
+                        if not next_context:
+                            next_context = event_context_id
+                
+                chain.extend(found_events)
+                
+                # Move to next level (follow first child)
+                current_context = next_context
+                depth += 1
+            
+            client.close()
+            
+            logger.info(f"Traced automation chain for {context_id}: {len(chain)} events, {depth} levels deep")
+            return chain
+            
+        except Exception as e:
+            logger.error(f"Error tracing automation chain: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return []
     
     def _get_mock_events(self, limit: int) -> List[EventData]:

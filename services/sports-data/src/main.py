@@ -71,8 +71,8 @@ async def lifespan(app: FastAPI):
     # Initialize API client
     sports_client = SportsAPIClient(cache=cache)
     
-    # Initialize webhook manager (Story 12.3)
-    webhook_manager = WebhookManager(storage_file="data/webhooks.json")
+    # Initialize webhook manager (Story 22.3: SQLite storage)
+    webhook_manager = WebhookManager(db_path="data/webhooks.db")
     await webhook_manager.startup()
     
     # Start event detector (Story 12.3)

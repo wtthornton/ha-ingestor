@@ -13,7 +13,10 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 | **Backend Framework (API)** | FastAPI | 0.104.1 | REST API for admin interface | High performance, automatic OpenAPI docs, excellent async support |
 | **Backend Framework (WebSocket)** | aiohttp | 3.9.1 | WebSocket client + async HTTP | Native async WebSocket + simple HTTP API for real-time streaming |
 | **API Style** | REST + WebSocket | - | Admin API + Real-time streaming | REST for admin interface, WebSocket for real-time data |
-| **Database** | InfluxDB | 2.7 | Time-series data storage | Purpose-built for time-series data and Home Assistant events |
+| **Database (Time-Series)** | InfluxDB | 2.7 | Time-series data storage | Purpose-built for time-series data and Home Assistant events |
+| **Database (Metadata)** | SQLite | 3.45+ | Metadata and registry storage | Lightweight relational DB for devices, entities, webhooks (Epic 22) |
+| **ORM** | SQLAlchemy | 2.0.25 | Async database access | Modern async ORM for SQLite with excellent FastAPI integration |
+| **Migrations** | Alembic | 1.13.1 | Schema migrations | Standard migration tool for SQLAlchemy schemas |
 | **File Storage** | Local Docker Volumes | - | Persistent data storage | Simple local storage with Docker Compose |
 | **Authentication** | Long-lived Access Tokens | - | Home Assistant authentication | HA's standard auth method for WebSocket connections |
 | **Frontend Testing** | Vitest | 3.2.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support (upgraded from 1.0.4) |
@@ -42,6 +45,9 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 
 ### Data & Storage
 - **InfluxDB 2.7**: Purpose-built for time-series data, perfect for Home Assistant sensor data
+- **SQLite 3.45+**: Lightweight relational database for metadata (devices, entities, webhooks) with WAL mode for concurrency
+- **SQLAlchemy 2.0**: Modern async ORM providing type-safe database access with excellent FastAPI integration
+- **Hybrid Architecture**: InfluxDB for time-series events/metrics, SQLite for relational metadata (Epic 22)
 - **Docker Volumes**: Simple, reliable local storage for development and production
 
 ### Testing Strategy
@@ -69,9 +75,30 @@ All versions are pinned to ensure reproducible builds and consistent behavior ac
 - **Backend**: `requirements.txt` with version constraints
 - **Infrastructure**: Docker image tags with specific versions
 
+## Database Architecture (Epic 22)
+
+**Hybrid Database Strategy** implemented to optimize for different data types:
+
+| Data Type | Database | Rationale |
+|-----------|----------|-----------|
+| **Time-Series Data** | InfluxDB | Events, metrics, sports scores - optimized for time-range queries |
+| **Metadata** | SQLite | Devices, entities, webhooks - optimized for relational queries |
+
+**Benefits:**
+- 5-10x faster device/entity queries (<10ms vs ~50ms)
+- Proper foreign key relationships
+- Concurrent-safe operations (WAL mode)
+- ACID transactions for critical data
+
+**Implementation:**
+- data-api: SQLite for devices/entities (`data/metadata.db`)
+- sports-data: SQLite for webhooks (`data/webhooks.db`)
+- Both services: InfluxDB for time-series data
+
 ## Future Technology Considerations
 
 - **State Management**: Consider Redux Toolkit if state complexity grows
-- **Database**: InfluxDB 2.7 provides excellent performance for current scale
+- **Database**: Current hybrid architecture (InfluxDB + SQLite) excellent for current scale
+- **PostgreSQL**: Consider if need multi-server writes or >10k devices
 - **Monitoring**: May add Prometheus/Grafana for advanced monitoring in future
 - **Caching**: Redis could be added for API response caching if needed

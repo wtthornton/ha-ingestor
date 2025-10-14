@@ -1,0 +1,29 @@
+Generic single-database configuration with async SQLAlchemy support for SQLite.
+
+## Usage
+
+### Create a new migration
+```bash
+cd services/data-api
+alembic revision --autogenerate -m "description of changes"
+```
+
+### Apply migrations
+```bash
+cd services/data-api
+alembic upgrade head
+```
+
+### Rollback migrations
+```bash
+cd services/data-api
+alembic downgrade -1
+```
+
+### View migration history
+```bash
+cd services/data-api
+alembic history
+alembic current
+```
+

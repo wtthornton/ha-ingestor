@@ -74,3 +74,38 @@ jobs:
 - **Tmpfs mounts:** For temporary files and caches
 - **Multi-stage builds:** Eliminate build tools from production images
 
+### Persistent Storage (Epic 22)
+
+**Docker Volumes:**
+```yaml
+volumes:
+  influxdb_data:         # InfluxDB time-series data
+  influxdb_config:       # InfluxDB configuration
+  sqlite-data:           # SQLite metadata databases (Epic 22)
+  data_retention_backups:# Retention service backups
+  ha_ingestor_logs:      # Centralized logs
+```
+
+**Hybrid Database Architecture:**
+- **InfluxDB** (`influxdb_data` volume):
+  - Home Assistant events (time-series)
+  - Sports scores and game data
+  - Weather enrichment data
+  - System metrics
+  
+- **SQLite** (`sqlite-data` volume):
+  - `metadata.db` (data-api) - Devices and entities registry
+  - `webhooks.db` (sports-data) - Webhook subscriptions
+  - WAL mode enabled for concurrent access
+  - File-based backups (simple `cp` command)
+
+**Backup Strategy:**
+```bash
+# InfluxDB backup
+docker exec ha-ingestor-data-api influx backup /backup/
+
+# SQLite backup (simple file copy - safe with WAL mode)
+docker cp ha-ingestor-data-api:/app/data/metadata.db ./backups/sqlite/
+docker cp ha-ingestor-sports-data:/app/data/webhooks.db ./backups/sqlite/
+```
+
