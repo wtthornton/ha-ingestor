@@ -13,6 +13,7 @@ import time
 
 from ..clients.data_api_client import DataAPIClient
 from ..pattern_analyzer.time_of_day import TimeOfDayPatternDetector
+from ..pattern_analyzer.co_occurrence import CoOccurrencePatternDetector
 from ..database import get_db, store_patterns, get_patterns, get_pattern_stats, delete_old_patterns
 from ..config import settings
 
@@ -126,6 +127,126 @@ async def detect_time_of_day_patterns(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Pattern detection failed: {str(e)}"
+        )
+
+
+@router.post("/detect/co-occurrence")
+async def detect_co_occurrence_patterns(
+    days: int = Query(default=30, ge=1, le=90, description="Number of days of history to analyze"),
+    window_minutes: int = Query(default=5, ge=1, le=60, description="Time window for co-occurrence (minutes)"),
+    min_support: int = Query(default=5, ge=1, le=20, description="Minimum co-occurrence count"),
+    min_confidence: float = Query(default=0.7, ge=0.0, le=1.0, description="Minimum confidence threshold"),
+    limit: int = Query(default=10000, ge=100, le=50000, description="Maximum events to fetch"),
+    optimize: bool = Query(default=True, description="Use optimized version for large datasets"),
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Detect co-occurrence patterns from historical data.
+    
+    This endpoint:
+    1. Fetches historical events from Data API
+    2. Runs co-occurrence pattern detection using sliding window
+    3. Stores detected patterns in database
+    4. Returns pattern summary and performance metrics
+    """
+    start_time = time.time()
+    
+    try:
+        logger.info(
+            f"Starting co-occurrence pattern detection: days={days}, window={window_minutes}min, "
+            f"min_support={min_support}, min_confidence={min_confidence}"
+        )
+        
+        # Step 1: Fetch historical events
+        logger.info(f"Fetching events from Data API (last {days} days)")
+        end_dt = datetime.now(timezone.utc)
+        start_dt = end_dt - timedelta(days=days)
+        
+        events_df = await data_api_client.fetch_events(
+            start_time=start_dt,
+            end_time=end_dt,
+            limit=limit
+        )
+        
+        if events_df.empty:
+            return {
+                "success": False,
+                "message": f"No events found for the last {days} days",
+                "data": {
+                    "patterns_detected": 0,
+                    "patterns_stored": 0,
+                    "events_analyzed": 0
+                }
+            }
+        
+        # Ensure required columns
+        if 'entity_id' in events_df.columns and 'device_id' not in events_df.columns:
+            events_df['device_id'] = events_df['entity_id']
+        
+        logger.info(f"✅ Fetched {len(events_df)} events from {events_df['device_id'].nunique()} devices")
+        
+        # Step 2: Detect co-occurrence patterns
+        logger.info("Running co-occurrence pattern detection")
+        detector = CoOccurrencePatternDetector(
+            window_minutes=window_minutes,
+            min_support=min_support,
+            min_confidence=min_confidence
+        )
+        
+        if optimize and len(events_df) > 10000:
+            logger.info("Using optimized detection for large dataset")
+            patterns = detector.detect_patterns_optimized(events_df)
+        else:
+            patterns = detector.detect_patterns(events_df)
+        
+        logger.info(f"✅ Detected {len(patterns)} co-occurrence patterns")
+        
+        # Step 3: Store patterns in database
+        patterns_stored = 0
+        if patterns:
+            logger.info(f"Storing {len(patterns)} patterns in database")
+            patterns_stored = await store_patterns(db, patterns)
+            logger.info(f"✅ Stored {patterns_stored} patterns")
+        
+        # Step 4: Get summary
+        pattern_summary = detector.get_pattern_summary(patterns)
+        
+        # Calculate performance metrics
+        duration = time.time() - start_time
+        
+        logger.info(f"✅ Co-occurrence detection completed in {duration:.2f}s")
+        
+        return {
+            "success": True,
+            "message": f"Detected and stored {patterns_stored} co-occurrence patterns",
+            "data": {
+                "patterns_detected": len(patterns),
+                "patterns_stored": patterns_stored,
+                "events_analyzed": len(events_df),
+                "unique_devices": int(events_df['device_id'].nunique()),
+                "time_range": {
+                    "start": start_dt.isoformat(),
+                    "end": end_dt.isoformat(),
+                    "days": days
+                },
+                "parameters": {
+                    "window_minutes": window_minutes,
+                    "min_support": min_support,
+                    "min_confidence": min_confidence
+                },
+                "summary": pattern_summary,
+                "performance": {
+                    "duration_seconds": round(duration, 2),
+                    "events_per_second": int(len(events_df) / duration) if duration > 0 else 0
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Co-occurrence detection failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Co-occurrence detection failed: {str(e)}"
         )
 
 
