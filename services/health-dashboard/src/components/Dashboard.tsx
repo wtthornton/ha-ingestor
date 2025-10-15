@@ -6,7 +6,6 @@ import * as Tabs from './tabs';
 // Tab configuration
 const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
   overview: Tabs.OverviewTab,
-  custom: Tabs.CustomTab,
   services: Tabs.ServicesTab,
   dependencies: Tabs.DependenciesTab,
   devices: Tabs.DevicesTab,
@@ -14,6 +13,7 @@ const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
   logs: Tabs.LogsTab,
   sports: Tabs.SportsTab,
   'data-sources': Tabs.DataSourcesTab,
+  energy: Tabs.EnergyTab,
   analytics: Tabs.AnalyticsTab,
   alerts: Tabs.AlertsTab,
   configuration: Tabs.ConfigurationTab,
@@ -21,7 +21,6 @@ const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
 
 const TAB_CONFIG = [
   { id: 'overview', label: '📊 Overview', icon: '📊', shortLabel: 'Overview' },
-  { id: 'custom', label: '🎨 Custom', icon: '🎨', shortLabel: 'Custom' },
   { id: 'services', label: '🔧 Services', icon: '🔧', shortLabel: 'Services' },
   { id: 'dependencies', label: '🔗 Dependencies', icon: '🔗', shortLabel: 'Deps' },
   { id: 'devices', label: '📱 Devices', icon: '📱', shortLabel: 'Devices' },
@@ -29,6 +28,7 @@ const TAB_CONFIG = [
   { id: 'logs', label: '📜 Logs', icon: '📜', shortLabel: 'Logs' },
   { id: 'sports', label: '🏈 Sports', icon: '🏈', shortLabel: 'Sports' },
   { id: 'data-sources', label: '🌐 Data Sources', icon: '🌐', shortLabel: 'Data' },
+  { id: 'energy', label: '⚡ Energy', icon: '⚡', shortLabel: 'Energy' },
   { id: 'analytics', label: '📈 Analytics', icon: '📈', shortLabel: 'Analytics' },
   { id: 'alerts', label: '🚨 Alerts', icon: '🚨', shortLabel: 'Alerts' },
   { id: 'configuration', label: '⚙️ Configuration', icon: '⚙️', shortLabel: 'Config' },
@@ -49,6 +49,32 @@ export const Dashboard: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Handle custom navigation events from modals
+  useEffect(() => {
+    const handleNavigateToTab = (event: CustomEvent) => {
+      const { tabId } = event.detail;
+      setSelectedTab(tabId);
+    };
+
+    window.addEventListener('navigateToTab', handleNavigateToTab as EventListener);
+    return () => window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener);
+  }, []);
+
+  // One-time cleanup of deprecated Custom tab localStorage
+  useEffect(() => {
+    const cleanupKey = 'dashboard-layout-cleanup-v1';
+    const hasCleanedUp = localStorage.getItem(cleanupKey);
+    
+    if (!hasCleanedUp) {
+      const oldLayout = localStorage.getItem('dashboard-layout');
+      if (oldLayout) {
+        localStorage.removeItem('dashboard-layout');
+        console.log('✅ Cleaned up deprecated Custom tab layout from localStorage');
+      }
+      localStorage.setItem(cleanupKey, 'true');
+    }
+  }, []);
 
   // Get the current tab component
   const TabComponent = TAB_COMPONENTS[selectedTab] || Tabs.OverviewTab;

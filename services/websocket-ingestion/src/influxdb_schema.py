@@ -22,12 +22,13 @@ class InfluxDBSchema:
     
     def __init__(self):
         """Initialize schema design"""
-        # Measurement names
-        self.MEASUREMENT_EVENTS = "home_assistant_events"
-        self.MEASUREMENT_WEATHER = "weather_data"
-        self.MEASUREMENT_SUMMARY = "event_summaries"
+        # Measurement names (Updated January 2025)
+        self.MEASUREMENT_EVENTS = "home_assistant_events"  # Primary bucket
+        self.MEASUREMENT_WEATHER = "weather_data"          # weather_data bucket
+        self.MEASUREMENT_SPORTS = "sports_data"            # sports_data bucket
+        self.MEASUREMENT_SYSTEM = "system_metrics"         # system_metrics bucket
         
-        # Tag keys for efficient querying
+        # Tag keys for efficient querying (Epic 23 Enhanced)
         self.TAG_ENTITY_ID = "entity_id"
         self.TAG_DOMAIN = "domain"
         self.TAG_DEVICE_CLASS = "device_class"
@@ -35,23 +36,37 @@ class InfluxDBSchema:
         self.TAG_LOCATION = "location"
         self.TAG_WEATHER_CONDITION = "weather_condition"
         self.TAG_EVENT_TYPE = "event_type"
+        # Epic 23.2: Device-level aggregation
+        self.TAG_DEVICE_ID = "device_id"
+        self.TAG_AREA_ID = "area_id"
+        # Epic 23.4: Entity classification
+        self.TAG_ENTITY_CATEGORY = "entity_category"
         
-        # Field keys for data storage
-        self.FIELD_STATE = "state"
-        self.FIELD_OLD_STATE = "old_state"
+        # Field keys for data storage (Epic 23 Enhanced)
+        self.FIELD_STATE = "state_value"
+        self.FIELD_OLD_STATE = "previous_state"
         self.FIELD_ATTRIBUTES = "attributes"
-        self.FIELD_TEMPERATURE = "temperature"
-        self.FIELD_HUMIDITY = "humidity"
-        self.FIELD_PRESSURE = "pressure"
+        self.FIELD_TEMPERATURE = "weather_temp"
+        self.FIELD_HUMIDITY = "weather_humidity"
+        self.FIELD_PRESSURE = "weather_pressure"
         self.FIELD_WIND_SPEED = "wind_speed"
         self.FIELD_WEATHER_DESCRIPTION = "weather_description"
+        # Epic 23.1: Context tracking
         self.FIELD_CONTEXT_ID = "context_id"
+        self.FIELD_CONTEXT_PARENT_ID = "context_parent_id"
         self.FIELD_CONTEXT_USER_ID = "context_user_id"
+        # Epic 23.3: Duration tracking
+        self.FIELD_DURATION_IN_STATE = "duration_in_state_seconds"
+        # Epic 23.5: Device metadata
+        self.FIELD_MANUFACTURER = "manufacturer"
+        self.FIELD_MODEL = "model"
+        self.FIELD_SW_VERSION = "sw_version"
         
-        # Retention policies
-        self.RETENTION_RAW_DATA = "raw_data_1y"  # 1 year
-        self.RETENTION_HOURLY_SUMMARY = "hourly_summary_2y"  # 2 years
-        self.RETENTION_DAILY_SUMMARY = "daily_summary_5y"  # 5 years
+        # Retention policies (Current Configuration - January 2025)
+        self.RETENTION_HA_EVENTS = "365d"        # home_assistant_events bucket
+        self.RETENTION_SPORTS_DATA = "90d"       # sports_data bucket  
+        self.RETENTION_WEATHER_DATA = "180d"     # weather_data bucket
+        self.RETENTION_SYSTEM_METRICS = "30d"    # system_metrics bucket
     
     def create_event_point(self, event_data: Dict[str, Any]) -> Optional[Point]:
         """

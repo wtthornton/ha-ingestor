@@ -13,8 +13,13 @@ This system uses a **hybrid database architecture** optimizing for different dat
 
 **Database:** `home_assistant`
 **Organization:** `home_assistant`
-**Bucket:** `events`
-**Retention Policy:** 1 year (365 days)
+**Primary Bucket:** `home_assistant_events` (365 days retention)
+**Additional Buckets:** 
+- `sports_data` (90 days retention)
+- `weather_data` (180 days retention) 
+- `system_metrics` (30 days retention)
+
+**Status:** ✅ Schema validated and deployed (January 2025)
 
 ### Primary Measurement: `home_assistant_events`
 
@@ -29,9 +34,9 @@ This system uses a **hybrid database architecture** optimizing for different dat
 - `integration` - HA integration source (zwave, mqtt, zigbee, etc.)
 - `weather_condition` - Current weather condition (clear, cloudy, rain, etc.)
 - `time_of_day` - Time period (morning, afternoon, evening, night)
-- **[Epic 23.2]** `device_id` - Physical device identifier for device-level aggregation
-- **[Epic 23.2]** `area_id` - Room/area ID for spatial analytics
-- **[Epic 23.4]** `entity_category` - Entity classification (null, diagnostic, config)
+- **[Epic 23.2]** `device_id` - Physical device identifier for device-level aggregation ✅
+- **[Epic 23.2]** `area_id` - Room/area ID for spatial analytics ✅
+- **[Epic 23.4]** `entity_category` - Entity classification (null, diagnostic, config) ✅
 
 #### Fields (measurements and values):
 - `state_value` - Current state value (string)
@@ -39,18 +44,17 @@ This system uses a **hybrid database architecture** optimizing for different dat
 - `normalized_value` - Standardized numeric value (float)
 - `confidence` - Sensor confidence level if applicable (float)
 - `duration_seconds` - Time in current state (integer)
-- `energy_consumption` - Energy usage in kWh if applicable (float)
 - `weather_temp` - Current temperature in Celsius (float)
 - `weather_humidity` - Current humidity percentage (float)
 - `weather_pressure` - Current atmospheric pressure in hPa (float)
 - `unit_of_measurement` - Unit of measurement (string)
-- **[Epic 23.1]** `context_id` - Event context identifier for correlation (string)
-- **[Epic 23.1]** `context_parent_id` - Parent automation context for causality tracking (string)
-- **[Epic 23.1]** `context_user_id` - User who triggered the event (string)
-- **[Epic 23.3]** `duration_in_state_seconds` - Time entity was in previous state (float)
-- **[Epic 23.5]** `manufacturer` - Device manufacturer for reliability analysis (string)
-- **[Epic 23.5]** `model` - Device model for reliability analysis (string)
-- **[Epic 23.5]** `sw_version` - Device firmware version for version correlation (string)
+- **[Epic 23.1]** `context_id` - Event context identifier for correlation (string) ✅
+- **[Epic 23.1]** `context_parent_id` - Parent automation context for causality tracking (string) ✅
+- **[Epic 23.1]** `context_user_id` - User who triggered the event (string) ✅
+- **[Epic 23.3]** `duration_in_state_seconds` - Time entity was in previous state (float) ✅
+- **[Epic 23.5]** `manufacturer` - Device manufacturer for reliability analysis (string) ✅
+- **[Epic 23.5]** `model` - Device model for reliability analysis (string) ✅
+- **[Epic 23.5]** `sw_version` - Device firmware version for version correlation (string) ✅
 
 ### Schema Examples
 
@@ -96,7 +100,6 @@ Fields:
   state_value: "on"
   previous_state: "off"
   normalized_value: 1.0
-  energy_consumption: 0.05
 Timestamp: 2024-12-19T15:30:00Z
 ```
 
@@ -133,33 +136,39 @@ BEGIN
 END
 ```
 
-### Retention Policies
+### Retention Policies (Current Configuration)
 
-#### Raw Data:
-- **Policy Name:** `raw_data_policy`
-- **Duration:** 365 days (1 year)
-- **Replication:** 1 (single instance)
-- **Shard Duration:** 7 days
+#### Primary Bucket: `home_assistant_events`
+- **Retention:** 365 days (1 year) ✅
+- **Purpose:** Home Assistant event data with Epic 23 enhancements
 
-#### Hourly Summaries:
-- **Policy Name:** `hourly_summary_policy`
-- **Duration:** 730 days (2 years)
-- **Replication:** 1
-- **Shard Duration:** 30 days
+#### Sports Data Bucket: `sports_data`
+- **Retention:** 90 days ✅
+- **Purpose:** Sports scores and game data
 
-#### Daily Summaries:
-- **Policy Name:** `daily_summary_policy`
-- **Duration:** 1825 days (5 years)
-- **Replication:** 1
-- **Shard Duration:** 90 days
+#### Weather Data Bucket: `weather_data`
+- **Retention:** 180 days ✅
+- **Purpose:** Weather enrichment data
+
+#### System Metrics Bucket: `system_metrics`
+- **Retention:** 30 days ✅
+- **Purpose:** System performance and health metrics
+
+**Note:** All buckets are configured and validated as of January 2025
 
 ---
 
-## SQLite Schema Design (Epic 22)
+## SQLite Schema Design (Epic 22 + October 2025 Enhancement)
 
 **Database Files:**
 - `data/metadata.db` (data-api service) - Devices and entities
 - `data/webhooks.db` (sports-data service) - Webhook subscriptions
+
+**Data Population** (Updated October 2025):
+- **Devices & Entities**: Direct from Home Assistant WebSocket discovery
+- **Method**: POST to `/internal/devices/bulk_upsert` (automated on connection)
+- **Frequency**: On WebSocket connect/reconnect
+- **Current Data**: 99 real devices, 100+ real entities ✅
 
 **Configuration:**
 - **WAL Mode**: Enabled for concurrent reads/writes

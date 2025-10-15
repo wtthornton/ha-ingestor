@@ -255,7 +255,7 @@ class WebSocketIngestionService:
         logger.info("WebSocket Ingestion Service stopped")
     
     async def _on_connect(self):
-        """Handle successful connection"""
+        """Handle successful connection and trigger discovery"""
         corr_id = get_correlation_id() or generate_correlation_id()
         log_with_context(
             logger, "INFO", "Successfully connected to Home Assistant",
@@ -264,6 +264,23 @@ class WebSocketIngestionService:
             status="connected",
             url=self.home_assistant_url
         )
+        
+        # Trigger device and entity discovery
+        if self.connection_manager and self.connection_manager.client:
+            log_with_context(
+                logger, "INFO", "Starting device and entity discovery...",
+                operation="discovery_trigger",
+                correlation_id=corr_id
+            )
+            try:
+                if self.connection_manager.client.websocket:
+                    await self.connection_manager.discovery_service.discover_all(
+                        self.connection_manager.client.websocket
+                    )
+                else:
+                    logger.error("Cannot run discovery: WebSocket not available")
+            except Exception as e:
+                logger.error(f"Discovery failed (non-fatal): {e}")
     
     async def _on_disconnect(self):
         """Handle disconnection"""

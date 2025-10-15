@@ -1,0 +1,99 @@
+<testsuites id="" name="" tests="11" failures="2" skipped="0" errors="0" time="33.627642">
+<testsuite name="custom-tab-removal.spec.ts" timestamp="2025-10-15T14:17:50.868Z" hostname="chromium" tests="11" failures="2" skipped="0" time="79.505" errors="0">
+<testcase name="Custom Tab Removal Verification › should display exactly 11 tabs (not 12)" classname="custom-tab-removal.spec.ts" time="5.935">
+<failure message="custom-tab-removal.spec.ts:19:3 should display exactly 11 tabs (not 12)" type="FAILURE">
+<![CDATA[  [chromium] › custom-tab-removal.spec.ts:19:3 › Custom Tab Removal Verification › should display exactly 11 tabs (not 12) 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 11
+    Received: 15
+
+      29 |     
+      30 |     // Should have exactly 11 tabs (was 12 with Custom tab)
+    > 31 |     expect(count).toBe(11);
+         |                   ^
+      32 |   });
+      33 |
+      34 |   test('should NOT display Custom tab', async ({ page }) => {
+        at C:\cursor\ha-ingestor\services\health-dashboard\tests\e2e\custom-tab-removal.spec.ts:31:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\test-failed-1.png]]
+
+[[ATTACHMENT|custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\video.webm]]
+
+[[ATTACHMENT|custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Custom Tab Removal Verification › should NOT display Custom tab" classname="custom-tab-removal.spec.ts" time="3.812">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should display all expected tabs" classname="custom-tab-removal.spec.ts" time="5.074">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should navigate to Overview tab successfully" classname="custom-tab-removal.spec.ts" time="6.095">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should navigate to Services tab successfully" classname="custom-tab-removal.spec.ts" time="4.222">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should navigate to Devices tab successfully" classname="custom-tab-removal.spec.ts" time="6.611">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should check localStorage for cleanup" classname="custom-tab-removal.spec.ts" time="4.221">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should display console message for localStorage cleanup (first load)" classname="custom-tab-removal.spec.ts" time="5.872">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should have correct tab order" classname="custom-tab-removal.spec.ts" time="4.145">
+</testcase>
+<testcase name="Custom Tab Removal Verification › should not have react-grid-layout in page resources" classname="custom-tab-removal.spec.ts" time="30.212">
+<failure message="custom-tab-removal.spec.ts:174:3 should not have react-grid-layout in page resources" type="FAILURE">
+<![CDATA[  [chromium] › custom-tab-removal.spec.ts:174:3 › Custom Tab Removal Verification › should not have react-grid-layout in page resources 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+
+      177 |     
+      178 |     // Wait for page to load
+    > 179 |     await page.waitForLoadState('networkidle');
+          |                ^
+      180 |     
+      181 |     // Get all script sources
+      182 |     const scriptSources = await page.evaluate(() => {
+        at C:\cursor\ha-ingestor\services\health-dashboard\tests\e2e\custom-tab-removal.spec.ts:179:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\video.webm]]
+
+[[ATTACHMENT|custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Custom Tab Removal Verification › should maintain responsive design without Custom tab" classname="custom-tab-removal.spec.ts" time="3.306">
+</testcase>
+</testsuite>
+</testsuites>

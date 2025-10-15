@@ -154,10 +154,9 @@ data-api/
 health-dashboard/
 ├── src/
 │   ├── components/                # React components
-│   │   ├── Dashboard.tsx          # Main dashboard with 12 tabs
+│   │   ├── Dashboard.tsx          # Main dashboard with 11 tabs
 │   │   ├── tabs/                  # Tab components
 │   │   │   ├── OverviewTab.tsx    # System overview
-│   │   │   ├── CustomTab.tsx      # Customizable dashboard
 │   │   │   ├── ServicesTab.tsx    # Service management
 │   │   │   ├── DependenciesTab.tsx # Dependency visualization
 │   │   │   ├── DevicesTab.tsx     # Device & entity browser

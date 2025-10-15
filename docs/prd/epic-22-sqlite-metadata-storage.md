@@ -4,11 +4,12 @@
 
 **Epic Goal**: Add SQLite database for storing metadata (devices, webhooks, user preferences) separately from time-series data in InfluxDB.
 
-**Status**: ✅ COMPLETE (3 of 4 stories)  
+**Status**: ✅ COMPLETE + ENHANCED (October 2025)  
 **Priority**: Medium  
 **Complexity**: Low (Kept Simple!)  
 **Actual Duration**: <1 day (Stories 22.1-22.3 implemented 2025-01-14)  
 **Cancelled**: Story 22.4 (User Preferences - optional, not needed)  
+**Enhancement**: Direct HA → SQLite storage (October 2025) - Fixed architecture gap  
 
 ## Problem Statement
 
@@ -318,4 +319,55 @@ alembic==1.13.1
 - No complex migrations
 
 **Estimated Effort**: 24-40 hours over 5 days (with optional Story 22.4)
+
+---
+
+## October 2025 Enhancement: Direct HA → SQLite Storage
+
+### Problem Identified
+
+The original Epic 22 implementation left an architectural gap:
+- ✅ SQLite database created
+- ✅ Data-API endpoints serve from SQLite
+- ❌ Discovery service still wrote to InfluxDB only
+- ❌ No automated sync from InfluxDB → SQLite
+- **Result**: Stale mock data in SQLite, real data orphaned in InfluxDB
+
+### Solution Implemented
+
+**Direct Storage Architecture**:
+```
+Home Assistant WebSocket
+         ↓ Discovery Service
+    HTTP POST /internal/devices/bulk_upsert
+         ↓ Data-API
+    SQLite (PRIMARY) ✅
+```
+
+**Changes Made**:
+1. Added `POST /internal/devices/bulk_upsert` endpoint (data-api)
+2. Added `POST /internal/entities/bulk_upsert` endpoint (data-api)
+3. Updated `discovery_service.py` to POST to data-api
+4. Triggered discovery in `main._on_connect()`
+5. Made InfluxDB device storage optional (disabled by default)
+
+**Results**:
+- ✅ 99 real devices from Home Assistant
+- ✅ 100+ real entities from Home Assistant
+- ✅ Automatic on every WebSocket connection
+- ✅ No manual sync scripts needed
+- ✅ Real-time updates
+
+**Files Modified**:
+- `services/data-api/src/devices_endpoints.py` - Bulk upsert endpoints
+- `services/websocket-ingestion/src/discovery_service.py` - Direct SQLite storage
+- `services/websocket-ingestion/src/main.py` - Discovery trigger
+- `docker-compose.yml` - Added DATA_API_URL env var
+
+**Deprecated Scripts** (no longer needed):
+- `sync_devices.py`
+- `populate_sqlite.py`
+- `simple_populate_sqlite.py`
+
+**Documentation**: See `implementation/ARCHITECTURE_FIX_COMPLETE.md` for full details.
 

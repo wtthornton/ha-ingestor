@@ -1,7 +1,7 @@
 version: 1.0
-last_updated: 2025-01-14T00:00:00Z
-total_libraries: 1
-total_topics: 3
+last_updated: 2025-10-15T00:00:00Z
+total_libraries: 5
+total_topics: 8
 total_cache_hits: 0
 
 libraries:
@@ -11,6 +11,39 @@ libraries:
       - when-to-use
       - docker-deployment
     last_fetched: 2025-01-14T00:00:00Z
+    cache_hits: 0
+    source: web_research
+  
+  scikit-learn:
+    topics:
+      - pattern-recognition
+      - clustering
+      - anomaly-detection
+    last_fetched: 2025-10-15T00:00:00Z
+    cache_hits: 0
+    source: web_research
+  
+  prophet:
+    topics:
+      - time-series-forecasting
+      - seasonal-patterns
+    last_fetched: 2025-10-15T00:00:00Z
+    cache_hits: 0
+    source: web_research
+  
+  langchain:
+    topics:
+      - llm-orchestration
+      - prompt-engineering
+    last_fetched: 2025-10-15T00:00:00Z
+    cache_hits: 0
+    source: web_research
+  
+  openai:
+    topics:
+      - gpt-4-api
+      - structured-output
+    last_fetched: 2025-10-15T00:00:00Z
     cache_hits: 0
     source: web_research
     

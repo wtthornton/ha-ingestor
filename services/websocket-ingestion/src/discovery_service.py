@@ -362,7 +362,7 @@ class DiscoveryService:
         config_entries_data: List[Dict[str, Any]]
     ) -> bool:
         """
-        Store discovery results in InfluxDB
+        Store discovery results to SQLite (via data-api) and optionally to InfluxDB
         
         Args:
             devices_data: List of device dictionaries from HA
@@ -372,56 +372,90 @@ class DiscoveryService:
         Returns:
             True if storage successful
         """
+        import aiohttp
+        import os
+        
         try:
-            # Convert devices to models
-            devices = []
-            for device_data in devices_data:
-                try:
-                    device = Device.from_ha_device(device_data)
-                    device.validate()
-                    devices.append(device)
-                except Exception as e:
-                    logger.warning(f"⚠️  Skipping invalid device: {e}")
+            # Primary storage: SQLite via data-api (simple HTTP POST)
+            data_api_url = os.getenv('DATA_API_URL', 'http://ha-ingestor-data-api:8006')
             
-            # Convert entities to models
-            entities = []
-            for entity_data in entities_data:
-                try:
-                    entity = Entity.from_ha_entity(entity_data)
-                    entity.validate()
-                    entities.append(entity)
-                except Exception as e:
-                    logger.warning(f"⚠️  Skipping invalid entity: {e}")
+            # Create session with proper connector (disable SSL for internal HTTP)
+            connector = aiohttp.TCPConnector(ssl=False)
+            timeout = aiohttp.ClientTimeout(total=30)
             
-            # Convert config entries to models
-            config_entries = []
-            for entry_data in config_entries_data:
-                try:
-                    entry = ConfigEntry.from_ha_config_entry(entry_data)
-                    entry.validate()
-                    config_entries.append(entry)
-                except Exception as e:
-                    logger.warning(f"⚠️  Skipping invalid config entry: {e}")
+            async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+                # Store devices to SQLite
+                if devices_data:
+                    try:
+                        async with session.post(
+                            f"{data_api_url}/internal/devices/bulk_upsert",
+                            json=devices_data,
+                            timeout=aiohttp.ClientTimeout(total=30)
+                        ) as response:
+                            if response.status == 200:
+                                result = await response.json()
+                                logger.info(f"✅ Stored {result.get('upserted', 0)} devices to SQLite")
+                            else:
+                                error_text = await response.text()
+                                logger.error(f"❌ Failed to store devices to SQLite: {response.status} - {error_text}")
+                    except Exception as e:
+                        logger.error(f"❌ Error posting devices to data-api: {e}")
+                
+                # Store entities to SQLite
+                if entities_data:
+                    try:
+                        async with session.post(
+                            f"{data_api_url}/internal/entities/bulk_upsert",
+                            json=entities_data,
+                            timeout=aiohttp.ClientTimeout(total=30)
+                        ) as response:
+                            if response.status == 200:
+                                result = await response.json()
+                                logger.info(f"✅ Stored {result.get('upserted', 0)} entities to SQLite")
+                            else:
+                                error_text = await response.text()
+                                logger.error(f"❌ Failed to store entities to SQLite: {response.status} - {error_text}")
+                    except Exception as e:
+                        logger.error(f"❌ Error posting entities to data-api: {e}")
             
-            logger.info(f"✅ Converted to models: {len(devices)} devices, {len(entities)} entities")
+            # Optional: Store snapshot to InfluxDB for historical tracking
+            store_influx_history = os.getenv('STORE_DEVICE_HISTORY_IN_INFLUXDB', 'false').lower() == 'true'
             
-            # Batch write devices
-            if devices:
-                device_points = [d.to_influx_point() for d in devices]
-                success = await self.influxdb_manager.batch_write_devices(device_points, bucket="home_assistant_events")
-                if success:
-                    logger.info(f"✅ Stored {len(devices)} devices in InfluxDB")
-                else:
-                    logger.error(f"❌ Failed to store devices")
-            
-            # Batch write entities
-            if entities:
-                entity_points = [e.to_influx_point() for e in entities]
-                success = await self.influxdb_manager.batch_write_entities(entity_points, bucket="home_assistant_events")
-                if success:
-                    logger.info(f"✅ Stored {len(entities)} entities in InfluxDB")
-                else:
-                    logger.error(f"❌ Failed to store entities")
+            if store_influx_history and self.influxdb_manager:
+                logger.info("📊 Storing device history snapshot to InfluxDB...")
+                
+                # Convert devices to models for InfluxDB
+                devices = []
+                for device_data in devices_data:
+                    try:
+                        device = Device.from_ha_device(device_data)
+                        device.validate()
+                        devices.append(device)
+                    except Exception as e:
+                        logger.warning(f"⚠️  Skipping invalid device for InfluxDB: {e}")
+                
+                # Convert entities to models for InfluxDB
+                entities = []
+                for entity_data in entities_data:
+                    try:
+                        entity = Entity.from_ha_entity(entity_data)
+                        entity.validate()
+                        entities.append(entity)
+                    except Exception as e:
+                        logger.warning(f"⚠️  Skipping invalid entity for InfluxDB: {e}")
+                
+                # Batch write to InfluxDB
+                if devices:
+                    device_points = [d.to_influx_point() for d in devices]
+                    success = await self.influxdb_manager.batch_write_devices(device_points, bucket="home_assistant_events")
+                    if success:
+                        logger.info(f"✅ Stored {len(devices)} devices history to InfluxDB")
+                
+                if entities:
+                    entity_points = [e.to_influx_point() for e in entities]
+                    success = await self.influxdb_manager.batch_write_entities(entity_points, bucket="home_assistant_events")
+                    if success:
+                        logger.info(f"✅ Stored {len(entities)} entities history to InfluxDB")
             
             logger.info("=" * 80)
             logger.info("✅ STORAGE COMPLETE")

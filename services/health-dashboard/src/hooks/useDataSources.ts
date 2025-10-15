@@ -4,6 +4,7 @@ import { DataSourceHealth } from '../types';
 
 export const useDataSources = (refreshInterval: number = 30000) => {
   const [dataSources, setDataSources] = useState<{
+    weather: DataSourceHealth | null;
     carbonIntensity: DataSourceHealth | null;
     electricityPricing: DataSourceHealth | null;
     airQuality: DataSourceHealth | null;

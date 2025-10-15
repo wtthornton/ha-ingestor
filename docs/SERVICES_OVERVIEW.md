@@ -348,7 +348,7 @@ Home Assistant → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
                         │                              │
                         └──────────────┬───────────────┘
                                        ↓
-                Admin API ← Health Dashboard (12 tabs)
+                Admin API ← Health Dashboard (11 tabs)
                     ↑            ↑
               Log Aggregator  Sports Tab
 ```

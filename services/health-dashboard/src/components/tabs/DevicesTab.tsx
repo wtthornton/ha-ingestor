@@ -7,9 +7,23 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedManufacturer, setSelectedManufacturer] = useState('');
   const [selectedArea, setSelectedArea] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('');
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 
-  // Get unique manufacturers and areas for filters
+  // Check for integration context from URL (Phase 1.3)
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const integrationParam = urlParams.get('integration');
+    if (integrationParam) {
+      setSelectedPlatform(integrationParam);
+      // Clear URL param after setting filter
+      urlParams.delete('integration');
+      const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+
+  // Get unique manufacturers, areas, and platforms for filters
   const manufacturers = useMemo(() => {
     const unique = Array.from(new Set(devices.map(d => d.manufacturer).filter(Boolean)));
     return unique.sort();
@@ -20,7 +34,12 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
     return unique.sort();
   }, [devices]);
 
-  // Filter devices
+  const platforms = useMemo(() => {
+    const unique = Array.from(new Set(entities.map(e => e.platform).filter(Boolean)));
+    return unique.sort();
+  }, [entities]);
+
+  // Filter devices (enhanced with platform filtering)
   const filteredDevices = useMemo(() => {
     return devices.filter(device => {
       const matchesSearch = !searchTerm || 
@@ -34,9 +53,13 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
       const matchesArea = !selectedArea || 
         device.area_id === selectedArea;
       
-      return matchesSearch && matchesManufacturer && matchesArea;
+      // Platform filtering: check if device has any entity with the selected platform
+      const matchesPlatform = !selectedPlatform || 
+        entities.some(e => e.device_id === device.device_id && e.platform === selectedPlatform);
+      
+      return matchesSearch && matchesManufacturer && matchesArea && matchesPlatform;
     });
-  }, [devices, searchTerm, selectedManufacturer, selectedArea]);
+  }, [devices, entities, searchTerm, selectedManufacturer, selectedArea, selectedPlatform]);
 
   // Get device icon
   const getDeviceIcon = (device: Device): string => {
@@ -131,7 +154,7 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
 
       {/* Search and Filters */}
       <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border mb-6`}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <input
             type="text"
@@ -176,11 +199,37 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
               <option key={a} value={a}>{a}</option>
             ))}
           </select>
+
+          {/* Platform Filter - NEW */}
+          <select
+            value={selectedPlatform}
+            onChange={(e) => setSelectedPlatform(e.target.value)}
+            className={`px-4 py-2 rounded-lg border ${
+              darkMode 
+                ? 'bg-gray-700 border-gray-600 text-gray-100' 
+                : 'bg-white border-gray-300 text-gray-900'
+            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            aria-label="Filter devices by integration platform"
+          >
+            <option value="">All Integrations</option>
+            {platforms.map(platform => (
+              <option key={platform} value={platform}>
+                {platform.charAt(0).toUpperCase() + platform.slice(1)}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Results count */}
-        <div className="mt-3 text-sm text-gray-500">
-          Showing {filteredDevices.length} of {devices.length} devices
+        {/* Results count with platform context */}
+        <div className="mt-3 text-sm text-gray-500 flex items-center gap-2">
+          <span>Showing {filteredDevices.length} of {devices.length} devices</span>
+          {selectedPlatform && (
+            <span className={`px-2 py-1 rounded text-xs font-medium ${
+              darkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {selectedPlatform} integration
+            </span>
+          )}
         </div>
       </div>
 

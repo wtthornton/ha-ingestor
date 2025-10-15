@@ -1,339 +1,1872 @@
-# Health Dashboard UI Enhancement PRD
+# AI Automation Suggestion System - Brownfield Enhancement PRD
 
-## Intro Project Analysis and Context
+**Product Requirements Document**  
+**Version:** 1.0  
+**Date:** 2025-10-15  
+**Author:** John (Product Manager)  
+**Status:** Draft - Pending Review  
+**Epic ID:** Epic-AI-1
 
-### Analysis Source
-IDE-based fresh analysis of existing health dashboard project
+---
 
-### Current Project State
-The Health Dashboard is a React-based monitoring interface for the Home Assistant Ingestor system. It provides real-time monitoring of system health, data visualization, event streaming, and configuration management. The dashboard is built with modern React patterns, TypeScript, and Tailwind CSS, serving as the primary user interface for monitoring the data ingestion pipeline.
+## Table of Contents
 
-### Available Documentation Analysis
-- ✅ Tech Stack Documentation - Available in docs/architecture/tech-stack.md
-- ✅ Source Tree/Architecture - Available in docs/architecture/ and services/health-dashboard/
-- ✅ Coding Standards - Available in docs/architecture/coding-standards.md
-- ✅ API Documentation - Available in services/health-dashboard/src/services/api.ts
-- ✅ External API Documentation - Available in docs/architecture/
-- ⚠️ UX/UI Guidelines - Limited documentation, needs enhancement
-- ✅ Technical Debt Documentation - Available in docs/architecture/
-- ✅ Other: Comprehensive PRD and stories in docs/prd/ and docs/stories/
+1. [Project Analysis and Context](#1-project-analysis-and-context)
+2. [Requirements](#2-requirements)
+3. [User Interface Enhancement Goals](#3-user-interface-enhancement-goals)
+4. [Technical Constraints and Integration](#4-technical-constraints-and-integration)
+5. [Epic and Story Structure](#5-epic-and-story-structure)
 
-### Enhancement Scope Definition
+---
 
-#### Enhancement Type
-- ✅ UI/UX Overhaul
-- ✅ New Feature Addition
-- ✅ Performance/Scalability Improvements
-- ✅ Technology Stack Upgrade
+## 1. Project Analysis and Context
 
-#### Enhancement Description
-Comprehensive enhancement of the existing health dashboard to improve user experience, add advanced data visualization capabilities, implement custom dashboard layouts, enhance real-time features, and modernize the overall interface while maintaining full compatibility with existing functionality.
+### 1.1 Analysis Source
 
-#### Impact Assessment
-- ✅ Significant Impact (substantial existing code changes)
-- ✅ Major Impact (architectural changes required)
+**Analysis Type:** IDE-based fresh analysis with existing project documentation
 
-### Goals and Background Context
+**Available Documentation:**
+- ✅ Existing tech stack documentation
+- ✅ Source tree structure documentation
+- ✅ Current project codebase and services
+- ✅ Architecture documentation
+- ✅ Context7 KB research completed
 
-#### Goals
-- Transform the health dashboard into a modern, visually appealing monitoring interface
-- Provide preset dashboard layouts optimized for different monitoring scenarios
-- Implement modern data visualization with interactive charts and better indicators
-- Enhance real-time capabilities with improved WebSocket integration and notifications
-- Improve mobile experience and accessibility compliance
-- Implement data export and historical analysis capabilities
-- Create a dashboard that clearly shows system health and status at a glance
+---
 
-#### Background Context
-The current health dashboard serves as the primary monitoring interface for the Home Assistant Ingestor system. While functional, it lacks modern visual design and could better communicate system status. Users need a more visually appealing interface that clearly shows system health, modern data visualization, and better real-time monitoring capabilities. The enhancement will transform it into a modern, easy-to-understand monitoring platform while maintaining full backward compatibility with existing integrations and APIs.
+### 1.2 Current Project State
 
-### Change Log
+**Existing Home Assistant Ingestor Project:**
+
+The **Home Assistant Ingestor** is a comprehensive microservices-based system that captures, processes, and stores Home Assistant event data.
+
+**Core Architecture (13 microservices):**
+- **WebSocket Ingestion Service** - Real-time HA event capture
+- **Data API Service** (Port 8006) - Feature data hub (events, devices, sports, analytics)
+- **Admin API Service** (Port 8003) - System monitoring and control
+- **Health Dashboard** - React-based monitoring interface (12 tabs)
+- **Enrichment Pipeline** - Data processing and normalization
+- **Sports Data Service** - ESPN API integration
+- **Data Retention Service** - Lifecycle management
+- **Additional services** - Weather, carbon intensity, electricity pricing, air quality, calendar, smart meter
+
+**Data Architecture:**
+- **InfluxDB** - Time-series data storage (events, metrics)
+- **SQLite** - Metadata storage (devices, entities, webhooks)
+- **Hybrid approach** optimized for different data types
+
+**Current Capabilities:**
+- Real-time event streaming from Home Assistant
+- Device and entity discovery and tracking
+- Sports data integration with automation webhooks
+- Multi-tab health dashboard for system monitoring
+- Data enrichment and quality management
+
+**Technology Stack:**
+- **Backend:** Python 3.11, FastAPI, aiohttp
+- **Frontend:** React 18, TypeScript 5, TailwindCSS
+- **Infrastructure:** Docker Compose, Alpine-based containers
+
+---
+
+### 1.3 Enhancement Scope Definition
+
+#### Enhancement Type:
+- ✅ **New Feature Addition** (Major)
+- ✅ **Integration with New Systems** (AI/ML models, HA automation API)
+- ⚠️ **Technology Stack Expansion** (AI/ML frameworks)
+
+#### Enhancement Description:
+
+**Intelligent Automation Suggestion System** - A new AI-powered subsystem that analyzes Home Assistant event data, device patterns, and existing automations to suggest new automation opportunities.
+
+**Key Features:**
+1. **Backend AI Service** with pattern recognition and recommendation engine
+2. **Automation Analysis Frontend** for viewing current automations and exploring suggestions
+3. **Multi-model approach** analyzing temporal patterns, device relationships, and user behavior
+4. **Categorized automation suggestions** organized by type, priority, and complexity
+5. **Integration** with existing Data API for historical data access
+
+#### Impact Assessment:
+- ✅ **Significant Impact** (substantial existing code changes required)
+  - New microservice addition to existing architecture
+  - New frontend application alongside existing health dashboard
+  - Integration with Data API service
+  - New data models for automation tracking and suggestions
+  - Requires AI/ML infrastructure not currently in the stack
+
+---
+
+### 1.4 Goals and Background Context
+
+#### Goals:
+- Enable users to discover automation opportunities they may not have considered
+- Leverage historical event data to identify actionable patterns in home behavior
+- Reduce friction in creating new Home Assistant automations
+- Provide categorized, prioritized automation suggestions based on actual usage patterns
+- Create a learning system that improves suggestions over time
+- Bridge the gap between data collection and actionable insights
+
+#### Background Context:
+
+The Home Assistant Ingestor currently excels at **collecting and storing** event data from Home Assistant, but lacks capabilities for **analyzing and acting** on that data to improve the user's home automation setup. Users accumulate months of historical data showing device usage patterns, but have no automated way to discover optimization opportunities.
+
+This enhancement addresses a critical gap: **turning passive data collection into active automation intelligence**. By analyzing device interactions, temporal patterns, and existing automations, the system can suggest new automations that align with observed behavior patterns. This transforms the ingestor from a monitoring tool into an **intelligent automation advisor**.
+
+The new subsystem will integrate with the existing Data API rather than duplicating functionality, maintaining the microservices architecture while adding AI-powered intelligence.
+
+---
+
+### 1.5 Change Log
+
 | Change | Date | Version | Description | Author |
-|--------|------|---------|-------------|---------|
-| Initial PRD | 2024-12-19 | 1.0 | Created comprehensive UI enhancement PRD | PM Agent |
+|--------|------|---------|-------------|--------|
+| Initial PRD Creation | 2025-10-15 | 0.1 | Brownfield PRD for AI Automation Suggestion System | PM Agent |
+| Architecture Review | 2025-10-15 | 0.2 | Winston (Architect) validation - simplified to Phase 1 MVP | Architect |
+| Context7 KB Research | 2025-10-15 | 0.3 | AI/ML best practices, Hugging Face analysis, deployment constraints | PM Agent |
+| UI Pattern Analysis | 2025-10-15 | 0.4 | Analyzed existing Health Dashboard for consistent patterns | PM Agent |
 
-## Requirements
+---
 
-### Functional
+### 1.6 AI/ML Technology Stack Research
 
-**FR1**: The enhanced dashboard will maintain full backward compatibility with existing API endpoints and data structures.
+**Context7 KB Research Completed** - Stored in: `docs/kb/context7-cache/`
 
-**FR2**: Users will be able to create, save, and manage custom dashboard layouts with drag-and-drop functionality.
+Based on Context7 KB best practices research, here's the recommended technology stack for Phase 1 MVP:
 
-**FR3**: The system will provide interactive data visualization with zoom, pan, filter, and drill-down capabilities for all charts.
+#### **Phase 1 MVP Stack (Architect-Validated):**
 
-**FR4**: Real-time notifications will alert users to system status changes, errors, and important events.
+| Component | Technology | Version | Purpose | Rationale from KB |
+|-----------|-----------|---------|---------|-------------------|
+| **Core ML Framework** | scikit-learn | 1.3+ | Pattern clustering, anomaly detection | Lightweight, perfect for edge deployment |
+| **Statistical Analysis** | statsmodels | 0.14+ | Basic seasonal decomposition | Lighter alternative to Prophet |
+| **LLM Provider** | OpenAI GPT-4o-mini | Latest | Automation suggestion generation | Cost-effective, good quality |
+| **LLM Orchestration** | LangChain | 0.1+ | Prompt management (optional) | May defer to Phase 2 |
+| **Data Validation** | Pydantic | 2.0+ | Automation schema validation | Type-safe automation structures |
+| **MQTT Client** | paho-mqtt | 1.6+ | Event bus communication | Lightweight, proven |
+| **Caching** | SQLite | 3.45+ | Pattern cache, suggestion storage | Simple, sufficient for single-home |
+| **Scheduling** | APScheduler | 3.10+ | Daily batch jobs | Cron-style scheduling |
 
-**FR5**: Users will be able to export dashboard data in multiple formats (CSV, JSON, PDF) with customizable date ranges.
+#### **Key Pattern Detection Strategies (from KB):**
 
-**FR6**: Mobile users will have an optimized touch-friendly interface with responsive design improvements.
+1. **Time-of-Day Clustering** (KMeans)
+   - Daily routine detection (morning, evening, bedtime patterns)
+   - Cluster device usage by hour of day
 
-**FR7**: The system will provide comprehensive search and filtering capabilities for events, metrics, and configuration data.
+2. **Device Co-Occurrence** (Association Rules)
+   - Devices used together within time windows
+   - Sequential patterns (Device A then Device B)
 
-**FR8**: The dashboard will support multiple themes and user preference management.
+3. **Anomaly Detection** (Isolation Forest)
+   - Manual interventions indicating automation opportunities
+   - **Key Insight:** Anomalies often reveal unmet automation needs
 
-**FR9**: Historical data analysis will be available with configurable time ranges and comparison views.
+#### **What We're NOT Using (Phase 1):**
 
-### Non Functional
+- ❌ **Prophet** - Too memory intensive (100-200MB per device) for MVP
+- ❌ **Deep Learning** - Overkill for Phase 1 patterns
+- ❌ **Local LLM** - API simpler and better quality for MVP
+- ❌ **Multi-scale hierarchies** - Too complex, deferred to Phase 2+
 
-**NFR1**: The enhanced dashboard must maintain existing performance characteristics with page load times under 2 seconds.
+**Rationale:** Focus on delivering value quickly with proven, lightweight tools. Add complexity in future phases based on user feedback and data availability.
 
-**NFR2**: The system must support concurrent access by up to 50 users without performance degradation.
+---
 
-**NFR3**: All new components must be fully accessible (WCAG 2.1 AA compliance) with keyboard navigation and screen reader support.
+### 1.7 Deployment Constraints & Hardware Requirements
 
-**NFR4**: The dashboard must be responsive and fully functional on devices with screen widths from 320px to 2560px.
+**Context7 KB Research:** `docs/kb/context7-cache/edge-ml-deployment-home-assistant.md`
 
-**NFR5**: Bundle size increase must not exceed 30% of current size, with code splitting implemented for optimal loading.
+#### **Deployment Context:**
 
-**NFR6**: All new features must include comprehensive error handling with user-friendly error messages.
+This system must run in a **resource-constrained environment**:
+- **Option A:** Inside Home Assistant OS (Raspberry Pi 4/5, 2-8GB RAM)
+- **Option B:** Separate local server (Intel NUC, small form factor PC)
 
-**NFR7**: The system must maintain 99.9% uptime during the enhancement deployment process.
+#### **Recommended Deployment: Single NUC (Intel i3/i5, 8-16GB RAM)**
 
-**NFR8**: Data export functionality must handle datasets up to 100MB without browser timeout.
+**Hardware Requirements:**
 
-**NFR9**: WebSocket connections must be resilient with automatic reconnection and connection state management.
+| Tier | Hardware | RAM | Cost | Use Case |
+|------|----------|-----|------|----------|
+| **Minimum** | Raspberry Pi 5 (8GB) | 8GB | $80 | Batch processing only, works! |
+| **Recommended** | Intel NUC i3 (8-16GB) ⭐ | 8-16GB | $400-500 | Smooth, no worries |
+| **Comfortable** | Intel NUC i5 (16GB) | 16GB | $600-700 | Future-proof |
 
-### Compatibility Requirements
+**Phase 1 Resource Profile:**
 
-**CR1**: All existing API endpoints and data structures must remain unchanged to maintain compatibility with backend services.
+```
+Memory Usage: 500MB-1GB (vs 2-4GB if using Prophet)
+Processing Time: 5-10 minutes daily (vs 15-60 min multi-scale)
+Hardware: $400-500 (vs $1,000+ dual NUC)
+API Cost: $5-10/month
+Development Time: 2-4 weeks (vs 3-6 months multi-scale)
+```
 
-**CR2**: Current database schema and data models must be preserved without any breaking changes.
+#### **Architecture Pattern:**
 
-**CR3**: Existing UI components and design patterns must be maintained where possible, with new components following established conventions.
+```
+Single NUC (i3/i5, 8-16GB RAM)
+├── Home Assistant (Port 8123) - includes MQTT broker
+├── Data API (Port 8006) - existing
+├── AI Automation Service (Port 8011) - NEW (connects to HA MQTT)
+│   ├── Pattern Analyzer (batch, daily 3 AM)
+│   ├── LLM Suggester (OpenAI API)
+│   ├── Suggestion DB (SQLite)
+│   └── REST API (FastAPI)
+└── AI Automation Frontend (Port 3002) - NEW
+```
 
-**CR4**: Integration with existing WebSocket services, configuration management, and authentication systems must remain intact.
+#### **Processing Schedule:**
 
-## User Interface Enhancement Goals
+```
+Daily (3 AM): Pattern analysis (5-10 minutes)
+  1. Query Data API (30 days of data)
+  2. Feature engineering (pandas)
+  3. Pattern detection (scikit-learn)
+  4. LLM generation (5-10 suggestions)
+  5. Store in SQLite
 
-### Integration with Existing UI
-New UI elements will integrate seamlessly with the existing Tailwind CSS design system, maintaining the current color palette, typography, and spacing conventions. Components will follow the established pattern of functional, clean design with emphasis on data clarity and user efficiency.
+User reviews suggestions at leisure (non-real-time)
+```
 
-### Modified/New Screens and Views
-- **Enhanced Main Dashboard**: Improved layout with modern design and better data presentation
-- **Preset Dashboard Layouts**: Pre-configured dashboard layouts for different monitoring scenarios
-- **Advanced Data Visualization**: Enhanced charts with interactive capabilities and modern styling
-- **Settings and Preferences**: Basic user preference management for themes and display options
-- **Mobile-Optimized Views**: Responsive layouts optimized for touch interaction
+---
 
-### UI Consistency Requirements
-- Maintain existing color scheme and visual hierarchy
-- Preserve current component naming conventions and file structure
-- Ensure all new components follow established TypeScript patterns
-- Maintain consistent error handling and loading state patterns
-- Preserve existing navigation and header structure
+### 1.8 Architect Review Summary
 
-## Technical Constraints and Integration Requirements
+**Reviewer:** Winston (Architect)  
+**Date:** 2025-10-15  
+**Verdict:** ✅ Approved with simplifications for MVP
 
-### Existing Technology Stack
-**Languages**: TypeScript 5.2.2, JavaScript ES6+
-**Frameworks**: React 18.2.0, Vite 5.0.8
-**Styling**: Tailwind CSS 3.4.0, PostCSS 8.4.32
-**Charts**: Chart.js 4.4.0, React-ChartJS-2 5.2.0
-**Testing**: Vitest 1.0.4, Testing Library
-**Build Tools**: Vite, TypeScript Compiler
-**External Dependencies**: date-fns 2.30.0, clsx 2.0.0
+**Key Recommendations Accepted:**
 
-### Integration Approach
-**Database Integration Strategy**: No database changes required; maintain existing API contracts
-**API Integration Strategy**: Enhance existing ApiService class with new endpoints while preserving current functionality
-**Frontend Integration Strategy**: Implement new features as React components following existing patterns, with gradual migration of legacy components
-**Testing Integration Strategy**: Extend existing Vitest configuration with new test suites for enhanced components
+1. ✅ **Phase 1 MVP approach** - Prove value in 2-4 weeks vs 3-6 months
+2. ✅ **scikit-learn only** - No Prophet in Phase 1 (too heavy)
+3. ✅ **3 pattern types** - Time-of-day, co-occurrence, anomaly (no multi-scale)
+4. ✅ **OpenAI API** - Better quality than local LLM for MVP
+5. ✅ **Push to HA** - Leverage HA's execution engine (brilliant decision)
+6. ✅ **MQTT architecture** - Sound choice for IoT systems
+7. ✅ **Single NUC** - Sufficient for Phase 1
 
-### Code Organization and Standards
-**File Structure Approach**: Maintain existing src/ structure with new features in appropriate subdirectories
-**Naming Conventions**: Follow existing TypeScript and React naming patterns established in the codebase
-**Coding Standards**: Adhere to existing ESLint configuration and TypeScript strict mode
-**Documentation Standards**: Follow existing JSDoc patterns and component documentation requirements
+**Red Flags Avoided:**
 
-### Deployment and Operations
-**Build Process Integration**: Enhance existing Vite build configuration with new features and code splitting
-**Deployment Strategy**: Maintain existing Docker-based deployment with updated frontend build process
-**Monitoring and Logging**: Extend existing logging patterns for new features and user interactions
-**Configuration Management**: Integrate with existing configuration management system for new user preferences
-
-### Risk Assessment and Mitigation
-**Technical Risks**: 
-- State management complexity with new features
-- Performance impact of additional components
-- WebSocket connection stability with enhanced real-time features
-
-**Integration Risks**:
-- Breaking changes to existing component interfaces
-- API compatibility issues with enhanced features
-- Mobile responsiveness challenges with new layouts
-
-**Deployment Risks**:
-- Bundle size increase affecting load times
-- Browser compatibility issues with new features
-- User experience disruption during migration
-
-**Mitigation Strategies**:
-- Implement gradual rollout with feature flags
-- Comprehensive testing of existing functionality
-- Performance monitoring and optimization
-- User training and documentation for new features
-
-## Epic and Story Structure
-
-### Epic Approach
-**Epic Structure Decision**: Single comprehensive epic for UI enhancement with logical story sequencing to minimize risk and ensure incremental value delivery. This approach ensures all enhancements work together cohesively while allowing for safe, incremental deployment.
-
-## Epic 1: Health Dashboard UI Enhancement
-
-**Epic Goal**: Transform the existing health dashboard into a modern, highly interactive monitoring interface with personalized layouts, advanced data visualization, enhanced real-time capabilities, and improved user experience while maintaining full backward compatibility.
-
-**Integration Requirements**: All enhancements must preserve existing API contracts, maintain current functionality, and integrate seamlessly with the existing React/TypeScript architecture.
-
-### Story 1.1: Foundation and Navigation Enhancement
-As a user,
-I want improved navigation and foundational UI improvements,
-so that I can better navigate the dashboard and have a more polished user experience.
-
-#### Acceptance Criteria
-1. React Router is implemented with proper navigation structure
-2. Error boundaries are added for better error handling
-3. Enhanced loading states with skeleton screens are implemented
-4. Accessibility improvements with ARIA labels and keyboard navigation
-5. Mobile navigation is optimized for touch interaction
-
-#### Integration Verification
-**IV1**: All existing dashboard functionality remains accessible and functional
-**IV2**: Current API calls and data loading patterns continue to work unchanged
-**IV3**: Performance metrics show no degradation in page load times
-
-### Story 1.2: Preset Dashboard Layouts
-As a user,
-I want to choose from preset dashboard layouts,
-so that I can quickly switch between different monitoring views optimized for different scenarios.
-
-#### Acceptance Criteria
-1. Multiple preset dashboard layouts are available (Overview, Detailed, Mobile)
-2. Users can switch between layouts with a simple selector
-3. Each layout is optimized for specific monitoring scenarios
-4. Layout selection is saved in user preferences
-5. Default layout is preserved for new users
-
-#### Integration Verification
-**IV1**: Existing dashboard components work within all preset layouts
-**IV2**: Current data loading and display functionality is preserved
-**IV3**: Layout switching doesn't disrupt real-time data updates
-
-### Story 1.3: Advanced Data Visualization
-As a user,
-I want interactive charts with zoom, pan, and filtering capabilities,
-so that I can analyze data more effectively and gain deeper insights.
-
-#### Acceptance Criteria
-1. All charts support zoom, pan, and drill-down functionality
-2. Interactive filtering and time range selection is available
-3. Chart data can be exported in multiple formats
-4. Real-time chart updates maintain interactivity
-5. Performance is maintained with large datasets
-
-#### Integration Verification
-**IV1**: Existing chart data sources and API calls continue to work
-**IV2**: Current chart styling and theming is preserved
-**IV3**: Real-time updates function correctly with interactive features
-
-### Story 1.4: Real-time Notifications System
-As a user,
-I want real-time notifications for system events and alerts,
-so that I can stay informed about important changes and issues.
-
-#### Acceptance Criteria
-1. WebSocket-based notification system is implemented
-2. Users can configure notification preferences and thresholds
-3. Notification history and management interface is available
-4. Notifications are properly categorized by severity and type
-5. Mobile-friendly notification display is implemented
-
-#### Integration Verification
-**IV1**: Existing WebSocket connections continue to function
-**IV2**: Current real-time data updates are not disrupted
-**IV3**: Notification system integrates with existing error handling
-
-### Story 1.5: Modern UI Design and Styling
-As a user,
-I want a modern, visually appealing dashboard interface,
-so that I can quickly understand system status and enjoy using the monitoring tool.
-
-#### Acceptance Criteria
-1. Modern design system with improved visual hierarchy is implemented
-2. Enhanced color scheme and typography for better readability
-3. Improved spacing, shadows, and visual effects for modern look
-4. Consistent iconography and visual elements throughout
-5. Dark/light theme support with smooth transitions
-
-#### Integration Verification
-**IV1**: All existing functionality remains visually consistent
-**IV2**: New styling doesn't break existing component layouts
-**IV3**: Theme switching works seamlessly across all components
-
-### Story 1.6: Data Export and Historical Analysis
-As a user,
-I want to export data and perform historical analysis,
-so that I can create reports and analyze trends over time.
-
-#### Acceptance Criteria
-1. Data export functionality supports multiple formats (CSV, JSON, PDF)
-2. Historical data analysis with configurable time ranges is available
-3. Export includes customizable data selection and filtering
-4. Large dataset exports are handled efficiently
-5. Export history and management is available
-
-#### Integration Verification
-**IV1**: Existing data APIs support the new export functionality
-**IV2**: Current data structures and formats are preserved
-**IV3**: Export functionality doesn't impact real-time performance
-
-### Story 1.7: Mobile Experience Enhancement
-As a user,
-I want an optimized mobile experience,
-so that I can effectively monitor the system from mobile devices.
-
-#### Acceptance Criteria
-1. Touch-friendly interface with appropriate gesture support
-2. Mobile-optimized layouts for all dashboard components
-3. Responsive design improvements for various screen sizes
-4. Mobile-specific navigation and interaction patterns
-5. Performance optimization for mobile devices
-
-#### Integration Verification
-**IV1**: All existing functionality works on mobile devices
-**IV2**: Current responsive design patterns are enhanced, not replaced
-**IV3**: Mobile performance meets established benchmarks
-
-### Story 1.8: Enhanced System Status Indicators
-As a user,
-I want clear, modern status indicators and health metrics,
-so that I can quickly understand if the system is working properly and identify any issues.
-
-#### Acceptance Criteria
-1. Modern status cards with clear visual indicators are implemented
-2. Enhanced health metrics display with better visual hierarchy
-3. Clear error states and warning indicators
-4. Real-time status updates with smooth animations
-5. Consistent status color coding throughout the interface
-
-#### Integration Verification
-**IV1**: All existing health data is properly displayed in new format
-**IV2**: Status indicators accurately reflect system state
-**IV3**: Real-time updates work seamlessly with new indicators
-
-### Story 1.9: Testing and Quality Assurance
-As a user,
-I want comprehensive testing and quality assurance,
-so that the enhanced dashboard is reliable and bug-free.
-
-#### Acceptance Criteria
-1. Comprehensive test suite covers all new functionality
-2. Integration tests verify existing functionality remains intact
-3. Visual regression tests ensure UI consistency
-4. Accessibility tests verify WCAG compliance
-5. User acceptance testing validates all requirements
-
-#### Integration Verification
-**IV1**: All existing tests continue to pass
-**IV2**: New tests cover integration points with existing code
-**IV3**: Test coverage meets or exceeds current project standards
+- 🚨 Prophet memory footprint (100-200MB/device) - SKIPPED
+- 🚨 Multi-scale hierarchies (3-6 months dev time) - DEFERRED
+- 🚨 Seasonal patterns (need 6-12 months data) - PHASE 3+
+
+**Architecture Validated:** ✅ Technical soundness confirmed, complexity appropriate for timeline
+
+---
+
+### 1.9 MQTT-Centric Architecture
+
+**Communication Layer:** MQTT (existing on Home Assistant) as event bus
+
+**Important:** MQTT broker already running on Home Assistant server (port 1883). AI service will connect as client.
+
+#### **Topic Structure:**
+
+```bash
+# AI Service publishes events
+ha-ai/events/pattern/detected
+ha-ai/events/suggestion/generated
+ha-ai/commands/automation/deploy
+
+# HA publishes responses
+ha-ai/responses/automation/executed
+ha-ai/responses/automation/failed
+homeassistant/status
+```
+
+#### **Message Flow Example (Sports Score):**
+
+```
+1. AI Service detects event (team scored)
+2. AI publishes: ha-ai/events/sports/patriots/scored
+3. HA automation (MQTT trigger) listens to topic
+4. HA executes action (flash lights)
+5. HA publishes result: ha-ai/responses/automation/executed
+6. AI logs execution success
+```
+
+#### **Benefits:**
+
+- ✅ **Loose coupling** - AI and HA don't need to know internals
+- ✅ **Async by design** - Non-blocking communication
+- ✅ **Native HA integration** - HA has built-in MQTT support
+- ✅ **Minimal overhead** - 10-20MB RAM
+- ✅ **Future-proof** - Easy to add more services
+
+---
+
+## 2. Requirements
+
+### 2.1 Functional Requirements
+
+**FR1:** The system SHALL analyze historical Home Assistant event data from the Data API to identify automation opportunities
+- **Scope:** Last 30 days of device state changes and events
+- **Frequency:** Daily batch analysis at 3 AM
+- **Patterns:** Time-of-day, device co-occurrence, manual intervention anomalies
+
+**FR2:** The system SHALL detect three types of automation patterns:
+- **FR2.1:** Time-of-day patterns (device actions at consistent times)
+- **FR2.2:** Device co-occurrence patterns (devices used together)
+- **FR2.3:** Anomaly patterns (manual interventions indicating automation opportunities)
+
+**FR3:** The system SHALL generate 5-10 automation suggestions per week using LLM-based natural language generation
+- **Quality over quantity:** Focus on high-confidence patterns only (>70%)
+- **LLM:** OpenAI GPT-4o-mini for cost-effectiveness
+- **Format:** Natural language explanation + Home Assistant YAML automation
+
+**FR4:** The system SHALL provide a web-based interface for users to browse, review, and manage automation suggestions
+- **Actions:** View, Approve, Modify, Reject, Archive
+- **Status tracking:** Pending, Approved, Deployed, Rejected
+- **History:** Track suggestion evolution and user feedback
+
+**FR5:** The system SHALL allow users to approve automation suggestions before deployment
+- **Human-in-the-loop:** No automations deploy without explicit approval
+- **Modification:** Users can edit suggested automations before deployment
+- **Preview:** Show automation logic in human-readable format
+
+**FR6:** The system SHALL deploy approved automations to Home Assistant via REST API
+- **Format:** Convert to Home Assistant automation YAML schema
+- **Validation:** Verify automation syntax before deployment
+- **Rollback:** Track deployed automations for potential removal
+
+**FR7:** The system SHALL communicate dynamic automation triggers via MQTT
+- **Topics:** `ha-ai/events/*` for AI-detected events
+- **HA Integration:** Home Assistant subscribed to AI topics
+- **Bi-directional:** HA publishes execution feedback to `ha-ai/responses/*`
+
+**FR8:** The system SHALL display current Home Assistant automations
+- **Source:** Query HA API for existing automations
+- **Purpose:** Avoid suggesting duplicate automations
+- **Comparison:** Show how suggestions differ from existing
+
+**FR9:** The system SHALL store pattern detection results and suggestions in SQLite database
+- **Persistence:** Patterns, suggestions, user decisions, deployment status
+- **History:** Track pattern evolution over time
+- **Analytics:** Support future reporting and ML improvements
+
+**FR10:** The system SHALL provide real-time status updates via MQTT
+- **Events:** Analysis complete, new suggestions available, deployment status
+- **Feedback loop:** Automation execution success/failure from HA
+
+---
+
+### 2.2 Non-Functional Requirements
+
+**NFR1:** The system SHALL complete daily pattern analysis within 10 minutes
+- **Target:** 5-10 minutes for 30 days of data
+- **Acceptable:** Up to 15 minutes on high-load days
+- **Failure:** Alert if exceeds 20 minutes
+
+**NFR2:** The system SHALL operate within 1GB of RAM during pattern analysis
+- **Peak:** <1GB during analysis
+- **Idle:** <200MB between analyses
+- **Constraint:** Must coexist with Home Assistant on single NUC
+
+**NFR3:** The system SHALL support 100-200 devices in Phase 1
+- **Minimum:** 50 devices (small home)
+- **Target:** 100-150 devices (typical home)
+- **Maximum:** 200 devices (large home)
+
+**NFR4:** The API SHALL respond to UI requests within 500ms
+- **Cached data:** <200ms
+- **Database queries:** <500ms
+- **LLM generation:** Async (background job)
+
+**NFR5:** The system SHALL maintain 95% uptime
+- **Critical:** Pattern analysis can run next day if missed
+- **Non-critical:** Service restarts don't affect deployed automations (they live in HA)
+- **Recovery:** Automatic restart on failure
+
+**NFR6:** The system SHALL integrate with existing Home Assistant Ingestor architecture
+- **Data API:** Use existing Data API (port 8006) for historical data
+- **MQTT:** Share MQTT broker with other services
+- **Docker:** Deploy as Docker Compose service
+- **Minimal impact:** <5% CPU usage when idle
+
+**NFR7:** The system SHALL limit API costs to $10/month
+- **LLM:** GPT-4o-mini for cost optimization
+- **Batch processing:** Generate 5-10 suggestions weekly
+- **Monitoring:** Track token usage and costs
+
+**NFR8:** The system SHALL be maintainable by developers with Python and React experience
+- **Code quality:** Follow existing coding standards
+- **Documentation:** Comprehensive inline documentation
+- **Testing:** Unit tests for pattern detection logic
+- **Debugging:** Logging for pattern analysis steps
+
+**NFR9:** The system SHALL secure communication between services
+- **MQTT:** Internal network only (no external exposure)
+- **API:** Authentication via Home Assistant tokens
+- **Data:** No sensitive data sent to external LLM (only anonymized patterns)
+
+**NFR10:** The system SHALL gracefully handle insufficient data scenarios
+- **Bootstrap:** Provide helpful messages when <7 days of data
+- **Confidence:** Only suggest patterns with >70% confidence
+- **Feedback:** Explain why suggestions may be limited initially
+
+---
+
+### 2.3 Compatibility Requirements
+
+**CR1:** The system SHALL maintain compatibility with existing Home Assistant installation
+- **HA Version:** Support Home Assistant 2024.1+
+- **API:** Use stable HA REST API endpoints
+- **Automations:** Generated automations must be valid HA YAML
+- **No modification:** Do not require HA configuration changes
+
+**CR2:** The system SHALL integrate with existing Data API without modification
+- **Endpoints:** Use existing `/api/events`, `/api/devices`, `/api/entities`
+- **No schema changes:** Do not require Data API updates
+- **Graceful degradation:** Handle Data API downtime
+
+**CR3:** The system SHALL use existing MQTT broker on Home Assistant server
+- **Existing broker:** Connect to HA's MQTT broker (port 1883)
+- **Authentication:** Use MQTT username/password from HA integration
+- **Topic namespace:** Use `ha-ai/*` to avoid conflicts with HA topics
+- **QoS:** Respect broker capacity limits (QoS 1 for reliability)
+
+**CR4:** The system SHALL deploy alongside existing services without resource conflicts
+- **Ports:** Use available port 8011 (AI service), 3002 (frontend)
+- **Memory:** Stay within hardware constraints (8-16GB total)
+- **CPU:** Batch processing scheduled during low-usage times (3 AM)
+
+**CR5:** The system SHALL preserve all existing Home Assistant automations
+- **Non-destructive:** Never delete or modify existing automations without user approval
+- **Additive only:** Only add new automations when user approves
+- **Rollback:** Support removing deployed automations
+
+---
+
+## 3. User Interface Enhancement Goals
+
+### 3.1 Integration with Existing UI
+
+**Existing Health Dashboard Architecture (http://localhost:3000):**
+
+The Health Dashboard uses a proven tab-based navigation pattern with:
+- 11 tabs (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Analytics, Alerts, Configuration)
+- Dark mode toggle with localStorage persistence
+- Auto-refresh capability
+- Time range selector
+- Mobile-first responsive design
+- Error boundaries for graceful failures
+- Custom navigation events for cross-linking
+
+**New AI Automation Frontend SHALL Follow Same Patterns:**
+
+```typescript
+// Match existing Dashboard.tsx structure
+- Tab-based navigation (not sidebar)
+- Dark mode prop passed to all components
+- TabProps interface for consistency
+- Error boundaries around tab content
+- Custom hooks for data fetching (useHealth pattern)
+- Loading skeletons (SkeletonCard components)
+- Modal detail views (ServiceDetailsModal pattern)
+```
+
+**Design System Consistency:**
+
+```typescript
+// Use existing tailwind.config.js
+- CSS Custom Properties (var(--color-primary))
+- Design tokens: design-primary, design-success, design-warning, design-error
+- Consistent shadows: shadow-design-sm/md/lg/xl
+- Animation system: fade-in, slide-up, scale-in
+- Dark mode class: 'dark'
+- Status color system (getStatusColors helper)
+```
+
+---
+
+### 3.2 Screens and Views
+
+#### **Main Dashboard Structure:**
+
+```typescript
+// AI Automation Dashboard (Port 3002)
+const AI_TAB_CONFIG = [
+  { id: 'suggestions', label: '💡 Suggestions', icon: '💡' },
+  { id: 'patterns', label: '📊 Patterns', icon: '📊' },
+  { id: 'automations', label: '⚙️ Automations', icon: '⚙️' },
+  { id: 'insights', label: '🔍 Insights', icon: '🔍' },
+];
+```
+
+#### **Tab 1: Suggestions Browser (Primary)**
+
+**Layout Pattern:** Card grid with modals (matches OverviewTab's CoreSystemCard)
+
+**Features:**
+- Card grid (1/2/3 columns responsive)
+- Search and filter controls
+- Status badges (pending/approved/deployed/rejected)
+- Confidence scores (>70%, >80%, >90%)
+- Click card → detail modal
+- Modal shows: pattern analysis + YAML preview + approve/reject actions
+- Loading skeletons (SkeletonCard pattern)
+
+**Status Colors (from existing getStatusColors):**
+
+```typescript
+pending:  blue-100 / blue-900/30 (dark)  ⏳
+approved: green-100 / green-900/30       ✅
+deployed: purple-100 / purple-900/30     🚀
+rejected: red-100 / red-900/30           ❌
+```
+
+#### **Tab 2: Patterns Insights**
+
+**Layout Pattern:** Stat cards + charts (matches AnalyticsTab)
+
+**Features:**
+- Pattern detection summary (stat cards)
+- Category breakdown (time-of-day/co-occurrence/anomaly)
+- Pattern chart (PerformanceSparkline style)
+- Confidence score indicators
+- Pattern detail modals
+- Filter by pattern type
+
+#### **Tab 3: Current Automations**
+
+**Layout Pattern:** Search + filters + list (exactly like DevicesTab)
+
+**Features:**
+- Search automations by name
+- Filter by source (user-created vs AI-deployed)
+- Filter by status (active/disabled)
+- List view with badges (👤 User / 🤖 AI)
+- Detail modal (ServiceDetailsModal pattern)
+- Remove AI automations action
+- Execution history and success rates
+- "View in HA" links (opens HA UI)
+
+#### **Tab 4: Insights Dashboard**
+
+**Layout Pattern:** Hero card + system status (matches OverviewTab)
+
+**Features:**
+- Hero card: Last analysis summary
+- Stat cards: Suggestions generated/approved/deployed
+- API cost tracking (budget monitor)
+- Acceptance rate chart
+- Pattern trends (last 7 days)
+- System status cards (green/yellow/red)
+- Service health indicators (Data API, MQTT, LLM API)
+
+---
+
+### 3.3 Reusable Components from Existing Dashboard
+
+**Components to Import/Reuse:**
+
+```typescript
+// From existing health-dashboard
+import { SkeletonCard } from '../skeletons'
+import { ErrorBoundary } from './ErrorBoundary'
+import { AlertBanner } from './AlertBanner'
+
+// Pattern-based components to create (matching existing style):
+- SuggestionCard (like CoreSystemCard)
+- SuggestionDetailModal (like ServiceDetailsModal)
+- PatternChartCard (like PerformanceSparkline)
+- AutomationListItem (like device list items)
+- StatCard (reuse from AnalyticsTab)
+```
+
+**Proven UX Patterns to Reuse:**
+
+1. **Search + Filter** (DevicesTab pattern)
+2. **Card → Modal detail view** (ServiceDetailsModal pattern)
+3. **Loading skeletons** (SkeletonCard components)
+4. **Status color system** (getStatusColors helper)
+5. **Error boundaries** (graceful degradation)
+6. **44px touch targets** (mobile-friendly)
+7. **Horizontal tab scrolling** (mobile optimization)
+8. **Custom navigation events** (cross-tab linking)
+
+---
+
+### 3.4 Design System Specifications
+
+**TailwindCSS Configuration (from existing health-dashboard):**
+
+```javascript
+// Use existing tailwind.config.js
+colors: {
+  'design-primary': 'var(--color-primary)',     // Blue
+  'design-success': 'var(--color-success)',     // Green
+  'design-warning': 'var(--color-warning)',     // Yellow
+  'design-error': 'var(--color-error)',         // Red
+  'design-info': 'var(--color-info)',           // Cyan
+}
+
+// Status colors
+healthy:  green-100 / green-900/30
+degraded: yellow-100 / yellow-900/30
+unhealthy: red-100 / red-900/30
+paused:   gray-100 / gray-700
+
+// Animations
+'fade-in': 'fadeIn 0.5s ease-in-out'
+'slide-up': 'slideUp 0.3s ease-out'
+'scale-in': 'scaleIn 0.2s ease-out'
+```
+
+**Typography:**
+
+```css
+H1: text-2xl sm:text-3xl font-bold
+H2: text-xl sm:text-2xl font-bold
+H3: text-lg font-semibold
+Body: text-sm sm:text-base
+Small: text-xs sm:text-sm
+```
+
+**Spacing:**
+
+```css
+gap-4: Cards on mobile
+gap-6: Cards on desktop
+p-4: Mobile cards
+p-6: Desktop cards
+p-8: Main container
+```
+
+---
+
+### 3.5 Mobile Responsiveness
+
+**Responsive Breakpoints (Tailwind defaults):**
+
+```
+sm: 640px   // Tablet
+md: 768px   // Desktop
+lg: 1024px  // Large desktop
+```
+
+**Proven patterns from existing dashboard:**
+
+- Grid: 1 col (mobile) → 2 cols (tablet) → 3-4 cols (desktop)
+- Text: text-sm (mobile) → text-base (desktop)
+- Padding: p-4 (mobile) → p-6 (desktop)
+- Header: stacked (mobile) → side-by-side (desktop)
+- Tabs: horizontal scroll (mobile) → full width (desktop)
+- Buttons: min-w-[44px] min-h-[44px] (touch-friendly)
+
+---
+
+### 3.6 User Experience Consistency Requirements
+
+**UC1:** The AI Automation frontend SHALL match the existing Health Dashboard's visual design
+- ✅ Same tab navigation pattern
+- ✅ Same card styles (rounded-lg, shadow-lg, padding)
+- ✅ Same status colors (green/yellow/red system)
+- ✅ Same modal patterns (ServiceDetailsModal structure)
+- ✅ Same emoji icons (💡 🚀 ⚙️ ✅ ❌)
+
+**UC2:** The frontend SHALL reuse proven interaction patterns
+- ✅ Search + filters (DevicesTab pattern)
+- ✅ Click card → modal details
+- ✅ Loading states (SkeletonCard components)
+- ✅ Error handling (ErrorBoundary wrapper)
+- ✅ Dark mode toggle (header button, localStorage)
+
+**UC3:** The frontend SHALL maintain performance standards
+- ✅ Initial load: <2 seconds
+- ✅ Tab switching: Instant (no re-fetch)
+- ✅ Modal animations: 200-300ms
+- ✅ Auto-refresh: 30-60 seconds (optional, user-controlled)
+
+**UC4:** The frontend SHALL provide cross-linking
+- ✅ Link from Health Dashboard → AI Automation
+- ✅ Link from AI Automation → Health Dashboard Devices tab
+- ✅ Custom navigation events for modal cross-linking
+
+**UC5:** The frontend SHALL be mobile-optimized
+- ✅ Touch targets: 44px minimum
+- ✅ Horizontal scroll tabs (works well on mobile)
+- ✅ Responsive grids (1→2→3 columns)
+- ✅ Stacked headers on mobile
+
+---
+
+## 4. Technical Constraints and Integration
+
+### 4.1 Existing Technology Stack (Must Use)
+
+**Backend Stack:**
+- Python 3.11
+- FastAPI 0.104.1
+- Docker + Docker Compose 2.20+
+- InfluxDB 2.7 (via Data API)
+- SQLite 3.45+
+
+**Frontend Stack:**
+- React 18.2.0
+- TypeScript 5.2.2
+- TailwindCSS 3.4.0
+- Vite 5.0.8
+- Heroicons 2.2.0
+
+**Infrastructure:**
+- MQTT (existing on Home Assistant server)
+- Docker Volumes
+- Python logging
+
+---
+
+### 4.2 Phase 1 MVP Technology Stack (NEW)
+
+**Machine Learning:**
+
+```python
+scikit-learn==1.3.2
+  - KMeans (clustering)
+  - DBSCAN (density-based clustering)
+  - Isolation Forest (anomaly detection)
+
+pandas==2.1.4
+  - Data manipulation
+  - Feature engineering
+
+numpy==1.26.2
+  - Numerical operations
+```
+
+**LLM Integration:**
+
+```python
+openai==1.12.0
+  - GPT-4o-mini API client
+  - Structured outputs (Pydantic)
+
+langchain==0.1.0 (Optional - may defer to Phase 2)
+  - Prompt management
+  - Chain orchestration
+```
+
+**MQTT Communication:**
+
+```python
+paho-mqtt==1.6.1
+  - MQTT client
+  - Pub/sub patterns
+```
+
+**Database & Storage:**
+
+```python
+aiosqlite==0.19.0
+  - Async SQLite
+  - Pattern storage
+```
+
+**Scheduling:**
+
+```python
+apscheduler==3.10.4
+  - Cron-style scheduling
+  - Daily batch jobs
+```
+
+---
+
+### 4.3 Integration Approach
+
+#### Data API Integration (Read-Only):
+
+```python
+# Query existing Data API for historical data
+async def fetch_historical_events():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://data-api:8006/api/events",
+            params={
+                "start": "-30d",
+                "group_by": "device_id"
+            }
+        )
+        return response.json()
+```
+
+**No Direct InfluxDB Access:**
+- ✅ Use Data API as abstraction layer
+- ❌ Do NOT query InfluxDB directly
+
+#### Home Assistant API Integration:
+
+```python
+# Read existing automations
+GET http://ha:8123/api/config/automation/config
+
+# Deploy new automation
+POST http://ha:8123/api/config/automation/config
+{
+  "alias": "AI Suggested: Morning Lights",
+  "trigger": [...],
+  "action": [...]
+}
+
+# Remove automation
+DELETE http://ha:8123/api/config/automation/config/{automation_id}
+```
+
+#### MQTT Integration:
+
+```bash
+# Topic structure
+ha-ai/events/*          # AI publishes
+ha-ai/commands/*        # AI sends commands
+ha-ai/responses/*       # HA responds
+homeassistant/status    # HA status
+```
+
+---
+
+### 4.4 Code Organization
+
+```
+services/ai-automation-service/
+├── src/
+│   ├── main.py                      # FastAPI entry point
+│   ├── config.py                    # Configuration
+│   ├── pattern_analyzer/            # Pattern detection
+│   │   ├── time_of_day.py
+│   │   ├── co_occurrence.py
+│   │   └── anomaly_detector.py
+│   ├── llm/                         # LLM integration
+│   │   ├── openai_client.py
+│   │   └── prompt_templates.py
+│   ├── mqtt/                        # MQTT communication
+│   │   ├── client.py
+│   │   └── topics.py
+│   ├── database/                    # Database layer
+│   │   ├── models.py
+│   │   └── crud.py
+│   ├── api/                         # FastAPI endpoints
+│   │   ├── suggestions.py
+│   │   ├── patterns.py
+│   │   └── deployment.py
+│   └── scheduler/                   # Batch scheduling
+│       └── daily_analysis.py
+├── tests/
+├── Dockerfile
+├── requirements.txt
+└── README.md
+```
+
+---
+
+### 4.5 Deployment Configuration
+
+**Docker Compose Integration:**
+
+```yaml
+services:
+  # NEW: AI Automation Service
+  # Note: Uses existing MQTT broker on Home Assistant server
+  ai-automation-service:
+    build: ./services/ai-automation-service
+    ports:
+      - "8011:8011"
+    environment:
+      - DATA_API_URL=http://data-api:8006
+      - HA_URL=${HA_URL}  # HA server address
+      - HA_TOKEN=${HA_TOKEN}
+      - MQTT_BROKER=${MQTT_BROKER}  # HA server IP (has MQTT)
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANALYSIS_SCHEDULE=0 3 * * *
+    env_file:
+      - infrastructure/env.ai-automation
+    depends_on:
+      - data-api
+    volumes:
+      - ai_data:/app/data
+    networks:
+      - ha-network
+  
+  # NEW: AI Frontend
+  ai-automation-frontend:
+    build: ./services/ai-automation-frontend
+    ports:
+      - "3002:80"
+    environment:
+      - AI_API_URL=http://localhost:8011
+    depends_on:
+      - ai-automation-service
+    networks:
+      - ha-network
+```
+
+---
+
+### 4.6 Performance Constraints
+
+**Memory Limits:**
+- Peak (analysis): 1GB
+- Idle: 200MB
+- Total system: Must fit within NUC 8-16GB RAM
+
+**Processing Time:**
+- Daily analysis: 10 minutes target, 15 minutes max
+- API response: 500ms target
+- LLM generation: 30 seconds per suggestion (async)
+
+**Storage:**
+- Code + dependencies: 500MB
+- Pattern database: 100MB
+- Logs: 50MB (rotating)
+- Total: <1GB
+
+---
+
+### 4.7 Security Constraints
+
+**Network Security:**
+- ✅ MQTT on internal network only
+- ✅ All services within Docker network
+- ✅ No public endpoints except frontend
+
+**API Security:**
+- ✅ Home Assistant token authentication
+- ✅ CORS restricted to localhost
+- ✅ Rate limiting on API endpoints
+
+**Data Security:**
+- ✅ No raw event data sent to LLM (only anonymized patterns)
+- ✅ HA tokens stored securely (environment variables)
+- ✅ OpenAI API key in environment (not code)
+
+---
+
+## 5. Epic and Story Structure
+
+### 5.1 Epic Approach
+
+**Epic Structure Decision:** Single comprehensive epic for Phase 1 MVP
+
+**Rationale:**
+- Phase 1 is a cohesive MVP with tightly coupled components
+- All stories work toward single goal: deliver working automation suggestion system
+- Maintains simplicity and clear scope boundaries
+- Allows for focused 2-4 week delivery timeline
+
+---
+
+### 5.2 Epic 1: AI Automation Suggestion System (Phase 1 MVP)
+
+**Epic ID:** Epic-AI-1  
+**Epic Goal:** Enable users to discover and deploy Home Assistant automations based on AI-detected patterns from historical data
+
+**Success Criteria:**
+- ✅ User receives 5-10 automation suggestions weekly
+- ✅ Pattern analysis completes in <10 minutes daily
+- ✅ Approved automations deploy successfully to Home Assistant
+- ✅ System runs within 1GB RAM budget
+- ✅ API costs stay under $10/month
+- ✅ No impact on existing services
+
+---
+
+### 5.3 Story List
+
+#### **Story 1.1: Infrastructure Setup and MQTT Integration**
+
+**As a** developer  
+**I want** to configure connection to existing HA MQTT broker  
+**so that** AI service can communicate with Home Assistant asynchronously
+
+**⚠️ IMPORTANT:** MQTT broker already running on Home Assistant server (port 1883). This story configures connection credentials only.
+
+**Acceptance Criteria:**
+1. ✅ AI service connects to HA MQTT broker successfully
+2. ✅ MQTT credentials configured in environment (.env.ai-automation)
+3. ✅ Topics ha-ai/* can be published/subscribed
+4. ✅ Connection authenticated with username/password
+5. ✅ Test messages verified in HA Developer Tools
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+#### **Story 1.2: AI Service Backend Foundation**
+
+**As a** developer  
+**I want** to create the AI automation service backend structure  
+**so that** we have a foundation for pattern detection and LLM integration
+
+**Acceptance Criteria:**
+1. ✅ Service starts successfully in Docker
+2. ✅ FastAPI health endpoint returns 200 OK
+3. ✅ SQLite database initializes with schema
+4. ✅ Service accessible on port 8011
+5. ✅ Logging outputs to stdout (JSON format)
+
+**Dependencies:** Story 1.1  
+**Estimated Effort:** 6-8 hours
+
+---
+
+#### **Story 1.3: Data API Integration and Historical Data Fetching**
+
+**As a** pattern analyzer  
+**I want** to query the Data API for historical event data  
+**so that** I can detect patterns in device usage
+
+**Acceptance Criteria:**
+1. ✅ Can fetch last 30 days of events from Data API
+2. ✅ Can fetch device and entity metadata
+3. ✅ Data transformed to pandas DataFrame format
+4. ✅ Handles Data API downtime gracefully
+5. ✅ Query response time <5 seconds for 30 days
+
+**Dependencies:** Story 1.2  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.4: Pattern Detection - Time-of-Day Clustering**
+
+**As a** pattern analyzer  
+**I want** to detect time-of-day patterns using KMeans clustering  
+**so that** I can identify when devices are consistently used
+
+**Acceptance Criteria:**
+1. ✅ Detects patterns for devices used at consistent times
+2. ✅ Minimum 3 occurrences required for pattern
+3. ✅ Confidence score >70% required
+4. ✅ Processes 30 days in <5 minutes
+5. ✅ Memory usage <500MB
+
+**Dependencies:** Story 1.3  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.5: Pattern Detection - Device Co-Occurrence**
+
+**As a** pattern analyzer  
+**I want** to detect device co-occurrence patterns  
+**so that** I can identify devices frequently used together
+
+**Acceptance Criteria:**
+1. ✅ Detects devices used within 5-minute window
+2. ✅ Minimum support: 5 occurrences
+3. ✅ Minimum confidence: 70%
+4. ✅ Processing time <3 minutes for 100 devices
+
+**Dependencies:** Story 1.4  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.6: Pattern Detection - Anomaly Detection**
+
+**As a** pattern analyzer  
+**I want** to detect anomalies indicating automation opportunities  
+**so that** I can suggest automations for repeated manual interventions
+
+**Acceptance Criteria:**
+1. ✅ Detects repeated manual interventions
+2. ✅ Minimum 3 occurrences to qualify
+3. ✅ Confidence score based on consistency
+4. ✅ Processing time <2 minutes
+5. ✅ Precision >60%
+
+**Dependencies:** Story 1.5  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.7: LLM Integration - OpenAI API Client**
+
+**As a** suggestion generator  
+**I want** to integrate with OpenAI GPT-4o-mini API  
+**so that** I can generate natural language automation suggestions
+
+**Acceptance Criteria:**
+1. ✅ Successfully calls OpenAI GPT-4o-mini API
+2. ✅ Generates valid Home Assistant automation YAML
+3. ✅ Returns structured JSON with Pydantic validation
+4. ✅ Tracks token usage per request
+5. ✅ Suggestion quality: 80%+ valid automations
+
+**Dependencies:** Story 1.6  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.8: Suggestion Generation Pipeline**
+
+**As a** user  
+**I want** the system to generate automation suggestions from detected patterns  
+**so that** I can review and approve them
+
+**Acceptance Criteria:**
+1. ✅ Generates 5-10 suggestions per weekly run
+2. ✅ Suggestions ranked by confidence
+3. ✅ No duplicate suggestions
+4. ✅ Generation time <5 minutes
+5. ✅ API cost <$1 per batch
+
+**Dependencies:** Story 1.7  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.9: Daily Batch Scheduler**
+
+**As a** system  
+**I want** to run pattern analysis daily at 3 AM  
+**so that** users wake up to new automation suggestions
+
+**Acceptance Criteria:**
+1. ✅ Job runs daily at 3:00 AM automatically
+2. ✅ Job completes in <15 minutes
+3. ✅ MQTT notification on completion
+4. ✅ Manual trigger endpoint available
+
+**Dependencies:** Story 1.8  
+**Estimated Effort:** 6-8 hours
+
+---
+
+#### **Story 1.10: REST API - Suggestion Management**
+
+**As a** frontend  
+**I want** REST API endpoints for suggestion CRUD operations  
+**so that** users can browse, approve, and reject suggestions
+
+**Acceptance Criteria:**
+1. ✅ List endpoint returns paginated suggestions
+2. ✅ Filter by status and confidence
+3. ✅ Update suggestion status
+4. ✅ API response time <200ms (cached)
+
+**Dependencies:** Story 1.9  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.11: REST API - Home Assistant Integration**
+
+**As a** user  
+**I want** to deploy approved automations to Home Assistant  
+**so that** they run automatically
+
+**Acceptance Criteria:**
+1. ✅ Converts suggestion to valid HA YAML
+2. ✅ Deploys to HA via REST API
+3. ✅ Tracks deployment status
+4. ✅ Can remove deployed automations
+
+**Dependencies:** Story 1.10  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.12: MQTT Event Publishing**
+
+**As a** AI service  
+**I want** to publish events to MQTT topics  
+**so that** Home Assistant can subscribe to dynamic triggers
+
+**Acceptance Criteria:**
+1. ✅ Publishes to ha-ai/events/* topics
+2. ✅ QoS 1 ensures message delivery
+3. ✅ HA can subscribe and receive messages
+4. ✅ Message latency <100ms
+
+**Dependencies:** Story 1.11  
+**Estimated Effort:** 6-8 hours
+
+---
+
+#### **Story 1.13: Frontend - Project Setup and Dashboard Shell**
+
+**As a** frontend developer  
+**I want** to set up the React project with tab navigation  
+**so that** we have a foundation matching the Health Dashboard
+
+**Acceptance Criteria:**
+1. ✅ Project builds successfully with Vite
+2. ✅ TailwindCSS matches health-dashboard config
+3. ✅ Dark mode toggle works
+4. ✅ Tab navigation in place
+5. ✅ Container runs on port 3002
+
+**Dependencies:** None  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 1.14: Frontend - Suggestions Tab**
+
+**As a** user  
+**I want** to browse automation suggestions in a card grid  
+**so that** I can review AI-generated automations
+
+**Acceptance Criteria:**
+1. ✅ Displays suggestions in card grid
+2. ✅ Search and filter controls
+3. ✅ Click card opens detail modal
+4. ✅ Approve/reject actions work
+5. ✅ Mobile responsive
+
+**Dependencies:** Story 1.13, Story 1.10  
+**Estimated Effort:** 12-14 hours
+
+---
+
+#### **Story 1.15: Frontend - Patterns Tab**
+
+**As a** user  
+**I want** to view detected patterns and analysis insights  
+**so that** I understand what the AI detected
+
+**Acceptance Criteria:**
+1. ✅ Shows pattern summary stats
+2. ✅ Displays patterns grouped by type
+3. ✅ Chart shows detection over time
+4. ✅ Filter by pattern type
+
+**Dependencies:** Story 1.14  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.16: Frontend - Current Automations Tab**
+
+**As a** user  
+**I want** to view existing HA automations and AI-deployed ones  
+**so that** I can manage my automations
+
+**Acceptance Criteria:**
+1. ✅ Displays user-created + AI-deployed automations
+2. ✅ Badges distinguish source
+3. ✅ Can remove AI-deployed automations
+4. ✅ Shows execution stats
+
+**Dependencies:** Story 1.15  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.17: Frontend - Insights Dashboard Tab**
+
+**As a** user  
+**I want** to see system status and AI service health  
+**so that** I know everything is working correctly
+
+**Acceptance Criteria:**
+1. ✅ Shows last analysis summary
+2. ✅ Displays API cost tracking
+3. ✅ System status cards
+4. ✅ Acceptance rate chart
+
+**Dependencies:** Story 1.16  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 1.18: End-to-End Testing and Documentation**
+
+**As a** developer  
+**I want** comprehensive E2E tests and documentation  
+**so that** the system is reliable and maintainable
+
+**Acceptance Criteria:**
+1. ✅ E2E test: Full suggestion approval flow
+2. ✅ E2E tests run in CI/CD
+3. ✅ README documents setup
+4. ✅ API documentation complete
+
+**Dependencies:** Story 1.17  
+**Estimated Effort:** 12-14 hours
+
+---
+
+## 6. Epic Summary
+
+**Total Stories:** 18  
+**Estimated Total Effort:** 160-192 hours (4-5 weeks for single developer)  
+**Parallel Development:** Yes (frontend + backend after Story 1.2)
+
+**Sequencing Strategy:**
+1. Foundation (Stories 1.1-1.2): 10-14 hours
+2. Pattern Detection (Stories 1.3-1.6): 34-42 hours
+3. LLM & Suggestions (Stories 1.7-1.9): 24-30 hours
+4. Backend API (Stories 1.10-1.12): 24-30 hours
+5. Frontend (Stories 1.13-1.17): 50-60 hours
+6. Testing & Docs (Story 1.18): 12-14 hours
+
+**Critical Path:** Stories 1.1 → 1.2 → 1.3 → 1.4 → 1.7 → 1.8 → 1.9 → 1.10 → 1.14
+
+---
+
+## 7. Implementation Guide (Practical Examples)
+
+### 7.1 Simple Pattern Detection Code Examples
+
+**Keep It Simple Principle:** Use simplest approach that works. No over-engineering.
+
+#### **Example 1: Time-of-Day Clustering (Story 1.4)**
+
+```python
+import pandas as pd
+from sklearn.cluster import KMeans
+from datetime import datetime
+
+def detect_time_of_day_patterns(events: pd.DataFrame) -> list:
+    """
+    Simple KMeans clustering to find consistent usage times.
+    
+    Input: events DataFrame with columns [device_id, timestamp, state]
+    Output: List of patterns with confidence scores
+    """
+    
+    # 1. Feature engineering (keep simple!)
+    events['hour'] = events['timestamp'].dt.hour
+    events['minute'] = events['timestamp'].dt.minute
+    events['time_decimal'] = events['hour'] + events['minute'] / 60
+    
+    patterns = []
+    
+    # 2. Analyze each device separately
+    for device_id in events['device_id'].unique():
+        device_events = events[events['device_id'] == device_id]
+        
+        # Need minimum data
+        if len(device_events) < 5:
+            continue
+        
+        # 3. Cluster time patterns (simple KMeans)
+        times = device_events[['time_decimal']].values
+        kmeans = KMeans(n_clusters=min(3, len(times)), random_state=42)
+        labels = kmeans.fit_predict(times)
+        
+        # 4. Find consistent clusters (confidence = size / total)
+        for cluster_id in range(kmeans.n_clusters):
+            cluster_times = times[labels == cluster_id]
+            
+            if len(cluster_times) >= 3:  # Minimum 3 occurrences
+                avg_time = cluster_times.mean()
+                confidence = len(cluster_times) / len(times)
+                
+                if confidence > 0.7:  # Only high confidence
+                    patterns.append({
+                        'device_id': device_id,
+                        'pattern_type': 'time_of_day',
+                        'hour': int(avg_time),
+                        'minute': int((avg_time % 1) * 60),
+                        'occurrences': len(cluster_times),
+                        'confidence': confidence
+                    })
+    
+    return patterns
+
+# That's it! ~40 lines, no complexity.
+```
+
+#### **Example 2: Device Co-Occurrence (Story 1.5)**
+
+```python
+from itertools import combinations
+from collections import defaultdict
+
+def detect_co_occurrence_patterns(events: pd.DataFrame, window_minutes=5) -> list:
+    """
+    Find devices used together within time window.
+    Simple approach: sliding window + counting.
+    """
+    
+    # 1. Sort by time
+    events = events.sort_values('timestamp')
+    
+    # 2. Find co-occurrences
+    co_occurrences = defaultdict(int)
+    
+    for i, event in events.iterrows():
+        # Look ahead within window
+        window_end = event['timestamp'] + pd.Timedelta(minutes=window_minutes)
+        nearby = events[
+            (events['timestamp'] > event['timestamp']) &
+            (events['timestamp'] <= window_end)
+        ]
+        
+        # Count co-occurrences
+        for _, nearby_event in nearby.iterrows():
+            if nearby_event['device_id'] != event['device_id']:
+                # Create sorted pair (avoid duplicates)
+                pair = tuple(sorted([event['device_id'], nearby_event['device_id']]))
+                co_occurrences[pair] += 1
+    
+    # 3. Filter for significant patterns
+    patterns = []
+    total_events = len(events)
+    
+    for (device1, device2), count in co_occurrences.items():
+        confidence = count / total_events
+        
+        if count >= 5 and confidence > 0.7:  # Thresholds
+            patterns.append({
+                'pattern_type': 'co_occurrence',
+                'device1': device1,
+                'device2': device2,
+                'occurrences': count,
+                'confidence': confidence
+            })
+    
+    return patterns
+
+# ~35 lines. Simple and effective.
+```
+
+#### **Example 3: Anomaly Detection (Story 1.6)**
+
+```python
+from sklearn.ensemble import IsolationForest
+
+def detect_automation_opportunities(events: pd.DataFrame) -> list:
+    """
+    Find repeated manual interventions = automation opportunities.
+    Use Isolation Forest to find "too regular" patterns.
+    """
+    
+    # 1. Feature engineering
+    events['hour'] = events['timestamp'].dt.hour
+    events['day_of_week'] = events['timestamp'].dt.dayofweek
+    
+    patterns = []
+    
+    # 2. Analyze each device
+    for device_id in events['device_id'].unique():
+        device_events = events[events['device_id'] == device_id]
+        
+        if len(device_events) < 10:
+            continue
+        
+        # 3. Create features
+        features = device_events[['hour', 'day_of_week']].values
+        
+        # 4. Isolation Forest (inverted - find regular patterns, not anomalies)
+        iso_forest = IsolationForest(contamination=0.1, random_state=42)
+        scores = iso_forest.fit_predict(features)
+        
+        # 5. Regular patterns (NOT anomalies) = automation candidates
+        regular = device_events[scores == 1]  # Inliers
+        
+        # Group by hour
+        for hour in regular['hour'].unique():
+            hour_events = regular[regular['hour'] == hour]
+            
+            if len(hour_events) >= 3:
+                patterns.append({
+                    'device_id': device_id,
+                    'pattern_type': 'anomaly_opportunity',
+                    'hour': hour,
+                    'occurrences': len(hour_events),
+                    'confidence': len(hour_events) / len(device_events)
+                })
+    
+    return patterns
+
+# ~40 lines. Isolation Forest = pattern detector.
+```
+
+---
+
+### 7.2 Simple LLM Prompt Template (Story 1.7)
+
+**Keep Prompts Simple - Don't Over-Engineer:**
+
+```python
+SIMPLE_AUTOMATION_PROMPT = """
+You are a home automation expert. Create a Home Assistant automation based on this pattern.
+
+PATTERN DETECTED:
+- Device: {device_id}
+- Pattern: Turns on at {hour}:{minute:02d} consistently
+- Occurrences: {occurrences} times in last 30 days
+- Confidence: {confidence:.0%}
+
+OUTPUT (valid Home Assistant YAML):
+alias: "AI Suggested: [descriptive name]"
+trigger:
+  - platform: time
+    at: "{hour:02d}:{minute:02d}:00"
+action:
+  - service: [appropriate service]
+    target:
+      entity_id: {device_id}
+
+Explain why this automation makes sense in 1-2 sentences.
+"""
+
+# That's it! No complex prompt engineering needed for MVP.
+```
+
+---
+
+### 7.3 Data Schemas (Simple SQLite)
+
+**Database Schema - Keep It Minimal:**
+
+```sql
+-- patterns table
+CREATE TABLE patterns (
+    id INTEGER PRIMARY KEY,
+    pattern_type TEXT,          -- 'time_of_day', 'co_occurrence', 'anomaly'
+    device_id TEXT,
+    metadata JSON,              -- Pattern-specific data
+    confidence REAL,
+    occurrences INTEGER,
+    created_at TIMESTAMP,
+    
+    INDEX idx_device (device_id),
+    INDEX idx_type (pattern_type)
+);
+
+-- suggestions table
+CREATE TABLE suggestions (
+    id INTEGER PRIMARY KEY,
+    pattern_id INTEGER,
+    title TEXT,
+    description TEXT,
+    automation_yaml TEXT,       -- HA automation YAML
+    status TEXT,                -- 'pending', 'approved', 'deployed', 'rejected'
+    confidence REAL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deployed_at TIMESTAMP,
+    ha_automation_id TEXT,      -- HA's ID after deployment
+    
+    FOREIGN KEY (pattern_id) REFERENCES patterns(id)
+);
+
+-- user_feedback table
+CREATE TABLE user_feedback (
+    id INTEGER PRIMARY KEY,
+    suggestion_id INTEGER,
+    action TEXT,                -- 'approved', 'rejected', 'modified'
+    feedback_text TEXT,         -- User's comments (optional)
+    created_at TIMESTAMP,
+    
+    FOREIGN KEY (suggestion_id) REFERENCES suggestions(id)
+);
+
+-- No complex joins needed. Keep it simple.
+```
+
+---
+
+### 7.4 API Endpoint Specifications (Story 1.10-1.11)
+
+**Simple REST API - No Over-Engineering:**
+
+```python
+# GET /api/suggestions
+# Query params: status, min_confidence, limit, offset
+Response: {
+    "suggestions": [
+        {
+            "id": 1,
+            "title": "Morning Bedroom Lights",
+            "description": "Turn on bedroom lights at 7 AM on weekdays",
+            "confidence": 0.85,
+            "status": "pending",
+            "created_at": "2025-10-15T03:05:00Z"
+        }
+    ],
+    "total": 8,
+    "page": 1
+}
+
+# GET /api/suggestions/{id}
+Response: {
+    "id": 1,
+    "title": "Morning Bedroom Lights",
+    "pattern": {
+        "type": "time_of_day",
+        "hour": 7,
+        "minute": 0,
+        "occurrences": 42,
+        "confidence": 0.93
+    },
+    "automation_yaml": "alias: ...\ntrigger: ...",
+    "status": "pending"
+}
+
+# PATCH /api/suggestions/{id}
+Body: {"status": "approved"}
+Response: {"success": true, "deployed_automation_id": "automation.ai_morning_lights"}
+
+# POST /api/deploy/{suggestion_id}
+# Deploys to Home Assistant
+Response: {"success": true, "ha_automation_id": "automation.1234"}
+```
+
+---
+
+### 7.5 MQTT Message Examples (Story 1.12)
+
+**Simple MQTT Messages - No Complex Schemas:**
+
+```json
+// Topic: ha-ai/events/suggestion/generated
+{
+  "event_type": "suggestions_ready",
+  "count": 8,
+  "timestamp": "2025-10-15T03:10:00Z"
+}
+
+// Topic: ha-ai/commands/automation/test
+{
+  "automation_id": "test_123",
+  "device_id": "light.bedroom",
+  "action": "turn_on"
+}
+
+// Topic: ha-ai/responses/automation/executed
+{
+  "automation_id": "morning_lights",
+  "status": "success",
+  "execution_time_ms": 234,
+  "timestamp": "2025-10-15T07:00:01Z"
+}
+```
+
+---
+
+### 7.6 Key Implementation Principles (From Context7 KB)
+
+**MVP-First Principles:**
+
+1. ✅ **Start Simple** - Use simplest algorithm that works (KMeans before DBSCAN)
+2. ✅ **Iterate Based on Data** - Don't optimize prematurely
+3. ✅ **Measure Everything** - Log pattern counts, confidence scores, execution times
+4. ✅ **Fail Fast** - Quick validation, discard low-confidence patterns early
+5. ✅ **User Feedback Loop** - Track approval/rejection rates to improve
+
+**Anti-Patterns to Avoid:**
+
+1. ❌ **Over-Engineering** - Don't build complex hierarchies in Phase 1
+2. ❌ **Premature Optimization** - Don't optimize before measuring
+3. ❌ **Feature Creep** - Resist adding "just one more pattern type"
+4. ❌ **Complex Prompt Engineering** - Simple prompts work for MVP
+5. ❌ **Heavy Dependencies** - Avoid Prophet, deep learning in Phase 1
+
+**Testing Strategy:**
+
+```python
+# Simple validation approach
+def validate_pattern(pattern):
+    """3 checks, that's it."""
+    return (
+        pattern['occurrences'] >= 3 and
+        pattern['confidence'] > 0.7 and
+        pattern['device_id'] in known_devices
+    )
+
+# Don't overthink it.
+```
+
+---
+
+### 7.7 Reference Architecture Diagram
+
+**Simple Data Flow (No Complex Orchestration):**
+
+```
+┌──────────────┐
+│  Data API    │  (existing)
+│  Port 8006   │
+└──────┬───────┘
+       │ HTTP GET /api/events?start=-30d
+       │
+┌──────▼───────────────────────────────────┐
+│  Daily Batch Job (3 AM)                  │
+│  ┌──────────────────────────────────┐    │
+│  │ 1. Fetch data (pandas DataFrame) │    │
+│  │ 2. Run 3 pattern detectors       │    │
+│  │ 3. Store patterns (SQLite)       │    │
+│  │ 4. Call OpenAI (top 5-10)        │    │
+│  │ 5. Store suggestions (SQLite)    │    │
+│  │ 6. Publish MQTT (done!)          │    │
+│  └──────────────────────────────────┘    │
+│  Time: 5-10 minutes                      │
+└──────────────────────────────────────────┘
+       │
+       │ MQTT: ha-ai/status/analysis_complete
+       │
+┌──────▼───────┐
+│  Frontend    │  User browses suggestions
+│  Port 3002   │  Clicks "Approve"
+└──────┬───────┘
+       │
+       │ POST /api/deploy/{id}
+       │
+┌──────▼──────────┐
+│  AI Service     │  Converts to HA YAML
+│  Port 8011      │  POST to HA API
+└──────┬──────────┘
+       │
+       │ POST http://ha:8123/api/config/automation/config
+       │
+┌──────▼──────────┐
+│  Home Assistant │  Automation now runs!
+│  Port 8123      │
+└─────────────────┘
+```
+
+**Total Complexity:** LOW  
+**Moving Parts:** 5 services  
+**Dependencies:** Minimal
+
+---
+
+### 7.8 Practical Development Tips
+
+#### **For Backend Developers (Stories 1.2-1.12):**
+
+**Start Here:**
+1. Copy `services/data-api/` structure (proven pattern)
+2. Use `shared/logging_config.py` (already exists)
+3. Follow FastAPI patterns from `admin-api/src/main.py`
+4. SQLite example in `services/sports-data/` (webhooks.db)
+
+**Don't Reinvent:**
+- ✅ Copy existing Docker patterns
+- ✅ Reuse existing error handling
+- ✅ Use existing health check format
+- ✅ Follow existing logging patterns
+
+#### **For Frontend Developers (Stories 1.13-1.17):**
+
+**Start Here:**
+1. Copy `services/health-dashboard/` structure
+2. Copy `tailwind.config.js` exactly
+3. Copy tab navigation from `Dashboard.tsx`
+4. Copy modal pattern from `ServiceDetailsModal.tsx`
+5. Copy hooks pattern from `useHealth.ts`
+
+**Don't Reinvent:**
+- ✅ Reuse SkeletonCard, ErrorBoundary, AlertBanner
+- ✅ Copy status color helpers
+- ✅ Use same dark mode pattern
+- ✅ Follow same responsive breakpoints
+
+---
+
+### 7.9 Quick Reference: Key Files to Copy/Reference
+
+| What You're Building | Reference This File | Why |
+|---------------------|-------------------|-----|
+| **FastAPI Service** | `services/admin-api/src/main.py` | Proven FastAPI setup |
+| **SQLite Models** | `services/data-api/src/models/device.py` | SQLAlchemy patterns |
+| **Docker Setup** | `services/data-api/Dockerfile` | Multi-stage build |
+| **Tab Component** | `health-dashboard/src/components/tabs/OverviewTab.tsx` | Tab structure |
+| **Modal Pattern** | `health-dashboard/src/components/ServiceDetailsModal.tsx` | Modal UX |
+| **Custom Hook** | `health-dashboard/src/hooks/useHealth.ts` | Data fetching |
+| **Card Component** | `health-dashboard/src/components/CoreSystemCard.tsx` | Card UI |
+
+**Time Saved:** 20-30 hours by copying proven patterns
+
+---
+
+### 7.10 Common Pitfalls to Avoid
+
+**Backend:**
+1. ❌ Don't query InfluxDB directly (use Data API)
+2. ❌ Don't block the main thread (use async/background jobs)
+3. ❌ Don't store patterns in InfluxDB (use SQLite)
+4. ❌ Don't over-complicate pattern detection (simple is better)
+5. ❌ Don't send raw data to LLM (anonymize first)
+
+**Frontend:**
+1. ❌ Don't create new design system (copy health-dashboard)
+2. ❌ Don't use different UI patterns (consistency matters)
+3. ❌ Don't skip loading states (use skeletons)
+4. ❌ Don't forget error boundaries (graceful failures)
+5. ❌ Don't ignore mobile (44px touch targets)
+
+**ML/AI:**
+1. ❌ Don't use Prophet in Phase 1 (too heavy)
+2. ❌ Don't implement complex hierarchies (Phase 1 = simple)
+3. ❌ Don't tune hyperparameters excessively (defaults work)
+4. ❌ Don't train models (use pre-built scikit-learn algorithms)
+5. ❌ Don't cache LLM responses forever (7 day TTL max)
+
+---
+
+### 7.11 Success Metrics (Measure These)
+
+**Phase 1 MVP Success:**
+
+```python
+# Track in SQLite and log these metrics
+metrics = {
+    'patterns_detected_per_run': 20-50,      # Target range
+    'suggestions_generated_per_run': 5-10,   # Quality over quantity
+    'user_approval_rate': '>60%',            # High acceptance
+    'analysis_duration_minutes': '<10',      # Performance target
+    'api_cost_monthly': '<$10',              # Budget constraint
+    'memory_peak_mb': '<1000',               # Resource constraint
+    'false_positive_rate': '<30%',           # Pattern quality
+}
+```
+
+**How to Measure:**
+1. Log all metrics during batch job
+2. Store in SQLite for trending
+3. Display in Insights Dashboard (Story 1.17)
+4. Review weekly, adjust thresholds
+
+---
+
+## 8. Appendices
+
+### 8.1 Context7 KB Research Documents
+
+- `docs/kb/context7-cache/ai-ml-recommendation-systems-best-practices.md`
+- `docs/kb/context7-cache/edge-ml-deployment-home-assistant.md`
+- `docs/kb/context7-cache/multi-scale-temporal-pattern-detection.md`
+- `docs/kb/context7-cache/huggingface-vs-traditional-ml-for-pattern-detection.md`
+
+### 8.2 Architecture Review
+
+- **Reviewed by:** Winston (Architect)
+- **Date:** 2025-10-15
+- **Verdict:** ✅ Approved with Phase 1 MVP simplifications
+- **Key Recommendations:** scikit-learn only, 3 pattern types, OpenAI API, no Prophet
+- **Timeline:** 2-4 weeks realistic for MVP
+
+### 8.3 Future Phases (Post-MVP)
+
+**Phase 2 (Month 3-4):**
+- Add weekly patterns (statsmodels)
+- Day-of-week awareness
+- 10-20 suggestions per week
+- Pattern trend tracking
+
+**Phase 3 (Month 6+):**
+- Prophet for seasonal patterns (if 6+ months data + user value proven)
+- Composite patterns ("Monday in Summer")
+- Local LLM option (Ollama, privacy-focused)
+- Advanced categorization
+
+**Phase 4 (Year 2):**
+- Multi-home aggregation (if applicable)
+- Federated learning (privacy-preserving)
+- Deep learning (only if simple ML insufficient)
+
+---
+
+**End of PRD**

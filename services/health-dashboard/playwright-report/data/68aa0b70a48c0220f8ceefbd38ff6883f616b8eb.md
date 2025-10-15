@@ -1,0 +1,229 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "🏠 HA Ingestor Dashboard" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Enhanced Home Assistant Event Ingestion & Data Enrichment Monitor
+      - generic [ref=e10]:
+        - button "Switch to Dark Mode" [ref=e11] [cursor=pointer]: 🌙
+        - 'button "Auto Refresh: ON" [ref=e12] [cursor=pointer]': 🔄
+        - combobox "Select time range" [ref=e13]:
+          - option "15m"
+          - option "1h" [selected]
+          - option "6h"
+          - option "24h"
+          - option "7d"
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: Last updated
+          - paragraph [ref=e16]: 07:17:54 AM
+    - generic [ref=e18]:
+      - button "📊 Overview" [ref=e19] [cursor=pointer]
+      - button "🔧 Services" [ref=e20] [cursor=pointer]
+      - button "🔗 Dependencies" [ref=e21] [cursor=pointer]
+      - button "📱 Devices" [ref=e22] [cursor=pointer]
+      - button "📡 Events" [ref=e23] [cursor=pointer]
+      - button "📜 Logs" [ref=e24] [cursor=pointer]
+      - button "🏈 Sports" [ref=e25] [cursor=pointer]
+      - button "🌐 Data Sources" [ref=e26] [cursor=pointer]
+      - button "📈 Analytics" [ref=e27] [cursor=pointer]
+      - button "🚨 Alerts" [ref=e28] [cursor=pointer]
+      - button "⚙️ Configuration" [ref=e29] [cursor=pointer]
+  - main [ref=e30]:
+    - region "System status overview" [ref=e31]:
+      - generic [ref=e32]:
+        - 'status "System status: ALL SYSTEMS OPERATIONAL" [ref=e34]':
+          - generic [ref=e35]:
+            - generic [ref=e36]: 🟢
+            - generic [ref=e38]:
+              - heading "ALL SYSTEMS OPERATIONAL" [level=2] [ref=e39]
+              - paragraph [ref=e40]: "Last updated: 07:17:59 AM"
+        - complementary "Key performance indicators" [ref=e42]:
+          - heading "KEY PERFORMANCE INDICATORS" [level=3] [ref=e43]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Uptime
+              - generic [ref=e47]: 48m 48s
+            - generic [ref=e48]:
+              - generic [ref=e49]: Throughput
+              - generic [ref=e50]:
+                - generic [ref=e51]: 57.25 evt/min
+                - generic [ref=e53]: ➡️
+            - generic [ref=e54]:
+              - generic [ref=e55]: Latency
+              - generic [ref=e56]:
+                - generic [ref=e57]: 51.1 ms avg
+                - generic [ref=e59]: ➡️
+            - generic [ref=e60]:
+              - generic [ref=e61]: Error Rate
+              - generic [ref=e62]: 44.00 %
+    - generic [ref=e63]:
+      - heading "📊 Core System Components" [level=2] [ref=e64]
+      - group "Core system components" [ref=e65]:
+        - button "INGESTION system component - healthy. Click for details." [ref=e66] [cursor=pointer]:
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]: 🔌
+              - generic [ref=e70]:
+                - heading "INGESTION" [level=3] [ref=e71]
+                - paragraph [ref=e72]: WebSocket Connection
+            - generic [ref=e73]:
+              - generic [ref=e74]: ✅
+              - generic [ref=e75]: Healthy
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]: Events per Minute
+              - generic [ref=e79]: 57.25evt/min
+            - generic [ref=e80]:
+              - generic [ref=e81]: Total Events
+              - generic [ref=e82]: 2,086events
+          - generic [ref=e83]:
+            - generic [ref=e84]: Uptime
+            - generic [ref=e85]: 48m 48s
+        - button "PROCESSING system component - healthy. Click for details." [ref=e86] [cursor=pointer]:
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: ⚙️
+              - generic [ref=e90]:
+                - heading "PROCESSING" [level=3] [ref=e91]
+                - paragraph [ref=e92]: Enrichment Pipeline
+            - generic [ref=e93]:
+              - generic [ref=e94]: ✅
+              - generic [ref=e95]: Healthy
+          - generic [ref=e96]:
+            - generic [ref=e97]:
+              - generic [ref=e98]: Processed per Minute
+              - generic [ref=e99]: 41.49proc/min
+            - generic [ref=e100]:
+              - generic [ref=e101]: Total Processed
+              - generic [ref=e102]: 2,020events
+          - generic [ref=e103]:
+            - generic [ref=e104]: Uptime
+            - generic [ref=e105]: 48m 48s
+        - button "STORAGE system component - healthy. Click for details." [ref=e106] [cursor=pointer]:
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - generic [ref=e109]: 🗄️
+              - generic [ref=e110]:
+                - heading "STORAGE" [level=3] [ref=e111]
+                - paragraph [ref=e112]: InfluxDB Database
+            - generic [ref=e113]:
+              - generic [ref=e114]: ✅
+              - generic [ref=e115]: Healthy
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: Response Time
+              - generic [ref=e119]: 28.5ms
+            - generic [ref=e120]:
+              - generic [ref=e121]: Availability
+              - generic [ref=e122]: 99.9%
+          - generic [ref=e123]:
+            - generic [ref=e124]: Uptime
+            - generic [ref=e125]: 48m 48s
+    - generic [ref=e126]:
+      - heading "🏠 Home Assistant Integration" [level=2] [ref=e127]
+      - generic [ref=e128]:
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - paragraph [ref=e132]: Devices
+            - paragraph [ref=e133]: "99"
+          - generic [ref=e134]: 📱
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - paragraph [ref=e138]: Entities
+            - paragraph [ref=e139]: "100"
+          - generic [ref=e140]: 🔌
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - paragraph [ref=e144]: Integrations
+            - paragraph [ref=e145]: "9"
+          - generic [ref=e146]: 🔧
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - paragraph [ref=e150]: Health
+            - paragraph [ref=e151]: 67%
+          - generic [ref=e152]: ❌
+      - generic [ref=e153]:
+        - heading "Top Integrations" [level=3] [ref=e154]
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - button "View devices for hue integration" [ref=e157] [cursor=pointer]:
+              - generic [ref=e158]: ✅
+              - generic [ref=e159]:
+                - paragraph [ref=e160]: hue
+                - paragraph [ref=e161]: 26 devices
+            - button "View details for hue integration" [ref=e162] [cursor=pointer]: ℹ️
+          - generic [ref=e163]:
+            - button "View devices for hassio integration" [ref=e164] [cursor=pointer]:
+              - generic [ref=e165]: ✅
+              - generic [ref=e166]:
+                - paragraph [ref=e167]: hassio
+                - paragraph [ref=e168]: 20 devices
+            - button "View details for hassio integration" [ref=e169] [cursor=pointer]: ℹ️
+          - generic [ref=e170]:
+            - button "View devices for mobile_app integration" [ref=e171] [cursor=pointer]:
+              - generic [ref=e172]: ✅
+              - generic [ref=e173]:
+                - paragraph [ref=e174]: mobile_app
+                - paragraph [ref=e175]: 18 devices
+            - button "View details for mobile_app integration" [ref=e176] [cursor=pointer]: ℹ️
+          - generic [ref=e177]:
+            - button "View devices for upnp integration" [ref=e178] [cursor=pointer]:
+              - generic [ref=e179]: ✅
+              - generic [ref=e180]:
+                - paragraph [ref=e181]: upnp
+                - paragraph [ref=e182]: 12 devices
+            - button "View details for upnp integration" [ref=e183] [cursor=pointer]: ℹ️
+          - generic [ref=e184]:
+            - button "View devices for sun integration" [ref=e185] [cursor=pointer]:
+              - generic [ref=e186]: ✅
+              - generic [ref=e187]:
+                - paragraph [ref=e188]: sun
+                - paragraph [ref=e189]: 9 devices
+            - button "View details for sun integration" [ref=e190] [cursor=pointer]: ℹ️
+          - generic [ref=e191]:
+            - button "View devices for ipp integration" [ref=e192] [cursor=pointer]:
+              - generic [ref=e193]: ✅
+              - generic [ref=e194]:
+                - paragraph [ref=e195]: ipp
+                - paragraph [ref=e196]: 4 devices
+            - button "View details for ipp integration" [ref=e197] [cursor=pointer]: ℹ️
+        - button "View All Devices →" [ref=e199] [cursor=pointer]
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - generic [ref=e203]: ✅
+          - generic [ref=e204]:
+            - paragraph [ref=e205]: HA Devices API Status
+            - paragraph [ref=e206]: Connected - 99 devices discovered
+        - button "View Details →" [ref=e207] [cursor=pointer]
+    - generic [ref=e208]:
+      - heading "🔗 Active Data Sources" [level=2] [ref=e209]
+      - generic [ref=e211]:
+        - button "CarbonIntensity ⏸️" [ref=e212] [cursor=pointer]:
+          - generic [ref=e213]: CarbonIntensity
+          - generic [ref=e214]: ⏸️
+        - button "ElectricityPricing ⏸️" [ref=e215] [cursor=pointer]:
+          - generic [ref=e216]: ElectricityPricing
+          - generic [ref=e217]: ⏸️
+        - button "AirQuality ⏸️" [ref=e218] [cursor=pointer]:
+          - generic [ref=e219]: AirQuality
+          - generic [ref=e220]: ⏸️
+        - button "Calendar ⏸️" [ref=e221] [cursor=pointer]:
+          - generic [ref=e222]: Calendar
+          - generic [ref=e223]: ⏸️
+        - button "SmartMeter ⏸️" [ref=e224] [cursor=pointer]:
+          - generic [ref=e225]: SmartMeter
+          - generic [ref=e226]: ⏸️
+    - generic [ref=e227]:
+      - heading "⚡ Quick Actions" [level=2] [ref=e228]
+      - navigation "Quick navigation actions" [ref=e229]:
+        - button "Navigate to logs tab" [ref=e230] [cursor=pointer]: 📜 View Logs
+        - button "Navigate to dependencies tab to check system dependencies" [ref=e231] [cursor=pointer]: 🔗 Check Dependencies
+        - button "Navigate to services tab to manage services" [ref=e232] [cursor=pointer]: 🔧 Manage Services
+        - button "Navigate to configuration tab to adjust settings" [ref=e233] [cursor=pointer]: ⚙️ Settings
+    - generic [ref=e234]:
+      - paragraph [ref=e235]: 🏠 HA Ingestor Dashboard - Real-time System Health Monitoring
+      - paragraph [ref=e236]: 99 Devices • 100 Entities • 9 Integrations • 0 Data Sources Active • Storage Optimized • Built with React & TypeScript
+```

@@ -203,6 +203,41 @@ class HealthEndpoints:
             try:
                 start_time = datetime.now()
                 
+                # Special handling for external weather API
+                if service_name == "weather-api":
+                    weather_api_key = os.getenv("WEATHER_API_KEY")
+                    if not weather_api_key:
+                        services_health[service_name] = ServiceHealth(
+                            name=service_name,
+                            status="unhealthy",
+                            last_check=datetime.now().isoformat(),
+                            error_message="No API key configured"
+                        )
+                        continue
+                    
+                    # Check actual weather API endpoint
+                    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=2)) as session:
+                        async with session.get(f"{service_url}/weather?q=London&appid={weather_api_key}") as response:
+                            response_time = (datetime.now() - start_time).total_seconds() * 1000
+                            
+                            if response.status == 200:
+                                services_health[service_name] = ServiceHealth(
+                                    name=service_name,
+                                    status="healthy",
+                                    last_check=datetime.now().isoformat(),
+                                    response_time_ms=response_time
+                                )
+                            else:
+                                services_health[service_name] = ServiceHealth(
+                                    name=service_name,
+                                    status="unhealthy",
+                                    last_check=datetime.now().isoformat(),
+                                    response_time_ms=response_time,
+                                    error_message=f"HTTP {response.status}"
+                                )
+                    continue
+                
+                # Standard health check for internal services
                 async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=2)) as session:
                     async with session.get(f"{service_url}/health") as response:
                         response_time = (datetime.now() - start_time).total_seconds() * 1000

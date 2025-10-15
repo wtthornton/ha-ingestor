@@ -9,9 +9,10 @@ The WebSocket Ingestion Service connects to Home Assistant's WebSocket API to ca
 - 🔐 **Secure Authentication** - Token-based authentication with validation
 - 🌤️ **Weather Enrichment** - Automatic weather data enrichment for events
 - 📊 **Event Processing** - Captures and normalizes state_changed events
-- 🔍 **Device Discovery** - Automatic discovery of devices and entities
+- 🔍 **Device Discovery** - Automatic discovery of devices and entities (NEW - stores directly to SQLite)
 - 📈 **Health Monitoring** - Comprehensive health checks and metrics
 - 🔁 **Automatic Reconnection** - Smart exponential backoff on connection failures
+- 💾 **Direct SQLite Storage** - Devices/entities stored directly to SQLite via data-api (October 2025)
 
 ## Network Resilience (NEW)
 
@@ -88,17 +89,62 @@ curl http://localhost:8001/health
 }
 ```
 
+## Device Discovery (NEW - October 2025)
+
+### How It Works
+
+**Trigger**: Runs automatically on every WebSocket connection to Home Assistant
+
+**Process**:
+1. Connect to HA at configured URL (e.g., http://192.168.1.86:8123)
+2. Authenticate with long-lived token
+3. Query device registry: `config/device_registry/list`
+4. Query entity registry: `config/entity_registry/list`
+5. **POST to data-api** → Stores in SQLite (primary storage) ✅
+6. (Optional) Store snapshot in InfluxDB for history tracking
+
+**Data Flow**:
+```
+Home Assistant @ 192.168.1.86:8123
+         ↓ WebSocket Discovery
+  Discovery Service
+         ↓ HTTP POST
+    Data-API → SQLite ✅ PRIMARY
+         ↓ Served via
+    /api/devices, /api/entities
+```
+
+**Frequency**: 
+- On initial connection
+- On reconnection after disconnect
+- Real-time updates via registry event subscriptions
+
+### Discovery Configuration
+
+```bash
+# Data API endpoint for device/entity storage
+DATA_API_URL=http://ha-ingestor-data-api:8006  # Container name (Docker network)
+
+# Optional: Enable InfluxDB historical tracking (disabled by default)
+STORE_DEVICE_HISTORY_IN_INFLUXDB=false
+```
+
+**Note**: Device/entity data is now stored directly to SQLite for fast queries (<10ms). InfluxDB storage is optional for historical tracking only.
+
 ## Configuration
 
 ### Required Environment Variables
 
 ```bash
 # Home Assistant Connection
-HOME_ASSISTANT_URL=http://your-ha-ip:8123
+HOME_ASSISTANT_URL=http://your-ha-ip:8123  # Your HA instance
 HOME_ASSISTANT_TOKEN=your_long_lived_access_token
 
 # Service Port
 WEBSOCKET_INGESTION_PORT=8001
+
+# Data API (for device/entity storage)
+DATA_API_URL=http://ha-ingestor-data-api:8006  # NEW
 
 # Network Resilience (Optional - Defaults shown)
 WEBSOCKET_MAX_RETRIES=-1
@@ -108,6 +154,9 @@ WEBSOCKET_MAX_RETRY_DELAY=300
 ### Optional Environment Variables
 
 ```bash
+# Device Discovery Storage
+STORE_DEVICE_HISTORY_IN_INFLUXDB=false  # NEW - Optional InfluxDB history
+
 # Weather Enrichment
 WEATHER_API_KEY=your_openweathermap_api_key
 WEATHER_DEFAULT_LOCATION=City,State,Country
@@ -215,45 +264,52 @@ pytest tests/ --cov=src --cov-report=html
 
 ## Architecture
 
+### Data Flow Diagram
+
 ```
-┌─────────────────────┐
-│  Home Assistant     │
-│  WebSocket API      │
-└──────────┬──────────┘
+┌─────────────────────────────────────────────┐
+│  Home Assistant @ 192.168.1.86:8123         │
+│  - WebSocket API (events)                   │
+│  - Device Registry (discovery)              │
+│  - Entity Registry (discovery)              │
+└──────────┬──────────────────────────────────┘
            │
-           │ WebSocket Connection
-           │ (with infinite retry)
+           │ WebSocket Connection (with infinite retry)
            │
-┌──────────▼──────────┐
-│  WebSocket Client   │
-│  - Connection Mgr   │
-│  - Retry Logic      │
-│  - Auth Handler     │
-└──────────┬──────────┘
-           │
-           │ Events
-           │
-┌──────────▼──────────┐
-│  Event Processor    │
-│  - Normalization    │
-│  - Weather Enrich   │
-│  - Validation       │
-└──────────┬──────────┘
-           │
-           │ Processed Events
-           │
-┌──────────▼──────────┐
-│  Enrichment         │
-│  Pipeline Service   │
-│  (Port 8002)        │
-└──────────┬──────────┘
-           │
-           │ Enriched Events
-           │
-┌──────────▼──────────┐
-│  InfluxDB           │
-│  (Port 8086)        │
-└─────────────────────┘
+┌──────────▼──────────────────────────────────┐
+│  WebSocket Ingestion Service                │
+│                                              │
+│  ┌──────────────┐    ┌──────────────┐      │
+│  │ Event Stream │    │ Discovery    │      │
+│  │ (real-time)  │    │ (on connect) │      │
+│  └──────┬───────┘    └──────┬───────┘      │
+│         │                   │               │
+└─────────┼───────────────────┼───────────────┘
+          │                   │
+          │ Events            │ Devices/Entities
+          ↓                   ↓
+┌──────────────────┐  ┌──────────────────────┐
+│  Enrichment      │  │  Data API            │
+│  Pipeline        │  │  (Port 8006)         │
+│  (Port 8002)     │  │                      │
+└────────┬─────────┘  │  POST /internal/     │
+         │            │  devices/bulk_upsert │
+         ↓            └──────────┬───────────┘
+┌──────────────────┐             │
+│  InfluxDB        │◄────────────┘
+│  (Time-Series)   │  SQLite
+│  (Port 8086)     │  (Metadata) ✅ PRIMARY
+└──────────────────┘  └──────────────────────┘
+```
+
+### Storage Strategy (Updated October 2025)
+
+| Data Type | Storage | Purpose |
+|-----------|---------|---------|
+| **HA Events** | InfluxDB | Time-series state changes |
+| **Devices** | SQLite (via data-api) | Current metadata, fast queries ✅ |
+| **Entities** | SQLite (via data-api) | Current metadata, fast queries ✅ |
+| **Device History** | InfluxDB (optional) | Historical snapshots (disabled) |
 ```
 
 ## Performance

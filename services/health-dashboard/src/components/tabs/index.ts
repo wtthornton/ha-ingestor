@@ -5,7 +5,6 @@
 
 export * from './types';
 export { OverviewTab } from './OverviewTab';
-export { CustomTab } from './CustomTab';
 export { ServicesTab } from './ServicesTab';
 export { SportsTab } from './SportsTab';
 export { DependenciesTab } from './DependenciesTab';
@@ -16,4 +15,5 @@ export { AnalyticsTab } from './AnalyticsTab';
 export { AlertsTab } from './AlertsTab';
 export { ConfigurationTab } from './ConfigurationTab';
 export { DevicesTab } from './DevicesTab';
+export { EnergyTab } from './EnergyTab';
 

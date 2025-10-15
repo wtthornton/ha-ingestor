@@ -95,20 +95,30 @@ async def list_devices(
     manufacturer: Optional[str] = Query(default=None, description="Filter by manufacturer"),
     model: Optional[str] = Query(default=None, description="Filter by model"),
     area_id: Optional[str] = Query(default=None, description="Filter by area/room"),
+    platform: Optional[str] = Query(default=None, description="Filter by integration platform"),
     db: AsyncSession = Depends(get_db)
 ):
     """
     List all discovered devices from Home Assistant (SQLite storage)
     
     Story 22.2: Simple, fast SQLite queries with JOIN for entity counts
+    Enhanced: Platform filtering support for Top Integrations feature
     """
     try:
         # Build query with entity count
-        query = select(Device, func.count(Entity.entity_id).label('entity_count'))\
-            .outerjoin(Entity, Device.device_id == Entity.device_id)\
-            .group_by(Device.device_id)
+        if platform:
+            # Join with entities to filter by platform
+            query = select(Device, func.count(Entity.entity_id).label('entity_count'))\
+                .join(Entity, Device.device_id == Entity.device_id)\
+                .where(Entity.platform == platform)\
+                .group_by(Device.device_id)
+        else:
+            # Standard query without platform filter
+            query = select(Device, func.count(Entity.entity_id).label('entity_count'))\
+                .outerjoin(Entity, Device.device_id == Entity.device_id)\
+                .group_by(Device.device_id)
         
-        # Apply filters (simple WHERE clauses)
+        # Apply additional filters (simple WHERE clauses)
         if manufacturer:
             query = query.where(Device.manufacturer == manufacturer)
         if model:
@@ -371,6 +381,193 @@ async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to retrieve entity: {str(e)}")
 
 
+@router.get("/api/integrations/{platform}/performance")
+async def get_integration_performance(
+    platform: str,
+    period: str = Query(default="1h", description="Time period for metrics (1h, 24h, 7d)")
+):
+    """
+    Get performance metrics for a specific integration platform (Phase 3.3)
+    
+    Returns event rate, error rate, response time, and discovery status
+    """
+    try:
+        from influxdb_client import InfluxDBClient
+        
+        # Get InfluxDB configuration
+        influxdb_url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
+        influxdb_token = os.getenv("INFLUXDB_TOKEN")
+        influxdb_org = os.getenv("INFLUXDB_ORG", "homeassistant")
+        influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
+        
+        # Create client
+        client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=influxdb_org)
+        query_api = client.query_api()
+        
+        # Calculate events per minute
+        event_rate_query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -{period})
+          |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r["platform"] == "{platform}")
+          |> count()
+        '''
+        
+        event_result = query_api.query(event_rate_query)
+        total_events = 0
+        for table in event_result:
+            for record in table.records:
+                total_events += record.get_value()
+        
+        # Calculate time period in minutes
+        period_minutes = {
+            "1h": 60,
+            "24h": 1440,
+            "7d": 10080
+        }.get(period, 60)
+        
+        events_per_minute = round(total_events / period_minutes, 2) if period_minutes > 0 else 0
+        
+        # Estimate error rate (events with error field)
+        error_query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -{period})
+          |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r["platform"] == "{platform}")
+          |> filter(fn: (r) => exists r["error"])
+          |> count()
+        '''
+        
+        error_result = query_api.query(error_query)
+        total_errors = 0
+        for table in error_result:
+            for record in table.records:
+                total_errors += record.get_value()
+        
+        error_rate = round((total_errors / total_events) * 100, 2) if total_events > 0 else 0
+        
+        # Calculate average response time (if available)
+        response_time_query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -{period})
+          |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r["platform"] == "{platform}")
+          |> filter(fn: (r) => exists r["response_time"])
+          |> mean(column: "response_time")
+        '''
+        
+        response_result = query_api.query(response_time_query)
+        avg_response_time = 0
+        for table in response_result:
+            for record in table.records:
+                avg_response_time = round(record.get_value(), 2)
+        
+        # Device discovery status (simplified - check if we have recent device updates)
+        discovery_query = f'''
+        from(bucket: "{influxdb_bucket}")
+          |> range(start: -5m)
+          |> filter(fn: (r) => r["_measurement"] == "devices")
+          |> filter(fn: (r) => r["platform"] == "{platform}")
+          |> count()
+        '''
+        
+        discovery_result = query_api.query(discovery_query)
+        recent_discoveries = 0
+        for table in discovery_result:
+            for record in table.records:
+                recent_discoveries += record.get_value()
+        
+        discovery_status = "active" if recent_discoveries > 0 else "paused"
+        
+        client.close()
+        
+        return {
+            "platform": platform,
+            "period": period,
+            "events_per_minute": events_per_minute,
+            "error_rate": error_rate,
+            "avg_response_time": avg_response_time if avg_response_time > 0 else None,
+            "device_discovery_status": discovery_status,
+            "total_events": total_events,
+            "total_errors": total_errors,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting performance metrics for {platform}: {e}")
+        # Return default metrics on error
+        return {
+            "platform": platform,
+            "period": period,
+            "events_per_minute": 0,
+            "error_rate": 0,
+            "avg_response_time": None,
+            "device_discovery_status": "unknown",
+            "total_events": 0,
+            "total_errors": 0,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+@router.get("/api/integrations/{platform}/analytics")
+async def get_integration_analytics(
+    platform: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get analytics for a specific integration platform (Phase 2.3)
+    
+    Returns device count, entity count, and entity breakdown by domain
+    """
+    try:
+        # Get device count for this platform
+        device_query = select(func.count(func.distinct(Device.device_id)))\
+            .select_from(Device)\
+            .join(Entity, Device.device_id == Entity.device_id)\
+            .where(Entity.platform == platform)
+        
+        device_result = await db.execute(device_query)
+        device_count = device_result.scalar() or 0
+        
+        # Get entity count for this platform
+        entity_query = select(func.count(Entity.entity_id))\
+            .where(Entity.platform == platform)
+        
+        entity_result = await db.execute(entity_query)
+        entity_count = entity_result.scalar() or 0
+        
+        # Get entity breakdown by domain
+        domain_query = select(
+            Entity.domain,
+            func.count(Entity.entity_id).label('count')
+        )\
+            .where(Entity.platform == platform)\
+            .group_by(Entity.domain)\
+            .order_by(func.count(Entity.entity_id).desc())
+        
+        domain_result = await db.execute(domain_query)
+        domain_breakdown = [
+            {"domain": row.domain, "count": row.count}
+            for row in domain_result
+        ]
+        
+        return {
+            "platform": platform,
+            "device_count": device_count,
+            "entity_count": entity_count,
+            "entity_breakdown": domain_breakdown,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting integration analytics for {platform}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve integration analytics: {str(e)}"
+        )
+
+
 @router.get("/api/integrations", response_model=IntegrationsListResponse)
 async def list_integrations(
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of integrations to return")
@@ -469,3 +666,114 @@ def _build_entities_query(filters: Dict[str, str], limit: int) -> str:
     
     return query
 
+
+# Internal bulk upsert endpoints (called by websocket-ingestion)
+@router.post("/internal/devices/bulk_upsert")
+async def bulk_upsert_devices(
+    devices: List[Dict[str, Any]],
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Internal endpoint for websocket-ingestion to bulk upsert devices from HA discovery
+    
+    Simple approach: Loop and merge (SQLAlchemy handles upsert logic)
+    """
+    try:
+        upserted_count = 0
+        
+        for device_data in devices:
+            # Extract device_id (HA uses 'id', we use 'device_id')
+            device_id = device_data.get('id') or device_data.get('device_id')
+            if not device_id:
+                logger.warning(f"Skipping device without ID: {device_data.get('name', 'unknown')}")
+                continue
+            
+            # Create device instance
+            device = Device(
+                device_id=device_id,
+                name=device_data.get('name_by_user') or device_data.get('name'),
+                manufacturer=device_data.get('manufacturer'),
+                model=device_data.get('model'),
+                sw_version=device_data.get('sw_version'),
+                area_id=device_data.get('area_id'),
+                last_seen=datetime.now()
+            )
+            
+            # Merge (upsert) - updates if exists, inserts if new
+            await db.merge(device)
+            upserted_count += 1
+        
+        await db.commit()
+        
+        logger.info(f"Bulk upserted {upserted_count} devices from HA discovery")
+        
+        return {
+            "success": True,
+            "upserted": upserted_count,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error bulk upserting devices: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to bulk upsert devices: {str(e)}"
+        )
+
+
+@router.post("/internal/entities/bulk_upsert")
+async def bulk_upsert_entities(
+    entities: List[Dict[str, Any]],
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Internal endpoint for websocket-ingestion to bulk upsert entities from HA discovery
+    
+    Simple approach: Loop and merge (SQLAlchemy handles upsert logic)
+    """
+    try:
+        upserted_count = 0
+        
+        for entity_data in entities:
+            entity_id = entity_data.get('entity_id')
+            if not entity_id:
+                logger.warning("Skipping entity without entity_id")
+                continue
+            
+            # Extract domain from entity_id (e.g., "light.kitchen" -> "light")
+            domain = entity_id.split('.')[0] if '.' in entity_id else 'unknown'
+            
+            # Create entity instance
+            entity = Entity(
+                entity_id=entity_id,
+                device_id=entity_data.get('device_id'),
+                domain=domain,
+                platform=entity_data.get('platform', 'unknown'),
+                unique_id=entity_data.get('unique_id'),
+                area_id=entity_data.get('area_id'),
+                disabled=entity_data.get('disabled_by') is not None,
+                created_at=datetime.now()
+            )
+            
+            # Merge (upsert)
+            await db.merge(entity)
+            upserted_count += 1
+        
+        await db.commit()
+        
+        logger.info(f"Bulk upserted {upserted_count} entities from HA discovery")
+        
+        return {
+            "success": True,
+            "upserted": upserted_count,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error bulk upserting entities: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to bulk upsert entities: {str(e)}"
+        )

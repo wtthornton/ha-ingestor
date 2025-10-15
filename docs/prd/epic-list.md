@@ -90,14 +90,15 @@ Complete integration of dashboard with Epic 13's data-api service structure and 
 
 ## Database Architecture Epics (22-23)
 
-**Epic 22: SQLite Metadata Storage** ✅ **COMPLETE**
-Implemented hybrid database architecture with SQLite for metadata and InfluxDB for time-series. Delivered 3 stories in <1 day with ultra-simple implementation. Story 22.4 (User Preferences) cancelled as localStorage sufficient.
+**Epic 22: SQLite Metadata Storage** ✅ **COMPLETE + ENHANCED**
+Implemented hybrid database architecture with SQLite for metadata and InfluxDB for time-series. Delivered 3 stories in <1 day with ultra-simple implementation. Story 22.4 (User Preferences) cancelled as localStorage sufficient. **October 2025 Enhancement**: Fixed architecture gap - now stores devices/entities directly from HA to SQLite (99 real devices, 100+ entities).
 
 **Delivered:**
 - ✅ SQLite infrastructure with async SQLAlchemy 2.0 + WAL mode
 - ✅ Device/Entity registry (5-10x faster queries, <10ms)
 - ✅ Webhook storage (concurrent-safe, ACID transactions)
 - ✅ Docker volumes, health checks, 15 unit tests
+- ✅ **NEW**: Direct HA → SQLite storage (no sync scripts needed)
 - ✅ Zero over-engineering, production ready
 
 **Epic 23: Enhanced Event Data Capture** ✅ **COMPLETE** ⭐ **HIGH PRIORITY** (All 5 stories - 100% in ~2 hours)

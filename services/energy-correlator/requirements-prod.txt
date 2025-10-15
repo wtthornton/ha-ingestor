@@ -1,0 +1,4 @@
+aiohttp==3.9.1
+influxdb-client==1.43.0
+python-dotenv==1.0.0
+

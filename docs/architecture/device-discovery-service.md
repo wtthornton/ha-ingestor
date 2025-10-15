@@ -15,49 +15,72 @@ Add device/entity discovery capability to existing WebSocket ingestion service. 
 
 ---
 
-## Architecture Diagram
+## Architecture Diagram (Updated October 2025)
+
+### Current Implementation ✅
 
 ```
 ┌─────────────────────────────────────────────────┐
 │        HOME ASSISTANT                            │
-│  - Device Registry                               │
-│  - Entity Registry                               │
+│  - Device Registry (99 devices)                 │
+│  - Entity Registry (100+ entities)              │
 │  - Config Entries                                │
 └────────────────┬────────────────────────────────┘
-                 │ WebSocket (existing connection)
+                 │ WebSocket (on connect)
 ┌────────────────▼────────────────────────────────┐
-│   WEBSOCKET INGESTION SERVICE (enhanced)        │
+│   WEBSOCKET INGESTION SERVICE                   │
 │                                                  │
-│   NEW: discovery_service.py                     │
-│   - send_registry_command()                     │
-│   - handle_registry_response()                  │
+│   ✅ discovery_service.py                       │
+│   - discover_devices()                          │
+│   - discover_entities()                         │
+│   - store_discovery_results()                   │
 │                                                  │
-│   ENHANCED: connection_manager.py               │
-│   - Subscribe to registry events on connect     │
+│   ✅ main.py (_on_connect)                      │
+│   - Triggers discovery on connect               │
 │                                                  │
-│   NEW: registry_processor.py                    │
-│   - process_device()                            │
-│   - process_entity()                            │
-│                                                  │
-│   REUSE: influxdb_wrapper.py                    │
-│   - write_device()                              │
-│   - write_entity()                              │
 └────────────────┬────────────────────────────────┘
-                 │ Write
+                 │ HTTP POST (aiohttp)
 ┌────────────────▼────────────────────────────────┐
-│            INFLUXDB                              │
-│   - devices/ bucket (NEW)                       │
-│   - entities/ bucket (NEW)                      │
-│   - home_assistant/ bucket (existing)           │
+│          DATA API SERVICE                        │
+│                                                  │
+│   ✅ POST /internal/devices/bulk_upsert         │
+│   ✅ POST /internal/entities/bulk_upsert        │
+│                                                  │
+│   Uses: SQLAlchemy merge() for upsert           │
+└────────────────┬────────────────────────────────┘
+                 │ Store
+┌────────────────▼────────────────────────────────┐
+│            SQLITE (Primary) ✅                   │
+│   - devices table (99 devices)                  │
+│   - entities table (100+ entities)              │
+│   - Fast queries (<10ms)                        │
+│   - WAL mode enabled                            │
 └────────────────┬────────────────────────────────┘
                  │ Query
 ┌────────────────▼────────────────────────────────┐
-│          ADMIN API (enhanced)                    │
-│   NEW: devices_endpoints.py                     │
-│   - GET /api/devices                            │
-│   - GET /api/entities                           │
+│          DATA API ENDPOINTS                      │
+│   ✅ GET /api/devices                           │
+│   ✅ GET /api/entities                          │
+│   ✅ GET /api/integrations                      │
+└────────────────┬────────────────────────────────┘
+                 │ Served to
+┌────────────────▼────────────────────────────────┐
+│          HEALTH DASHBOARD                        │
+│   - Overview Tab (HA Integration section)       │
+│   - Devices Tab (full device browser)           │
 └─────────────────────────────────────────────────┘
 ```
+
+### Key Changes (October 2025)
+
+**Before**: ❌ HA → InfluxDB → (manual sync) → SQLite  
+**After**: ✅ HA → SQLite (direct via HTTP POST)
+
+**Benefits**:
+- Real-time updates (no sync lag)
+- Simpler architecture (no sync scripts)
+- Automated on connection
+- Single source of truth
 
 ---
 

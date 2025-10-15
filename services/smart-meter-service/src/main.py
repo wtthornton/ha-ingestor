@@ -19,6 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 from shared.logging_config import setup_logging, log_with_context, log_error_with_context
 
 from health_check import HealthCheckHandler
+from adapters.home_assistant import HomeAssistantAdapter
 
 load_dotenv()
 
@@ -29,9 +30,13 @@ class SmartMeterService:
     """Generic smart meter integration with adapter support"""
     
     def __init__(self):
-        self.meter_type = os.getenv('METER_TYPE', 'generic')
+        self.meter_type = os.getenv('METER_TYPE', 'home_assistant')
         self.api_token = os.getenv('METER_API_TOKEN', '')
         self.device_id = os.getenv('METER_DEVICE_ID', '')
+        
+        # Home Assistant configuration
+        self.ha_url = os.getenv('HOME_ASSISTANT_URL')
+        self.ha_token = os.getenv('HOME_ASSISTANT_TOKEN')
         
         # InfluxDB configuration
         self.influxdb_url = os.getenv('INFLUXDB_URL', 'http://influxdb:8086')
@@ -51,6 +56,7 @@ class SmartMeterService:
         self.session: Optional[aiohttp.ClientSession] = None
         self.influxdb_client: Optional[InfluxDBClient3] = None
         self.health_handler = HealthCheckHandler()
+        self.adapter = None  # Will be initialized in startup
         
         if not self.influxdb_token:
             raise ValueError("INFLUXDB_TOKEN required")
@@ -70,7 +76,35 @@ class SmartMeterService:
             org=self.influxdb_org
         )
         
+        # Initialize adapter based on meter type
+        self.adapter = self._create_adapter()
+        
+        # Test connection if using Home Assistant adapter
+        if isinstance(self.adapter, HomeAssistantAdapter):
+            connected = await self.adapter.test_connection()
+            if not connected:
+                logger.warning("Failed to connect to Home Assistant - will use mock data")
+        
         logger.info("Smart Meter Service initialized")
+    
+    def _create_adapter(self):
+        """Create adapter based on meter type"""
+        if self.meter_type == 'home_assistant':
+            if not self.ha_url or not self.ha_token:
+                logger.warning(
+                    "HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN not configured - using mock data"
+                )
+                return None
+            return HomeAssistantAdapter(self.ha_url, self.ha_token)
+        elif self.meter_type == 'emporia':
+            logger.warning("Emporia adapter not yet implemented - using mock data")
+            return None
+        elif self.meter_type == 'sense':
+            logger.warning("Sense adapter not yet implemented - using mock data")
+            return None
+        else:
+            logger.warning(f"Unknown meter type: {self.meter_type} - using mock data")
+            return None
     
     async def shutdown(self):
         """Cleanup"""
@@ -80,60 +114,100 @@ class SmartMeterService:
             self.influxdb_client.close()
     
     async def fetch_consumption(self) -> Optional[Dict[str, Any]]:
-        """Fetch power consumption (generic implementation)"""
+        """Fetch power consumption from configured adapter or mock data"""
         
-        try:
-            # Generic mock data for demonstration
-            # In production, this would call actual meter API
-            
-            data = {
-                'total_power_w': 2450.0,
-                'daily_kwh': 18.5,
-                'circuits': [
-                    {'name': 'HVAC', 'power_w': 1200.0},
-                    {'name': 'Kitchen', 'power_w': 450.0},
-                    {'name': 'Living Room', 'power_w': 300.0},
-                    {'name': 'Office', 'power_w': 250.0},
-                    {'name': 'Bedrooms', 'power_w': 150.0},
-                    {'name': 'Other', 'power_w': 100.0}
-                ],
-                'timestamp': datetime.now()
-            }
-            
-            # Calculate percentages
-            for circuit in data['circuits']:
-                circuit['percentage'] = (circuit['power_w'] / data['total_power_w']) * 100 if data['total_power_w'] > 0 else 0
-            
-            # Detect phantom loads (high 3am baseline)
-            current_hour = datetime.now().hour
-            if current_hour == 3:
-                self.baseline_3am = data['total_power_w']
-                if self.baseline_3am > 200:
-                    logger.warning(f"High phantom load detected: {self.baseline_3am:.0f}W at 3am")
-            
-            # Log high consumption
-            if data['total_power_w'] > 10000:
-                logger.warning(f"High power consumption: {data['total_power_w']:.0f}W")
-            
-            self.cached_data = data
-            self.last_fetch_time = datetime.now()
-            
-            self.health_handler.last_successful_fetch = datetime.now()
-            self.health_handler.total_fetches += 1
-            
-            logger.info(f"Power: {data['total_power_w']:.0f}W, Daily: {data['daily_kwh']:.1f}kWh")
-            
-            return data
-            
-        except Exception as e:
-            log_error_with_context(
-                logger,
-                f"Error fetching consumption: {e}",
-                service="smart-meter-service",
-                error=str(e)
-            )
-            self.health_handler.failed_fetches += 1
-            return self.cached_data
+        # Use adapter if configured
+        if self.adapter:
+            try:
+                data = await self.adapter.fetch_consumption(
+                    self.session,
+                    self.api_token,
+                    self.device_id
+                )
+                
+                # Add timestamp if not present
+                if 'timestamp' not in data:
+                    data['timestamp'] = datetime.now()
+                
+                # Ensure percentages are calculated
+                for circuit in data.get('circuits', []):
+                    if 'percentage' not in circuit:
+                        circuit['percentage'] = (
+                            (circuit['power_w'] / data['total_power_w']) * 100 
+                            if data['total_power_w'] > 0 else 0
+                        )
+                
+                # Detect phantom loads (high 3am baseline)
+                current_hour = datetime.now().hour
+                if current_hour == 3:
+                    self.baseline_3am = data['total_power_w']
+                    if self.baseline_3am > 200:
+                        logger.warning(f"High phantom load detected: {self.baseline_3am:.0f}W at 3am")
+                
+                # Log high consumption
+                if data['total_power_w'] > 10000:
+                    logger.warning(f"High power consumption: {data['total_power_w']:.0f}W")
+                
+                # Update cache and stats
+                self.cached_data = data
+                self.last_fetch_time = datetime.now()
+                self.health_handler.last_successful_fetch = datetime.now()
+                self.health_handler.total_fetches += 1
+                
+                logger.info(
+                    f"Power: {data['total_power_w']:.0f}W, "
+                    f"Daily: {data.get('daily_kwh', 0):.1f}kWh, "
+                    f"Circuits: {len(data.get('circuits', []))}"
+                )
+                
+                return data
+                
+            except Exception as e:
+                log_error_with_context(
+                    logger,
+                    f"Error fetching from adapter: {e}",
+                    service="smart-meter-service",
+                    error=str(e)
+                )
+                self.health_handler.failed_fetches += 1
+                
+                # Return cached data if available
+                if self.cached_data:
+                    logger.warning("Using cached data after adapter failure")
+                    return self.cached_data
+                
+                # Fall through to mock data
+                logger.warning("No cached data available, using mock data")
+        
+        # Use mock data if no adapter or adapter failed
+        return self._get_mock_data()
+    
+    def _get_mock_data(self) -> Dict[str, Any]:
+        """Return mock data for testing when no adapter is configured"""
+        
+        data = {
+            'total_power_w': 2450.0,
+            'daily_kwh': 18.5,
+            'circuits': [
+                {'name': 'HVAC', 'power_w': 1200.0, 'percentage': 49.0},
+                {'name': 'Kitchen', 'power_w': 450.0, 'percentage': 18.4},
+                {'name': 'Living Room', 'power_w': 300.0, 'percentage': 12.2},
+                {'name': 'Office', 'power_w': 250.0, 'percentage': 10.2},
+                {'name': 'Bedrooms', 'power_w': 150.0, 'percentage': 6.1},
+                {'name': 'Other', 'power_w': 100.0, 'percentage': 4.1}
+            ],
+            'timestamp': datetime.now()
+        }
+        
+        # Update stats
+        self.cached_data = data
+        self.last_fetch_time = datetime.now()
+        self.health_handler.last_successful_fetch = datetime.now()
+        self.health_handler.total_fetches += 1
+        
+        logger.debug("Using mock data")
+        
+        return data
     
     async def store_in_influxdb(self, data: Dict[str, Any]):
         """Store consumption data in InfluxDB"""

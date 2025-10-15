@@ -12,22 +12,40 @@ The HA Ingestor uses a **hybrid database architecture** optimizing different dat
 
 ```
 ┌─────────────────────────────────────┐
-│  InfluxDB 2.7 (Time-Series)        │
-│  - HA events                        │
-│  - Sports scores                    │
-│  - Weather data                     │
-│  - System metrics                   │
-│  - Retention policies               │
+│  InfluxDB 2.7 (Time-Series)         │
+│  - HA events (state_changed)        │
+│  - Sports scores                     │
+│  - Weather data                      │
+│  - System metrics                    │
+│  - Retention policies                │
 └─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐
-│  SQLite 3.45+ (Metadata)            │
-│  - Device registry                  │
-│  - Entity registry                  │
-│  - Webhook subscriptions            │
-│  - WAL mode (concurrent-safe)       │
+│  SQLite 3.45+ (Metadata) ✅         │
+│  - Device registry (99 devices)     │
+│  - Entity registry (100+ entities)  │
+│  - Webhook subscriptions             │
+│  - WAL mode (concurrent-safe)        │
+│  - Direct from HA (no sync needed)  │
 └─────────────────────────────────────┘
 ```
+
+### Data Population (Updated October 2025)
+
+**Devices & Entities** → Direct from Home Assistant ✅
+```
+HA WebSocket → Discovery Service → POST → Data-API → SQLite
+```
+- Automatic on WebSocket connection
+- Real-time updates
+- No manual sync required
+
+**Events** → InfluxDB ✅
+```
+HA WebSocket → Event Stream → Enrichment → InfluxDB
+```
+- Real-time state changes
+- Time-series storage
 
 ---
 

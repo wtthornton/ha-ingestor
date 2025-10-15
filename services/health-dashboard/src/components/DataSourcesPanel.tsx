@@ -6,40 +6,31 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getMockDataSources, type DataSource } from '../mocks/dataSourcesMock';
+import { useDataSources } from '../hooks/useDataSources';
+import { DataSourceHealth } from '../types';
 import { SkeletonCard } from './skeletons';
 
 interface DataSourcesPanelProps {
   darkMode: boolean;
 }
 
+// Data source definitions for display
+const DATA_SOURCE_DEFINITIONS = [
+  { id: 'weather', name: 'Weather API', icon: '☁️' },
+  { id: 'carbonIntensity', name: 'Carbon Intensity', icon: '🌱' },
+  { id: 'airQuality', name: 'Air Quality', icon: '💨' },
+  { id: 'electricityPricing', name: 'Electricity Pricing', icon: '⚡' },
+  { id: 'calendar', name: 'Calendar Service', icon: '📅' },
+  { id: 'smartMeter', name: 'Smart Meter', icon: '📈' }
+];
+
 export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) => {
-  const [dataSources, setDataSources] = useState<DataSource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { dataSources, loading, error } = useDataSources(30000);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  const fetchDataSources = async () => {
-    try {
-      // Mock data for now - will be replaced with real API call
-      // TODO: Replace with actual API call to /api/v1/data-sources/status
-      const mockData = getMockDataSources();
-      
-      setDataSources(mockData);
-      setError(null);
-      setLastUpdate(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data sources');
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchDataSources();
-    const interval = setInterval(fetchDataSources, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
-  }, []);
+    setLastUpdate(new Date());
+  }, [dataSources]);
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -154,25 +145,25 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
           <div className="flex items-center gap-2">
             <span>🟢</span>
             <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-              {dataSources.filter(s => s.status === 'healthy').length} Healthy
+              {dataSources ? Object.values(dataSources).filter(s => s?.status === 'healthy').length : 0} Healthy
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span>🟡</span>
             <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-              {dataSources.filter(s => s.status === 'degraded').length} Degraded
+              {dataSources ? Object.values(dataSources).filter(s => s?.status === 'degraded').length : 0} Degraded
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span>🔴</span>
             <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-              {dataSources.filter(s => s.status === 'error').length} Error
+              {dataSources ? Object.values(dataSources).filter(s => s?.status === 'error').length : 0} Error
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span>⚪</span>
             <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-              {dataSources.filter(s => s.status === 'unknown').length} Unknown
+              {dataSources ? Object.values(dataSources).filter(s => s?.status === 'unknown' || s === null).length : 0} Unknown
             </span>
           </div>
         </div>
@@ -180,28 +171,32 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
 
       {/* Data Source Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {dataSources.map(source => (
-          <div
-            key={source.id}
-            className={`rounded-lg shadow-md p-6 transition-all hover:shadow-lg ${
-              darkMode ? 'bg-gray-800' : 'bg-white'
-            }`}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{source.icon}</span>
-                <div>
-                  <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {source.name}
-                  </h3>
-                  <div className={`flex items-center gap-2 text-sm ${getStatusColor(source.status)}`}>
-                    <span>{getStatusIcon(source.status)}</span>
-                    <span className="capitalize">{source.status}</span>
+        {DATA_SOURCE_DEFINITIONS.map(sourceDef => {
+          const source = dataSources?.[sourceDef.id as keyof typeof dataSources];
+          const status = source?.status || 'unknown';
+          
+          return (
+            <div
+              key={sourceDef.id}
+              className={`rounded-lg shadow-md p-6 transition-all hover:shadow-lg ${
+                darkMode ? 'bg-gray-800' : 'bg-white'
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{sourceDef.icon}</span>
+                  <div>
+                    <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {sourceDef.name}
+                    </h3>
+                    <div className={`flex items-center gap-2 text-sm ${getStatusColor(status)}`}>
+                      <span>{getStatusIcon(status)}</span>
+                      <span className="capitalize">{status}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* API Usage */}
             {source.api_usage && (
@@ -248,65 +243,28 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
               </div>
               <div className="space-y-1 text-sm">
                 <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Avg Response:</span>
-                  <span className={`font-medium ${
-                    source.performance.avg_response_time_ms > 1000
-                      ? 'text-red-500'
-                      : source.performance.avg_response_time_ms > 500
-                      ? 'text-yellow-500'
-                      : darkMode ? 'text-green-400' : 'text-green-600'
-                  }`}>
-                    {source.performance.avg_response_time_ms > 0 
-                      ? `${source.performance.avg_response_time_ms}ms` 
-                      : 'N/A'}
-                    {source.performance.avg_response_time_ms > 1000 && ' ⚠️'}
+                  <span>Status:</span>
+                  <span className={`font-medium capitalize ${getStatusColor(status)}`}>
+                    {status}
                   </span>
                 </div>
                 <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Last Success:</span>
-                  <span className="font-medium">{formatTimestamp(source.performance.last_success)}</span>
+                  <span>Service:</span>
+                  <span className="font-medium">{source?.service || 'N/A'}</span>
                 </div>
-                {source.performance.retry_count !== undefined && source.performance.retry_count > 0 && (
-                  <div className={`flex justify-between ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                    <span>Retries:</span>
-                    <span className="font-medium">{source.performance.retry_count}</span>
+                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span>Last Check:</span>
+                  <span className="font-medium">{formatTimestamp(source?.timestamp)}</span>
+                </div>
+                {source?.uptime_seconds !== undefined && source.uptime_seconds > 0 && (
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Uptime:</span>
+                    <span className="font-medium">{formatTimestamp(source.uptime_seconds)}</span>
                   </div>
                 )}
-                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Errors (24h):</span>
-                  <span className={`font-medium ${
-                    source.performance.error_count_24h > 0 
-                      ? (darkMode ? 'text-red-400' : 'text-red-600')
-                      : ''
-                  }`}>
-                    {source.performance.error_count_24h}
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Cache Metrics */}
-            {source.cache && (
-              <div className="space-y-2">
-                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Cache Performance
-                </div>
-                <div className="space-y-1 text-sm">
-                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>Hit Rate:</span>
-                    <span className="font-medium">{source.cache.hit_rate_percentage}%</span>
-                  </div>
-                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>Cache Size:</span>
-                    <span className="font-medium">{formatBytes(source.cache.size_bytes)}</span>
-                  </div>
-                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>Cached Items:</span>
-                    <span className="font-medium">{source.cache.item_count}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Actions */}
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
@@ -332,7 +290,8 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Configuration Tip */}

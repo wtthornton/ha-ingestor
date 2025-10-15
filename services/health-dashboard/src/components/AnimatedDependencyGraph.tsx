@@ -41,12 +41,14 @@ interface ServiceNode {
   icon: string;
   type: 'source' | 'processor' | 'storage' | 'ui' | 'external';
   position: { x: number; y: number };
+  layer: number;
   status?: 'running' | 'error' | 'degraded' | 'unknown';
   metrics?: {
     throughput?: number;
     latency?: number;
     errorRate?: number;
   };
+  description?: string;
 }
 
 export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = ({
@@ -58,51 +60,63 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Define service nodes with positions (including NFL/NHL sports integration)
+  // Define service nodes with accurate architecture (Epic 13 + Epic 22)
   const nodes: ServiceNode[] = [
-    // Top Layer: External Sources
-    { id: 'home-assistant', name: 'Home Assistant', icon: '🏠', type: 'source', position: { x: 400, y: 50 } },
-    { id: 'nfl-api', name: 'NFL API', icon: '🏈', type: 'external', position: { x: 100, y: 50 } },
-    { id: 'nhl-api', name: 'NHL API', icon: '🏒', type: 'external', position: { x: 200, y: 50 } },
+    // Layer 1: External Sources
+    { id: 'home-assistant', name: 'Home Assistant', icon: '🏠', type: 'source', position: { x: 400, y: 50 }, layer: 1, description: 'External event source' },
+    { id: 'espn-api', name: 'ESPN API', icon: '🏈🏒', type: 'external', position: { x: 150, y: 50 }, layer: 1, description: 'NFL/NHL game data' },
+    { id: 'openweather', name: 'OpenWeather', icon: '☁️', type: 'external', position: { x: 550, y: 50 }, layer: 1, description: 'Weather enrichment' },
+    { id: 'external-apis', name: 'External APIs', icon: '🌐', type: 'external', position: { x: 700, y: 50 }, layer: 1, description: 'Air quality, carbon, pricing' },
     
-    // Middle Layer: Processing
-    { id: 'websocket-ingestion', name: 'WebSocket Ingestion', icon: '📡', type: 'processor', position: { x: 400, y: 200 } },
-    { id: 'sports-data', name: 'Sports Data', icon: '⚡', type: 'processor', position: { x: 150, y: 200 } },
+    // Layer 2: Ingestion
+    { id: 'websocket-ingestion', name: 'WebSocket Ingestion', icon: '📡', type: 'processor', position: { x: 400, y: 150 }, layer: 2, description: 'Event capture + inline weather' },
+    { id: 'sports-data', name: 'Sports Data', icon: '⚡', type: 'processor', position: { x: 150, y: 150 }, layer: 2, description: 'ESPN cache + persistence' },
+    { id: 'external-services', name: 'External Services', icon: '🔌', type: 'processor', position: { x: 650, y: 150 }, layer: 2, description: 'Periodic external data fetch' },
     
-    // External Services
-    { id: 'weather-api', name: 'Weather', icon: '☁️', type: 'external', position: { x: 550, y: 200 } },
-    { id: 'other-services', name: 'Other APIs', icon: '🌐', type: 'external', position: { x: 650, y: 200 } },
+    // Layer 3: Processing (Optional Enhancement Path)
+    { id: 'enrichment-pipeline', name: 'Enrichment Pipeline', icon: '🔄', type: 'processor', position: { x: 400, y: 250 }, layer: 3, description: 'Optional normalization' },
     
-    // Enrichment
-    { id: 'enrichment-pipeline', name: 'Enrichment Pipeline', icon: '🔄', type: 'processor', position: { x: 400, y: 350 } },
+    // Layer 4: Storage (Hybrid Architecture - Epic 22!)
+    { id: 'influxdb', name: 'InfluxDB', icon: '🗄️', type: 'storage', position: { x: 350, y: 370 }, layer: 4, description: 'Time-series events' },
+    { id: 'sqlite', name: 'SQLite', icon: '💾', type: 'storage', position: { x: 450, y: 370 }, layer: 4, description: 'Metadata (Epic 22)' },
     
-    // Bottom Layer: Storage & UI
-    { id: 'influxdb', name: 'InfluxDB', icon: '🗄️', type: 'storage', position: { x: 400, y: 500 } },
-    { id: 'admin-api', name: 'Admin API', icon: '🔌', type: 'processor', position: { x: 550, y: 500 } },
-    { id: 'health-dashboard', name: 'Dashboard', icon: '📊', type: 'ui', position: { x: 700, y: 500 } },
+    // Layer 5: API Gateway (Epic 13 Split!)
+    { id: 'data-api', name: 'Data API', icon: '🔌', type: 'processor', position: { x: 350, y: 470 }, layer: 5, description: 'Feature data hub' },
+    { id: 'admin-api', name: 'Admin API', icon: '⚙️', type: 'processor', position: { x: 500, y: 470 }, layer: 5, description: 'System monitoring' },
+    
+    // Layer 6: UI
+    { id: 'health-dashboard', name: 'Dashboard', icon: '📊', type: 'ui', position: { x: 425, y: 570 }, layer: 6, description: 'You are here!' },
   ];
 
-  // Define data flow paths with animation properties (including sports data!)
+  // Define data flow paths based on actual call trees
   const dataFlows: DataFlowPath[] = [
-    // Main HA data flow
+    // Primary HA Event Flow (Path A - Always Active)
     { id: 'ha-ws', from: 'home-assistant', to: 'websocket-ingestion', type: 'websocket', active: true, throughput: realTimeData?.eventsPerSecond || 0, color: '#3B82F6' },
-    { id: 'ws-enrich', from: 'websocket-ingestion', to: 'enrichment-pipeline', type: 'api', active: true, color: '#10B981' },
+    { id: 'ws-direct-influx', from: 'websocket-ingestion', to: 'influxdb', type: 'storage', active: true, color: '#10B981' }, // Primary path!
     
-    // Sports data flows (NEW! 🏈🏒)
-    { id: 'nfl-sports', from: 'nfl-api', to: 'sports-data', type: 'api', active: realTimeData?.dataSourcesActive?.includes('nfl') || false, throughput: 0.5, color: '#F59E0B' },
-    { id: 'nhl-sports', from: 'nhl-api', to: 'sports-data', type: 'api', active: realTimeData?.dataSourcesActive?.includes('nhl') || false, throughput: 0.5, color: '#8B5CF6' },
-    { id: 'sports-enrich', from: 'sports-data', to: 'enrichment-pipeline', type: 'api', active: realTimeData?.dataSourcesActive?.includes('nfl') || realTimeData?.dataSourcesActive?.includes('nhl') || false, color: '#F59E0B' },
+    // Enhancement Path (Path B - Optional)
+    { id: 'ws-enrich', from: 'websocket-ingestion', to: 'enrichment-pipeline', type: 'api', active: true, color: '#F59E0B' },
+    { id: 'enrich-db', from: 'enrichment-pipeline', to: 'influxdb', type: 'storage', active: true, color: '#F59E0B' },
     
-    // External enrichment
-    { id: 'weather-enrich', from: 'weather-api', to: 'enrichment-pipeline', type: 'api', active: true, color: '#06B6D4' },
-    { id: 'other-enrich', from: 'other-services', to: 'enrichment-pipeline', type: 'api', active: false, color: '#6B7280' },
+    // Inline Weather Enrichment (within websocket-ingestion)
+    { id: 'weather-inline', from: 'openweather', to: 'websocket-ingestion', type: 'api', active: true, color: '#06B6D4' },
     
-    // Storage (Write)
-    { id: 'enrich-db', from: 'enrichment-pipeline', to: 'influxdb', type: 'storage', active: true, color: '#8B5CF6' },
+    // Sports Data Flow (Epic 12 - Hybrid Pattern A+B)
+    { id: 'espn-sports', from: 'espn-api', to: 'sports-data', type: 'api', active: realTimeData?.dataSourcesActive?.includes('sports') || false, throughput: 0.5, color: '#8B5CF6' },
+    { id: 'sports-influx', from: 'sports-data', to: 'influxdb', type: 'storage', active: true, color: '#8B5CF6' }, // Epic 12: InfluxDB persistence
+    { id: 'sports-sqlite', from: 'sports-data', to: 'sqlite', type: 'storage', active: true, color: '#8B5CF6' }, // Epic 22: SQLite webhooks
     
-    // Read/Query Layer (FIXED: InfluxDB → Admin API → Dashboard)
-    { id: 'db-admin', from: 'influxdb', to: 'admin-api', type: 'query', active: true, color: '#F59E0B' },
-    { id: 'admin-dash', from: 'admin-api', to: 'health-dashboard', type: 'api', active: true, color: '#06B6D4' },
+    // External API Services (Pattern A - Continuous Push)
+    { id: 'external-fetch', from: 'external-apis', to: 'external-services', type: 'api', active: true, color: '#6B7280' },
+    { id: 'external-influx', from: 'external-services', to: 'influxdb', type: 'storage', active: true, color: '#6B7280' },
+    
+    // Epic 22: Hybrid Database Queries
+    { id: 'influx-data', from: 'influxdb', to: 'data-api', type: 'query', active: true, color: '#3B82F6' },
+    { id: 'sqlite-data', from: 'sqlite', to: 'data-api', type: 'query', active: true, color: '#10B981' },
+    
+    // Epic 13: API Gateway Layer
+    { id: 'data-dash', from: 'data-api', to: 'health-dashboard', type: 'api', active: true, color: '#3B82F6' },
+    { id: 'admin-dash', from: 'admin-api', to: 'health-dashboard', type: 'api', active: true, color: '#F59E0B' },
   ];
 
   // Note: Pulse and active flows managed through CSS animations and real-time data
@@ -348,10 +362,10 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
           <div>
             <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-3`}>
               <span className="animate-pulse">🌊</span>
-              Real-Time Data Flow Visualization
+              Complete Architecture Flow
             </h2>
             <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Watch data flow through your system in real-time • Click nodes to highlight connections
+              Hybrid database (Epic 22) • API split (Epic 13) • Sports persistence (Epic 12) • Click nodes for details
             </p>
           </div>
           
@@ -381,26 +395,38 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-blue-500"></div>
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>WebSocket</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>WebSocket/Query</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-green-500"></div>
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>API Call</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-0.5 bg-purple-500"></div>
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Storage</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Primary Path</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-orange-500"></div>
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sports Data</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Enhancement Path</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-purple-500"></div>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sports (Epic 12)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-cyan-500"></div>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Weather (Inline)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-gray-500"></div>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>External APIs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🗄️💾</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Hybrid DB (Epic 22)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="animate-pulse">●</div>
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Active Flow</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Active Flow</span>
           </div>
         </div>
       </div>
@@ -481,19 +507,36 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
       {selectedNode && (
         <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-                {nodes.find(n => n.id === selectedNode)?.icon} {nodes.find(n => n.id === selectedNode)?.name}
+            <div className="flex-1">
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2 flex items-center gap-2`}>
+                <span className="text-2xl">{nodes.find(n => n.id === selectedNode)?.icon}</span>
+                {nodes.find(n => n.id === selectedNode)?.name}
               </h3>
-              <div className="space-y-1">
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span className="font-semibold">Type:</span> {nodes.find(n => n.id === selectedNode)?.type}
+              <div className="space-y-2">
+                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} italic`}>
+                  {nodes.find(n => n.id === selectedNode)?.description}
                 </p>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span className="font-semibold">Connections:</span>{' '}
-                  {dataFlows.filter(f => f.from === selectedNode || f.to === selectedNode).length} active
-                </p>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <div className="grid grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Type</p>
+                    <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {nodes.find(n => n.id === selectedNode)?.type}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Layer</p>
+                    <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {nodes.find(n => n.id === selectedNode)?.layer}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Connections</p>
+                    <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {dataFlows.filter(f => f.from === selectedNode || f.to === selectedNode).length} active
+                    </p>
+                  </div>
+                </div>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-2`}>
                   <span className="font-semibold">Status:</span>{' '}
                   <span className={getServiceStatus(selectedNode)?.status === 'running' ? 'text-green-500' : 'text-gray-500'}>
                     {getServiceStatus(selectedNode)?.status || 'unknown'}
@@ -503,7 +546,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
             </div>
             <button
               onClick={() => setSelectedNode(null)}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`ml-4 px-4 py-2 rounded-lg transition-colors ${
                 darkMode
                   ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-blue-500 hover:bg-blue-600 text-white'

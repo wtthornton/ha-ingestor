@@ -55,18 +55,24 @@ docker-compose exec data-api sqlite3 /app/data/metadata.db ".tables"
 # Should show: alembic_version, devices, entities
 ```
 
-### Step 4: Trigger Discovery (5 min)
+### Step 4: Verify Discovery (Automatic - 2 min)
 ```powershell
-# Trigger device discovery to populate SQLite
-curl -X POST http://localhost:8001/api/discover
-
-# Wait for discovery
+# Discovery runs AUTOMATICALLY when websocket-ingestion connects to HA
+# Wait for discovery to complete (happens on connection)
 Start-Sleep -Seconds 30
 
-# Verify devices stored
-docker-compose exec data-api sqlite3 /app/data/metadata.db "SELECT COUNT(*) FROM devices;"
-# Should show count > 0
+# Verify devices stored (should see 90+ real devices)
+$devices = Invoke-WebRequest -Uri http://localhost:8006/api/devices | ConvertFrom-Json
+Write-Host "Devices discovered: $($devices.count)"
+
+# Should show: 90+ devices from your Home Assistant instance
+# If 0: Check websocket-ingestion logs for connection issues
 ```
+
+**Note**: Discovery is now **fully automatic** - no manual trigger needed!
+- Runs on WebSocket connection to Home Assistant
+- Stores directly to SQLite via data-api
+- No sync scripts required
 
 ### Step 5: Quick Tests (5 min)
 ```powershell

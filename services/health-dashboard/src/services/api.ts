@@ -105,6 +105,7 @@ class AdminApiClient extends BaseApiClient {
   }
 
   async getAllDataSources(): Promise<{
+    weather: DataSourceHealth | null;
     carbonIntensity: DataSourceHealth | null;
     electricityPricing: DataSourceHealth | null;
     airQuality: DataSourceHealth | null;
@@ -125,10 +126,12 @@ class AdminApiClient extends BaseApiClient {
         'electricity-pricing-service': 'electricityPricing', 
         'air-quality-service': 'airQuality',
         'calendar-service': 'calendar',
-        'smart-meter-service': 'smartMeter'
+        'smart-meter-service': 'smartMeter',
+        'weather-api': 'weather'
       };
       
       const result = {
+        weather: null,
         carbonIntensity: null,
         electricityPricing: null,
         airQuality: null,
@@ -141,14 +144,18 @@ class AdminApiClient extends BaseApiClient {
         if (servicesData[backendName]) {
           const serviceData = servicesData[backendName];
           result[frontendName as keyof typeof result] = {
-            status: serviceData.status === 'healthy' ? 'healthy' : 'degraded',
+            status: serviceData.status === 'healthy' ? 'healthy' : 
+                   serviceData.status === 'pass' ? 'healthy' :
+                   serviceData.status === 'degraded' ? 'degraded' :
+                   serviceData.status === 'unhealthy' ? 'error' : 'unknown',
             service: serviceData.name,
             uptime_seconds: 0, // Not provided by admin-api health check
             last_successful_fetch: null, // Not provided by admin-api health check
             total_fetches: 0, // Not provided by admin-api health check
             failed_fetches: 0, // Not provided by admin-api health check
             success_rate: 1.0, // Not provided by admin-api health check
-            timestamp: serviceData.last_check
+            timestamp: serviceData.last_check,
+            error_message: serviceData.error_message || null
           };
         }
       }
@@ -158,6 +165,7 @@ class AdminApiClient extends BaseApiClient {
       console.error('Failed to fetch data sources:', error);
       // Return null for all services on error
       return {
+        weather: null,
         carbonIntensity: null,
         electricityPricing: null,
         airQuality: null,
@@ -281,6 +289,40 @@ class DataApiClient extends BaseApiClient {
 
   async getEventsStats(period: string = '1h'): Promise<any> {
     return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/events/stats?period=${period}`);
+  }
+
+  // Energy Correlation endpoints (Phase 4)
+  async getEnergyStatistics(hours: number = 24): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/energy/statistics?hours=${hours}`);
+  }
+
+  async getEnergyCorrelations(
+    hours: number = 24,
+    entity_id?: string,
+    domain?: string,
+    min_delta: number = 50,
+    limit: number = 100
+  ): Promise<any[]> {
+    const params = new URLSearchParams({ hours: hours.toString(), min_delta: min_delta.toString(), limit: limit.toString() });
+    if (entity_id) params.append('entity_id', entity_id);
+    if (domain) params.append('domain', domain);
+    return this.fetchWithErrorHandling<any[]>(`${this.baseUrl}/v1/energy/correlations?${params.toString()}`);
+  }
+
+  async getCurrentPower(): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/energy/current`);
+  }
+
+  async getCircuitPower(hours: number = 1): Promise<any[]> {
+    return this.fetchWithErrorHandling<any[]>(`${this.baseUrl}/v1/energy/circuits?hours=${hours}`);
+  }
+
+  async getDeviceEnergyImpact(entity_id: string, days: number = 7): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/energy/device-impact/${entity_id}?days=${days}`);
+  }
+
+  async getTopEnergyConsumers(days: number = 7, limit: number = 10): Promise<any[]> {
+    return this.fetchWithErrorHandling<any[]>(`${this.baseUrl}/v1/energy/top-consumers?days=${days}&limit=${limit}`);
   }
 
   // Devices & Entities endpoints (Story 13.2)

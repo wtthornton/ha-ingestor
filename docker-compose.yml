@@ -54,6 +54,7 @@ services:
       - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
       - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
       - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
+      - DATA_API_URL=http://ha-ingestor-data-api:8006
       - WEBSOCKET_INGESTION_PORT=8001
       - ENABLE_HOME_ASSISTANT=true
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -63,6 +64,8 @@ services:
       # WebSocket Retry Configuration
       - WEBSOCKET_MAX_RETRIES=${WEBSOCKET_MAX_RETRIES:--1}  # -1 = infinite retry (recommended)
       - WEBSOCKET_MAX_RETRY_DELAY=${WEBSOCKET_MAX_RETRY_DELAY:-300}  # Max 5 minutes between retries
+      # Device storage configuration
+      - STORE_DEVICE_HISTORY_IN_INFLUXDB=${STORE_DEVICE_HISTORY_IN_INFLUXDB:-false}
       # Weather API Configuration
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
@@ -82,6 +85,8 @@ services:
       - ha_ingestor_logs:/var/log/ha-ingestor
     depends_on:
       enrichment-pipeline:
+        condition: service_healthy
+      data-api:
         condition: service_healthy
     networks:
       - ha-ingestor-network
@@ -180,6 +185,8 @@ services:
       websocket-ingestion:
         condition: service_healthy
       enrichment-pipeline:
+        condition: service_healthy
+      data-api:
         condition: service_healthy
     networks:
       - ha-ingestor-network
@@ -472,7 +479,9 @@ services:
     ports:
       - "8014:8014"
     environment:
-      - METER_TYPE=${METER_TYPE:-generic}
+      - METER_TYPE=${METER_TYPE:-home_assistant}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
       - METER_API_TOKEN=${METER_API_TOKEN:-}
       - METER_DEVICE_ID=${METER_DEVICE_ID:-}
       - INFLUXDB_URL=http://influxdb:8086
@@ -500,6 +509,49 @@ services:
         labels: "service=smart-meter,environment=production"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  energy-correlator:
+    build:
+      context: .
+      dockerfile: services/energy-correlator/Dockerfile
+    container_name: ha-ingestor-energy-correlator
+    restart: unless-stopped
+    ports:
+      - "8017:8017"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      - PROCESSING_INTERVAL=${ENERGY_CORRELATION_INTERVAL:-60}
+      - LOOKBACK_MINUTES=${ENERGY_LOOKBACK_MINUTES:-5}
+      - SERVICE_PORT=8017
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      smart-meter:
+        condition: service_started
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=energy-correlator,environment=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8016/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -660,12 +712,51 @@ services:
       retries: 3
       start_period: 30s
 
+  ai-automation-service:
+    build:
+      context: .
+      dockerfile: services/ai-automation-service/Dockerfile
+    container_name: ai-automation-service
+    restart: unless-stopped
+    ports:
+      - "8016:8016"
+    env_file:
+      - infrastructure/env.ai-automation
+    environment:
+      - DATA_API_URL=http://data-api:8006
+    depends_on:
+      data-api:
+        condition: service_healthy
+    volumes:
+      - ai_automation_data:/app/data
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=ai-automation,environment=production"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8017/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   influxdb_data:
   influxdb_config:
   data_retention_backups:
   ha_ingestor_logs:
   sqlite-data:
+  ai_automation_data:
 
 networks:
   ha-ingestor-network:

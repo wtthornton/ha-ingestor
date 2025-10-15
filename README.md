@@ -55,8 +55,15 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 - Reliable HMAC-signed webhook delivery
 - Background event detection (15-second intervals)
 
-## 🎯 **Recent Updates (January 2025)**
+## 🎯 **Recent Updates**
 
+### October 2025
+✅ **Direct HA → SQLite Storage** - 🎉 Fixed architecture gap! Devices/entities now stored directly from HA WebSocket to SQLite  
+✅ **Real Device Data** - Dashboard now shows 99 real devices, 100+ entities from Home Assistant (was 5 mock devices)  
+✅ **Eliminated Sync Scripts** - No manual sync needed, automated on WebSocket connection  
+✅ **Architecture Simplified** - Clean data flow: HA → SQLite (primary) + InfluxDB (time-series)
+
+### January 2025
 ✅ **Epic 23: Enhanced Event Data Capture** - 🎉 Automation tracing, spatial analytics, time metrics, device reliability (5 stories in ~2 hours!)  
 ✅ **Hybrid Database Architecture (Epic 22)** - SQLite added for metadata storage with 5-10x faster queries  
 ✅ **Network Resilience Enhancement** - Infinite retry strategy ensures automatic recovery from network outages  

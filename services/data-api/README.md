@@ -79,13 +79,22 @@ POST /api/v1/events/search     # Search events
 GET /api/v1/events/stats       # Event statistics
 ```
 
-### Devices & Entities (Story 13.2)
+### Devices & Entities (Story 13.2 + Epic 22)
 ```
-GET /api/v1/devices            # List devices
-GET /api/v1/devices/{id}       # Device details
-GET /api/v1/entities           # List entities
-GET /api/v1/entities/{id}      # Entity details
+GET /api/devices               # List devices (SQLite)
+GET /api/devices/{id}          # Device details (SQLite)
+GET /api/entities              # List entities (SQLite)
+GET /api/entities/{id}         # Entity details (SQLite)
+GET /api/integrations          # List integrations (InfluxDB)
 ```
+
+### Internal Endpoints (October 2025)
+```
+POST /internal/devices/bulk_upsert   # Bulk upsert devices (called by websocket-ingestion)
+POST /internal/entities/bulk_upsert  # Bulk upsert entities (called by websocket-ingestion)
+```
+
+**Purpose**: Allow websocket-ingestion to store discovered devices/entities directly to SQLite without manual sync.
 
 ### Sports Data (Story 13.4 - Epic 12)
 ```
@@ -181,17 +190,46 @@ The HA Ingestor system uses two API services:
 - Analytics
 - HA automation integration
 
-### Data Flow
+### Data Flow (Updated October 2025)
 
 ```
-InfluxDB (8086) → Data API (8006) → Dashboard (3000)
-                     ↓
-              Home Assistant Automations
+┌─────────────────────┐
+│ Home Assistant      │
+│ @ 192.168.1.86:8123 │
+└──────────┬──────────┘
+           │
+           │ WebSocket Discovery (on connect)
+           ↓
+┌───────────────────────────┐
+│ websocket-ingestion       │
+│ POST /internal/bulk_upsert│
+└──────────┬────────────────┘
+           │
+           ↓
+┌───────────────────────────┐
+│ Data API (8006)           │
+│                           │
+│ ┌─────────┐ ┌──────────┐ │
+│ │ SQLite  │ │ InfluxDB │ │
+│ │Metadata │ │Time-Series│ │
+│ └─────────┘ └──────────┘ │
+└──────────┬────────────────┘
+           │
+           ↓
+┌───────────────────────────┐
+│ Dashboard (3000)          │
+│ HA Automation Triggers    │
+└───────────────────────────┘
 ```
 
-### InfluxDB Access
+### Database Access
 
-Data API has **full query access** to all InfluxDB measurements:
+**SQLite (Primary for Metadata)**:
+- `devices` - Device registry (99 devices, <10ms queries)
+- `entities` - Entity registry (100+ entities, <10ms queries)
+- `webhooks` - Webhook registrations
+
+**InfluxDB (Time-Series Data)**:
 - `home_assistant_events` - HA state changes
 - `nfl_scores`, `nhl_scores` - Sports data
 - `air_quality`, `carbon_intensity` - Environmental data
