@@ -18,7 +18,7 @@ class Pattern(Base):
     id = Column(Integer, primary_key=True)
     pattern_type = Column(String, nullable=False)  # 'time_of_day', 'co_occurrence', 'anomaly'
     device_id = Column(String, nullable=False)
-    metadata = Column(JSON)  # Pattern-specific data
+    pattern_metadata = Column(JSON)  # Pattern-specific data (renamed from 'metadata' to avoid SQLAlchemy reserved name)
     confidence = Column(Float, nullable=False)
     occurrences = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

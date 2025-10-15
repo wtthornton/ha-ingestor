@@ -463,8 +463,16 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                 <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </span>
-                <span className="text-xl">
-                  {value?.status === 'healthy' ? '✅' : value?.status === 'error' ? '❌' : value?.status === 'degraded' ? '⚠️' : '⏸️'}
+                <span className="text-xl" title={value?.status_detail || value?.status || 'unknown'}>
+                  {value?.status_detail === 'credentials_missing' || value?.credentials_configured === false 
+                    ? '🔑' 
+                    : value?.status === 'healthy' 
+                    ? '✅' 
+                    : value?.status === 'error' 
+                    ? '❌' 
+                    : value?.status === 'degraded' 
+                    ? '⚠️' 
+                    : '⏸️'}
                 </span>
               </button>
             ))}

@@ -23,7 +23,7 @@ except ImportError:
 
 from .config import settings
 from .database.models import init_db
-from .api import health_router
+from .api import health_router, data_router, pattern_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -48,6 +48,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health_router)
+app.include_router(data_router)
+app.include_router(pattern_router)
 
 
 @app.on_event("startup")
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8017,
+        port=8018,
         log_level=settings.log_level.lower()
     )
 

@@ -22,6 +22,7 @@ export interface HealthStatus {
 
 export interface DataSourceHealth {
   status: 'healthy' | 'degraded';
+  status_detail?: string;  // 'operational' | 'credentials_missing' | 'degraded' | 'starting'
   service: string;
   uptime_seconds: number;
   last_successful_fetch: string | null;
@@ -30,6 +31,7 @@ export interface DataSourceHealth {
   success_rate: number;
   timestamp: string;
   oauth_valid?: boolean;
+  credentials_configured?: boolean;  // For services requiring external API credentials
 }
 
 export interface DataSourceMetrics {

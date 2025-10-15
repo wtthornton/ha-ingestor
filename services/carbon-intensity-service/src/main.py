@@ -34,7 +34,16 @@ class CarbonIntensityService:
     """Fetch and store carbon intensity data from WattTime API"""
     
     def __init__(self):
-        self.api_token = os.getenv('WATTTIME_API_TOKEN')
+        # WattTime authentication credentials
+        self.username = os.getenv('WATTTIME_USERNAME')
+        self.password = os.getenv('WATTTIME_PASSWORD')
+        self.api_token = os.getenv('WATTTIME_API_TOKEN')  # Optional fallback for manual token
+        
+        # Token management
+        self.token_expires_at: Optional[datetime] = None
+        self.token_refresh_buffer = 300  # Refresh 5 minutes before expiry (seconds)
+        
+        # WattTime configuration
         self.region = os.getenv('GRID_REGION', 'CAISO_NORTH')
         self.base_url = "https://api.watttime.org/v3"
         
@@ -61,9 +70,27 @@ class CarbonIntensityService:
         # Health check handler
         self.health_handler = HealthCheckHandler()
         
+        # Track configuration status
+        self.credentials_configured = False
+        
         # Validate configuration
-        if not self.api_token:
-            raise ValueError("WATTTIME_API_TOKEN environment variable is required")
+        if not self.username or not self.password:
+            if not self.api_token:
+                logger.warning(
+                    "⚠️  No WattTime credentials configured! "
+                    "Service will run in standby mode. "
+                    "Add WATTTIME_USERNAME/PASSWORD to environment to enable data fetching."
+                )
+                self.credentials_configured = False
+                self.health_handler.credentials_missing = True
+            else:
+                logger.warning("Using static WATTTIME_API_TOKEN - token will expire in 30 minutes")
+                self.credentials_configured = True
+                self.health_handler.credentials_missing = False
+        else:
+            self.credentials_configured = True
+            self.health_handler.credentials_missing = False
+        
         if not self.influxdb_token:
             raise ValueError("INFLUXDB_TOKEN environment variable is required")
     
@@ -75,6 +102,17 @@ class CarbonIntensityService:
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
         )
+        
+        # If using username/password, get initial token
+        if self.username and self.password:
+            logger.info("Obtaining initial WattTime API token...")
+            if not await self.refresh_token():
+                logger.error("Failed to obtain initial WattTime API token - will run in standby mode")
+                self.credentials_configured = False
+        elif self.api_token:
+            logger.info("Using static API token (will expire in 30 minutes)")
+        else:
+            logger.warning("No WattTime credentials - service running in standby mode")
         
         # Create InfluxDB client
         self.influxdb_client = InfluxDBClient3(
@@ -98,10 +136,95 @@ class CarbonIntensityService:
         
         logger.info("Carbon Intensity Service shut down successfully")
     
+    async def refresh_token(self) -> bool:
+        """
+        Refresh WattTime API token using username/password
+        
+        Returns:
+            bool: True if refresh successful, False otherwise
+        """
+        if not self.username or not self.password:
+            logger.error("Cannot refresh token: username/password not configured")
+            return False
+        
+        try:
+            url = f"{self.base_url}/login"
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            
+            log_with_context(
+                logger, "INFO",
+                "Refreshing WattTime API token",
+                service="carbon-intensity-service"
+            )
+            
+            async with self.session.post(url, auth=auth) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.api_token = data.get('token')
+                    
+                    # WattTime tokens expire in 30 minutes
+                    self.token_expires_at = datetime.now() + timedelta(minutes=30)
+                    
+                    # Update health check
+                    self.health_handler.last_token_refresh = datetime.now()
+                    self.health_handler.token_refresh_count += 1
+                    
+                    logger.info(f"Token refreshed successfully, expires at {self.token_expires_at.isoformat()}")
+                    return True
+                else:
+                    log_error_with_context(
+                        logger,
+                        f"Token refresh failed with status {response.status}",
+                        service="carbon-intensity-service",
+                        status_code=response.status
+                    )
+                    return False
+                    
+        except Exception as e:
+            log_error_with_context(
+                logger,
+                f"Error refreshing token: {e}",
+                service="carbon-intensity-service",
+                error=str(e)
+            )
+            return False
+    
+    async def ensure_valid_token(self) -> bool:
+        """
+        Ensure we have a valid token, refresh if needed
+        
+        Returns:
+            bool: True if we have a valid token, False otherwise
+        """
+        # If no expiration time set and we have username/password, refresh now
+        if not self.token_expires_at and self.username and self.password:
+            logger.info("No token expiration set, refreshing token...")
+            return await self.refresh_token()
+        
+        # If token expires soon (within buffer time), refresh now
+        if self.token_expires_at:
+            time_until_expiry = (self.token_expires_at - datetime.now()).total_seconds()
+            if time_until_expiry < self.token_refresh_buffer:
+                logger.info(f"Token expires in {time_until_expiry:.0f}s, refreshing...")
+                return await self.refresh_token()
+        
+        return True  # Token still valid
+    
     async def fetch_carbon_intensity(self) -> Optional[Dict[str, Any]]:
         """Fetch carbon intensity from WattTime API"""
         
+        # If no credentials configured, skip fetch silently
+        if not self.credentials_configured:
+            # Don't log error every time, just return None quietly
+            return None
+        
         try:
+            # Ensure we have a valid token before making request
+            if not await self.ensure_valid_token():
+                logger.error("No valid WattTime token available")
+                self.health_handler.failed_fetches += 1
+                return self.cached_data
+            
             url = f"{self.base_url}/forecast"
             headers = {"Authorization": f"Bearer {self.api_token}"}
             params = {"region": self.region}
@@ -145,6 +268,52 @@ class CarbonIntensityService:
                     logger.info(f"Carbon intensity: {data['carbon_intensity']:.1f} gCO2/kWh, Renewable: {data['renewable_percentage']:.1f}%")
                     
                     return data
+                
+                elif response.status == 401:
+                    # Token expired mid-request, try refresh and retry once
+                    log_error_with_context(
+                        logger,
+                        "Authentication failed (401), attempting token refresh",
+                        service="carbon-intensity-service"
+                    )
+                    
+                    if await self.refresh_token():
+                        logger.info("Token refreshed, retrying request...")
+                        # Retry once with new token
+                        headers = {"Authorization": f"Bearer {self.api_token}"}
+                        async with self.session.get(url, headers=headers, params=params) as retry_response:
+                            if retry_response.status == 200:
+                                raw_data = await retry_response.json()
+                                
+                                # Parse WattTime response
+                                data = {
+                                    'carbon_intensity': raw_data.get('moer', 0),
+                                    'renewable_percentage': raw_data.get('renewable_pct', 0),
+                                    'fossil_percentage': 100 - raw_data.get('renewable_pct', 0),
+                                    'timestamp': datetime.now()
+                                }
+                                
+                                # Extract forecasts
+                                forecast = raw_data.get('forecast', [])
+                                if forecast:
+                                    data['forecast_1h'] = forecast[0].get('value', 0) if len(forecast) > 0 else 0
+                                    data['forecast_24h'] = forecast[23].get('value', 0) if len(forecast) > 23 else 0
+                                else:
+                                    data['forecast_1h'] = 0
+                                    data['forecast_24h'] = 0
+                                
+                                # Update cache and health
+                                self.cached_data = data
+                                self.last_fetch_time = datetime.now()
+                                self.health_handler.last_successful_fetch = datetime.now()
+                                self.health_handler.total_fetches += 1
+                                
+                                logger.info(f"Carbon intensity (retry): {data['carbon_intensity']:.1f} gCO2/kWh")
+                                return data
+                    
+                    # Token refresh failed or retry failed
+                    self.health_handler.failed_fetches += 1
+                    return self.cached_data
                     
                 else:
                     log_error_with_context(

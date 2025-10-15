@@ -1,2 +1,5 @@
-"""Pattern analyzer package - to be implemented in Stories 1.4-1.6"""
+"""Pattern analysis package"""
 
+from .time_of_day import TimeOfDayPatternDetector
+
+__all__ = ["TimeOfDayPatternDetector"]

@@ -45,7 +45,12 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
     }
   };
 
-  const getStatusIcon = (status: string): string => {
+  const getStatusIcon = (status: string, statusDetail?: string, credentialsConfigured?: boolean): string => {
+    // Check for missing credentials first
+    if (statusDetail === 'credentials_missing' || credentialsConfigured === false) {
+      return '🔑';  // Key icon for missing credentials
+    }
+    
     switch (status) {
       case 'healthy':
         return '🟢';
@@ -191,8 +196,12 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
                       {sourceDef.name}
                     </h3>
                     <div className={`flex items-center gap-2 text-sm ${getStatusColor(status)}`}>
-                      <span>{getStatusIcon(status)}</span>
-                      <span className="capitalize">{status}</span>
+                      <span>{getStatusIcon(status, source.status_detail, source.credentials_configured)}</span>
+                      <span className="capitalize">
+                        {source.status_detail === 'credentials_missing' || source.credentials_configured === false
+                          ? 'Credentials Needed'
+                          : status}
+                      </span>
                     </div>
                   </div>
                 </div>
