@@ -1,2 +1,6 @@
-"""LLM integration package - to be implemented in Story 1.7"""
+"""LLM integration package"""
 
+from .openai_client import OpenAIClient, AutomationSuggestion
+from .cost_tracker import CostTracker
+
+__all__ = ["OpenAIClient", "AutomationSuggestion", "CostTracker"]

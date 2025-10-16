@@ -113,7 +113,7 @@ class AdminApiClient extends BaseApiClient {
     smartMeter: DataSourceHealth | null;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
+      const response = await fetch(`${this.baseUrl}/health/services`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -390,9 +390,156 @@ class DataApiClient extends BaseApiClient {
   }
 }
 
+/**
+ * AI Automation API Client
+ * Epic AI1 Story 13: AI-powered automation suggestion system
+ */
+class AIAutomationApiClient {
+  private baseUrl: string;
+
+  constructor() {
+    // AI Automation service runs on port 8018
+    this.baseUrl = import.meta.env.VITE_AI_API_URL || 'http://localhost:8018/api';
+  }
+
+  private async fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed: ${url}`, error);
+      throw error;
+    }
+  }
+
+  // Analysis endpoints
+  async triggerAnalysis(params?: {
+    days?: number;
+    max_suggestions?: number;
+    min_confidence?: number;
+  }): Promise<any> {
+    const body = {
+      days: params?.days || 30,
+      max_suggestions: params?.max_suggestions || 10,
+      min_confidence: params?.min_confidence || 0.7,
+      time_of_day_enabled: true,
+      co_occurrence_enabled: true
+    };
+    
+    return this.fetchWithErrorHandling(`${this.baseUrl}/analysis/analyze-and-suggest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  async getAnalysisStatus(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/analysis/status`);
+  }
+
+  async triggerManualJob(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/analysis/trigger`, {
+      method: 'POST'
+    });
+  }
+
+  async getScheduleInfo(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/analysis/schedule`);
+  }
+
+  // Suggestion endpoints
+  async listSuggestions(status?: string, limit?: number): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (limit) queryParams.append('limit', limit.toString());
+    
+    const url = `${this.baseUrl}/suggestions/list${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling(url);
+  }
+
+  async generateSuggestions(params?: {
+    pattern_type?: string;
+    min_confidence?: number;
+    max_suggestions?: number;
+  }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params?.pattern_type) queryParams.append('pattern_type', params.pattern_type);
+    if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
+    if (params?.max_suggestions) queryParams.append('max_suggestions', params.max_suggestions.toString());
+    
+    const url = `${this.baseUrl}/suggestions/generate${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling(url, { method: 'POST' });
+  }
+
+  async getUsageStats(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/suggestions/usage-stats`);
+  }
+
+  async resetUsageStats(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/suggestions/usage-stats/reset`, {
+      method: 'POST'
+    });
+  }
+
+  // Pattern endpoints
+  async listPatterns(params?: {
+    pattern_type?: string;
+    device_id?: string;
+    min_confidence?: number;
+    limit?: number;
+  }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params?.pattern_type) queryParams.append('pattern_type', params.pattern_type);
+    if (params?.device_id) queryParams.append('device_id', params.device_id);
+    if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    
+    const url = `${this.baseUrl}/patterns/list${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling(url);
+  }
+
+  async getPatternStats(): Promise<any> {
+    return this.fetchWithErrorHandling(`${this.baseUrl}/patterns/stats`);
+  }
+
+  async detectTimeOfDayPatterns(params?: {
+    days?: number;
+    min_occurrences?: number;
+    min_confidence?: number;
+  }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params?.days) queryParams.append('days', params.days.toString());
+    if (params?.min_occurrences) queryParams.append('min_occurrences', params.min_occurrences.toString());
+    if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
+    
+    const url = `${this.baseUrl}/patterns/detect/time-of-day${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling(url, { method: 'POST' });
+  }
+
+  async detectCoOccurrencePatterns(params?: {
+    days?: number;
+    window_minutes?: number;
+    min_support?: number;
+    min_confidence?: number;
+  }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params?.days) queryParams.append('days', params.days.toString());
+    if (params?.window_minutes) queryParams.append('window_minutes', params.window_minutes.toString());
+    if (params?.min_support) queryParams.append('min_support', params.min_support.toString());
+    if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
+    
+    const url = `${this.baseUrl}/patterns/detect/co-occurrence${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.fetchWithErrorHandling(url, { method: 'POST' });
+  }
+}
+
 // Export API client instances
 export const adminApi = new AdminApiClient();  // System monitoring
 export const dataApi = new DataApiClient();    // Feature data
+export const aiApi = new AIAutomationApiClient();  // AI Automation
 
 // Legacy export for backward compatibility (uses admin API)
 export const apiService = adminApi;

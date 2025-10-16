@@ -443,13 +443,17 @@ services:
     ports:
       - "8013:8013"
     environment:
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
+      # Home Assistant Configuration
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      - CALENDAR_ENTITIES=${CALENDAR_ENTITIES:-calendar.primary}
+      - CALENDAR_FETCH_INTERVAL=${CALENDAR_FETCH_INTERVAL:-900}
+      # InfluxDB Configuration
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
+      # Service Configuration
       - SERVICE_PORT=8013
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
@@ -755,6 +759,40 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  ai-automation-ui:
+    build:
+      context: .
+      dockerfile: services/ai-automation-ui/Dockerfile
+    container_name: ai-automation-ui
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      - VITE_API_URL=http://localhost:8018/api
+    depends_on:
+      ai-automation-service:
+        condition: service_started
+    networks:
+      - ha-ingestor-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "service=ai-ui,environment=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   influxdb_data:

@@ -40,12 +40,14 @@
 
 The **Home Assistant Ingestor** is a comprehensive microservices-based system that captures, processes, and stores Home Assistant event data.
 
-**Core Architecture (13 microservices):**
+**Core Architecture (15 microservices):**
 - **WebSocket Ingestion Service** - Real-time HA event capture
 - **Data API Service** (Port 8006) - Feature data hub (events, devices, sports, analytics)
 - **Admin API Service** (Port 8003) - System monitoring and control
 - **Health Dashboard** - React-based monitoring interface (12 tabs)
 - **Enrichment Pipeline** - Data processing and normalization
+- **AI Automation Service** (Port 8018) - AI-powered automation suggestions
+- **Energy Correlator** (Port 8017) - Energy correlation analysis
 - **Sports Data Service** - ESPN API integration
 - **Data Retention Service** - Lifecycle management
 - **Additional services** - Weather, carbon intensity, electricity pricing, air quality, calendar, smart meter
@@ -447,7 +449,7 @@ homeassistant/status
 **Existing Health Dashboard Architecture (http://localhost:3000):**
 
 The Health Dashboard uses a proven tab-based navigation pattern with:
-- 11 tabs (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Analytics, Alerts, Configuration)
+- 12 tabs (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Energy, Analytics, Alerts, Configuration)
 - Dark mode toggle with localStorage persistence
 - Auto-refresh capability
 - Time range selector

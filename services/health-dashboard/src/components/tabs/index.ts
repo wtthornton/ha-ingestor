@@ -16,4 +16,5 @@ export { AlertsTab } from './AlertsTab';
 export { ConfigurationTab } from './ConfigurationTab';
 export { DevicesTab } from './DevicesTab';
 export { EnergyTab } from './EnergyTab';
+export { AIAutomationTab } from './AIAutomationTab';
 

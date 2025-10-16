@@ -93,7 +93,7 @@ graph TB
 | **carbon-intensity-service** | Python/FastAPI | 8010 | Carbon intensity data from National Grid |
 | **electricity-pricing-service** | Python/FastAPI | 8011 | Real-time electricity pricing (Octopus, etc.) |
 | **air-quality-service** | Python/FastAPI | 8012 | Air quality index and pollutant levels |
-| **calendar-service** | Python/FastAPI | 8013 | Calendar integration (Google, Outlook, iCal) |
+| **calendar-service** | Python/aiohttp | 8013 | Home Assistant calendar integration, occupancy prediction |
 | **smart-meter-service** | Python/FastAPI | 8014 | Smart meter data (SMETS2, P1, etc.) |
 | **weather-api** | Python/FastAPI | Internal | Weather data integration |
 

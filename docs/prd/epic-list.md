@@ -127,9 +127,10 @@ Capture critical missing fields from Home Assistant events to enable automation 
 - **Total Epics**: 23
 - **Completed**: 22
 - **Planned**: 1
-- **Active Services**: 16
+- **Active Services**: 16 total (15 microservices + InfluxDB infrastructure)
+- **Microservices**: 15 custom services (admin-api, data-api, websocket-ingestion, enrichment-pipeline, data-retention, sports-data, log-aggregator, weather-api, carbon-intensity, electricity-pricing, air-quality, calendar, smart-meter, energy-correlator, ai-automation)
 - **API Endpoints**: ~62 (22 admin-api + 40 data-api)
-- **Dashboard Tabs**: 12
+- **Dashboard Tabs**: 12 (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Energy, Analytics, Alerts, Configuration)
 - **External Data Services**: 6 (carbon, electricity, air quality, calendar, smart meter, weather)
 
 ---

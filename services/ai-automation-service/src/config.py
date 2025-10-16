@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     # Data API
     data_api_url: str = "http://data-api:8006"
     
+    # InfluxDB (for direct event queries)
+    influxdb_url: str = "http://influxdb:8086"
+    influxdb_token: str = "ha-ingestor-token"
+    influxdb_org: str = "ha-ingestor"
+    influxdb_bucket: str = "home_assistant_events"
+    
     # Home Assistant
     ha_url: str
     ha_token: str

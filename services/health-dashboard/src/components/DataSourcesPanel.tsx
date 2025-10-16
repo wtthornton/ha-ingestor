@@ -25,7 +25,7 @@ const DATA_SOURCE_DEFINITIONS = [
 ];
 
 export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) => {
-  const { dataSources, loading, error } = useDataSources(30000);
+  const { dataSources, loading, error, refetch } = useDataSources(30000);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
             </p>
           </div>
           <button
-            onClick={fetchDataSources}
+            onClick={refetch}
             className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
           >
             Retry

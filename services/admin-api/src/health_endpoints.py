@@ -61,16 +61,16 @@ class HealthEndpoints:
         self.start_time = datetime.now()
         self.alert_manager = get_alert_manager("admin-api")
         self.service_urls = {
-            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002"),
-            "influxdb": os.getenv("INFLUXDB_URL", "http://localhost:8086"),
+            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://ha-ingestor-websocket:8001"),
+            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://ha-ingestor-enrichment:8002"),
+            "influxdb": os.getenv("INFLUXDB_URL", "http://ha-ingestor-influxdb:8086"),
             "weather-api": "https://api.openweathermap.org/data/2.5",
-            # Data source services
-            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://localhost:8010"),
-            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://localhost:8011"),
-            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://localhost:8012"),
-            "calendar-service": os.getenv("CALENDAR_URL", "http://localhost:8013"),
-            "smart-meter-service": os.getenv("SMART_METER_URL", "http://localhost:8014")
+            # Data source services - Fixed to use Docker container names
+            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010"),
+            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://ha-ingestor-electricity-pricing:8011"),
+            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://ha-ingestor-air-quality:8012"),
+            "calendar-service": os.getenv("CALENDAR_URL", "http://ha-ingestor-calendar:8013"),
+            "smart-meter-service": os.getenv("SMART_METER_URL", "http://ha-ingestor-smart-meter:8014")
         }
         
         self._add_routes()

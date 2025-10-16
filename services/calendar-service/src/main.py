@@ -1,26 +1,25 @@
 """
 Calendar Service Main Entry Point
-Integrates with Google Calendar for occupancy prediction
+Integrates with Home Assistant Calendar for occupancy prediction
 """
 
 import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from aiohttp import web
 from dotenv import load_dotenv
 from influxdb_client_3 import InfluxDBClient3, Point
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from google.auth.transport.requests import Request
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 
 from shared.logging_config import setup_logging, log_with_context, log_error_with_context
 
 from health_check import HealthCheckHandler
+from ha_client import HomeAssistantCalendarClient
+from event_parser import CalendarEventParser
 
 load_dotenv()
 
@@ -28,12 +27,13 @@ logger = setup_logging("calendar-service")
 
 
 class CalendarService:
-    """Google Calendar integration for occupancy prediction"""
+    """Home Assistant Calendar integration for occupancy prediction"""
     
     def __init__(self):
-        self.client_id = os.getenv('GOOGLE_CLIENT_ID')
-        self.client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
-        self.refresh_token = os.getenv('GOOGLE_REFRESH_TOKEN')
+        # Home Assistant configuration
+        self.ha_url = os.getenv('HOME_ASSISTANT_URL')
+        self.ha_token = os.getenv('HOME_ASSISTANT_TOKEN')
+        self.calendar_entities = os.getenv('CALENDAR_ENTITIES', 'calendar.primary').split(',')
         
         # InfluxDB configuration
         self.influxdb_url = os.getenv('INFLUXDB_URL', 'http://influxdb:8086')
@@ -42,41 +42,55 @@ class CalendarService:
         self.influxdb_bucket = os.getenv('INFLUXDB_BUCKET', 'events')
         
         # Service configuration
-        self.fetch_interval = 900  # 15 minutes
+        self.fetch_interval = int(os.getenv('CALENDAR_FETCH_INTERVAL', '900'))  # 15 minutes default
         
         # Components
-        self.calendar_service = None
-        self.credentials = None
+        self.ha_client: Optional[HomeAssistantCalendarClient] = None
+        self.event_parser = CalendarEventParser()
         self.influxdb_client: Optional[InfluxDBClient3] = None
         self.health_handler = HealthCheckHandler()
         
         # Validate
-        if not self.client_id or not self.client_secret or not self.refresh_token:
-            raise ValueError("Google OAuth credentials required: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN")
+        if not self.ha_url or not self.ha_token:
+            raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN required")
         if not self.influxdb_token:
             raise ValueError("INFLUXDB_TOKEN required")
+        
+        # Clean up calendar entity list
+        self.calendar_entities = [cal.strip() for cal in self.calendar_entities]
+        logger.info(f"Configured for {len(self.calendar_entities)} calendar(s): {self.calendar_entities}")
     
     async def startup(self):
         """Initialize service"""
-        logger.info("Initializing Calendar Service...")
+        logger.info("Initializing Calendar Service (Home Assistant Integration)...")
         
-        # Setup OAuth credentials
-        self.credentials = Credentials(
-            token=None,
-            refresh_token=self.refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=self.client_id,
-            client_secret=self.client_secret
+        # Initialize Home Assistant client
+        self.ha_client = HomeAssistantCalendarClient(
+            base_url=self.ha_url,
+            token=self.ha_token
         )
         
-        # Refresh token
-        if not self.credentials.valid:
-            self.credentials.refresh(Request())
+        await self.ha_client.connect()
         
-        # Build calendar service
-        self.calendar_service = build('calendar', 'v3', credentials=self.credentials)
+        # Test connection
+        connection_ok = await self.ha_client.test_connection()
+        if not connection_ok:
+            logger.error("Failed to connect to Home Assistant")
+            self.health_handler.ha_connected = False
+            raise ConnectionError(f"Cannot connect to Home Assistant at {self.ha_url}")
         
-        self.health_handler.oauth_valid = True
+        self.health_handler.ha_connected = True
+        
+        # Discover available calendars
+        available_calendars = await self.ha_client.get_calendars()
+        logger.info(f"Found {len(available_calendars)} calendar(s) in Home Assistant: {available_calendars}")
+        
+        # Validate configured calendars exist
+        for calendar_id in self.calendar_entities:
+            if calendar_id not in available_calendars and f"calendar.{calendar_id}" not in available_calendars:
+                logger.warning(f"Configured calendar '{calendar_id}' not found in Home Assistant")
+        
+        self.health_handler.calendar_count = len(self.calendar_entities)
         
         # Create InfluxDB client
         self.influxdb_client = InfluxDBClient3(
@@ -86,45 +100,53 @@ class CalendarService:
             org=self.influxdb_org
         )
         
-        logger.info("Calendar Service initialized")
+        logger.info(f"Calendar Service initialized successfully")
     
     async def shutdown(self):
         """Cleanup"""
         logger.info("Shutting down Calendar Service...")
         
+        if self.ha_client:
+            await self.ha_client.close()
+        
         if self.influxdb_client:
             self.influxdb_client.close()
     
     async def get_today_events(self) -> List[Dict[str, Any]]:
-        """Fetch today's calendar events"""
+        """Fetch today's calendar events from Home Assistant"""
         
         try:
-            now = datetime.now().isoformat() + 'Z'
-            end_of_day = (datetime.now().replace(hour=23, minute=59)).isoformat() + 'Z'
+            # Define time range (today)
+            now = datetime.now(timezone.utc)
+            end_of_day = now.replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            events_result = self.calendar_service.events().list(
-                calendarId='primary',
-                timeMin=now,
-                timeMax=end_of_day,
-                singleEvents=True,
-                orderBy='startTime'
-            ).execute()
+            # Fetch events from all configured calendars
+            all_events_raw = await self.ha_client.get_events_from_multiple_calendars(
+                calendar_ids=self.calendar_entities,
+                start=now,
+                end=end_of_day
+            )
             
-            events = []
-            for event in events_result.get('items', []):
-                start_str = event['start'].get('dateTime', event['start'].get('date'))
-                end_str = event['end'].get('dateTime', event['end'].get('date'))
-                
-                events.append({
-                    'summary': event.get('summary', 'Untitled'),
-                    'location': event.get('location', ''),
-                    'start': datetime.fromisoformat(start_str.replace('Z', '+00:00')),
-                    'end': datetime.fromisoformat(end_str.replace('Z', '+00:00')),
-                    'is_wfh': 'WFH' in event.get('summary', '').upper() or 
-                             'HOME' in event.get('location', '').upper()
-                })
+            # Combine events from all calendars
+            combined_events = []
+            for calendar_id, events in all_events_raw.items():
+                for event in events:
+                    # Add calendar source to event
+                    event['calendar_source'] = calendar_id
+                    combined_events.append(event)
             
-            return events
+            logger.info(f"Fetched {len(combined_events)} events from {len(self.calendar_entities)} calendar(s)")
+            
+            # Parse and enrich events
+            parsed_events = self.event_parser.parse_multiple_events(combined_events)
+            
+            # Sort by start time
+            parsed_events.sort(key=lambda e: e['start'] if e.get('start') else now)
+            
+            self.health_handler.last_successful_fetch = datetime.now()
+            self.health_handler.total_fetches += 1
+            
+            return parsed_events
             
         except Exception as e:
             log_error_with_context(
@@ -133,7 +155,8 @@ class CalendarService:
                 service="calendar-service",
                 error=str(e)
             )
-            self.health_handler.oauth_valid = False
+            self.health_handler.ha_connected = False
+            self.health_handler.failed_fetches += 1
             return []
     
     async def predict_home_status(self) -> Dict[str, Any]:
@@ -141,29 +164,56 @@ class CalendarService:
         
         try:
             events = await self.get_today_events()
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
+            
+            if not events:
+                logger.info("No calendar events found, assuming default status")
+                return {
+                    'currently_home': False,
+                    'wfh_today': False,
+                    'next_arrival': None,
+                    'prepare_time': None,
+                    'hours_until_arrival': None,
+                    'confidence': 0.5,  # Low confidence with no data
+                    'timestamp': datetime.now(timezone.utc),
+                    'event_count': 0
+                }
             
             # Check if working from home today
-            wfh_today = any(e['is_wfh'] for e in events)
+            wfh_today = any(e.get('is_wfh', False) for e in events)
             
-            # Check current events
-            current_events = [e for e in events if e['start'] <= now <= e['end']]
-            currently_home = wfh_today or any('HOME' in e.get('location', '').upper() for e in current_events)
+            # Get current events using parser helper
+            current_events = self.event_parser.get_current_events(events, now)
+            
+            # Check if currently home based on current events
+            currently_home = wfh_today or any(e.get('is_home', False) for e in current_events)
+            
+            # Get upcoming events
+            future_events = self.event_parser.get_upcoming_events(events, now)
             
             # Find next home event
-            future_events = [e for e in events if e['start'] > now]
-            next_home_event = next((e for e in future_events if 'HOME' in e.get('location', '').upper()), None)
+            next_home_event = next((e for e in future_events if e.get('is_home', False)), None)
             
-            # Calculate arrival time
+            # Calculate arrival time and confidence
             if next_home_event:
                 arrival_time = next_home_event['start']
                 travel_time = timedelta(minutes=30)  # Estimate
                 prepare_time = arrival_time - travel_time
                 hours_until_arrival = (arrival_time - now).total_seconds() / 3600
+                
+                # Use event's confidence if available
+                confidence = next_home_event.get('confidence', 0.75)
             else:
                 arrival_time = None
                 prepare_time = None
                 hours_until_arrival = None
+                confidence = 0.85 if wfh_today else 0.70
+            
+            # Adjust confidence based on multiple factors
+            if wfh_today and currently_home:
+                confidence = max(confidence, 0.90)  # High confidence if WFH today
+            elif currently_home and current_events:
+                confidence = max(confidence, 0.85)  # High confidence with current home events
             
             prediction = {
                 'currently_home': currently_home,
@@ -171,14 +221,17 @@ class CalendarService:
                 'next_arrival': arrival_time,
                 'prepare_time': prepare_time,
                 'hours_until_arrival': hours_until_arrival,
-                'confidence': 0.85 if wfh_today else 0.70,
-                'timestamp': datetime.now()
+                'confidence': confidence,
+                'timestamp': datetime.now(timezone.utc),
+                'event_count': len(events),
+                'current_event_count': len(current_events),
+                'upcoming_event_count': len(future_events)
             }
             
-            self.health_handler.last_successful_fetch = datetime.now()
-            self.health_handler.total_fetches += 1
-            
-            logger.info(f"Occupancy prediction: Home={currently_home}, WFH={wfh_today}")
+            logger.info(
+                f"Occupancy prediction: Home={currently_home}, WFH={wfh_today}, "
+                f"Events={len(events)}, Confidence={confidence:.2f}"
+            )
             
             return prediction
             
@@ -227,17 +280,15 @@ class CalendarService:
         
         while True:
             try:
-                # Refresh OAuth token if needed
-                if not self.credentials.valid:
-                    self.credentials.refresh(Request())
-                    self.health_handler.oauth_valid = True
-                
                 # Get prediction
                 prediction = await self.predict_home_status()
                 
                 # Store in InfluxDB
                 if prediction:
                     await self.store_in_influxdb(prediction)
+                
+                # Mark as healthy after successful fetch and store
+                self.health_handler.ha_connected = True
                 
                 await asyncio.sleep(self.fetch_interval)
                 
@@ -248,6 +299,8 @@ class CalendarService:
                     service="calendar-service",
                     error=str(e)
                 )
+                self.health_handler.ha_connected = False
+                # Wait 5 minutes before retry on error
                 await asyncio.sleep(300)
 
 

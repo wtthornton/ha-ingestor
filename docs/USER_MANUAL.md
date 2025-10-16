@@ -169,8 +169,10 @@ If you prefer manual configuration:
 - Monitor air quality and trigger automations
 
 #### **Calendar Service (Optional)**
-- Configure Google Calendar, Outlook, or iCal
-- Set `CALENDAR_GOOGLE_CLIENT_ID` and credentials
+- Integrates with Home Assistant calendar entities
+- Supports Google Calendar, iCloud, CalDAV, Office 365, and more
+- Set `CALENDAR_ENTITIES` to your HA calendar entity IDs
+- Provides occupancy prediction and work-from-home detection
 - Enable event-based automation triggers
 
 #### **Smart Meter Service (Optional)**

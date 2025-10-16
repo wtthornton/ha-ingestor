@@ -1,7 +1,7 @@
 """
 Data API Client for AI Automation Service
 
-Provides access to historical Home Assistant data via the Data API service.
+Provides access to historical Home Assistant data via InfluxDB and Data API service.
 """
 
 import httpx
@@ -11,18 +11,31 @@ import logging
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from datetime import datetime, timedelta, timezone
 
+from .influxdb_client import InfluxDBEventClient
+
 logger = logging.getLogger(__name__)
 
 
 class DataAPIClient:
-    """Client for fetching historical data from Data API"""
+    """Client for fetching historical data from InfluxDB and Data API"""
     
-    def __init__(self, base_url: str = "http://data-api:8006"):
+    def __init__(
+        self,
+        base_url: str = "http://data-api:8006",
+        influxdb_url: str = "http://influxdb:8086",
+        influxdb_token: str = "ha-ingestor-token",
+        influxdb_org: str = "ha-ingestor",
+        influxdb_bucket: str = "home_assistant_events"
+    ):
         """
         Initialize Data API client.
         
         Args:
             base_url: Base URL for Data API (default: http://data-api:8006)
+            influxdb_url: InfluxDB URL for direct event queries
+            influxdb_token: InfluxDB authentication token
+            influxdb_org: InfluxDB organization
+            influxdb_bucket: InfluxDB bucket name
         """
         self.base_url = base_url.rstrip('/')
         self.client = httpx.AsyncClient(
@@ -30,7 +43,17 @@ class DataAPIClient:
             follow_redirects=True,
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
         )
+        
+        # Initialize InfluxDB client for direct event queries
+        self.influxdb_client = InfluxDBEventClient(
+            url=influxdb_url,
+            token=influxdb_token,
+            org=influxdb_org,
+            bucket=influxdb_bucket
+        )
+        
         logger.info(f"Data API client initialized with base_url={self.base_url}")
+        logger.info(f"InfluxDB client initialized with url={influxdb_url}")
     
     @retry(
         stop=stop_after_attempt(3),
@@ -85,44 +108,21 @@ class DataAPIClient:
             if event_type:
                 params["event_type"] = event_type
             
-            logger.info(f"Fetching events from Data API: start={start_time}, end={end_time}, limit={limit}")
+            logger.info(f"Fetching events from InfluxDB: start={start_time}, end={end_time}, limit={limit}")
             
-            response = await self.client.get(
-                f"{self.base_url}/api/v1/events",
-                params=params
+            # Query InfluxDB directly for events
+            df = await self.influxdb_client.fetch_events(
+                start_time=start_time,
+                end_time=end_time,
+                entity_id=entity_id,
+                limit=limit
             )
-            response.raise_for_status()
             
-            data = response.json()
-            
-            # Handle different response formats
-            if isinstance(data, dict):
-                if "events" in data:
-                    events = data["events"]
-                elif "data" in data:
-                    events = data["data"]
-                else:
-                    events = []
-            elif isinstance(data, list):
-                events = data
-            else:
-                logger.warning(f"Unexpected response format from Data API: {type(data)}")
-                events = []
-            
-            # Convert to pandas DataFrame
-            if not events:
-                logger.warning(f"No events returned from Data API for period {start_time} to {end_time}")
+            if df.empty:
+                logger.warning(f"No events returned from InfluxDB for period {start_time} to {end_time}")
                 return pd.DataFrame()
             
-            df = pd.DataFrame(events)
-            
-            # Ensure timestamp column exists and parse it
-            if 'timestamp' in df.columns:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-            else:
-                logger.warning("No timestamp column in events data")
-            
-            logger.info(f"✅ Fetched {len(df)} events from Data API")
+            logger.info(f"✅ Fetched {len(df)} events from InfluxDB")
             return df
             
         except httpx.HTTPError as e:

@@ -98,3 +98,13 @@ async def get_db():
     async with async_session() as session:
         yield session
 
+
+def get_db_session():
+    """
+    Get database session as async context manager.
+    
+    Usage:
+        async with get_db_session() as db:
+            result = await db.execute(query)
+    """
+    return async_session()

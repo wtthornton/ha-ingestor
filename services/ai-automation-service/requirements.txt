@@ -21,6 +21,9 @@ paho-mqtt==1.6.1
 # HTTP Client
 httpx==0.25.2
 
+# InfluxDB Client
+influxdb-client==1.38.0
+
 # Data Processing
 pandas==2.1.4
 numpy==1.26.2
@@ -37,6 +40,7 @@ apscheduler==3.10.4
 # Utilities
 python-dotenv==1.0.0
 tenacity==8.2.3
+pyyaml==6.0.1
 
 # Testing
 pytest==7.4.3

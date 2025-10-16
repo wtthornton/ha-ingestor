@@ -16,6 +16,7 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 | **Database (Time-Series)** | InfluxDB | 2.7 | Time-series data storage | Purpose-built for time-series data and Home Assistant events |
 | **Database (Metadata)** | SQLite | 3.45+ | Metadata and registry storage | Lightweight relational DB for devices, entities, webhooks (Epic 22) |
 | **ORM** | SQLAlchemy | 2.0.25 | Async database access | Modern async ORM for SQLite with excellent FastAPI integration |
+| **SQLite Driver** | aiosqlite | 0.20.0 | Async SQLite driver | Async database driver for SQLAlchemy with SQLite |
 | **Migrations** | Alembic | 1.13.1 | Schema migrations | Standard migration tool for SQLAlchemy schemas |
 | **File Storage** | Local Docker Volumes | - | Persistent data storage | Simple local storage with Docker Compose |
 | **Authentication** | Long-lived Access Tokens | - | Home Assistant authentication | HA's standard auth method for WebSocket connections |

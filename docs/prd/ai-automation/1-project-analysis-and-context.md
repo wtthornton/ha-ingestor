@@ -19,7 +19,7 @@
 
 The **Home Assistant Ingestor** is a comprehensive microservices-based system that captures, processes, and stores Home Assistant event data.
 
-**Core Architecture (13 microservices):**
+**Core Architecture (15 microservices):**
 - **WebSocket Ingestion Service** - Real-time HA event capture
 - **Data API Service** (Port 8006) - Feature data hub (events, devices, sports, analytics)
 - **Admin API Service** (Port 8003) - System monitoring and control
@@ -27,6 +27,8 @@ The **Home Assistant Ingestor** is a comprehensive microservices-based system th
 - **Enrichment Pipeline** - Data processing and normalization
 - **Sports Data Service** - ESPN API integration
 - **Data Retention Service** - Lifecycle management
+- **AI Automation Service** (Port 8018) - AI-powered automation suggestions
+- **Energy Correlator** (Port 8017) - Energy correlation analysis
 - **Additional services** - Weather, carbon intensity, electricity pricing, air quality, calendar, smart meter
 
 **Data Architecture:**
@@ -275,4 +277,4 @@ homeassistant/status
 - ✅ **Future-proof** - Easy to add more services
 
 ---
-
+

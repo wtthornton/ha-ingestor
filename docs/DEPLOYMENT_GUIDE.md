@@ -232,8 +232,9 @@ CARBON_INTENSITY_REGION=GB  # UK region code
 ELECTRICITY_PRICING_PROVIDER=octopus  # octopus, agile, etc.
 ELECTRICITY_PRICING_API_KEY=your_pricing_api_key
 AIR_QUALITY_API_KEY=your_air_quality_api_key
-CALENDAR_GOOGLE_CLIENT_ID=your_google_client_id
-CALENDAR_GOOGLE_CLIENT_SECRET=your_google_client_secret
+# Calendar Service (Home Assistant Integration)
+CALENDAR_ENTITIES=calendar.primary  # Comma-separated HA calendar entity IDs
+CALENDAR_FETCH_INTERVAL=900  # Fetch interval in seconds (default: 15 min)
 SMART_METER_PROTOCOL=smets2  # smets2, p1, etc.
 SMART_METER_CONNECTION=your_meter_connection
 
@@ -302,7 +303,7 @@ S3_REGION=us-east-1
 - **carbon-intensity-service** - Carbon intensity data integration (Alpine-based, ~40MB)
 - **electricity-pricing-service** - Real-time electricity pricing (Alpine-based, ~40MB)
 - **air-quality-service** - Air quality monitoring (Alpine-based, ~40MB)
-- **calendar-service** - Calendar integration (Alpine-based, ~45MB)
+- **calendar-service** - Home Assistant calendar integration for occupancy prediction (Alpine-based, ~40MB, 28MB smaller!)
 - **smart-meter-service** - Smart meter data integration (Alpine-based, ~45MB)
 - **weather-api** - Weather data integration (Alpine-based, ~40MB)
 

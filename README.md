@@ -310,9 +310,10 @@ This project follows security best practices:
 - Port: 8012 (internal)
 
 #### Calendar Service
-- Integrates with Google Calendar, Outlook, iCal
+- Integrates with Home Assistant calendar entities (Google, iCloud, CalDAV, Office 365, etc.)
+- Supports unlimited calendars from any HA-supported source
+- Occupancy prediction and work-from-home detection
 - Event-based automation triggers
-- Holiday and schedule tracking
 - Port: 8013 (internal)
 
 #### Smart Meter Service

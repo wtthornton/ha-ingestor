@@ -5,7 +5,7 @@
 **Existing Health Dashboard Architecture (http://localhost:3000):**
 
 The Health Dashboard uses a proven tab-based navigation pattern with:
-- 11 tabs (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Analytics, Alerts, Configuration)
+- 12 tabs (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Energy, Analytics, Alerts, Configuration)
 - Dark mode toggle with localStorage persistence
 - Auto-refresh capability
 - Time range selector
@@ -251,4 +251,4 @@ lg: 1024px  // Large desktop
 - ✅ Stacked headers on mobile
 
 ---
-
+

@@ -24,8 +24,8 @@ ha-ingestor/
 │   ├── analysis/                  # Technical analysis and diagnosis
 │   ├── verification/              # Test and verification results
 │   └── archive/                   # Old/superseded implementation notes
-├── services/                      # 13 Microservices (Alpine-based)
-│   ├── admin-api/                 # System monitoring & control API (Port 8003) [Epic 13]
+├── services/                      # 15 Microservices (Alpine-based)
+│   ├── admin-api/                 # System monitoring & control API (Port 8003 external → 8004 internal) [Epic 13]
 │   ├── data-api/                  # Feature data hub API (Port 8006) [Epic 13]
 │   ├── health-dashboard/          # React frontend (12 tabs, Port 3000)
 │   ├── websocket-ingestion/       # WebSocket client service (Port 8001)
@@ -37,8 +37,10 @@ ha-ingestor/
 │   ├── carbon-intensity-service/  # Carbon data (Port 8010)
 │   ├── electricity-pricing-service/ # Pricing data (Port 8011)
 │   ├── air-quality-service/       # Air quality (Port 8012)
-│   ├── calendar-service/          # Calendar integration (Port 8013)
+│   ├── calendar-service/          # HA calendar integration (Port 8013)
 │   ├── smart-meter-service/       # Smart meter (Port 8014)
+│   ├── energy-correlator/         # Energy correlation analysis (Port 8017)
+│   ├── ai-automation-service/     # AI automation suggestions (Port 8018)
 │   └── ha-simulator/              # Test event generator
 ├── shared/                        # Shared Python utilities
 │   ├── logging_config.py          # ⭐ Structured logging + correlation IDs
@@ -154,7 +156,7 @@ data-api/
 health-dashboard/
 ├── src/
 │   ├── components/                # React components
-│   │   ├── Dashboard.tsx          # Main dashboard with 11 tabs
+│   │   ├── Dashboard.tsx          # Main dashboard with 12 tabs
 │   │   ├── tabs/                  # Tab components
 │   │   │   ├── OverviewTab.tsx    # System overview
 │   │   │   ├── ServicesTab.tsx    # Service management
@@ -164,6 +166,7 @@ health-dashboard/
 │   │   │   ├── LogsTab.tsx        # Live log viewer
 │   │   │   ├── SportsTab.tsx      # Sports tracking
 │   │   │   ├── DataSourcesTab.tsx # Data sources status
+│   │   │   ├── EnergyTab.tsx      # Energy correlation
 │   │   │   ├── AnalyticsTab.tsx   # Performance analytics
 │   │   │   ├── AlertsTab.tsx      # Alert management
 │   │   │   └── ConfigurationTab.tsx # Service configuration

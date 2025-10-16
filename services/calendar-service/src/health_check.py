@@ -15,14 +15,15 @@ class HealthCheckHandler:
         self.last_successful_fetch = None
         self.total_fetches = 0
         self.failed_fetches = 0
-        self.oauth_valid = False
+        self.ha_connected = False
+        self.calendar_count = 0
     
     async def handle(self, request):
         """Handle health check request"""
         
         uptime = (datetime.now() - self.start_time).total_seconds()
         
-        healthy = self.oauth_valid
+        healthy = self.ha_connected
         if self.last_successful_fetch:
             time_since_last = (datetime.now() - self.last_successful_fetch).total_seconds()
             if time_since_last > 1800:  # 30 minutes
@@ -31,8 +32,10 @@ class HealthCheckHandler:
         status = {
             "status": "healthy" if healthy else "degraded",
             "service": "calendar-service",
+            "integration_type": "home_assistant",
             "uptime_seconds": uptime,
-            "oauth_valid": self.oauth_valid,
+            "ha_connected": self.ha_connected,
+            "calendar_count": self.calendar_count,
             "last_successful_fetch": self.last_successful_fetch.isoformat() if self.last_successful_fetch else None,
             "total_fetches": self.total_fetches,
             "failed_fetches": self.failed_fetches,

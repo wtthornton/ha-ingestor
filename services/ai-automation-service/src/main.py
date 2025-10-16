@@ -23,7 +23,9 @@ except ImportError:
 
 from .config import settings
 from .database.models import init_db
-from .api import health_router, data_router, pattern_router
+from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router
+from .api.analysis_router import set_scheduler
+from .scheduler import DailyAnalysisScheduler
 
 # Create FastAPI application
 app = FastAPI(
@@ -34,11 +36,15 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS middleware (allow frontend at port 3002)
+# CORS middleware (allow frontend at ports 3000, 3001, 3002)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3002",
+        "http://localhost:3000",  # Health dashboard
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",  # AI Automation standalone UI
+        "http://127.0.0.1:3001",
+        "http://localhost:3002",  # Legacy
         "http://127.0.0.1:3002"
     ],
     allow_credentials=True,
@@ -50,6 +56,14 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(data_router)
 app.include_router(pattern_router)
+app.include_router(suggestion_router)
+app.include_router(analysis_router)
+app.include_router(suggestion_management_router)
+app.include_router(deployment_router)
+
+# Initialize scheduler
+scheduler = DailyAnalysisScheduler()
+set_scheduler(scheduler)  # Connect scheduler to analysis router
 
 
 @app.on_event("startup")
@@ -72,6 +86,14 @@ async def startup_event():
         logger.error(f"❌ Database initialization failed: {e}")
         raise
     
+    # Start scheduler
+    try:
+        scheduler.start()
+        logger.info("✅ Daily analysis scheduler started")
+    except Exception as e:
+        logger.error(f"❌ Scheduler startup failed: {e}")
+        # Don't raise - service can still run without scheduler
+    
     logger.info("✅ AI Automation Service ready")
 
 
@@ -79,6 +101,13 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("AI Automation Service shutting down")
+    
+    # Stop scheduler
+    try:
+        scheduler.stop()
+        logger.info("✅ Scheduler stopped")
+    except Exception as e:
+        logger.error(f"❌ Scheduler shutdown failed: {e}")
 
 
 if __name__ == "__main__":
