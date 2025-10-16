@@ -58,6 +58,9 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 ## 🎯 **Recent Updates**
 
 ### October 2025
+✅ **Epic AI-2: Device Intelligence System** - 🎉 AI discovers device capabilities and suggests unused features! Universal support for 6,000+ Zigbee devices  
+✅ **Unified Daily Batch Job** - Combined pattern detection + device intelligence in single efficient job (99% resource reduction)  
+✅ **Smart Feature Suggestions** - LLM-powered recommendations for LED notifications, power monitoring, and 20+ advanced features  
 ✅ **Direct HA → SQLite Storage** - 🎉 Fixed architecture gap! Devices/entities now stored directly from HA WebSocket to SQLite  
 ✅ **Real Device Data** - Dashboard now shows 99 real devices, 100+ entities from Home Assistant (was 5 mock devices)  
 ✅ **Eliminated Sync Scripts** - No manual sync needed, automated on WebSocket connection  

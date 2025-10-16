@@ -1,6 +1,9 @@
 """
 Daily Analysis Scheduler
-Runs pattern analysis and suggestion generation on a scheduled basis (default: 3 AM daily)
+Runs unified AI analysis combining Epic-AI-1 (Pattern Detection) and Epic-AI-2 (Device Intelligence)
+on a scheduled basis (default: 3 AM daily)
+
+Story AI2.5: Unified Daily Batch Job
 """
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -10,6 +13,7 @@ import logging
 from typing import Optional, Dict
 import asyncio
 
+# Epic AI-1 imports (Pattern Detection)
 from ..clients.data_api_client import DataAPIClient
 from ..clients.mqtt_client import MQTTNotificationClient
 from ..pattern_analyzer.time_of_day import TimeOfDayPatternDetector
@@ -18,6 +22,13 @@ from ..llm.openai_client import OpenAIClient
 from ..database.crud import store_patterns, store_suggestion
 from ..database.models import get_db, get_db_session
 from ..config import settings
+
+# Epic AI-2 imports (Device Intelligence)
+from ..device_intelligence import (
+    update_device_capabilities_batch,
+    FeatureAnalyzer,
+    FeatureSuggestionGenerator
+)
 
 logger = logging.getLogger(__name__)
 
@@ -92,14 +103,17 @@ class DailyAnalysisScheduler:
     
     async def run_daily_analysis(self):
         """
-        Main daily batch job workflow:
-        1. Fetch historical events from Data API
-        2. Run pattern detection (time-of-day + co-occurrence)
-        3. Generate automation suggestions via OpenAI
-        4. Store patterns and suggestions in database
-        5. Log results and performance metrics
+        Unified daily batch job workflow (Story AI2.5):
         
-        This method is called by the scheduler automatically.
+        Phase 1: Device Capability Update (Epic AI-2)
+        Phase 2: Fetch Historical Events (Shared by AI-1 + AI-2)
+        Phase 3: Pattern Detection (Epic AI-1)
+        Phase 4: Feature Analysis (Epic AI-2)
+        Phase 5: Combined Suggestion Generation (AI-1 + AI-2)
+        Phase 6: Publish Notification & Store Results
+        
+        This method is called by the scheduler automatically at 3 AM daily.
+        Story AI2.5: Unified Daily Batch Job
         """
         # Prevent concurrent runs
         if self.is_running:
@@ -115,14 +129,50 @@ class DailyAnalysisScheduler:
         
         try:
             logger.info("=" * 80)
-            logger.info("🚀 Daily Analysis Job Started")
+            logger.info("🚀 Unified Daily AI Analysis Started (Epic AI-1 + AI-2)")
             logger.info("=" * 80)
             logger.info(f"Timestamp: {start_time.isoformat()}")
             
             # ================================================================
-            # Phase 1: Fetch Events
+            # Phase 1: Device Capability Update (NEW - Epic AI-2)
             # ================================================================
-            logger.info("📊 Phase 1: Fetching events from Data API...")
+            logger.info("📡 Phase 1/6: Device Capability Update (Epic AI-2)...")
+            
+            data_client = DataAPIClient(
+                base_url=settings.data_api_url,
+                influxdb_url=settings.influxdb_url,
+                influxdb_token=settings.influxdb_token,
+                influxdb_org=settings.influxdb_org,
+                influxdb_bucket=settings.influxdb_bucket
+            )
+            
+            try:
+                capability_stats = await update_device_capabilities_batch(
+                    mqtt_client=self.mqtt_client,
+                    data_api_client=data_client,
+                    db_session_factory=get_db_session
+                )
+                
+                logger.info(f"✅ Device capabilities updated:")
+                logger.info(f"   - Devices checked: {capability_stats['devices_checked']}")
+                logger.info(f"   - Capabilities updated: {capability_stats['capabilities_updated']}")
+                logger.info(f"   - New devices: {capability_stats['new_devices']}")
+                logger.info(f"   - Errors: {capability_stats['errors']}")
+                
+                job_result['devices_checked'] = capability_stats['devices_checked']
+                job_result['capabilities_updated'] = capability_stats['capabilities_updated']
+                job_result['new_devices'] = capability_stats['new_devices']
+                
+            except Exception as e:
+                logger.error(f"⚠️ Device capability update failed: {e}")
+                logger.info("   → Continuing with pattern analysis...")
+                job_result['devices_checked'] = 0
+                job_result['capabilities_updated'] = 0
+            
+            # ================================================================
+            # Phase 2: Fetch Events (SHARED by AI-1 + AI-2)
+            # ================================================================
+            logger.info("📊 Phase 2/6: Fetching events (SHARED by AI-1 + AI-2)...")
             
             data_client = DataAPIClient(
                 base_url=settings.data_api_url,
@@ -148,9 +198,9 @@ class DailyAnalysisScheduler:
             job_result['events_count'] = len(events_df)
             
             # ================================================================
-            # Phase 2: Pattern Detection
+            # Phase 3: Pattern Detection (Epic AI-1)
             # ================================================================
-            logger.info("🔍 Phase 2: Detecting patterns...")
+            logger.info("🔍 Phase 3/6: Pattern Detection (Epic AI-1)...")
             
             all_patterns = []
             
@@ -183,67 +233,147 @@ class DailyAnalysisScheduler:
             all_patterns.extend(co_patterns)
             logger.info(f"    ✅ Found {len(co_patterns)} co-occurrence patterns")
             logger.info(f"✅ Total patterns detected: {len(all_patterns)}")
-            
-            if not all_patterns:
-                logger.warning("❌ No patterns detected")
-                job_result['status'] = 'no_patterns'
-                job_result['patterns_detected'] = 0
-                return
-            
             job_result['patterns_detected'] = len(all_patterns)
             
+            # Store patterns (don't fail if no patterns)
+            if all_patterns:
+                async with get_db_session() as db:
+                    patterns_stored = await store_patterns(db, all_patterns)
+                logger.info(f"   💾 Stored {patterns_stored} patterns in database")
+                job_result['patterns_stored'] = patterns_stored
+            else:
+                logger.info("   ℹ️  No patterns to store")
+                job_result['patterns_stored'] = 0
+            
             # ================================================================
-            # Phase 3: Store Patterns
+            # Phase 4: Feature Analysis (NEW - Epic AI-2)
             # ================================================================
-            logger.info("💾 Phase 3: Storing patterns in database...")
+            logger.info("🧠 Phase 4/6: Feature Analysis (Epic AI-2)...")
             
-            async with get_db_session() as db:
-                patterns_stored = await store_patterns(db, all_patterns)
-            
-            logger.info(f"✅ Stored {patterns_stored} patterns")
-            job_result['patterns_stored'] = patterns_stored
+            try:
+                feature_analyzer = FeatureAnalyzer(
+                    data_api_client=data_client,
+                    db_session=get_db_session,
+                    influxdb_client=data_client.influxdb_client
+                )
+                
+                analysis_result = await feature_analyzer.analyze_all_devices()
+                opportunities = analysis_result.get('opportunities', [])
+                
+                logger.info(f"✅ Feature analysis complete:")
+                logger.info(f"   - Devices analyzed: {analysis_result.get('devices_analyzed', 0)}")
+                logger.info(f"   - Opportunities found: {len(opportunities)}")
+                logger.info(f"   - Average utilization: {analysis_result.get('avg_utilization', 0):.1f}%")
+                
+                job_result['devices_analyzed'] = analysis_result.get('devices_analyzed', 0)
+                job_result['opportunities_found'] = len(opportunities)
+                job_result['avg_utilization'] = analysis_result.get('avg_utilization', 0)
+                
+            except Exception as e:
+                logger.error(f"⚠️ Feature analysis failed: {e}")
+                logger.info("   → Continuing with suggestions...")
+                opportunities = []
+                job_result['devices_analyzed'] = 0
+                job_result['opportunities_found'] = 0
             
             # ================================================================
-            # Phase 4: Generate Suggestions
+            # Phase 5: Combined Suggestion Generation (AI-1 + AI-2)
             # ================================================================
-            logger.info("🤖 Phase 4: Generating automation suggestions...")
+            logger.info("💡 Phase 5/6: Combined Suggestion Generation (AI-1 + AI-2)...")
             
-            # Rank patterns by confidence and limit to top 10
-            sorted_patterns = sorted(all_patterns, key=lambda p: p['confidence'], reverse=True)
-            top_patterns = sorted_patterns[:10]
-            
-            logger.info(f"  → Processing top {len(top_patterns)} patterns")
-            
+            # Initialize OpenAI client
             openai_client = OpenAIClient(api_key=settings.openai_api_key)
-            suggestions_generated = 0
-            suggestions_failed = 0
             
-            for i, pattern in enumerate(top_patterns, 1):
-                try:
-                    logger.info(f"  → [{i}/{len(top_patterns)}] Generating suggestion: {pattern['device_id']}")
-                    
-                    suggestion = await openai_client.generate_automation_suggestion(pattern)
-                    
-                    # Store suggestion
-                    async with get_db_session() as db:
-                        await store_suggestion(db, {
+            # ----------------------------------------------------------------
+            # Part A: Pattern-based suggestions (Epic AI-1)
+            # ----------------------------------------------------------------
+            logger.info("  → Part A: Pattern-based suggestions (Epic AI-1)...")
+            
+            pattern_suggestions = []
+            
+            if all_patterns:
+                sorted_patterns = sorted(all_patterns, key=lambda p: p['confidence'], reverse=True)
+                top_patterns = sorted_patterns[:10]
+                
+                logger.info(f"     Processing top {len(top_patterns)} patterns")
+                
+                for i, pattern in enumerate(top_patterns, 1):
+                    try:
+                        suggestion = await openai_client.generate_automation_suggestion(pattern)
+                        
+                        pattern_suggestions.append({
+                            'type': 'pattern_automation',
+                            'source': 'Epic-AI-1',
                             'pattern_id': pattern.get('id'),
+                            'pattern_type': pattern.get('pattern_type'),
                             'title': suggestion.alias,
                             'description': suggestion.description,
                             'automation_yaml': suggestion.automation_yaml,
                             'confidence': pattern['confidence'],
                             'category': suggestion.category,
-                            'priority': suggestion.priority
+                            'priority': suggestion.priority,
+                            'rationale': suggestion.rationale
                         })
+                        
+                        logger.debug(f"     [{i}/{len(top_patterns)}] ✅ {suggestion.alias}")
+                        
+                    except Exception as e:
+                        logger.error(f"     [{i}/{len(top_patterns)}] ❌ Failed: {e}")
+                
+                logger.info(f"     ✅ Generated {len(pattern_suggestions)} pattern suggestions")
+            else:
+                logger.info("     ℹ️  No patterns available for suggestions")
+            
+            # ----------------------------------------------------------------
+            # Part B: Feature-based suggestions (Epic AI-2)
+            # ----------------------------------------------------------------
+            logger.info("  → Part B: Feature-based suggestions (Epic AI-2)...")
+            
+            feature_suggestions = []
+            
+            if opportunities:
+                try:
+                    feature_generator = FeatureSuggestionGenerator(
+                        llm_client=openai_client,
+                        feature_analyzer=feature_analyzer,
+                        db_session=get_db_session
+                    )
                     
-                    suggestions_generated += 1
-                    logger.info(f"    ✅ Stored suggestion: {suggestion.alias}")
+                    feature_suggestions = await feature_generator.generate_suggestions(max_suggestions=10)
+                    logger.info(f"     ✅ Generated {len(feature_suggestions)} feature suggestions")
                     
                 except Exception as e:
-                    logger.error(f"    ❌ Failed to generate suggestion: {e}")
-                    suggestions_failed += 1
+                    logger.error(f"     ❌ Feature suggestion generation failed: {e}")
+            else:
+                logger.info("     ℹ️  No opportunities available for suggestions")
             
-            logger.info(f"✅ Generated {suggestions_generated} suggestions")
+            # ----------------------------------------------------------------
+            # Part C: Combine and rank all suggestions
+            # ----------------------------------------------------------------
+            logger.info("  → Part C: Combining and ranking all suggestions...")
+            
+            all_suggestions = pattern_suggestions + feature_suggestions
+            all_suggestions.sort(key=lambda s: s.get('confidence', 0.5), reverse=True)
+            all_suggestions = all_suggestions[:10]  # Top 10 total
+            
+            logger.info(f"✅ Combined suggestions: {len(all_suggestions)} total")
+            logger.info(f"   - Pattern-based (AI-1): {len(pattern_suggestions)}")
+            logger.info(f"   - Feature-based (AI-2): {len(feature_suggestions)}")
+            logger.info(f"   - Top suggestions kept: {len(all_suggestions)}")
+            
+            # Store all combined suggestions
+            suggestions_stored = 0
+            for suggestion in all_suggestions:
+                try:
+                    async with get_db_session() as db:
+                        await store_suggestion(db, suggestion)
+                    suggestions_stored += 1
+                except Exception as e:
+                    logger.error(f"   ❌ Failed to store suggestion: {e}")
+            
+            logger.info(f"   💾 Stored {suggestions_stored}/{len(all_suggestions)} suggestions in database")
+            
+            suggestions_generated = len(all_suggestions)
             
             # OpenAI usage stats
             openai_cost = (
@@ -254,20 +384,33 @@ class DailyAnalysisScheduler:
             logger.info(f"  → OpenAI cost: ${openai_cost:.6f}")
             
             job_result['suggestions_generated'] = suggestions_generated
-            job_result['suggestions_failed'] = suggestions_failed
+            job_result['pattern_suggestions'] = len(pattern_suggestions)
+            job_result['feature_suggestions'] = len(feature_suggestions)
             job_result['openai_tokens'] = openai_client.total_tokens_used
             job_result['openai_cost_usd'] = round(openai_cost, 6)
             
             # ================================================================
-            # Phase 5: Publish Notification (MQTT)
+            # Phase 6: Publish Notification & Results (MQTT)
             # ================================================================
-            logger.info("📢 Phase 5: Publishing MQTT notification...")
+            logger.info("📢 Phase 6/6: Publishing MQTT notification...")
             
             try:
                 notification = {
                     'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'patterns_detected': len(all_patterns),
-                    'suggestions_generated': suggestions_generated,
+                    'epic_ai_1': {
+                        'patterns_detected': len(all_patterns),
+                        'pattern_suggestions': len(pattern_suggestions)
+                    },
+                    'epic_ai_2': {
+                        'devices_checked': job_result.get('devices_checked', 0),
+                        'capabilities_updated': job_result.get('capabilities_updated', 0),
+                        'opportunities_found': job_result.get('opportunities_found', 0),
+                        'feature_suggestions': len(feature_suggestions)
+                    },
+                    'combined': {
+                        'suggestions_generated': suggestions_generated,
+                        'events_analyzed': len(events_df)
+                    },
                     'duration_seconds': (datetime.now(timezone.utc) - start_time).total_seconds(),
                     'success': True
                 }
@@ -293,12 +436,25 @@ class DailyAnalysisScheduler:
             job_result['duration_seconds'] = round(duration, 2)
             
             logger.info("=" * 80)
-            logger.info("✅ Daily Analysis Job Complete!")
-            logger.info(f"  → Duration: {duration:.1f} seconds")
-            logger.info(f"  → Events: {len(events_df)}")
-            logger.info(f"  → Patterns: {len(all_patterns)}")
-            logger.info(f"  → Suggestions: {suggestions_generated}")
-            logger.info(f"  → Cost: ${openai_cost:.6f}")
+            logger.info("✅ Unified Daily AI Analysis Complete!")
+            logger.info("=" * 80)
+            logger.info(f"  Duration: {duration:.1f} seconds")
+            logger.info(f"  ")
+            logger.info(f"  Epic AI-1 (Pattern Detection):")
+            logger.info(f"    - Events analyzed: {len(events_df)}")
+            logger.info(f"    - Patterns detected: {len(all_patterns)}")
+            logger.info(f"    - Pattern suggestions: {len(pattern_suggestions)}")
+            logger.info(f"  ")
+            logger.info(f"  Epic AI-2 (Device Intelligence):")
+            logger.info(f"    - Devices checked: {job_result.get('devices_checked', 0)}")
+            logger.info(f"    - Capabilities updated: {job_result.get('capabilities_updated', 0)}")
+            logger.info(f"    - Opportunities found: {job_result.get('opportunities_found', 0)}")
+            logger.info(f"    - Feature suggestions: {len(feature_suggestions)}")
+            logger.info(f"  ")
+            logger.info(f"  Combined Results:")
+            logger.info(f"    - Total suggestions: {suggestions_generated}")
+            logger.info(f"    - OpenAI tokens: {openai_client.total_tokens_used}")
+            logger.info(f"    - OpenAI cost: ${openai_cost:.6f}")
             logger.info("=" * 80)
             
         except Exception as e:

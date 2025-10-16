@@ -45,12 +45,13 @@ open http://localhost:3000
 
 ## Full Documentation
 
-- **Epic Document:** [docs/stories/epic-21-dashboard-api-integration-fix.md](docs/stories/epic-21-dashboard-api-integration-fix.md)
-- **Deployment Checklist:** [implementation/EPIC_21_DATA_API_DEPLOYMENT_CHECKLIST.md](implementation/EPIC_21_DATA_API_DEPLOYMENT_CHECKLIST.md)
-- **Analysis Summary:** [implementation/EPIC_21_ANALYSIS_SUMMARY.md](implementation/EPIC_21_ANALYSIS_SUMMARY.md)
+- **Epic Document:** [docs/stories/epic-21-dashboard-api-integration-fix.md](../docs/stories/epic-21-dashboard-api-integration-fix.md)
+- **Deployment Checklist:** [implementation/EPIC_21_DATA_API_DEPLOYMENT_CHECKLIST.md](./EPIC_21_DATA_API_DEPLOYMENT_CHECKLIST.md)
+- **Analysis Summary:** [implementation/EPIC_21_ANALYSIS_SUMMARY.md](./EPIC_21_ANALYSIS_SUMMARY.md)
 
 ---
 
 **Created:** 2025-10-13  
 **Priority:** CRITICAL - Deploy immediately
+
 

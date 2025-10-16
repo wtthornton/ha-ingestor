@@ -78,6 +78,7 @@ graph TB
 |---------|-----------|------|---------|
 | **websocket-ingestion** | Python/aiohttp | 8001 | Home Assistant WebSocket client |
 | **enrichment-pipeline** | Python/FastAPI | 8002 | Data validation and multi-source enrichment |
+| **ai-automation-service** | Python/FastAPI | 8018 | AI pattern detection + device intelligence |
 | **data-retention** | Python/FastAPI | 8080 | Enhanced data lifecycle, tiered retention, S3 archival |
 | **admin-api** | Python/FastAPI | 8003 | System monitoring & control REST API |
 | **data-api** | Python/FastAPI | 8006 | Feature data hub (events, devices, sports, analytics) |

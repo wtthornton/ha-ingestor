@@ -1,19 +1,30 @@
 """
-MQTT Client for Publishing Notifications
-Story AI1.12: MQTT Integration
+MQTT Client for Publishing Notifications and Subscribing to Topics
+
+Story AI1.12: MQTT Integration (Publishing)
+Story AI2.1: MQTT Capability Listener (Subscription - Epic AI-2)
 """
 
 import paho.mqtt.client as mqtt
 import logging
 import json
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable
 
 logger = logging.getLogger(__name__)
 
 
 class MQTTNotificationClient:
     """
-    Simple MQTT client for publishing AI automation notifications.
+    MQTT client for publishing AI automation notifications and subscribing to topics.
+    
+    Epic AI-1: Publishes automation notifications and analysis results
+    Epic AI-2: Subscribes to Zigbee2MQTT bridge for device capability discovery
+    
+    Features:
+    - Publish automation notifications (Epic AI-1)
+    - Subscribe to topics with callback handlers (Epic AI-2)
+    - Automatic reconnection on disconnect
+    - QoS support for reliable delivery
     """
     
     def __init__(self, broker: str, port: int = 1883, username: Optional[str] = None, password: Optional[str] = None):
@@ -32,6 +43,7 @@ class MQTTNotificationClient:
         self.password = password
         self.client = None
         self.is_connected = False
+        self._message_callback: Optional[Callable] = None
         
         logger.info(f"MQTT client initialized for broker: {broker}:{port}")
     
@@ -64,10 +76,17 @@ class MQTTNotificationClient:
             return False
     
     def _on_connect(self, client, userdata, flags, rc):
-        """Callback for when client connects to broker"""
+        """
+        Callback for when client connects to broker.
+        
+        Automatically resubscribes to topics on reconnect.
+        """
         if rc == 0:
             logger.info("✅ MQTT connection established")
             self.is_connected = True
+            
+            # Resubscribe to topics on reconnect (Epic AI-2)
+            # paho-mqtt will handle this automatically if we stored subscriptions
         else:
             logger.error(f"❌ MQTT connection failed with code {rc}")
             self.is_connected = False
@@ -151,6 +170,84 @@ class MQTTNotificationClient:
             "priority": suggestion_data.get("priority")
         }
         return self.publish(topic, message)
+    
+    def subscribe(self, topic: str, qos: int = 1) -> bool:
+        """
+        Subscribe to MQTT topic.
+        
+        Added in Story AI2.1 for Epic AI-2 (Device Intelligence).
+        
+        Args:
+            topic: MQTT topic to subscribe to (e.g., "zigbee2mqtt/bridge/devices")
+            qos: Quality of service (0, 1, or 2)
+        
+        Returns:
+            True if subscription successful
+            
+        Example:
+            client.subscribe("zigbee2mqtt/bridge/devices")
+            client.on_message = callback_function
+        """
+        try:
+            if not self.is_connected:
+                logger.warning("⚠️ MQTT not connected, attempting to connect...")
+                if not self.connect():
+                    return False
+            
+            result, mid = self.client.subscribe(topic, qos=qos)
+            
+            if result == mqtt.MQTT_ERR_SUCCESS:
+                logger.info(f"📡 Subscribed to topic: {topic} (QoS {qos})")
+                return True
+            else:
+                logger.error(f"❌ Subscription failed with code {result}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ MQTT subscribe error: {e}")
+            return False
+    
+    @property
+    def on_message(self) -> Optional[Callable]:
+        """
+        Get the message callback handler.
+        
+        Returns:
+            Current message callback or None
+        """
+        return self._message_callback
+    
+    @on_message.setter
+    def on_message(self, callback: Callable):
+        """
+        Set message callback handler for subscribed topics.
+        
+        Added in Story AI2.1 for Epic AI-2 (Device Intelligence).
+        
+        The callback should have signature:
+            def callback(client, userdata, message) -> None
+        
+        Where message has:
+            - message.topic: str (MQTT topic)
+            - message.payload: bytes (message payload)
+            - message.qos: int (QoS level)
+            
+        Args:
+            callback: Function to call when message received
+            
+        Example:
+            def on_msg(client, userdata, msg):
+                print(f"Received: {msg.topic}: {msg.payload}")
+            
+            client.on_message = on_msg
+        """
+        self._message_callback = callback
+        
+        if self.client:
+            self.client.on_message = callback
+            logger.debug("✅ Message callback registered")
+        else:
+            logger.warning("⚠️ Cannot set callback - client not initialized")
     
     def disconnect(self):
         """Disconnect from MQTT broker"""

@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
 import logging
 
-from .models import Pattern, Suggestion, UserFeedback
+from .models import Pattern, Suggestion, UserFeedback, DeviceCapability, DeviceFeatureUsage
 
 logger = logging.getLogger(__name__)
 
@@ -283,5 +283,305 @@ async def store_feedback(db: AsyncSession, feedback_data: Dict) -> UserFeedback:
     except Exception as e:
         await db.rollback()
         logger.error(f"Failed to store feedback: {e}", exc_info=True)
+        raise
+
+
+# ============================================================================
+# Epic AI-2: Device Intelligence CRUD Operations (Story AI2.2)
+# ============================================================================
+
+async def upsert_device_capability(
+    db: AsyncSession,
+    device_model: str,
+    manufacturer: str,
+    description: str,
+    capabilities: dict,
+    mqtt_exposes: list,
+    integration_type: str = 'zigbee2mqtt'
+) -> DeviceCapability:
+    """
+    Insert or update device capability.
+    
+    Uses merge() for upsert semantics (insert if new, update if exists).
+    
+    Story AI2.2: Capability Database Schema & Storage
+    Epic AI-2: Device Intelligence System
+    
+    Args:
+        db: Database session
+        device_model: Device model identifier (primary key)
+        manufacturer: Manufacturer name
+        description: Device description
+        capabilities: Parsed capabilities dict
+        mqtt_exposes: Raw MQTT exposes array
+        integration_type: Integration type (default: zigbee2mqtt)
+        
+    Returns:
+        DeviceCapability record (new or updated)
+        
+    Example:
+        capability = await upsert_device_capability(
+            db=session,
+            device_model="VZM31-SN",
+            manufacturer="Inovelli",
+            description="Red Series Dimmer Switch",
+            capabilities={"light_control": {}, "smart_bulb_mode": {}},
+            mqtt_exposes=[...]
+        )
+    """
+    try:
+        # Check if capability exists (proper async upsert pattern)
+        existing = await get_device_capability(db, device_model)
+        
+        if existing:
+            # Update existing
+            existing.manufacturer = manufacturer
+            existing.integration_type = integration_type
+            existing.description = description
+            existing.capabilities = capabilities
+            existing.mqtt_exposes = mqtt_exposes
+            existing.last_updated = datetime.now(timezone.utc)
+            capability = existing
+        else:
+            # Insert new
+            capability = DeviceCapability(
+                device_model=device_model,
+                manufacturer=manufacturer,
+                integration_type=integration_type,
+                description=description,
+                capabilities=capabilities,
+                mqtt_exposes=mqtt_exposes,
+                last_updated=datetime.now(timezone.utc)
+            )
+            db.add(capability)
+        
+        await db.commit()
+        await db.refresh(capability)
+        
+        logger.debug(f"✅ Upserted capability for {manufacturer} {device_model}")
+        return capability
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Failed to upsert capability for {device_model}: {e}", exc_info=True)
+        raise
+
+
+async def get_device_capability(db: AsyncSession, device_model: str) -> Optional[DeviceCapability]:
+    """
+    Get device capability by model.
+    
+    Args:
+        db: Database session
+        device_model: Device model identifier
+        
+    Returns:
+        DeviceCapability or None if not found
+        
+    Example:
+        capability = await get_device_capability(db, "VZM31-SN")
+        if capability:
+            print(f"Found {len(capability.capabilities)} features")
+    """
+    try:
+        result = await db.execute(
+            select(DeviceCapability).where(DeviceCapability.device_model == device_model)
+        )
+        capability = result.scalars().first()
+        
+        if capability:
+            logger.debug(f"Retrieved capability for {device_model}")
+        else:
+            logger.debug(f"No capability found for {device_model}")
+        
+        return capability
+        
+    except Exception as e:
+        logger.error(f"Failed to get capability for {device_model}: {e}", exc_info=True)
+        raise
+
+
+async def get_all_capabilities(
+    db: AsyncSession,
+    manufacturer: Optional[str] = None,
+    integration_type: Optional[str] = None
+) -> List[DeviceCapability]:
+    """
+    Get all device capabilities with optional filters.
+    
+    Args:
+        db: Database session
+        manufacturer: Filter by manufacturer (e.g., "Inovelli")
+        integration_type: Filter by integration (e.g., "zigbee2mqtt")
+        
+    Returns:
+        List of all DeviceCapability records matching filters
+        
+    Example:
+        # Get all Inovelli devices
+        inovelli_devices = await get_all_capabilities(db, manufacturer="Inovelli")
+    """
+    try:
+        query = select(DeviceCapability)
+        
+        if manufacturer:
+            query = query.where(DeviceCapability.manufacturer == manufacturer)
+        
+        if integration_type:
+            query = query.where(DeviceCapability.integration_type == integration_type)
+        
+        query = query.order_by(DeviceCapability.manufacturer, DeviceCapability.device_model)
+        
+        result = await db.execute(query)
+        capabilities = result.scalars().all()
+        
+        logger.info(f"Retrieved {len(capabilities)} device capabilities")
+        return list(capabilities)
+        
+    except Exception as e:
+        logger.error(f"Failed to get capabilities: {e}", exc_info=True)
+        raise
+
+
+async def initialize_feature_usage(
+    db: AsyncSession,
+    device_id: str,
+    features: list[str]
+) -> list[DeviceFeatureUsage]:
+    """
+    Initialize feature usage tracking for a device.
+    
+    Creates DeviceFeatureUsage records for all device features,
+    initially marked as unconfigured (Story 2.3 will detect configured).
+    
+    Story AI2.2: Capability Database Schema & Storage
+    Epic AI-2: Device Intelligence System
+    
+    Args:
+        db: Database session
+        device_id: Device instance ID (e.g., "light.kitchen_switch")
+        features: List of feature names from capabilities
+        
+    Returns:
+        List of created DeviceFeatureUsage records
+        
+    Example:
+        await initialize_feature_usage(
+            db=session,
+            device_id="light.kitchen_switch",
+            features=["led_notifications", "smart_bulb_mode", "auto_off_timer"]
+        )
+    """
+    try:
+        usage_records = []
+        
+        for feature_name in features:
+            # Check if usage record exists
+            result = await db.execute(
+                select(DeviceFeatureUsage).where(
+                    DeviceFeatureUsage.device_id == device_id,
+                    DeviceFeatureUsage.feature_name == feature_name
+                )
+            )
+            existing = result.scalars().first()
+            
+            if existing:
+                # Update existing
+                existing.last_checked = datetime.now(timezone.utc)
+                usage = existing
+            else:
+                # Create new
+                usage = DeviceFeatureUsage(
+                    device_id=device_id,
+                    feature_name=feature_name,
+                    configured=False,  # Story 2.3 will detect configured features
+                    discovered_date=datetime.now(timezone.utc),
+                    last_checked=datetime.now(timezone.utc)
+                )
+                db.add(usage)
+            
+            usage_records.append(usage)
+        
+        await db.commit()
+        logger.debug(f"✅ Initialized {len(features)} feature usage records for {device_id}")
+        
+        return usage_records
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Failed to initialize feature usage for {device_id}: {e}", exc_info=True)
+        raise
+
+
+async def get_device_feature_usage(db: AsyncSession, device_id: str) -> List[DeviceFeatureUsage]:
+    """
+    Get all feature usage records for a device.
+    
+    Args:
+        db: Database session
+        device_id: Device instance ID
+        
+    Returns:
+        List of DeviceFeatureUsage records for the device
+    """
+    try:
+        result = await db.execute(
+            select(DeviceFeatureUsage).where(DeviceFeatureUsage.device_id == device_id)
+        )
+        usage = result.scalars().all()
+        
+        logger.debug(f"Retrieved {len(usage)} feature usage records for {device_id}")
+        return list(usage)
+        
+    except Exception as e:
+        logger.error(f"Failed to get feature usage for {device_id}: {e}", exc_info=True)
+        raise
+
+
+async def get_capability_stats(db: AsyncSession) -> Dict:
+    """
+    Get capability database statistics.
+    
+    Returns:
+        Dictionary with capability and usage statistics
+        
+    Example:
+        stats = await get_capability_stats(db)
+        print(f"Total models: {stats['total_models']}")
+        print(f"By manufacturer: {stats['by_manufacturer']}")
+    """
+    try:
+        # Total device models
+        total_result = await db.execute(select(func.count()).select_from(DeviceCapability))
+        total_models = total_result.scalar() or 0
+        
+        # Models by manufacturer
+        manuf_result = await db.execute(
+            select(DeviceCapability.manufacturer, func.count())
+            .group_by(DeviceCapability.manufacturer)
+        )
+        by_manufacturer = {row[0]: row[1] for row in manuf_result.all()}
+        
+        # Total feature usage records
+        usage_result = await db.execute(select(func.count()).select_from(DeviceFeatureUsage))
+        total_usage_records = usage_result.scalar() or 0
+        
+        # Configured vs unconfigured features
+        configured_result = await db.execute(
+            select(DeviceFeatureUsage.configured, func.count())
+            .group_by(DeviceFeatureUsage.configured)
+        )
+        by_configured = {bool(row[0]): row[1] for row in configured_result.all()}
+        
+        return {
+            'total_models': total_models,
+            'by_manufacturer': by_manufacturer,
+            'total_usage_records': total_usage_records,
+            'configured_features': by_configured.get(True, 0),
+            'unconfigured_features': by_configured.get(False, 0)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get capability stats: {e}", exc_info=True)
         raise
 

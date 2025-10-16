@@ -1,10 +1,10 @@
 # Epic AI-1: AI Automation Suggestion System - Story Summary
 
 **Epic ID:** Epic-AI-1  
-**Epic Goal:** Enable users to discover and deploy Home Assistant automations based on AI-detected patterns  
-**Phase:** Phase 1 MVP  
-**Timeline:** 4-5 weeks  
-**Total Effort:** 160-192 hours
+**Epic Goal:** Enable users to discover and deploy Home Assistant automations based on AI-detected patterns and natural language requests, with comprehensive safety validation and audit trail  
+**Phase:** Phase 1 MVP (Enhanced)  
+**Timeline:** 5-7 weeks  
+**Total Effort:** 192-228 hours
 
 ---
 
@@ -30,9 +30,13 @@
 | **AI1.16** | Frontend - Automations Tab | 10-12h | Medium | AI1.15 |
 | **AI1.17** | Frontend - Insights Tab | 10-12h | Medium | AI1.16 |
 | **AI1.18** | E2E Testing & Documentation | 12-14h | High | AI1.17 |
+| **AI1.19** | Safety Validation Engine | 8-10h | Critical | AI1.11 |
+| **AI1.20** | Audit Trail & Rollback | 6-8h | High | AI1.11, AI1.19 |
+| **AI1.21** | Natural Language Request Generation | 10-12h | High | AI1.7, AI1.8 |
+| **AI1.22** | Integrate with Health Dashboard | 8-10h | Critical | AI1.10, AI1.19, AI1.20 |
 
-**Total Stories:** 18  
-**Total Effort:** 156-188 hours (updated: AI1.1 reduced from 4-6h to 2-3h)
+**Total Stories:** 22  
+**Total Effort:** 192-228 hours (Enhanced with safety, audit, NL, and UX improvements)
 
 ---
 
@@ -48,7 +52,7 @@ AI1.13 → AI1.14
 Integration Point: AI1.10 (API) enables AI1.14 (Frontend)
 ```
 
-**Timeline:** 4-5 weeks for sequential execution, 3-4 weeks with parallel backend/frontend work
+**Timeline:** 5-7 weeks for sequential execution, 4-5 weeks with parallel backend/frontend work
 
 ---
 
@@ -137,16 +141,19 @@ Integration Point: AI1.10 (API) enables AI1.14 (Frontend)
 |------|-----------|-------|
 | Pattern quality low | Start with high confidence threshold (70%) | AI1.4-1.6 |
 | LLM generates invalid YAML | YAML validation before deployment | AI1.11 |
-| API costs spike | Track usage, alert at $5 | AI1.7, AI1.8 |
+| API costs spike | Track usage, alert at $5 | AI1.7, AI1.8, AI1.21 |
 | Memory exceeds 1GB | Sample data, optimize algorithms | AI1.4-1.6 |
 | HA API rejects automation | Comprehensive error handling | AI1.11 |
+| Dangerous automation deployed | Multi-layer safety validation | AI1.19 |
+| Automation misbehaves | Audit trail and rollback capability | AI1.20 |
+| User overwhelmed by separate app | Unified dashboard UX | AI1.22 |
 
 ---
 
 ## Definition of Done (Epic Level)
 
 ### All Stories Complete:
-- [ ] All 18 stories marked as "Done"
+- [ ] All 22 stories marked as "Done"
 - [ ] All acceptance criteria met
 - [ ] All integration verifications passed
 
@@ -214,10 +221,14 @@ All story files located in: `docs/stories/`
 - `story-ai1-16-frontend-automations-tab.md`
 - `story-ai1-17-frontend-insights-tab.md`
 - `story-ai1-18-e2e-testing-documentation.md`
+- `story-ai1-19-safety-validation-engine.md`
+- `story-ai1-20-audit-trail-rollback.md`
+- `story-ai1-21-natural-language-request-generation.md`
+- `story-ai1-22-integrate-health-dashboard.md`
 
 ---
 
-**Epic Status:** Ready for Development  
+**Epic Status:** Ready for Development (Enhanced)  
 **Created:** 2025-10-15  
-**Updated:** 2025-10-15
+**Updated:** 2025-10-16
 

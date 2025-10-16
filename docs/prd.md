@@ -1,11 +1,13 @@
-# AI Automation Suggestion System - Brownfield Enhancement PRD
+# AI Automation & Device Intelligence System - Brownfield Enhancement PRD
 
 **Product Requirements Document**  
-**Version:** 1.0  
-**Date:** 2025-10-15  
+**Version:** 2.0  
+**Date:** 2025-01-16  
 **Author:** John (Product Manager)  
-**Status:** Draft - Pending Review  
-**Epic ID:** Epic-AI-1
+**Status:** Updated - Device Intelligence Phase Added  
+**Epic ID:** Epic-AI-1 (Pattern Automation) + Epic-AI-2 (Device Intelligence)  
+**Previous Version:** 1.0 (Pattern Automation Only)  
+**Project Brief:** docs/brief.md
 
 ---
 
@@ -74,48 +76,90 @@ The **Home Assistant Ingestor** is a comprehensive microservices-based system th
 ### 1.3 Enhancement Scope Definition
 
 #### Enhancement Type:
-- ✅ **New Feature Addition** (Major)
-- ✅ **Integration with New Systems** (AI/ML models, HA automation API)
-- ⚠️ **Technology Stack Expansion** (AI/ML frameworks)
+- ✅ **Major Feature Addition** (Two-Phase Enhancement)
+- ✅ **Integration with New Systems** (AI/ML models, HA automation API, Zigbee2MQTT MQTT bridge)
+- ⚠️ **Technology Stack Expansion** (AI/ML frameworks for Phase 1, Device Intelligence for Phase 2)
 
 #### Enhancement Description:
 
-**Intelligent Automation Suggestion System** - A new AI-powered subsystem that analyzes Home Assistant event data, device patterns, and existing automations to suggest new automation opportunities.
+**AI Automation & Device Intelligence System** - An integrated AI-powered system with two complementary phases:
 
-**Key Features:**
-1. **Backend AI Service** with pattern recognition and recommendation engine
-2. **Automation Analysis Frontend** for viewing current automations and exploring suggestions
-3. **Multi-model approach** analyzing temporal patterns, device relationships, and user behavior
-4. **Categorized automation suggestions** organized by type, priority, and complexity
-5. **Integration** with existing Data API for historical data access
+**Phase 1: Pattern-Based Automation (EXISTING - Epic-AI-1):**
+- Backend AI Service with pattern recognition (time-of-day, co-occurrence, anomaly)
+- LLM-powered automation suggestion generation
+- Daily batch analysis scheduler
+- Suggestion approval workflow
+- **Status:** Partially implemented (Stories 1-18 defined)
+
+**Phase 2: Device Intelligence (NEW - Epic-AI-2):**
+- Universal device capability discovery via Zigbee2MQTT MQTT bridge
+- Feature-based suggestion engine (unused device capabilities)
+- Device utilization tracking and dashboard
+- Proactive feature discovery notifications
+- Multi-manufacturer support (6,000+ Zigbee device models)
+
+**Key Features (Combined System):**
+1. **Pattern-Based Suggestions** - "Create automation when bedroom light turns on 6am daily" (EXISTING)
+2. **Feature-Based Suggestions** - "Enable LED notifications on Inovelli switch" (NEW)
+3. **Universal Capability Discovery** - Automatic detection for ALL Zigbee manufacturers (NEW)
+4. **Device Intelligence Dashboard** - Utilization tracking and opportunity identification (NEW)
+5. **Unified Suggestion Pipeline** - Merges pattern + feature suggestions (ENHANCED)
 
 #### Impact Assessment:
-- ✅ **Significant Impact** (substantial existing code changes required)
-  - New microservice addition to existing architecture
-  - New frontend application alongside existing health dashboard
-  - Integration with Data API service
-  - New data models for automation tracking and suggestions
-  - Requires AI/ML infrastructure not currently in the stack
+- ✅ **Significant Impact** (enhancement to existing AI Automation Service)
+  - **Phase 1 (Pattern):** New microservice (ai-automation-service) - Partially Complete
+  - **Phase 2 (Intelligence):** Enhancement to existing service - New Development
+  - New database tables in ai_automation.db (2 tables for device intelligence)
+  - New Health Dashboard tab (Device Intelligence)
+  - Integration with Zigbee2MQTT via MQTT bridge
+  - Universal capability database for 6,000+ device models
 
 ---
 
 ### 1.4 Goals and Background Context
 
 #### Goals:
+
+**Phase 1 Goals (Pattern-Based Automation):**
 - Enable users to discover automation opportunities they may not have considered
 - Leverage historical event data to identify actionable patterns in home behavior
 - Reduce friction in creating new Home Assistant automations
 - Provide categorized, prioritized automation suggestions based on actual usage patterns
 - Create a learning system that improves suggestions over time
+
+**Phase 2 Goals (Device Intelligence):**
+- **Maximize device ROI**: Increase device utilization from ~20% to 45% within 12 months
+- **Discover hidden capabilities**: Help users configure 15+ previously unknown device features
+- **Reduce energy costs**: Achieve $150+ annual savings through device optimization
+- **Universal support**: Work automatically for ALL Zigbee manufacturers (6,000+ models)
+- **Proactive guidance**: Daily feature discovery alongside pattern automation
+
+**Combined System Goals:**
 - Bridge the gap between data collection and actionable insights
+- Transform HA-Ingestor from passive infrastructure into active intelligence layer
+- Provide both behavior-based (patterns) AND capability-based (features) suggestions
+- Deliver measurable ROI through automation quality AND device optimization
 
 #### Background Context:
 
-The Home Assistant Ingestor currently excels at **collecting and storing** event data from Home Assistant, but lacks capabilities for **analyzing and acting** on that data to improve the user's home automation setup. Users accumulate months of historical data showing device usage patterns, but have no automated way to discover optimization opportunities.
+The Home Assistant Ingestor currently excels at **collecting and storing** event data from Home Assistant, with 99.9% capture reliability and comprehensive historical storage. However, two critical intelligence gaps exist:
 
-This enhancement addresses a critical gap: **turning passive data collection into active automation intelligence**. By analyzing device interactions, temporal patterns, and existing automations, the system can suggest new automations that align with observed behavior patterns. This transforms the ingestor from a monitoring tool into an **intelligent automation advisor**.
+**Gap #1: Pattern Intelligence (Addressed by Phase 1 - Epic-AI-1)**
+Users accumulate months of historical data showing device usage patterns, but have no automated way to discover automation opportunities. The system can detect "bathroom light left on >30min frequently" but doesn't suggest "configure auto-off timer."
 
-The new subsystem will integrate with the existing Data API rather than duplicating functionality, maintaining the microservices architecture while adding AI-powered intelligence.
+**Gap #2: Device Intelligence (Addressed by Phase 2 - Epic-AI-2)**  
+Users own sophisticated devices (Inovelli switches, Aqara sensors, IKEA bulbs, Xiaomi sensors, etc.) but use only ~20% of available capabilities. The system knows a device is an "Inovelli VZM31-SN" but doesn't know it supports LED notifications, button events, smart bulb mode, power monitoring, and auto-off timers. **This gap exists for ALL manufacturers** - users with devices from Aqara, IKEA, Xiaomi, Sonoff, and 100+ other brands are missing 70-90% of their devices' capabilities.
+
+**The Integrated Solution:**
+
+This two-phase enhancement transforms the ingestor from a monitoring tool into an **intelligent automation advisor** that suggests BOTH:
+- **Pattern-based automations** - "Create automation based on your 6am daily routine"
+- **Feature-based optimizations** - "Enable LED notifications on your Inovelli switch (unused)"
+
+**Critical Insight from Analysis:**  
+Zigbee2MQTT publishes a complete device capability database via MQTT topic `zigbee2mqtt/bridge/devices` containing ALL capabilities for ALL Zigbee manufacturers (~6,000 device models). One MQTT subscription provides universal device intelligence without manual research.
+
+The enhancement integrates with existing Data API and maintains the microservices architecture while adding AI-powered intelligence that understands both **behavior patterns** (from data) AND **device capabilities** (from Zigbee2MQTT bridge).
 
 ---
 
@@ -127,6 +171,9 @@ The new subsystem will integrate with the existing Data API rather than duplicat
 | Architecture Review | 2025-10-15 | 0.2 | Winston (Architect) validation - simplified to Phase 1 MVP | Architect |
 | Context7 KB Research | 2025-10-15 | 0.3 | AI/ML best practices, Hugging Face analysis, deployment constraints | PM Agent |
 | UI Pattern Analysis | 2025-10-15 | 0.4 | Analyzed existing Health Dashboard for consistent patterns | PM Agent |
+| **Project Brief Created** | **2025-01-16** | **1.5** | **Comprehensive brief for Device Intelligence enhancement created by Analyst** | **Analyst (Mary)** |
+| **Device Intelligence Phase** | **2025-01-16** | **2.0** | **Added Epic-AI-2: Universal device capability discovery and feature-based suggestions** | **PM Agent (John)** |
+| **Requirements Updated** | **2025-01-16** | **2.0** | **Added requirements for Zigbee2MQTT MQTT bridge integration, capability database, unified suggestions** | **PM Agent (John)** |
 
 ---
 
@@ -355,6 +402,78 @@ homeassistant/status
 
 ---
 
+### 2.1.1 Device Intelligence Functional Requirements (NEW - Epic-AI-2)
+
+**FR11:** The system SHALL automatically discover device capabilities for ALL Zigbee devices via Zigbee2MQTT MQTT bridge
+- **Method:** Subscribe to `zigbee2mqtt/bridge/devices` MQTT topic
+- **Coverage:** ~6,000 Zigbee device models from 100+ manufacturers (Inovelli, Aqara, IKEA, Xiaomi, Sonoff, Tuya, etc.)
+- **Real-time:** Auto-update when new devices are paired
+- **Storage:** Persist capabilities in `device_capabilities` SQLite table
+- **Universal:** Works for ANY Zigbee manufacturer automatically
+
+**FR12:** The system SHALL parse Zigbee2MQTT 'exposes' format into unified capability structure
+- **Input:** Raw Zigbee2MQTT device definition JSON
+- **Output:** Structured capability format with feature name, type, description, configuration options
+- **Mapping:** Convert MQTT parameter names to friendly capability names (e.g., "smartBulbMode" → "smart_bulb_mode")
+- **Categories:** Group by capability type (lighting, sensors, configuration, advanced features)
+
+**FR13:** The system SHALL track device feature utilization at individual device level
+- **Tracking:** For each device, track which capabilities are configured vs. available
+- **Storage:** `device_feature_usage` table linking device_id to feature_name
+- **Status:** Binary configured/not-configured status
+- **Timestamps:** Track when feature was discovered and last checked
+
+**FR14:** The system SHALL calculate device utilization scores
+- **Per-device:** (configured_features / total_available_features) * 100
+- **Per-manufacturer:** Aggregated score by brand (Inovelli, Aqara, IKEA, etc.)
+- **Overall home:** Total configured / total available across all devices
+- **Trending:** Track utilization changes over time
+- **Target:** Help users reach 45% utilization from baseline ~20%
+
+**FR15:** The system SHALL generate feature-based suggestions for unused device capabilities
+- **Analysis:** Scan all devices for unused features (configured = false)
+- **Prioritization:** Rank by impact (energy savings, convenience, security)
+- **Context-aware:** Consider device location (area), patterns, and user behavior
+- **LLM Generation:** Use OpenAI to create human-readable suggestions with device-specific context
+- **Multi-brand:** Work automatically for all Zigbee manufacturers
+
+**FR16:** The system SHALL merge pattern-based and feature-based suggestions into unified daily report
+- **Combination:** Mix pattern automation suggestions (FR3) with feature discovery suggestions (FR15)
+- **Ranking:** Unified confidence scoring across both types
+- **Limit:** Top 5-10 suggestions total per day (not 5 pattern + 5 feature)
+- **Balance:** Ensure mix of both types when relevant
+- **Priority:** High-confidence suggestions regardless of type
+
+**FR17:** The system SHALL provide Device Intelligence dashboard in Health Dashboard
+- **Location:** New 13th tab in existing Health Dashboard (port 3000)
+- **Metrics:** Overall utilization score, features discovered count, energy savings estimate
+- **Breakdown:** Utilization by manufacturer (chart)
+- **Opportunities:** Top 10 unused features ranked by impact
+- **Device List:** All devices with utilization % and feature details
+- **Visual:** Progress charts showing utilization trends
+
+**FR18:** The system SHALL expose Device Intelligence via REST API endpoints
+- **Endpoints:**
+  - `GET /api/device-intelligence/utilization` - Overall and per-brand utilization scores
+  - `GET /api/device-intelligence/devices/{device_id}/capabilities` - All capabilities for specific device
+  - `GET /api/device-intelligence/opportunities` - Top unused feature opportunities
+  - `POST /api/device-intelligence/capabilities/refresh` - Manual refresh trigger
+- **Integration:** Add to existing ai-automation-service (port 8018)
+
+**FR19:** The system SHALL support manual capability refresh for edge cases
+- **Trigger:** API endpoint or dashboard button
+- **Fallback:** Use Context7 for devices not in Zigbee2MQTT bridge
+- **Custom:** Allow manual capability definitions for unsupported devices
+- **Update:** Refresh capabilities when firmware updates change features
+
+**FR20:** The system SHALL provide multi-manufacturer support roadmap
+- **Phase 1 (MVP):** Zigbee2MQTT devices (~6,000 models) - Full support
+- **Phase 2:** Z-Wave JS devices (~3,000 models) - Similar MQTT/API approach
+- **Phase 3:** Native HA integrations (Hue, Shelly, etc.) - Integration-specific APIs
+- **Fallback:** Context7 research for unsupported integration types
+
+---
+
 ### 2.2 Non-Functional Requirements
 
 **NFR1:** The system SHALL complete daily pattern analysis within 10 minutes
@@ -411,6 +530,51 @@ homeassistant/status
 
 ---
 
+### 2.2.1 Device Intelligence Non-Functional Requirements (NEW - Epic-AI-2)
+
+**NFR11:** The system SHALL populate device capability database within 5 minutes for 100 devices
+- **Initial load:** Parse MQTT bridge message and populate database
+- **Per-device:** <3 seconds to parse and store capabilities
+- **Bulk operation:** Process all devices in parallel where possible
+- **Progress:** Show progress indicator for initial population
+
+**NFR12:** The system SHALL maintain device capability database with minimal storage overhead
+- **Per-device model:** <10KB storage per device capability definition
+- **Total estimate:** <5MB for 500 unique device models
+- **Indexing:** Fast lookups by manufacturer, model, integration type (<10ms)
+- **Efficiency:** Store raw MQTT exposes + parsed capabilities (redundancy for debugging)
+
+**NFR13:** The system SHALL generate feature-based suggestions within the same daily batch window
+- **Combined runtime:** Pattern analysis (5-10 min) + Feature analysis (<5 min) = <15 min total
+- **No impact:** Device intelligence SHALL NOT increase existing batch time by >50%
+- **Parallel processing:** Run pattern and feature analysis concurrently where possible
+
+**NFR14:** The Device Intelligence dashboard SHALL load within 2 seconds
+- **Metrics query:** <500ms for utilization scores
+- **Device list:** <1 second for all devices with capabilities
+- **Charts:** Client-side rendering with cached data
+- **Pagination:** Support 100+ devices without performance degradation
+
+**NFR15:** The system SHALL support incremental capability discovery
+- **Real-time:** Update capabilities when new devices paired (within 30 seconds of MQTT message)
+- **No downtime:** Capability updates SHALL NOT require service restart
+- **Graceful degradation:** If MQTT unavailable, use cached capabilities
+- **Recovery:** Auto-reconnect to MQTT broker if connection lost
+
+**NFR16:** The system SHALL scale to 500+ devices from multiple manufacturers
+- **Minimum:** 50 devices (small home)
+- **Target:** 100-200 devices (typical home with multi-brand ecosystem)
+- **Maximum:** 500 devices (large home)
+- **Per-manufacturer:** Support 20+ different Zigbee manufacturers simultaneously
+
+**NFR17:** Device Intelligence SHALL add minimal resource overhead to existing AI Automation Service
+- **Memory:** +200MB maximum (capability database + feature analysis)
+- **CPU:** <10% additional CPU during daily batch
+- **Disk:** <100MB for capability database
+- **Network:** One-time MQTT subscription (minimal bandwidth)
+
+---
+
 ### 2.3 Compatibility Requirements
 
 **CR1:** The system SHALL maintain compatibility with existing Home Assistant installation
@@ -439,6 +603,36 @@ homeassistant/status
 - **Non-destructive:** Never delete or modify existing automations without user approval
 - **Additive only:** Only add new automations when user approves
 - **Rollback:** Support removing deployed automations
+
+---
+
+### 2.3.1 Device Intelligence Compatibility Requirements (NEW - Epic-AI-2)
+
+**CR6:** The system SHALL integrate with Zigbee2MQTT without requiring configuration changes
+- **MQTT subscription:** Read-only subscription to `zigbee2mqtt/bridge/devices`
+- **No Zigbee2MQTT changes:** Do not modify Zigbee2MQTT configuration
+- **Passive discovery:** Listen to existing MQTT topics without publishing to bridge topics
+- **Compatibility:** Support Zigbee2MQTT 1.30.0+ (current stable versions)
+
+**CR7:** The system SHALL enhance existing AI Automation Service without breaking pattern automation
+- **Additive:** Add new tables to ai_automation.db without modifying existing tables
+- **API extension:** Add new endpoints without changing existing endpoints
+- **Backward compatible:** Existing pattern-based suggestions continue to work
+- **Migration path:** Existing suggestions table supports new `feature_discovery` type
+
+**CR8:** Device Intelligence SHALL integrate seamlessly with existing Health Dashboard
+- **13th tab:** Add Device Intelligence as new tab without modifying existing 12 tabs
+- **Consistent UI:** Follow existing React/TypeScript/TailwindCSS patterns
+- **Chart library:** Use existing Recharts components for consistency
+- **Navigation:** Integrate with existing tab navigation system
+- **No conflicts:** Device Intelligence SHALL NOT interfere with existing dashboard functionality
+
+**CR9:** The system SHALL support multi-integration architecture for future expansion
+- **Phase 1:** Zigbee2MQTT MQTT bridge (primary)
+- **Phase 2:** Z-Wave JS API integration (similar pattern)
+- **Phase 3:** Native HA integration APIs (Hue, Shelly, etc.)
+- **Extensible:** Database schema supports multiple integration types via `integration_type` column
+- **Future-proof:** Architecture allows adding new integration sources without schema changes
 
 ---
 
@@ -558,6 +752,111 @@ rejected: red-100 / red-900/30           ❌
 - Pattern trends (last 7 days)
 - System status cards (green/yellow/red)
 - Service health indicators (Data API, MQTT, LLM API)
+
+---
+
+### 3.2.1 Device Intelligence UI (NEW - Health Dashboard Tab)
+
+**Location:** New 13th tab in existing Health Dashboard (Port 3000)
+
+**Tab Configuration:**
+```typescript
+const DASHBOARD_TABS = [
+  // ... existing 12 tabs
+  { id: 'device-intelligence', label: '🧠 Device Intelligence', icon: '🧠' }
+];
+```
+
+#### **Device Intelligence Page Layout**
+
+**Section 1: Utilization Overview (Hero Metrics)**
+```typescript
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <MetricCard
+    title="Device Utilization"
+    value="32%"
+    trend="+12%"
+    target="45%"
+    progressBar={true}
+  />
+  <MetricCard
+    title="Features Discovered"
+    value="18"
+    trend="+4 this month"
+  />
+  <MetricCard
+    title="Energy Savings"
+    value="$67"
+    subtitle="6 months cumulative"
+  />
+  <MetricCard
+    title="Automation Quality"
+    value="42%"
+    subtitle="Fewer manual actions"
+  />
+</div>
+```
+
+**Section 2: Utilization by Manufacturer (Chart)**
+```typescript
+<Card title="Utilization by Brand">
+  <BarChart 
+    data={manufacturerUtilization}
+    xKey="manufacturer"
+    yKey="utilization"
+    height={300}
+  />
+</Card>
+```
+
+**Section 3: Top Opportunities (Ranked List)**
+```typescript
+<Card title="Top Feature Opportunities">
+  <OpportunityList items={opportunities} />
+  {/* Each item shows:
+    - Device name + manufacturer
+    - Feature name
+    - Impact badge (high/medium/low)
+    - Complexity (easy/medium/hard)
+    - [Configure Now] button
+  */}
+</Card>
+```
+
+**Section 4: All Devices Table**
+```typescript
+<Card title="All Devices">
+  <DeviceUtilizationTable
+    columns={['Device', 'Manufacturer', 'Model', 'Utilization', 'Unused Features']}
+    data={devices}
+    searchable={true}
+    sortable={['Utilization', 'Manufacturer']}
+    filterable={['Manufacturer']}
+    onRowClick={(device) => showDeviceDetails(device)}
+  />
+</Card>
+```
+
+**Section 5: Recent Activity (Timeline)**
+```typescript
+<Card title="Recently Configured">
+  <Timeline events={recentFeatures} />
+  {/* Shows last 10 feature configurations with dates */}
+</Card>
+```
+
+**Reused Patterns from Existing Dashboard:**
+- **Card component** (OverviewTab, AnalyticsTab, etc.)
+- **MetricCard** (OverviewTab pattern)
+- **BarChart via Recharts** (AnalyticsTab pattern)
+- **DataTable** (DevicesTab pattern)
+- **Timeline** (EventsTab pattern)
+- **ProgressBar** (OverviewTab pattern)
+- **StatusBadge** (ServicesTab pattern)
+- **Dark mode support** (existing theme)
+- **Mobile responsiveness** (existing grid system)
+
+**NO New Component Patterns Required** - 100% reuse of existing patterns!
 
 ---
 
@@ -1295,10 +1594,360 @@ services:
 
 ---
 
+### 5.4 Epic 2: Device Intelligence System (NEW - Phase 2)
+
+**Epic ID:** Epic-AI-2  
+**Epic Goal:** Enable users to discover and utilize device capabilities across ALL Zigbee manufacturers through universal capability discovery and feature-based suggestions
+
+**Dependencies:** Epic-AI-1 (AI Automation Service foundation must exist)
+
+**Success Criteria:**
+- ✅ Capability database populated for 95%+ of user's Zigbee devices automatically
+- ✅ Device utilization score increases from 20% to 25%+ within 30 days
+- ✅ User discovers and configures 3+ previously unknown device features
+- ✅ Feature-based suggestions integrated with pattern-based suggestions
+- ✅ Device Intelligence dashboard tab functional in Health Dashboard
+- ✅ Works automatically for ALL Zigbee manufacturers (6,000+ models)
+
+**Key Differentiator:** Universal, automated capability discovery via Zigbee2MQTT MQTT bridge (no manual research needed)
+
+---
+
+### 5.5 Epic-AI-2 Story List
+
+#### **Story 2.1: MQTT Capability Listener & Universal Parser**
+
+**As a** system administrator  
+**I want** automatic device capability discovery from Zigbee2MQTT during daily batch analysis  
+**so that** the system knows what ALL my Zigbee devices can do (any manufacturer)
+
+**Acceptance Criteria:**
+1. Query `zigbee2mqtt/bridge/devices` MQTT topic during daily batch (3 AM)
+2. Check HA device registry for new/updated devices since last run
+3. Parse Zigbee2MQTT `exposes` format for ANY manufacturer (universal parser)
+4. Extract capabilities (features, configuration options, MQTT topics)
+5. Handle all device types (switches, sensors, bulbs, plugs, thermostats, etc.)
+6. Process 100+ devices within 3 minutes
+7. Log successful capability extraction for each device
+8. Integrate with existing daily scheduler (Story 1.9 - no 24/7 listener)
+
+**Architecture Change:**
+- **Before:** Real-time MQTT listener (24/7 subscription)
+- **After:** Batch query during daily analysis (5 min/day)
+- **Benefit:** Same user experience, 99% less resource usage, simpler failure modes
+
+**Integration Points:**
+- Existing MQTT client in ai-automation-service
+- Daily scheduler (Story 1.9)
+- Zigbee2MQTT bridge (external, read-only)
+
+**Estimated Effort:** 8-10 hours (reduced - simpler than real-time listener)
+
+---
+
+#### **Story 2.2: Device Capability Database Schema & Storage**
+
+**As a** developer  
+**I want** to store device capabilities in SQLite database  
+**so that** we can match devices to their available features
+
+**Acceptance Criteria:**
+1. Create `device_capabilities` table with universal schema (supports any manufacturer)
+2. Create `device_feature_usage` table for tracking utilization
+3. Index by manufacturer, model, integration_type for fast lookups
+4. Store raw MQTT exposes + parsed capabilities
+5. Support upsert operations (update existing, insert new)
+6. Query performance <10ms for capability lookups
+
+**Database Schema:**
+```sql
+CREATE TABLE device_capabilities (
+    device_model TEXT PRIMARY KEY,
+    manufacturer TEXT NOT NULL,
+    integration_type TEXT NOT NULL,
+    description TEXT,
+    capabilities JSON NOT NULL,
+    mqtt_exposes JSON,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    source TEXT DEFAULT 'zigbee2mqtt_bridge'
+);
+
+CREATE TABLE device_feature_usage (
+    device_id TEXT,
+    feature_name TEXT,
+    configured BOOLEAN DEFAULT FALSE,
+    discovered_date TIMESTAMP,
+    last_checked TIMESTAMP,
+    PRIMARY KEY (device_id, feature_name),
+    FOREIGN KEY (device_id) REFERENCES devices(device_id)
+);
+```
+
+**Dependencies:** Story 2.1  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 2.3: Device-to-Capability Matching Engine**
+
+**As a** feature analyzer  
+**I want** to link device instances to their capability definitions  
+**so that** I can identify which features are unused
+
+**Acceptance Criteria:**
+1. Query existing devices from data-api service
+2. Match devices to capabilities via manufacturer + model
+3. For each device, determine which features are configured
+4. Calculate utilization score per device (configured / total * 100)
+5. Store results in device_feature_usage table
+6. Handle devices without capability definitions gracefully (log, use fallback)
+
+**Dependencies:** Story 2.2  
+**Estimated Effort:** 10-12 hours
+
+---
+
+#### **Story 2.4: Feature-Based Suggestion Generator**
+
+**As a** user  
+**I want** the system to suggest unused device features  
+**so that** I can discover capabilities I didn't know existed
+
+**Acceptance Criteria:**
+1. Scan all devices for unused features (configured = false)
+2. Prioritize by impact (energy savings, convenience, security)
+3. Consider device location (area) and usage patterns
+4. Generate natural language suggestions via OpenAI LLM
+5. Include device-specific context (manufacturer, model, current config)
+6. Store suggestions with type = 'feature_discovery'
+7. Generate 5-10 feature suggestions per daily run
+
+**Example Output:**
+```
+[Inovelli VZM31-SN - Kitchen Switch]
+Enable LED Notifications (unused feature)
+
+Your kitchen switch supports 7 individually controllable RGB LEDs that can show status indicators. Pattern detected: You frequently check garage door status from kitchen. 
+
+Suggestion: Configure red LED to show when garage door is open.
+Complexity: Easy (5-minute setup)
+Impact: High (visual awareness, no phone checking)
+```
+
+**Dependencies:** Story 2.3  
+**Estimated Effort:** 12-14 hours
+
+---
+
+#### **Story 2.5: Unified Daily Batch Job (Pattern + Feature Analysis)**
+
+**As a** system  
+**I want** a single daily batch job that combines pattern detection and feature analysis  
+**so that** I can provide comprehensive AI suggestions efficiently
+
+**Acceptance Criteria:**
+1. **Unified 3 AM Daily Job:** Combines Epic-AI-1 and Epic-AI-2 analysis
+2. **Device Capability Update:** Query new devices, fetch capabilities from Zigbee2MQTT bridge (Story 2.1 batch query)
+3. **InfluxDB Query:** Fetch last 30 days of events (shared by both epics)
+4. **Pattern Detection:** Run time-of-day, co-occurrence, anomaly detection (Epic-AI-1)
+5. **Feature Analysis:** Analyze device utilization, detect unused features (Epic-AI-2)
+6. **Combined Suggestions:** Generate pattern-based + feature-based suggestions
+7. **Unified Ranking:** Rank by combined score (confidence * impact)
+8. **Balanced Output:** Limit to top 5-10 suggestions total with type balance
+9. **Performance:** Complete full analysis in <10 minutes
+10. **Logging:** Show unified progress: "Device capabilities: 5 updated, Pattern detection: 3 patterns, Feature analysis: 7 opportunities, Suggestions: 8 generated"
+
+**Example Combined Output:**
+```
+Daily AI Analysis Complete (3:08 AM):
+- Devices scanned: 99 (5 new capabilities updated)
+- Events analyzed: 14,523 (last 30 days)
+- Patterns detected: 3 time-of-day, 2 co-occurrence, 1 anomaly
+- Unused features: 23 high-impact opportunities found
+- Suggestions generated: 8 total (4 pattern + 4 feature)
+
+Top Suggestions:
+1. [Pattern] Create sunrise automation (bedroom light 6am daily) - 92% confidence
+2. [Feature] Enable LED notifications on kitchen switch (Inovelli) - 88% confidence
+3. [Pattern] Motion + light automation (hallway correlation) - 85% confidence
+4. [Feature] Configure vibration detection on front door sensor (Aqara) - 82% confidence
+5. [Feature] Use color temperature presets on bedroom bulb (IKEA) - 78% confidence
+```
+
+**Architecture Benefits:**
+- ✅ Single unified job (vs. separate real-time listener + pattern batch)
+- ✅ Shared InfluxDB query (one 30-day fetch for both epics)
+- ✅ Combined suggestion generation (can create hybrid suggestions)
+- ✅ 99% less resource usage (5-10 min/day vs. 24/7 listener)
+- ✅ Simpler monitoring (one job status vs. multiple services)
+
+**Dependencies:** Stories 2.1-2.4 + Epic-AI-1 Stories 1.1-1.9  
+**Estimated Effort:** 10-12 hours (increased to include refactoring 2.1 to batch)
+
+---
+
+#### **Story 2.6: Device Utilization Calculator & Metrics API**
+
+**As a** user  
+**I want** to see how much of my devices' capabilities I'm actually using  
+**so that** I can track ROI and discover optimization opportunities
+
+**Acceptance Criteria:**
+1. Calculate overall home utilization score (total configured / total available * 100)
+2. Calculate per-device utilization scores
+3. Calculate per-manufacturer aggregate scores (Inovelli, Aqara, IKEA, etc.)
+4. Track utilization trends over time
+5. API endpoint: GET /api/device-intelligence/utilization
+6. API endpoint: GET /api/device-intelligence/opportunities
+7. Response time <500ms
+
+**Example API Response:**
+```json
+{
+  "overall_utilization": 32,
+  "target": 45,
+  "trend": "+12% this month",
+  "total_devices": 99,
+  "total_features": 387,
+  "configured_features": 124,
+  "by_manufacturer": {
+    "Inovelli": { "utilization": 35, "devices": 12 },
+    "Aqara": { "utilization": 38, "devices": 15 },
+    "IKEA": { "utilization": 32, "devices": 8 },
+    "Xiaomi": { "utilization": 28, "devices": 20 },
+    "Other": { "utilization": 30, "devices": 44 }
+  }
+}
+```
+
+**Dependencies:** Story 2.3  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 2.7: Device Intelligence Dashboard Tab (Health Dashboard)**
+
+**As a** user  
+**I want** a Device Intelligence tab in my Health Dashboard  
+**so that** I can visualize device utilization and discover opportunities
+
+**Acceptance Criteria:**
+1. Add 13th tab to existing Health Dashboard navigation
+2. Display overall utilization score with progress bar
+3. Show utilization breakdown by manufacturer (bar chart)
+4. List top 10 unused features with device details
+5. Display all devices table (searchable, filterable, sortable)
+6. Show recent feature configurations timeline
+7. Page loads in <2 seconds
+8. Follows existing Health Dashboard UI patterns (Card, Charts, Table)
+9. Dark mode support (existing theme)
+10. Mobile responsive (existing grid system)
+
+**Reused Components:**
+- Card, MetricCard, ProgressBar (OverviewTab)
+- BarChart via Recharts (AnalyticsTab)
+- DataTable (DevicesTab)
+- Timeline (EventsTab)
+
+**Dependencies:** Story 2.6  
+**Estimated Effort:** 12-14 hours
+
+---
+
+#### **Story 2.8: Manual Capability Refresh & Context7 Fallback**
+
+**As a** user  
+**I want** to manually refresh device capabilities  
+**so that** I can update capability data or research unsupported devices
+
+**Acceptance Criteria:**
+1. API endpoint: POST /api/device-intelligence/capabilities/refresh
+2. Dashboard button: "Refresh Device Capabilities"
+3. For devices in Zigbee2MQTT: Re-query MQTT bridge
+4. For devices NOT in bridge: Query Context7 for documentation
+5. Show progress indicator during refresh
+6. Handle errors gracefully (log, show user-friendly message)
+7. Update last_updated timestamp in database
+
+**Fallback Flow:**
+```
+1. Check device_capabilities table
+2. If found and fresh (<30 days): Use cached
+3. If stale or missing:
+   a. Try Zigbee2MQTT MQTT bridge first
+   b. If not found, query Context7
+   c. If not found, mark as "manual definition required"
+```
+
+**Dependencies:** Story 2.2  
+**Estimated Effort:** 8-10 hours
+
+---
+
+#### **Story 2.9: Feature Discovery Integration Testing**
+
+**As a** QA tester  
+**I want** comprehensive tests for device intelligence  
+**so that** the system reliably discovers capabilities for all manufacturers
+
+**Acceptance Criteria:**
+1. Unit tests: MQTT exposes parser (test 10+ different manufacturers)
+2. Unit tests: Utilization calculator (multi-brand scenarios)
+3. Integration test: MQTT listener → database population
+4. Integration test: Feature suggestion generation (Inovelli, Aqara, IKEA examples)
+5. E2E test: Dashboard loads Device Intelligence tab
+6. E2E test: Utilization metrics display correctly
+7. Test data: Mock Zigbee2MQTT bridge message with 20+ device models
+8. Documentation: Device Intelligence setup guide
+
+**Test Coverage:**
+- Inovelli switch capabilities
+- Aqara sensor capabilities
+- IKEA bulb capabilities
+- Xiaomi sensor capabilities
+- Generic Zigbee device capabilities
+
+**Dependencies:** Stories 2.1-2.7  
+**Estimated Effort:** 10-12 hours
+
+---
+
 ## 6. Epic Summary
+
+### 6.1 Epic-AI-1 Summary (Pattern Automation)
 
 **Total Stories:** 18  
 **Estimated Total Effort:** 160-192 hours (4-5 weeks for single developer)  
+**Status:** Partially implemented (Stories 1-18 defined)
+
+---
+
+### 6.2 Epic-AI-2 Summary (Device Intelligence)
+
+**Total Stories:** 9 (Stories 2.1-2.9)  
+**Estimated Total Effort:** 84-102 hours (2-3 weeks for single developer)  
+**Status:** New - Ready for implementation
+
+**Sequencing Strategy:**
+1. Foundation (Stories 2.1-2.2): 18-22 hours - MQTT listener + database
+2. Analysis Engine (Stories 2.3-2.4): 22-26 hours - Matching + suggestions
+3. Integration (Story 2.5): 6-8 hours - Merge with pattern automation
+4. Dashboard (Stories 2.6-2.7): 20-24 hours - API + UI
+5. Polish (Stories 2.8-2.9): 18-22 hours - Fallback + testing
+
+**Critical Path:** Stories 2.1 → 2.2 → 2.3 → 2.4 → 2.5 → 2.6 → 2.7
+
+**Parallel Development:** Frontend (2.7) can start after backend API (2.6) is complete
+
+---
+
+### 6.3 Combined System Summary
+
+**Total Stories:** 27 (18 pattern + 9 device intelligence)  
+**Total Estimated Effort:** 244-294 hours (6-8 weeks total)  
+**Phased Approach:** 
+- Phase 1 (Epic-AI-1): Pattern Automation - 4-5 weeks
+- Phase 2 (Epic-AI-2): Device Intelligence - 2-3 weeks
 **Parallel Development:** Yes (frontend + backend after Story 1.2)
 
 **Sequencing Strategy:**

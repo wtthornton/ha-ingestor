@@ -1,6 +1,11 @@
-"""SQLAlchemy database models for AI Automation Service"""
+"""
+SQLAlchemy database models for AI Automation Service
 
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, JSON
+Epic AI-1: Pattern detection and automation suggestions
+Epic AI-2: Device intelligence and capability tracking
+"""
+
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, JSON, Boolean, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from datetime import datetime
@@ -61,6 +66,90 @@ class UserFeedback(Base):
     
     def __repr__(self):
         return f"<UserFeedback(id={self.id}, suggestion_id={self.suggestion_id}, action={self.action})>"
+
+
+# ============================================================================
+# Epic AI-2: Device Intelligence Models (Story AI2.2)
+# ============================================================================
+
+class DeviceCapability(Base):
+    """
+    Device capability definitions from Zigbee2MQTT bridge.
+    
+    Stores universal capability data for device models. One record per
+    unique model (e.g., "VZM31-SN", "MCCGQ11LM").
+    
+    Story AI2.2: Capability Database Schema & Storage
+    Epic AI-2: Device Intelligence System
+    
+    Integration:
+        Links to devices table via device.model field (cross-database)
+        Devices are in data-api's metadata.db, capabilities in ai_automation.db
+    
+    Example:
+        VZM31-SN -> {led_notifications, smart_bulb_mode, auto_off_timer, ...}
+    """
+    __tablename__ = 'device_capabilities'
+    
+    # Primary Key
+    device_model = Column(String, primary_key=True)  # e.g., "VZM31-SN"
+    
+    # Device Identification
+    manufacturer = Column(String, nullable=False)  # e.g., "Inovelli"
+    integration_type = Column(String, nullable=False, default='zigbee2mqtt')
+    description = Column(String, nullable=True)
+    
+    # Capability Data (JSON columns)
+    capabilities = Column(JSON, nullable=False)  # Parsed, structured format
+    mqtt_exposes = Column(JSON, nullable=True)   # Raw Zigbee2MQTT exposes (backup)
+    
+    # Metadata
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    source = Column(String, default='zigbee2mqtt_bridge')
+    
+    def __repr__(self):
+        return f"<DeviceCapability(model='{self.device_model}', manufacturer='{self.manufacturer}', features={len(self.capabilities) if self.capabilities else 0})>"
+
+
+class DeviceFeatureUsage(Base):
+    """
+    Track feature usage per device instance.
+    
+    Records which features are configured vs. available for each physical
+    device. Used for utilization analysis and unused feature detection.
+    
+    Story AI2.2: Capability Database Schema & Storage
+    Epic AI-2: Device Intelligence System
+    
+    Composite Primary Key: (device_id, feature_name)
+    
+    Integration:
+        device_id links to devices.device_id in data-api's metadata.db (logical FK)
+    
+    Example:
+        ("kitchen_switch", "led_notifications", configured=False)
+        ("kitchen_switch", "smart_bulb_mode", configured=True)
+    """
+    __tablename__ = 'device_feature_usage'
+    
+    # Composite Primary Key
+    device_id = Column(String, primary_key=True)       # FK to devices.device_id (cross-DB)
+    feature_name = Column(String, primary_key=True)    # e.g., "led_notifications"
+    
+    # Usage Tracking
+    configured = Column(Boolean, default=False, nullable=False)
+    discovered_date = Column(DateTime, default=datetime.utcnow)
+    last_checked = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<DeviceFeatureUsage(device='{self.device_id}', feature='{self.feature_name}', configured={self.configured})>"
+
+
+# Indexes for fast lookups (Epic AI-2)
+Index('idx_capabilities_manufacturer', DeviceCapability.manufacturer)
+Index('idx_capabilities_integration', DeviceCapability.integration_type)
+Index('idx_feature_usage_device', DeviceFeatureUsage.device_id)
+Index('idx_feature_usage_configured', DeviceFeatureUsage.configured)
 
 
 # Database engine and session

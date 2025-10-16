@@ -20,6 +20,7 @@ paho-mqtt==1.6.1
 
 # HTTP Client
 httpx==0.25.2
+aiohttp==3.9.1
 
 # InfluxDB Client
 influxdb-client==1.38.0
