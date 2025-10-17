@@ -4,7 +4,15 @@
 **Service:** ai-automation-service (Port 8018)  
 **Entry Point:** Scheduled daily analysis at 3 AM (configurable via `analysis_schedule`)  
 **Story:** AI2.5 - Unified Daily Batch Job (Epic AI-1 + Epic AI-2)  
-**Purpose:** Discover device capabilities, detect usage patterns, and generate AI-powered automation suggestions  
+**Purpose:** Discover device capabilities, detect usage patterns, and generate AI-powered automation suggestions
+
+**🔄 DOCUMENTATION UPDATE (Oct 17, 2025):**
+- Updated database schema for Story AI1.23 (Conversational Suggestion Refinement)
+- Added new fields: `description_only`, `conversation_history`, `refinement_count`, etc.
+- Updated status lifecycle to support both legacy (pending) and conversational (draft→refining→yaml_generated) flows
+- Clarified `automation_yaml` is now NULLABLE until user approval
+
+**📋 IMPLEMENTATION PLAN:** See [AI_PATTERN_DETECTION_IMPLEMENTATION_PLAN.md](../../AI_PATTERN_DETECTION_IMPLEMENTATION_PLAN.md) for Phase 1 MVP architecture with HuggingFace models integration  
 
 ---
 
@@ -765,17 +773,34 @@ run_daily_analysis() [line 282]
 └── Store Suggestions [line 366]
     ├── For each suggestion in all_suggestions:
     │   └── store_suggestion(db, suggestion) [database/crud.py:180]
-    │       ├── Create Suggestion object:
+    │       ├── Create Suggestion object (Story AI1.23 - Conversational Flow):
     │       │   ├── pattern_id = suggestion.get('pattern_id')  # Link to detected pattern
     │       │   ├── title = suggestion['title']  # User-friendly name
-    │       │   ├── description = suggestion.get('description')  # Explanation
-    │       │   ├── automation_yaml = suggestion['automation_yaml']  # Home Assistant YAML
-    │       │   ├── status = 'pending'  # Always pending on creation
+    │       │   │
+    │       │   ├── # NEW: Description-first fields (Story AI1.23)
+    │       │   ├── description_only = suggestion['description']  # Human-readable description (required)
+    │       │   ├── conversation_history = []  # Conversation edit history (JSON array)
+    │       │   ├── device_capabilities = suggestion.get('device_capabilities', {})  # Cached device features
+    │       │   ├── refinement_count = 0  # Number of user edits
+    │       │   │
+    │       │   ├── # YAML generation (nullable until approved in conversational flow)
+    │       │   ├── automation_yaml = suggestion.get('automation_yaml')  # NULL for draft, populated when approved
+    │       │   ├── yaml_generated_at = None  # Set when YAML is generated after approval
+    │       │   │
+    │       │   ├── # Status tracking (updated for conversational flow)
+    │       │   ├── status = 'pending'  # Legacy batch flow: pending → deployed/rejected
+    │       │   ├──                     # NEW conversational flow: draft → refining → yaml_generated → deployed
+    │       │   │
+    │       │   ├── # Metadata fields
     │       │   ├── confidence = suggestion['confidence']  # Pattern confidence
     │       │   ├── category = suggestion.get('category')  # energy/comfort/security/convenience
     │       │   ├── priority = suggestion.get('priority')  # high/medium/low
+    │       │   │
+    │       │   ├── # Timestamps
     │       │   ├── created_at = datetime.now(utc)
-    │       │   └── updated_at = datetime.now(utc)
+    │       │   ├── updated_at = datetime.now(utc)
+    │       │   ├── approved_at = None  # NEW: Set when user approves
+    │       │   └── deployed_at = None  # Set when deployed to HA
     │       │
     │       ├── db.add(suggestion) [line 205]
     │       │   └── Add to SQLAlchemy session (not yet committed)
@@ -831,23 +856,43 @@ Each suggestion is a complete, deployable Home Assistant automation with metadat
 
 #### Database Schema: `suggestions` Table
 
-**SQLite Schema:**
+**SQLite Schema (Updated for Story AI1.23 - Conversational Refinement):**
 
 ```sql
 CREATE TABLE suggestions (
+    -- Primary Key
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pattern_id INTEGER,  -- Foreign key to patterns.id (nullable for feature-based)
+    
+    -- Core Fields
     title VARCHAR NOT NULL,
-    description TEXT,
-    automation_yaml TEXT NOT NULL,
-    status VARCHAR DEFAULT 'pending',
+    
+    -- NEW: Description-First Fields (Story AI1.23)
+    description_only TEXT NOT NULL,  -- Human-readable description (REQUIRED)
+    conversation_history JSON,  -- Array of edit history
+    device_capabilities JSON,  -- Cached device features for context
+    refinement_count INTEGER DEFAULT 0,  -- Number of user refinements
+    
+    -- YAML Generation (nullable until approved in conversational flow)
+    automation_yaml TEXT,  -- NULL for draft, populated after approval (CHANGED: was NOT NULL)
+    yaml_generated_at DATETIME,  -- NEW: When YAML was created
+    
+    -- Status Tracking (updated for conversational flow)
+    status VARCHAR DEFAULT 'pending',  -- Legacy: pending → deployed/rejected
+                                       -- NEW conversational: draft → refining → yaml_generated → deployed
+    
+    -- Metadata
     confidence FLOAT NOT NULL,
-    category VARCHAR,
-    priority VARCHAR,
+    category VARCHAR,  -- energy/comfort/security/convenience
+    priority VARCHAR,  -- high/medium/low
+    
+    -- Timestamps
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    deployed_at DATETIME,
+    approved_at DATETIME,  -- NEW: When user approved
+    deployed_at DATETIME,  -- When deployed to HA
     ha_automation_id VARCHAR,  -- HA's ID after deployment
+    
     FOREIGN KEY(pattern_id) REFERENCES patterns(id)
 );
 
@@ -855,67 +900,110 @@ CREATE INDEX idx_suggestions_status ON suggestions(status);
 CREATE INDEX idx_suggestions_created_at ON suggestions(created_at DESC);
 ```
 
-**Field Details:**
+**Field Details (Updated for Story AI1.23):**
 
 | Field | Type | Purpose | Example |
 |-------|------|---------|---------|
 | `id` | INTEGER | Auto-increment primary key | 42 |
 | `pattern_id` | INTEGER | Link to pattern (Epic AI-1) or NULL (Epic AI-2) | 17 |
 | `title` | VARCHAR | User-friendly name | "Living Room Light Morning Routine" |
-| `description` | TEXT | Plain English explanation | "Turn on living room lights at 7:15 AM on weekdays..." |
-| `automation_yaml` | TEXT | Deployable HA YAML | `alias: "Morning Lights"\ntrigger:...` |
-| `status` | VARCHAR | Lifecycle state | "pending" → "approved" → "deployed" |
+| **`description_only`** | **TEXT** | **Human-readable description (REQUIRED)** | "Turn on living room lights at 7:15 AM on weekdays..." |
+| **`conversation_history`** | **JSON** | **Conversation edit history** | `[{"user": "make it 7:30", "timestamp": "..."}]` |
+| **`device_capabilities`** | **JSON** | **Cached device features for context** | `{"light.living_room": {"brightness": true}}` |
+| **`refinement_count`** | **INTEGER** | **Number of user refinements** | 3 |
+| `automation_yaml` | TEXT | Deployable HA YAML (NULLABLE until approved) | `alias: "Morning Lights"\ntrigger:...` or NULL |
+| **`yaml_generated_at`** | **DATETIME** | **When YAML was generated** | "2025-10-17T09:15:00Z" |
+| `status` | VARCHAR | Lifecycle state (see updated flow below) | "draft" → "refining" → "yaml_generated" → "deployed" |
 | `confidence` | FLOAT | Pattern confidence | 0.87 |
 | `category` | VARCHAR | Suggestion type | "convenience" |
 | `priority` | VARCHAR | Importance level | "medium" |
 | `created_at` | DATETIME | When generated | "2025-10-17T03:05:23Z" |
 | `updated_at` | DATETIME | Last modified | "2025-10-17T09:15:00Z" |
+| **`approved_at`** | **DATETIME** | **When user approved** | "2025-10-17T09:10:00Z" |
 | `deployed_at` | DATETIME | When deployed to HA | "2025-10-17T10:00:00Z" |
 | `ha_automation_id` | VARCHAR | HA automation ID | "automation.morning_lights" |
 
-#### Status Lifecycle
+**Bold fields** = NEW in Story AI1.23 (Conversational Suggestion Refinement)
 
-Suggestions flow through a defined lifecycle:
+#### Status Lifecycle (Updated for Story AI1.23)
 
+Suggestions now support TWO flows:
+
+**LEGACY FLOW (Pattern-Based Daily Analysis):**
 ```
        ┌─────────┐
-       │ pending │  ← Created by AI (3 AM daily run)
+       │ pending │  ← Created by AI (3 AM daily run) with full YAML
        └────┬────┘
             │
             ├──────────────┐
             ▼              ▼
        ┌─────────┐    ┌──────────┐
-       │approved │    │ rejected │  ← User decision
-       └────┬────┘    └──────────┘
-            │
-            ▼
-       ┌─────────┐
-       │deployed │  ← Pushed to Home Assistant
-       └─────────┘
+       │deployed │    │ rejected │  ← User decision (immediate)
+       └─────────┘    └──────────┘
 ```
 
-**Status Transitions:**
+**NEW CONVERSATIONAL FLOW (Natural Language Requests - Story AI1.23):**
+```
+       ┌───────┐
+       │ draft │  ← Created from NL request (description only, NO YAML yet)
+       └───┬───┘
+           │
+           ▼
+       ┌──────────┐
+       │ refining │  ← User iterates with natural language edits
+       └─────┬────┘    (max 10 refinements, tracked in conversation_history)
+             │
+             ├─────────────┐
+             ▼             ▼
+    ┌────────────────┐  ┌──────────┐
+    │ yaml_generated │  │ rejected │  ← User approves or rejects
+    └────────┬───────┘  └──────────┘
+             │
+             ▼
+        ┌─────────┐
+        │deployed │  ← YAML generated and deployed to HA
+        └─────────┘
+```
 
-1. **pending** (Initial)
+**Status Definitions (Updated):**
+
+1. **pending** (Legacy Flow Only)
    - Created during Phase 5 of daily analysis
-   - Visible in AI Automation UI
+   - Includes full automation_yaml from start
+   - Ready for immediate deployment
    - Awaiting user review
 
-2. **approved** (User Action)
-   - User clicked "Approve" in UI
-   - Ready for deployment
-   - Can still be edited before deployment
+2. **draft** (NEW - Conversational Flow Only - Story AI1.23)
+   - Created from natural language request
+   - `description_only` populated, `automation_yaml` is NULL
+   - User can refine with natural language
+   - First step in conversational refinement
 
-3. **deployed** (System Action)
+3. **refining** (NEW - Conversational Flow Only - Story AI1.23)
+   - User is actively editing with natural language
+   - `refinement_count` increments with each edit
+   - `conversation_history` tracks all changes
+   - Max 10 refinements allowed
+   - Still NO automation_yaml (only description)
+
+4. **yaml_generated** (NEW - Conversational Flow Only - Story AI1.23)
+   - User approved the description
+   - System generates automation_yaml from final description
+   - `yaml_generated_at` timestamp set
+   - `approved_at` timestamp set
+   - Ready for deployment
+
+5. **deployed** (Both Flows)
    - Successfully deployed to Home Assistant
    - `deployed_at` timestamp set
    - `ha_automation_id` populated
    - Automation is now active
 
-4. **rejected** (User Action)
-   - User clicked "Reject" in UI
+6. **rejected** (Both Flows)
+   - User rejected the suggestion
    - Not shown in active suggestions
    - Kept for analytics/learning
+   - Can occur at any stage
 
 **Status Query Examples:**
 
@@ -2548,9 +2636,16 @@ curl http://localhost:8018/api/analysis/schedule
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Last Updated:** October 17, 2025  
 **Subsystem:** ai-automation-service  
 **Epic:** AI-1 (Pattern Detection) + AI-2 (Device Intelligence)  
-**Stories:** AI2.5 (Unified Daily Batch Job)
+**Stories:** AI2.5 (Unified Daily Batch Job) + AI1.23 (Conversational Suggestion Refinement)
+
+**Changelog:**
+- **v1.1 (Oct 17, 2025)**: Updated for Story AI1.23 - Conversational Suggestion Refinement
+  - Added new database fields: `description_only`, `conversation_history`, `refinement_count`, `yaml_generated_at`, `approved_at`
+  - Updated status lifecycle to support dual flows (legacy + conversational)
+  - Clarified `automation_yaml` is nullable until user approval
+- **v1.0 (Initial)**: Complete call tree for unified daily batch job (Epic AI-1 + AI-2)
 

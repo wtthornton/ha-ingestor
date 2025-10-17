@@ -202,72 +202,80 @@ export const ServiceDependencyGraph: React.FC<ServiceDependencyGraphProps> = ({
             </div>
           </div>
 
-          {/* Convergence Section */}
-          <div className="flex items-start justify-center gap-8 mb-8">
-            {/* Left: External Services */}
-            <div className="flex flex-col items-center">
-              <div className={`text-sm font-semibold mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                External Data Sources
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {SERVICE_NODES.filter(n => n.type === 'external').map(node => (
-                  <div
-                    key={node.id}
-                    onClick={() => handleNodeClick(node.id)}
-                    onMouseEnter={() => setHoveredNode(node.id)}
-                    onMouseLeave={() => setHoveredNode(null)}
-                    className={`relative px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      getStatusColor(node.id)
-                    } ${isNodeHighlighted(node.id) ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="text-2xl mb-1">{node.icon}</div>
-                      <div className={`text-xs font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {node.name}
-                      </div>
+          {/* External Services Row - Spread horizontally */}
+          <div className="mb-8">
+            <div className={`text-sm font-semibold mb-6 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              External Data Sources
+            </div>
+            <div className="flex flex-wrap justify-center gap-6">
+              {SERVICE_NODES.filter(n => n.type === 'external').map(node => (
+                <div
+                  key={node.id}
+                  onClick={() => handleNodeClick(node.id)}
+                  onMouseEnter={() => setHoveredNode(node.id)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  className={`relative px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    getStatusColor(node.id)
+                  } ${isNodeHighlighted(node.id) ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="text-2xl mb-1">{node.icon}</div>
+                    <div className={`text-xs font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {node.name}
                     </div>
-                    {hoveredNode === node.id && (
-                      <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                        darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                      }`}>
-                        <div className="text-xs">External enrichment</div>
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Center: Arrows */}
-            <div className="flex flex-col justify-center items-center pt-16">
-              <div className={`text-4xl ${getConnectionOpacity('websocket-ingestion', 'enrichment-pipeline')}`}>↓</div>
-              <div className={`text-2xl mt-2 ${getConnectionOpacity('weather-api', 'enrichment-pipeline')}`}>→</div>
-            </div>
-
-            {/* Right: Enrichment Pipeline */}
-            <div className="flex flex-col items-center pt-16">
-              <div
-                onClick={() => handleNodeClick('enrichment-pipeline')}
-                onMouseEnter={() => setHoveredNode('enrichment-pipeline')}
-                onMouseLeave={() => setHoveredNode(null)}
-                className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  getStatusColor('enrichment-pipeline')
-                } ${isNodeHighlighted('enrichment-pipeline') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-              >
-                <div className="flex flex-col items-center">
-                  <div className="text-3xl mb-2">🔄</div>
-                  <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Enrichment<br/>Pipeline
-                  </div>
+                  {hoveredNode === node.id && (
+                    <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                      darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                    }`}>
+                      <div className="text-xs">External enrichment</div>
+                    </div>
+                  )}
                 </div>
-                {hoveredNode === 'enrichment-pipeline' && (
-                  <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                    darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                  }`}>
-                    <div className="text-xs">Combines all data sources</div>
-                  </div>
-                )}
+              ))}
+            </div>
+          </div>
+
+          {/* Arrows from External Services to Enrichment Pipeline */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-4">
+              <div className={`text-2xl ${getConnectionOpacity('weather-api', 'enrichment-pipeline')}`}>↘</div>
+              <div className={`text-2xl ${getConnectionOpacity('carbon-intensity-service', 'enrichment-pipeline')}`}>↓</div>
+              <div className={`text-2xl ${getConnectionOpacity('electricity-pricing-service', 'enrichment-pipeline')}`}>↓</div>
+              <div className={`text-2xl ${getConnectionOpacity('air-quality-service', 'enrichment-pipeline')}`}>↓</div>
+              <div className={`text-2xl ${getConnectionOpacity('calendar-service', 'enrichment-pipeline')}`}>↓</div>
+              <div className={`text-2xl ${getConnectionOpacity('smart-meter-service', 'enrichment-pipeline')}`}>↙</div>
+            </div>
+          </div>
+
+          {/* Main Data Flow Arrow */}
+          <div className="flex justify-center mb-4">
+            <div className={`text-4xl ${getConnectionOpacity('websocket-ingestion', 'enrichment-pipeline')}`}>↓</div>
+          </div>
+
+          {/* Enrichment Pipeline - Centered */}
+          <div className="flex justify-center mb-8">
+            <div
+              onClick={() => handleNodeClick('enrichment-pipeline')}
+              onMouseEnter={() => setHoveredNode('enrichment-pipeline')}
+              onMouseLeave={() => setHoveredNode(null)}
+              className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
+                getStatusColor('enrichment-pipeline')
+              } ${isNodeHighlighted('enrichment-pipeline') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+            >
+              <div className="flex flex-col items-center">
+                <div className="text-3xl mb-2">🔄</div>
+                <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Enrichment<br/>Pipeline
+                </div>
               </div>
+              {hoveredNode === 'enrichment-pipeline' && (
+                <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                  darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                }`}>
+                  <div className="text-xs">Combines all data sources</div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -276,102 +284,107 @@ export const ServiceDependencyGraph: React.FC<ServiceDependencyGraphProps> = ({
             <div className={`text-4xl ${getConnectionOpacity('enrichment-pipeline', 'influxdb')}`}>↓</div>
           </div>
 
-          {/* Layer 5: Storage and Services */}
-          <div className="flex justify-center items-start gap-6">
-            {/* InfluxDB */}
-            <div
-              onClick={() => handleNodeClick('influxdb')}
-              onMouseEnter={() => setHoveredNode('influxdb')}
-              onMouseLeave={() => setHoveredNode(null)}
-              className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
-                getStatusColor('influxdb')
-              } ${isNodeHighlighted('influxdb') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-3xl mb-2">🗄️</div>
-                <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  InfluxDB
-                </div>
-              </div>
-              {hoveredNode === 'influxdb' && (
-                <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                  darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                }`}>
-                  <div className="text-xs">Time-series storage</div>
-                </div>
-              )}
+          {/* Storage and Services Row - Spread horizontally */}
+          <div className="mb-8">
+            <div className={`text-sm font-semibold mb-6 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Storage & Services
             </div>
-
-            {/* Data Retention */}
-            <div
-              onClick={() => handleNodeClick('data-retention')}
-              onMouseEnter={() => setHoveredNode('data-retention')}
-              onMouseLeave={() => setHoveredNode(null)}
-              className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
-                getStatusColor('data-retention')
-              } ${isNodeHighlighted('data-retention') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-3xl mb-2">💾</div>
-                <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Data<br/>Retention
+            <div className="flex flex-wrap justify-center gap-8">
+              {/* InfluxDB */}
+              <div
+                onClick={() => handleNodeClick('influxdb')}
+                onMouseEnter={() => setHoveredNode('influxdb')}
+                onMouseLeave={() => setHoveredNode(null)}
+                className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  getStatusColor('influxdb')
+                } ${isNodeHighlighted('influxdb') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-3xl mb-2">🗄️</div>
+                  <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    InfluxDB
+                  </div>
                 </div>
+                {hoveredNode === 'influxdb' && (
+                  <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                    darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                  }`}>
+                    <div className="text-xs">Time-series storage</div>
+                  </div>
+                )}
               </div>
-              {hoveredNode === 'data-retention' && (
-                <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                  darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                }`}>
-                  <div className="text-xs">Data lifecycle management</div>
-                </div>
-              )}
-            </div>
 
-            {/* Admin API */}
-            <div
-              onClick={() => handleNodeClick('admin-api')}
-              onMouseEnter={() => setHoveredNode('admin-api')}
-              onMouseLeave={() => setHoveredNode(null)}
-              className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
-                getStatusColor('admin-api')
-              } ${isNodeHighlighted('admin-api') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-3xl mb-2">🔌</div>
-                <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Admin<br/>API
+              {/* Data Retention */}
+              <div
+                onClick={() => handleNodeClick('data-retention')}
+                onMouseEnter={() => setHoveredNode('data-retention')}
+                onMouseLeave={() => setHoveredNode(null)}
+                className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  getStatusColor('data-retention')
+                } ${isNodeHighlighted('data-retention') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-3xl mb-2">💾</div>
+                  <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Data<br/>Retention
+                  </div>
                 </div>
+                {hoveredNode === 'data-retention' && (
+                  <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                    darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                  }`}>
+                    <div className="text-xs">Data lifecycle management</div>
+                  </div>
+                )}
               </div>
-              {hoveredNode === 'admin-api' && (
-                <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                  darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                }`}>
-                  <div className="text-xs">REST API gateway</div>
-                </div>
-              )}
-            </div>
 
-            {/* Health Dashboard */}
-            <div
-              onClick={() => handleNodeClick('health-dashboard')}
-              onMouseEnter={() => setHoveredNode('health-dashboard')}
-              onMouseLeave={() => setHoveredNode(null)}
-              className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
-                getStatusColor('health-dashboard')
-              } ${isNodeHighlighted('health-dashboard') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-3xl mb-2">📊</div>
-                <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Health<br/>Dashboard
+              {/* Admin API */}
+              <div
+                onClick={() => handleNodeClick('admin-api')}
+                onMouseEnter={() => setHoveredNode('admin-api')}
+                onMouseLeave={() => setHoveredNode(null)}
+                className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  getStatusColor('admin-api')
+                } ${isNodeHighlighted('admin-api') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-3xl mb-2">🔌</div>
+                  <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Admin<br/>API
+                  </div>
                 </div>
+                {hoveredNode === 'admin-api' && (
+                  <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                    darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                  }`}>
+                    <div className="text-xs">REST API gateway</div>
+                  </div>
+                )}
               </div>
-              {hoveredNode === 'health-dashboard' && (
-                <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
-                  darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                }`}>
-                  <div className="text-xs">Web UI (you are here!)</div>
+
+              {/* Health Dashboard */}
+              <div
+                onClick={() => handleNodeClick('health-dashboard')}
+                onMouseEnter={() => setHoveredNode('health-dashboard')}
+                onMouseLeave={() => setHoveredNode(null)}
+                className={`relative px-6 py-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  getStatusColor('health-dashboard')
+                } ${isNodeHighlighted('health-dashboard') ? 'ring-4 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-3xl mb-2">📊</div>
+                  <div className={`text-sm font-medium text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Health<br/>Dashboard
+                  </div>
                 </div>
-              )}
+                {hoveredNode === 'health-dashboard' && (
+                  <div className={`absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 rounded shadow-lg whitespace-nowrap ${
+                    darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+                  }`}>
+                    <div className="text-xs">Web UI (you are here!)</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

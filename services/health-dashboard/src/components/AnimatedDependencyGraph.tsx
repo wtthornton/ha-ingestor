@@ -60,61 +60,76 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Define service nodes with accurate architecture (Epic 13 + Epic 22)
+  // Define service nodes with optimized spacing to prevent line crossings
   const nodes: ServiceNode[] = [
-    // Layer 1: External Sources
-    { id: 'home-assistant', name: 'Home Assistant', icon: '🏠', type: 'source', position: { x: 400, y: 50 }, layer: 1, description: 'External event source' },
-    { id: 'espn-api', name: 'ESPN API', icon: '🏈🏒', type: 'external', position: { x: 150, y: 50 }, layer: 1, description: 'NFL/NHL game data' },
-    { id: 'openweather', name: 'OpenWeather', icon: '☁️', type: 'external', position: { x: 550, y: 50 }, layer: 1, description: 'Weather enrichment' },
-    { id: 'external-apis', name: 'External APIs', icon: '🌐', type: 'external', position: { x: 700, y: 50 }, layer: 1, description: 'Air quality, carbon, pricing' },
+    // Layer 1: External Sources (Spread horizontally across top)
+    { id: 'external-apis', name: 'External APIs', icon: '🌐', type: 'external', position: { x: 80, y: 60 }, layer: 1, description: 'Air quality, carbon, pricing' },
+    { id: 'espn-api', name: 'ESPN API', icon: '🏈🏒', type: 'external', position: { x: 200, y: 60 }, layer: 1, description: 'NFL/NHL game data' },
+    { id: 'home-assistant', name: 'Home Assistant', icon: '🏠', type: 'source', position: { x: 320, y: 60 }, layer: 1, description: 'External event source' },
+    { id: 'openweather', name: 'OpenWeather', icon: '☁️', type: 'external', position: { x: 440, y: 60 }, layer: 1, description: 'Weather enrichment' },
     
-    // Layer 2: Ingestion
-    { id: 'websocket-ingestion', name: 'WebSocket Ingestion', icon: '📡', type: 'processor', position: { x: 400, y: 150 }, layer: 2, description: 'Event capture + inline weather' },
-    { id: 'sports-data', name: 'Sports Data', icon: '⚡', type: 'processor', position: { x: 150, y: 150 }, layer: 2, description: 'ESPN cache + persistence' },
-    { id: 'external-services', name: 'External Services', icon: '🔌', type: 'processor', position: { x: 650, y: 150 }, layer: 2, description: 'Periodic external data fetch' },
+    // Layer 2: Ingestion (Spread horizontally, second row)
+    { id: 'external-services', name: 'External Services', icon: '🔌', type: 'processor', position: { x: 80, y: 180 }, layer: 2, description: 'Periodic external data fetch' },
+    { id: 'sports-data', name: 'Sports Data', icon: '⚡', type: 'processor', position: { x: 200, y: 180 }, layer: 2, description: 'ESPN cache + persistence' },
+    { id: 'websocket-ingestion', name: 'WebSocket Ingestion', icon: '📡', type: 'processor', position: { x: 320, y: 180 }, layer: 2, description: 'Event capture + inline weather' },
     
-    // Layer 3: Processing (Optional Enhancement Path)
-    { id: 'enrichment-pipeline', name: 'Enrichment Pipeline', icon: '🔄', type: 'processor', position: { x: 400, y: 250 }, layer: 3, description: 'Optional normalization' },
+    // Layer 3: Processing (Center, better horizontal spacing)
+    { id: 'enrichment-pipeline', name: 'Enrichment Pipeline', icon: '🔄', type: 'processor', position: { x: 500, y: 180 }, layer: 3, description: 'Data normalization' },
+    { id: 'ai-automation-service', name: 'AI Automation', icon: '🤖', type: 'processor', position: { x: 650, y: 180 }, layer: 3, description: 'Pattern detection + suggestions' },
     
-    // Layer 4: Storage (Hybrid Architecture - Epic 22!)
-    { id: 'influxdb', name: 'InfluxDB', icon: '🗄️', type: 'storage', position: { x: 350, y: 370 }, layer: 4, description: 'Time-series events' },
-    { id: 'sqlite', name: 'SQLite', icon: '💾', type: 'storage', position: { x: 450, y: 370 }, layer: 4, description: 'Metadata (Epic 22)' },
+    // Layer 4: AI Models (Right side, better vertical spacing for arcs)
+    { id: 'openai-gpt4', name: 'OpenAI GPT-4o-mini', icon: '🧠', type: 'external', position: { x: 650, y: 300 }, layer: 4, description: 'Natural language generation' },
+    { id: 'openvino-models', name: 'OpenVINO Models', icon: '⚡', type: 'processor', position: { x: 650, y: 420 }, layer: 4, description: 'Local ML: embeddings, reranking, classification' },
     
-    // Layer 5: API Gateway (Epic 13 Split!)
-    { id: 'data-api', name: 'Data API', icon: '🔌', type: 'processor', position: { x: 350, y: 470 }, layer: 5, description: 'Feature data hub' },
-    { id: 'admin-api', name: 'Admin API', icon: '⚙️', type: 'processor', position: { x: 500, y: 470 }, layer: 5, description: 'System monitoring' },
+    // Layer 5: Storage (Spread horizontally across bottom)
+    { id: 'influxdb', name: 'InfluxDB', icon: '🗄️', type: 'storage', position: { x: 200, y: 380 }, layer: 5, description: 'Time-series events' },
+    { id: 'sqlite', name: 'SQLite', icon: '💾', type: 'storage', position: { x: 400, y: 380 }, layer: 5, description: 'Metadata & AI suggestions' },
     
-    // Layer 6: UI
-    { id: 'health-dashboard', name: 'Dashboard', icon: '📊', type: 'ui', position: { x: 425, y: 570 }, layer: 6, description: 'You are here!' },
+    // Layer 6: API Gateway (Spread horizontally, second from bottom)
+    { id: 'data-api', name: 'Data API', icon: '🔌', type: 'processor', position: { x: 200, y: 480 }, layer: 6, description: 'Feature data hub' },
+    { id: 'admin-api', name: 'Admin API', icon: '⚙️', type: 'processor', position: { x: 400, y: 480 }, layer: 6, description: 'System monitoring' },
+    
+    // Layer 7: Main UI (Bottom center)
+    { id: 'health-dashboard', name: 'Dashboard', icon: '📊', type: 'ui', position: { x: 300, y: 580 }, layer: 7, description: 'You are here!' },
   ];
 
-  // Define data flow paths based on actual call trees
+  // Define data flow paths with AI automation integration
   const dataFlows: DataFlowPath[] = [
-    // Primary HA Event Flow (Path A - Always Active)
+    // ===== LEFT SIDE: PRIMARY DATA FLOWS (Non-AI) =====
+    // Primary HA Event Flow (Always Active)
     { id: 'ha-ws', from: 'home-assistant', to: 'websocket-ingestion', type: 'websocket', active: true, throughput: realTimeData?.eventsPerSecond || 0, color: '#3B82F6' },
-    { id: 'ws-direct-influx', from: 'websocket-ingestion', to: 'influxdb', type: 'storage', active: true, color: '#10B981' }, // Primary path!
+    { id: 'ws-direct-influx', from: 'websocket-ingestion', to: 'influxdb', type: 'storage', active: true, color: '#10B981' },
     
-    // Enhancement Path (Path B - Optional)
+    // Enhancement Path (Optional)
     { id: 'ws-enrich', from: 'websocket-ingestion', to: 'enrichment-pipeline', type: 'api', active: true, color: '#F59E0B' },
     { id: 'enrich-db', from: 'enrichment-pipeline', to: 'influxdb', type: 'storage', active: true, color: '#F59E0B' },
     
-    // Inline Weather Enrichment (within websocket-ingestion)
+    // Inline Weather Enrichment
     { id: 'weather-inline', from: 'openweather', to: 'websocket-ingestion', type: 'api', active: true, color: '#06B6D4' },
     
-    // Sports Data Flow (Epic 12 - Hybrid Pattern A+B)
+    // Sports Data Flow (Hybrid Pattern)
     { id: 'espn-sports', from: 'espn-api', to: 'sports-data', type: 'api', active: realTimeData?.dataSourcesActive?.includes('sports') || false, throughput: 0.5, color: '#8B5CF6' },
-    { id: 'sports-influx', from: 'sports-data', to: 'influxdb', type: 'storage', active: true, color: '#8B5CF6' }, // Epic 12: InfluxDB persistence
-    { id: 'sports-sqlite', from: 'sports-data', to: 'sqlite', type: 'storage', active: true, color: '#8B5CF6' }, // Epic 22: SQLite webhooks
+    { id: 'sports-influx', from: 'sports-data', to: 'influxdb', type: 'storage', active: true, color: '#8B5CF6' },
+    { id: 'sports-sqlite', from: 'sports-data', to: 'sqlite', type: 'storage', active: true, color: '#8B5CF6' },
     
-    // External API Services (Pattern A - Continuous Push)
+    // External API Services (Non-AI Data Sources)
     { id: 'external-fetch', from: 'external-apis', to: 'external-services', type: 'api', active: true, color: '#6B7280' },
     { id: 'external-influx', from: 'external-services', to: 'influxdb', type: 'storage', active: true, color: '#6B7280' },
     
-    // Epic 22: Hybrid Database Queries
+    // ===== RIGHT SIDE: AI PATTERN ANALYSIS FLOWS =====
+    // AI Pattern Analysis Flow
+    { id: 'ws-ai-analysis', from: 'websocket-ingestion', to: 'ai-automation-service', type: 'api', active: true, color: '#8B5CF6' },
+    { id: 'ai-openvino', from: 'ai-automation-service', to: 'openvino-models', type: 'api', active: true, color: '#8B5CF6' },
+    { id: 'openvino-ai', from: 'openvino-models', to: 'ai-automation-service', type: 'api', active: true, color: '#8B5CF6' },
+    { id: 'ai-openai', from: 'ai-automation-service', to: 'openai-gpt4', type: 'api', active: true, color: '#FF6B6B' },
+    { id: 'openai-ai', from: 'openai-gpt4', to: 'ai-automation-service', type: 'api', active: true, color: '#FF6B6B' },
+    { id: 'ai-sqlite', from: 'ai-automation-service', to: 'sqlite', type: 'storage', active: true, color: '#8B5CF6' },
+    
+    // Hybrid Database Queries
     { id: 'influx-data', from: 'influxdb', to: 'data-api', type: 'query', active: true, color: '#3B82F6' },
     { id: 'sqlite-data', from: 'sqlite', to: 'data-api', type: 'query', active: true, color: '#10B981' },
     
-    // Epic 13: API Gateway Layer
+    // API Gateway Layer
     { id: 'data-dash', from: 'data-api', to: 'health-dashboard', type: 'api', active: true, color: '#3B82F6' },
     { id: 'admin-dash', from: 'admin-api', to: 'health-dashboard', type: 'api', active: true, color: '#F59E0B' },
   ];
@@ -149,7 +164,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   };
 
 
-  // Calculate path between two nodes
+  // Calculate path between two nodes using D3.js arc-based routing
   const calculatePath = (fromId: string, toId: string): string => {
     const from = nodes.find(n => n.id === fromId);
     const to = nodes.find(n => n.id === toId);
@@ -161,13 +176,63 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
     const endX = to.position.x;
     const endY = to.position.y - 30; // Offset from node center
     
-    // Create smooth curve
+    // Calculate distance and direction
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // For very short distances, use straight line
+    if (distance < 50) {
+      return `M ${startX} ${startY} L ${endX} ${endY}`;
+    }
+    
+    // For vertical connections (same x-coordinate), use straight line
+    if (Math.abs(dx) < 10) {
+      return `M ${startX} ${startY} L ${endX} ${endY}`;
+    }
+    
+    // For horizontal connections (same y-coordinate), use straight line
+    if (Math.abs(dy) < 10) {
+      return `M ${startX} ${startY} L ${endX} ${endY}`;
+    }
+    
+    // For AI automation bidirectional flows, use arc routing
+    if ((fromId === 'ai-automation-service' && (toId === 'openai-gpt4' || toId === 'openvino-models')) ||
+        ((fromId === 'openai-gpt4' || fromId === 'openvino-models') && toId === 'ai-automation-service')) {
+      const midX = (startX + endX) / 2;
+      const arcHeight = Math.abs(dy) * 0.6; // Increased arc height for better visibility
+      const arcY = dy > 0 ? startY + arcHeight : startY - arcHeight;
+      
+      return `M ${startX} ${startY} 
+              Q ${midX} ${arcY}, 
+                 ${endX} ${endY}`;
+    }
+    
+    // For external services parallel flows, use offset routing to prevent crossings
+    if ((fromId === 'external-apis' || fromId === 'espn-api') && toId === 'external-services') {
+      const offset = fromId === 'external-apis' ? -30 : 30;
+      const midY = (startY + endY) / 2;
+      
+      return `M ${startX} ${startY} 
+              L ${startX + offset} ${startY}
+              L ${startX + offset} ${midY}
+              L ${endX + offset} ${midY}
+              L ${endX + offset} ${endY}
+              L ${endX} ${endY}`;
+    }
+    
+    // For long diagonal connections, use smooth curve
+    const midX = (startX + endX) / 2;
     const midY = (startY + endY) / 2;
     
+    // Add slight curve to avoid straight lines
+    const curveOffset = Math.min(distance * 0.1, 30);
+    const curveX = dx > 0 ? midX - curveOffset : midX + curveOffset;
+    
     return `M ${startX} ${startY} 
-            C ${startX} ${midY}, 
-              ${endX} ${midY}, 
-              ${endX} ${endY}`;
+            C ${curveX} ${startY}, 
+               ${curveX} ${endY}, 
+               ${endX} ${endY}`;
   };
 
   const renderDataFlow = (flow: DataFlowPath) => {
@@ -355,8 +420,8 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Clean Slim Header */}
       <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -365,11 +430,11 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
               Complete Architecture Flow
             </h2>
             <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Hybrid database (Epic 22) • API split (Epic 13) • Sports persistence (Epic 12) • Click nodes for details
+              AI Automation • Hybrid Database • Pattern Detection • Click nodes for details
             </p>
           </div>
           
-          {/* Live Metrics */}
+          {/* Clean Live Metrics */}
           {realTimeData && (
             <div className={`px-6 py-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
               <div className="flex items-center gap-4">
@@ -394,7 +459,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
           )}
         </div>
 
-        {/* Legend */}
+        {/* Clean Slim Legend */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-blue-500"></div>
@@ -410,7 +475,11 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-purple-500"></div>
-            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sports (Epic 12)</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>AI Pattern Analysis</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-0.5 bg-red-500"></div>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>OpenAI GPT-4o-mini</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-cyan-500"></div>
@@ -422,7 +491,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xl">🗄️💾</span>
-            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Hybrid DB (Epic 22)</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Hybrid Database</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="animate-pulse">●</div>
@@ -431,15 +500,15 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
         </div>
       </div>
 
-      {/* SVG Diagram */}
+      {/* Clean SVG Diagram Container */}
       <div className={`p-8 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg overflow-x-auto`}>
         <svg
           ref={svgRef}
-          width="800"
-          height="600"
-          viewBox="0 0 800 600"
+          width="1000"
+          height="650"
+          viewBox="0 0 1000 650"
           className="w-full"
-          style={{ minWidth: '800px' }}
+          style={{ minWidth: '1000px' }}
         >
           {/* Definitions for filters and effects */}
           <defs>
@@ -493,6 +562,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+            
           </defs>
 
           {/* Render all data flows first (so they appear behind nodes) */}

@@ -48,18 +48,14 @@ class DailyAnalysisScheduler:
         self.is_running = False
         self._job_history = []
         
-        # Initialize MQTT client
-        try:
-            self.mqtt_client = MQTTNotificationClient(
-                broker=settings.mqtt_broker,
-                port=settings.mqtt_port
-            )
-            self.mqtt_client.connect()
-        except Exception as e:
-            logger.warning(f"⚠️ MQTT initialization failed: {e}. Notifications will be skipped.")
-            self.mqtt_client = None
+        # MQTT client will be set by main.py
+        self.mqtt_client = None
         
         logger.info(f"DailyAnalysisScheduler initialized with schedule: {self.cron_schedule}")
+    
+    def set_mqtt_client(self, mqtt_client):
+        """Set the MQTT client from main.py"""
+        self.mqtt_client = mqtt_client
     
     def start(self):
         """

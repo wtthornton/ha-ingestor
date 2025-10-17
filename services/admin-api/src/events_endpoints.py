@@ -466,46 +466,81 @@ class EventsEndpoints:
             client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=influxdb_org)
             query_api = client.query_api()
             
-            # Build Flux query
+            # Build Flux query - OPTIMIZED (Context7 KB Pattern)
+            # Context7 KB: /websites/influxdata-influxdb-v2
+            # FIX: Filter to single field to prevent field multiplication
+            # Same optimization as data-api events_endpoints.py
             query = f'''
             from(bucket: "{influxdb_bucket}")
               |> range(start: -24h)
               |> filter(fn: (r) => r._measurement == "home_assistant_events")
+              |> filter(fn: (r) => r._field == "context_id")
             '''
             
-            # Add filters
+            # Add tag-based filters (indexed, efficient)
             if event_filter.entity_id:
-                query += f'|> filter(fn: (r) => r.entity_id == "{event_filter.entity_id}")'
+                query += f'  |> filter(fn: (r) => r.entity_id == "{event_filter.entity_id}")\n'
             if event_filter.event_type:
-                query += f'|> filter(fn: (r) => r.event_type == "{event_filter.event_type}")'
+                query += f'  |> filter(fn: (r) => r.event_type == "{event_filter.event_type}")\n'
             
-            query += f'|> sort(columns: ["_time"], desc: true)'
-            query += f'|> limit(n: {limit + offset})'
-            query += f'|> offset(n: {offset})'
+            # Group and limit
+            query += f'  |> group()\n'
+            query += f'  |> sort(columns: ["_time"], desc: true)\n'
+            query += f'  |> limit(n: {limit})\n'
+            
+            if offset > 0:
+                query += f'  |> offset(n: {offset})\n'
+            
+            # Log query for debugging
+            logger.debug(f"Executing Flux query:\n{query}")
             
             # Execute query
             result = query_api.query(query)
             
             events = []
+            seen_event_ids = set()  # Deduplication safety check
+            
             for table in result:
                 for record in table.records:
+                    # Get tags from record (always present)
+                    entity_id_val = record.values.get("entity_id") or "unknown"
+                    event_type_val = record.values.get("event_type") or "unknown"
+                    context_id = record.values.get("_value") or f"event_{record.get_time().timestamp()}"
+                    
+                    # Skip duplicates (safety check)
+                    if context_id in seen_event_ids:
+                        continue
+                    seen_event_ids.add(context_id)
+                    
+                    # Create event object
                     event = EventData(
-                        id=record.get_field_by_key("context_id") or f"event_{record.get_time().timestamp()}",
+                        id=context_id,
                         timestamp=record.get_time(),
-                        entity_id=record.get_field_by_key("entity_id") or "unknown",
-                        event_type=record.get_field_by_key("event_type") or "unknown",
-                        old_state={"state": record.get_field_by_key("old_state")} if record.get_field_by_key("old_state") else None,
-                        new_state={"state": record.get_field_by_key("state")} if record.get_field_by_key("state") else None,
-                        attributes=json.loads(record.get_field_by_key("attributes")) if record.get_field_by_key("attributes") else {},
+                        entity_id=entity_id_val,
+                        event_type=event_type_val,
+                        old_state=None,  # Not available in single-field query
+                        new_state=None,  # Not available in single-field query
+                        attributes={},  # Not available in single-field query
                         tags={
-                            "domain": record.get_field_by_key("domain") or "unknown",
-                            "device_class": record.get_field_by_key("device_class") or "unknown"
+                            "domain": record.values.get("domain") or "unknown",
+                            "device_class": record.values.get("device_class") or "unknown"
                         }
                     )
                     events.append(event)
             
+            # Python deduplication (final safety net)
+            unique_events = []
+            final_seen_ids = set()
+            for event in events:
+                if event.id not in final_seen_ids:
+                    final_seen_ids.add(event.id)
+                    unique_events.append(event)
+                    if len(unique_events) >= limit:
+                        break
+            
             client.close()
-            return events
+            logger.info(f"admin-api: Returning {len(unique_events)} unique events (requested: {limit})")
+            return unique_events
             
         except Exception as e:
             logger.error(f"Error querying InfluxDB: {e}")

@@ -1,8 +1,13 @@
 # AI Automation System Architecture
 
 **Epic:** AI1 - AI Automation Suggestion System (Enhanced)  
-**Last Updated:** October 16, 2025  
+**Last Updated:** October 17, 2025  
 **Status:** Production Ready
+
+**🔄 Recent Update (Oct 17, 2025):**
+- Updated database schema for Story AI1.23 (Conversational Suggestion Refinement)
+- Added description-first workflow with iterative natural language editing
+- Status lifecycle now supports both legacy batch flow and new conversational flow
 
 ---
 
@@ -208,23 +213,46 @@ User Request Text
 
 ## Database Schema
 
-### suggestions Table
+### suggestions Table (Updated for Story AI1.23 - Conversational Refinement)
 ```sql
 CREATE TABLE suggestions (
     id INTEGER PRIMARY KEY,
     pattern_id INTEGER,  -- FK to patterns (nullable for NL requests)
     title VARCHAR NOT NULL,
-    description TEXT,
-    automation_yaml TEXT NOT NULL,
-    status VARCHAR,  -- pending, approved, deployed, rejected
+    
+    -- NEW: Description-first fields (Story AI1.23)
+    description_only TEXT NOT NULL,  -- Human-readable description (REQUIRED)
+    conversation_history JSON,  -- Edit history for conversational refinement
+    device_capabilities JSON,  -- Cached device context
+    refinement_count INTEGER DEFAULT 0,  -- Number of user refinements
+    
+    -- YAML generation (nullable until approved in conversational flow)
+    automation_yaml TEXT,  -- NULL for draft, populated after approval (CHANGED: was NOT NULL)
+    yaml_generated_at DATETIME,  -- NEW: When YAML was generated
+    
+    -- Status (supports both legacy and conversational flows)
+    status VARCHAR,  -- Legacy flow: pending → deployed/rejected
+                     -- Conversational flow: draft → refining → yaml_generated → deployed
+    
     confidence FLOAT NOT NULL,
     category VARCHAR,  -- user_request, energy, comfort, security, convenience
     priority VARCHAR,
     created_at DATETIME,
     updated_at DATETIME,
+    approved_at DATETIME,  -- NEW: When user approved
     deployed_at DATETIME,
     ha_automation_id VARCHAR  -- For rollback
 );
+```
+
+**Status Values:**
+- **Legacy Flow (Pattern-based):** `pending` → `deployed` / `rejected`
+- **Conversational Flow (NL requests - Story AI1.23):**
+  - `draft` - Description only, no YAML yet
+  - `refining` - User iterating with natural language edits (max 10)
+  - `yaml_generated` - User approved, YAML generated
+  - `deployed` - Deployed to Home Assistant
+  - `rejected` - Rejected at any stage
 ```
 
 ### automation_versions Table (AI1.20)

@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKe
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from datetime import datetime
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -33,25 +34,64 @@ class Pattern(Base):
 
 
 class Suggestion(Base):
-    """Automation suggestions generated from patterns"""
+    """
+    Automation suggestions generated from patterns.
+    
+    Story AI1.23: Conversational Suggestion Refinement
+    
+    New conversational flow:
+    1. Generate description_only (no YAML yet) -> status='draft'
+    2. User refines with natural language -> status='refining', conversation_history updated
+    3. User approves -> Generate automation_yaml -> status='yaml_generated'
+    4. Deploy to HA -> status='deployed'
+    """
     __tablename__ = 'suggestions'
     
     id = Column(Integer, primary_key=True)
     pattern_id = Column(Integer, ForeignKey('patterns.id'), nullable=True)
+    
+    # ===== NEW: Description-First Fields (Story AI1.23) =====
+    description_only = Column(Text, nullable=False)  # Human-readable description
+    conversation_history = Column(JSON, default=[])  # Array of edit history
+    device_capabilities = Column(JSON, default={})   # Cached device features
+    refinement_count = Column(Integer, default=0)    # Number of user edits
+    
+    # ===== YAML Generation (only after approval) =====
+    automation_yaml = Column(Text, nullable=True)    # NULL until approved (changed from NOT NULL)
+    yaml_generated_at = Column(DateTime, nullable=True)  # NEW: When YAML was created
+    
+    # ===== Status Tracking (updated for conversational flow) =====
+    status = Column(String, default='draft')  # draft, refining, yaml_generated, deployed, rejected
+    
+    # ===== Legacy Fields (kept for compatibility) =====
     title = Column(String, nullable=False)
-    description = Column(Text)
-    automation_yaml = Column(Text, nullable=False)
-    status = Column(String, default='pending')  # pending, approved, deployed, rejected
-    confidence = Column(Float, nullable=False)
     category = Column(String, nullable=True)  # energy, comfort, security, convenience
     priority = Column(String, nullable=True)  # high, medium, low
+    confidence = Column(Float, nullable=False)
+    
+    # ===== Timestamps =====
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    approved_at = Column(DateTime, nullable=True)  # NEW: When user approved
     deployed_at = Column(DateTime, nullable=True)
     ha_automation_id = Column(String, nullable=True)
     
     def __repr__(self):
-        return f"<Suggestion(id={self.id}, title={self.title}, status={self.status})>"
+        return f"<Suggestion(id={self.id}, title={self.title}, status={self.status}, refinements={self.refinement_count})>"
+    
+    def can_refine(self, max_refinements: int = 10) -> tuple[bool, Optional[str]]:
+        """
+        Check if suggestion can be refined further.
+        
+        Args:
+            max_refinements: Maximum allowed refinements (default: 10)
+        
+        Returns:
+            Tuple of (allowed: bool, error_message: Optional[str])
+        """
+        if self.refinement_count >= max_refinements:
+            return False, f"Maximum refinements reached ({max_refinements}). Please approve or reject."
+        return True, None
 
 
 class UserFeedback(Base):

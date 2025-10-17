@@ -262,10 +262,13 @@ async def get_device_reliability(
                 item["percentage"] = round((item["event_count"] / total_events) * 100, 2)
         
         # Get total event count for coverage calculation
+        # Total events count - OPTIMIZED (Context7 KB Pattern)
+        # FIX: Add _field filter to count unique events, not field instances
         total_query = f'''
         from(bucket: "{influxdb_bucket}")
           |> range(start: -{period})
           |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r._field == "context_id")
           |> count()
         '''
         
@@ -405,10 +408,13 @@ async def get_integration_performance(
         query_api = client.query_api()
         
         # Calculate events per minute
+        # Event rate query - OPTIMIZED (Context7 KB Pattern)
+        # FIX: Add _field filter to count unique events, not field instances
         event_rate_query = f'''
         from(bucket: "{influxdb_bucket}")
           |> range(start: -{period})
           |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r._field == "context_id")
           |> filter(fn: (r) => r["platform"] == "{platform}")
           |> count()
         '''
@@ -429,10 +435,13 @@ async def get_integration_performance(
         events_per_minute = round(total_events / period_minutes, 2) if period_minutes > 0 else 0
         
         # Estimate error rate (events with error field)
+        # Error count query - OPTIMIZED (Context7 KB Pattern)
+        # FIX: Add _field filter to count unique events with errors
         error_query = f'''
         from(bucket: "{influxdb_bucket}")
           |> range(start: -{period})
           |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r._field == "context_id")
           |> filter(fn: (r) => r["platform"] == "{platform}")
           |> filter(fn: (r) => exists r["error"])
           |> count()
@@ -447,13 +456,15 @@ async def get_integration_performance(
         error_rate = round((total_errors / total_events) * 100, 2) if total_events > 0 else 0
         
         # Calculate average response time (if available)
+        # Response time query - OPTIMIZED (Context7 KB Pattern)
+        # FIX: Filter by response_time field specifically
         response_time_query = f'''
         from(bucket: "{influxdb_bucket}")
           |> range(start: -{period})
           |> filter(fn: (r) => r["_measurement"] == "home_assistant_events")
+          |> filter(fn: (r) => r._field == "response_time")
           |> filter(fn: (r) => r["platform"] == "{platform}")
-          |> filter(fn: (r) => exists r["response_time"])
-          |> mean(column: "response_time")
+          |> mean()
         '''
         
         response_result = query_api.query(response_time_query)

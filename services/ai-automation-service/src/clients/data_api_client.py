@@ -400,6 +400,262 @@ class DataAPIClient:
         
         return friendly
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
+        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
+        reraise=False
+    )
+    async def fetch_device_capabilities(
+        self,
+        entity_id: str,
+        use_cache: bool = True,
+        cache_ttl_seconds: int = 3600
+    ) -> Dict:
+        """
+        Fetch device capabilities for conversational suggestions.
+        
+        Story AI1.23 Phase 2: Description-Only Generation
+        
+        This method fetches device metadata and parses supported features
+        to provide user-friendly capability information for:
+        - Showing users what's possible ("This light can also...")
+        - Validating refinement requests ("Can change RGB color? Yes/No")
+        - Building better prompts for OpenAI
+        
+        Args:
+            entity_id: Entity ID (e.g., 'light.living_room')
+            use_cache: Whether to use cached capabilities (default: True)
+            cache_ttl_seconds: Cache TTL in seconds (default: 3600 = 1 hour)
+        
+        Returns:
+            Dictionary with parsed capabilities:
+            {
+                "entity_id": "light.living_room",
+                "friendly_name": "Living Room Light",
+                "domain": "light",
+                "area": "Living Room",
+                "supported_features": {
+                    "brightness": True,
+                    "rgb_color": True,
+                    "color_temp": True,
+                    "transition": True,
+                    "effect": False
+                },
+                "friendly_capabilities": [
+                    "Adjust brightness (0-100%)",
+                    "Change color (RGB)",
+                    "Set color temperature (warm to cool)",
+                    "Smooth transitions (fade in/out)"
+                ],
+                "cached": False
+            }
+        """
+        try:
+            logger.debug(f"Fetching capabilities for {entity_id}")
+            
+            # Fetch entity metadata from data-api
+            response = await self.client.get(
+                f"{self.base_url}/api/entities/{entity_id}"
+            )
+            
+            if response.status_code == 404:
+                logger.warning(f"Entity {entity_id} not found")
+                return self._empty_capabilities(entity_id)
+            
+            if response.status_code != 200:
+                logger.warning(f"Failed to fetch entity {entity_id}: HTTP {response.status_code}")
+                return self._empty_capabilities(entity_id)
+            
+            entity_data = response.json()
+            
+            # Parse capabilities from entity data
+            capabilities = self._parse_capabilities(entity_id, entity_data)
+            
+            logger.info(
+                f"✅ Fetched capabilities for {entity_id}: "
+                f"{len(capabilities['friendly_capabilities'])} features"
+            )
+            
+            return capabilities
+            
+        except Exception as e:
+            logger.error(f"Error fetching capabilities for {entity_id}: {e}")
+            return self._empty_capabilities(entity_id)
+    
+    def _parse_capabilities(self, entity_id: str, entity_data: Dict) -> Dict:
+        """
+        Parse entity metadata into structured capabilities.
+        
+        Args:
+            entity_id: Entity ID
+            entity_data: Raw entity metadata from data-api
+        
+        Returns:
+            Parsed capabilities dictionary
+        """
+        domain = entity_id.split('.')[0] if '.' in entity_id else 'unknown'
+        attributes = entity_data.get('attributes', {})
+        
+        # Extract basic info
+        capabilities = {
+            "entity_id": entity_id,
+            "friendly_name": entity_data.get('friendly_name', entity_data.get('name', entity_id)),
+            "domain": domain,
+            "area": entity_data.get('area_id', entity_data.get('area', '')),
+            "supported_features": {},
+            "friendly_capabilities": [],
+            "cached": False
+        }
+        
+        # Parse domain-specific capabilities
+        if domain == 'light':
+            capabilities.update(self._parse_light_capabilities(attributes))
+        elif domain == 'climate':
+            capabilities.update(self._parse_climate_capabilities(attributes))
+        elif domain == 'cover':
+            capabilities.update(self._parse_cover_capabilities(attributes))
+        elif domain == 'fan':
+            capabilities.update(self._parse_fan_capabilities(attributes))
+        elif domain == 'switch':
+            capabilities.update(self._parse_switch_capabilities(attributes))
+        else:
+            # Generic capabilities for other domains
+            capabilities['supported_features'] = {'on_off': True}
+            capabilities['friendly_capabilities'] = ["Turn on/off"]
+        
+        return capabilities
+    
+    def _parse_light_capabilities(self, attributes: Dict) -> Dict:
+        """Parse light-specific capabilities"""
+        features = {}
+        friendly = []
+        
+        # Brightness
+        if 'brightness' in attributes or 'brightness_pct' in attributes:
+            features['brightness'] = True
+            friendly.append("Adjust brightness (0-100%)")
+        
+        # RGB Color
+        if 'rgb_color' in attributes or 'hs_color' in attributes:
+            features['rgb_color'] = True
+            friendly.append("Change color (RGB)")
+        
+        # Color Temperature
+        if 'color_temp' in attributes or 'color_temp_kelvin' in attributes:
+            features['color_temp'] = True
+            friendly.append("Set color temperature (warm to cool)")
+        
+        # Transition
+        if 'supported_color_modes' in attributes or 'transition' in attributes:
+            features['transition'] = True
+            friendly.append("Smooth transitions (fade in/out)")
+        
+        # Effects
+        if 'effect_list' in attributes and attributes.get('effect_list'):
+            features['effect'] = True
+            friendly.append(f"Light effects ({len(attributes['effect_list'])} available)")
+        
+        return {'supported_features': features, 'friendly_capabilities': friendly}
+    
+    def _parse_climate_capabilities(self, attributes: Dict) -> Dict:
+        """Parse climate/thermostat capabilities"""
+        features = {}
+        friendly = []
+        
+        # Temperature control
+        if 'temperature' in attributes:
+            features['temperature'] = True
+            min_temp = attributes.get('min_temp', 60)
+            max_temp = attributes.get('max_temp', 90)
+            friendly.append(f"Set temperature ({min_temp}°-{max_temp}°)")
+        
+        # HVAC modes
+        if 'hvac_modes' in attributes:
+            features['hvac_mode'] = True
+            modes = attributes['hvac_modes']
+            friendly.append(f"Change mode ({', '.join(modes)})")
+        
+        # Fan mode
+        if 'fan_modes' in attributes:
+            features['fan_mode'] = True
+            friendly.append("Adjust fan speed")
+        
+        # Presets
+        if 'preset_modes' in attributes:
+            features['preset'] = True
+            friendly.append("Use preset modes")
+        
+        return {'supported_features': features, 'friendly_capabilities': friendly}
+    
+    def _parse_cover_capabilities(self, attributes: Dict) -> Dict:
+        """Parse cover (blinds, garage door, etc.) capabilities"""
+        features = {
+            'open': True,
+            'close': True
+        }
+        friendly = ["Open/close"]
+        
+        # Position control
+        if 'current_position' in attributes:
+            features['position'] = True
+            friendly.append("Set position (0-100%)")
+        
+        # Tilt control
+        if 'current_tilt_position' in attributes:
+            features['tilt'] = True
+            friendly.append("Adjust tilt angle")
+        
+        return {'supported_features': features, 'friendly_capabilities': friendly}
+    
+    def _parse_fan_capabilities(self, attributes: Dict) -> Dict:
+        """Parse fan capabilities"""
+        features = {'on_off': True}
+        friendly = ["Turn on/off"]
+        
+        # Speed control
+        if 'percentage' in attributes or 'speed' in attributes:
+            features['speed'] = True
+            friendly.append("Adjust speed")
+        
+        # Direction
+        if 'direction' in attributes:
+            features['direction'] = True
+            friendly.append("Reverse direction")
+        
+        # Oscillation
+        if 'oscillating' in attributes:
+            features['oscillate'] = True
+            friendly.append("Enable oscillation")
+        
+        return {'supported_features': features, 'friendly_capabilities': friendly}
+    
+    def _parse_switch_capabilities(self, attributes: Dict) -> Dict:
+        """Parse switch capabilities"""
+        features = {'on_off': True}
+        friendly = ["Turn on/off"]
+        
+        # Power monitoring
+        if 'current_power_w' in attributes or 'power' in attributes:
+            features['power_monitoring'] = True
+            friendly.append("Monitor power usage")
+        
+        return {'supported_features': features, 'friendly_capabilities': friendly}
+    
+    def _empty_capabilities(self, entity_id: str) -> Dict:
+        """Return empty capabilities structure for unknown/error cases"""
+        domain = entity_id.split('.')[0] if '.' in entity_id else 'unknown'
+        
+        return {
+            "entity_id": entity_id,
+            "friendly_name": self.extract_friendly_name(entity_id),
+            "domain": domain,
+            "area": "",
+            "supported_features": {},
+            "friendly_capabilities": [],
+            "cached": False
+        }
+    
     async def close(self):
         """Close HTTP client connection pool"""
         await self.client.aclose()

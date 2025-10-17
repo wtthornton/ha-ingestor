@@ -20,9 +20,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install runtime dependencies
+# Added: libgomp1 for OpenVINO threading
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from builder
@@ -40,8 +42,13 @@ COPY shared/ ./shared/
 # Make sure scripts are in PATH
 ENV PATH=/root/.local/bin:$PATH
 
-# Create data directory
-RUN mkdir -p /app/data
+# Create data and models directories
+RUN mkdir -p /app/data /app/models
+
+# Pre-download Phase 1 models (optional - can also lazy-load on first use)
+# Uncomment to pre-download during build (increases build time but faster first run)
+# COPY services/ai-automation-service/scripts/download-models.py ./scripts/
+# RUN python scripts/download-models.py || echo "Model download failed, will retry on startup"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \

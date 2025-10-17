@@ -8,6 +8,7 @@ from .analysis_router import router as analysis_router
 from .suggestion_management_router import router as suggestion_management_router
 from .deployment_router import router as deployment_router
 from .nl_generation_router import router as nl_generation_router
+from .conversational_router import router as conversational_router  # Story AI1.23
 
 __all__ = [
     'health_router',
@@ -17,6 +18,7 @@ __all__ = [
     'analysis_router',
     'suggestion_management_router',
     'deployment_router',
-    'nl_generation_router'
+    'nl_generation_router',
+    'conversational_router'  # Story AI1.23: Conversational Refinement
 ]
 

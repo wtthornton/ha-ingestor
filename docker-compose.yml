@@ -335,9 +335,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 192M  # Increased from 128M (was at 53% usage)
         reservations:
-          memory: 64M
+          memory: 96M   # Increased from 64M
     logging:
       driver: "json-file"
       options:
@@ -376,9 +376,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 192M  # Increased from 128M (was at 57% usage)
         reservations:
-          memory: 64M
+          memory: 96M   # Increased from 64M
     logging:
       driver: "json-file"
       options:
@@ -418,9 +418,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 192M  # Increased from 128M (was at 58% usage)
         reservations:
-          memory: 64M
+          memory: 96M   # Increased from 64M
     logging:
       driver: "json-file"
       options:
@@ -464,9 +464,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 192M  # Increased from 128M (was at 54% usage)
         reservations:
-          memory: 64M
+          memory: 96M   # Increased from 64M
     logging:
       driver: "json-file"
       options:
@@ -508,9 +508,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 192M  # Increased from 128M (was at 54% usage)
         reservations:
-          memory: 64M
+          memory: 96M   # Increased from 64M
     logging:
       driver: "json-file"
       options:
@@ -739,14 +739,15 @@ services:
         condition: service_healthy
     volumes:
       - ai_automation_data:/app/data
+      - ai_automation_models:/app/models  # Phase 1: OpenVINO model cache
     networks:
       - ha-ingestor-network
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G  # Increased for model loading (was 1G)
         reservations:
-          memory: 512M
+          memory: 1G  # Increased for model inference (was 512M)
     logging:
       driver: "json-file"
       options:
@@ -799,6 +800,7 @@ volumes:
   ha_ingestor_logs:
   sqlite-data:
   ai_automation_data:
+  ai_automation_models:  # Phase 1: Persistent model cache (OpenVINO INT8 models)
 
 networks:
   ha-ingestor-network:

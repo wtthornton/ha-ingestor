@@ -47,7 +47,7 @@ class AnalysisResponse(BaseModel):
 
 
 @router.post("/analyze-and-suggest", response_model=AnalysisResponse)
-async def analyze_and_suggest(request: AnalysisRequest):
+async def analyze_and_suggest(request: AnalysisRequest, timeout: int = 300):
     """
     Run complete analysis pipeline: Fetch events → Detect patterns → Generate suggestions.
     
@@ -70,8 +70,28 @@ async def analyze_and_suggest(request: AnalysisRequest):
     logger.info("🚀 Starting Analysis Pipeline")
     logger.info("=" * 80)
     logger.info(f"Parameters: days={request.days}, max_suggestions={request.max_suggestions}, "
-                f"min_confidence={request.min_confidence}")
+                f"min_confidence={request.min_confidence}, timeout={timeout}s")
     
+    try:
+        # Add timeout wrapper to prevent hanging
+        async def run_analysis():
+            return await _run_analysis_pipeline(request)
+        
+        # Run with timeout
+        result = await asyncio.wait_for(run_analysis(), timeout=timeout)
+        return result
+        
+    except asyncio.TimeoutError:
+        logger.error(f"❌ Analysis timed out after {timeout} seconds")
+        raise HTTPException(
+            status_code=408, 
+            detail=f"Analysis timed out after {timeout} seconds. Try reducing the analysis scope."
+        )
+
+
+async def _run_analysis_pipeline(request: AnalysisRequest):
+    """Internal analysis pipeline function"""
+    start_time = datetime.now(timezone.utc)
     try:
         # ========================================================================
         # Phase 1: Fetch Events from Data API
@@ -88,9 +108,10 @@ async def analyze_and_suggest(request: AnalysisRequest):
         )
         start_date = datetime.now(timezone.utc) - timedelta(days=request.days)
         
+        # Optimize event fetching with reasonable limits
         events_df = await data_client.fetch_events(
             start_time=start_date,
-            limit=100000
+            limit=50000  # Reduced from 100k to 50k for better performance
         )
         
         phase1_duration = (datetime.now(timezone.utc) - phase1_start).total_seconds()

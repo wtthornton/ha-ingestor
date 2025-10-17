@@ -23,7 +23,7 @@ except ImportError:
 
 from .config import settings
 from .database.models import init_db
-from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router
+from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router, conversational_router
 from .api.analysis_router import set_scheduler
 from .api.health import set_capability_listener
 from .scheduler import DailyAnalysisScheduler
@@ -70,6 +70,7 @@ app.include_router(analysis_router)
 app.include_router(suggestion_management_router)
 app.include_router(deployment_router)
 app.include_router(nl_generation_router)  # Story AI1.21: Natural Language
+app.include_router(conversational_router)  # Story AI1.23: Conversational Refinement (Phase 1: Stubs)
 
 # Initialize scheduler
 scheduler = DailyAnalysisScheduler()
@@ -111,10 +112,15 @@ async def startup_event():
             username=settings.mqtt_username,
             password=settings.mqtt_password
         )
-        mqtt_client.connect()
-        logger.info("✅ MQTT client connected")
+        # Use improved connection with retry logic
+        if mqtt_client.connect(max_retries=3, retry_delay=2.0):
+            logger.info("✅ MQTT client connected")
+        else:
+            logger.warning("⚠️ MQTT client connection failed - continuing without MQTT")
+            mqtt_client = None
     except Exception as e:
         logger.error(f"❌ MQTT client initialization failed: {e}")
+        mqtt_client = None
         # Continue without MQTT - don't block service startup
     
     # Initialize Device Intelligence (Epic AI-2 - Story AI2.1)
@@ -134,6 +140,10 @@ async def startup_event():
             # Continue without Device Intelligence - don't block service startup
     else:
         logger.warning("⚠️ Device Intelligence not started (MQTT unavailable)")
+    
+    # Set MQTT client in scheduler
+    if mqtt_client:
+        scheduler.set_mqtt_client(mqtt_client)
     
     # Start scheduler (Epic AI-1)
     try:

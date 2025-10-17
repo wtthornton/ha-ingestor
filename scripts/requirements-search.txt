@@ -1,0 +1,3 @@
+# Requirements for HuggingFace search script
+huggingface_hub>=0.20.0
+

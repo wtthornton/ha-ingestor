@@ -44,12 +44,32 @@ async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   // Suggestions
-  async getSuggestions(status?: string, limit = 50): Promise<{ data: { suggestions: Suggestion[], count: number } }> {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    params.append('limit', limit.toString());
-    
-    return fetchJSON(`${API_BASE_URL}/suggestions/list?${params}`);
+  async getSuggestions(_status?: string, _limit = 50): Promise<{ data: { suggestions: Suggestion[], count: number } }> {
+    // For now, return empty list since we don't have the list endpoint yet
+    // TODO: Implement GET /api/v1/suggestions endpoint
+    return { data: { suggestions: [], count: 0 } };
+  },
+
+  // Story AI1.23: Generate new suggestions
+  async generateSuggestion(patternId: number, patternType: string, deviceId: string, metadata: any): Promise<{
+    suggestion_id: string;
+    description: string;
+    trigger_summary: string;
+    action_summary: string;
+    devices_involved: any[];
+    confidence: number;
+    status: string;
+    created_at: string;
+  }> {
+    return fetchJSON(`${API_BASE_URL}/v1/suggestions/generate`, {
+      method: 'POST',
+      body: JSON.stringify({
+        pattern_id: patternId,
+        pattern_type: patternType,
+        device_id: deviceId,
+        metadata: metadata
+      }),
+    });
   },
 
   async approveSuggestion(id: number): Promise<any> {
@@ -77,6 +97,46 @@ export const api = {
     return fetchJSON(`${API_BASE_URL}/suggestions/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  // Story AI1.23: Conversational Refinement
+  async refineSuggestion(id: number, userInput: string): Promise<{
+    suggestion_id: string;
+    updated_description: string;
+    changes_detected: string[];
+    validation: { ok: boolean; messages: string[]; warnings: string[]; alternatives: string[] };
+    refinement_count: number;
+    status: string;
+  }> {
+    return fetchJSON(`${API_BASE_URL}/v1/suggestions/suggestion-${id}/refine`, {
+      method: 'POST',
+      body: JSON.stringify({ user_input: userInput, conversation_context: true }),
+    });
+  },
+
+  async approveAndGenerateYAML(id: number, finalDescription?: string): Promise<{
+    suggestion_id: string;
+    status: string;
+    automation_yaml: string;
+    yaml_validation: { syntax_valid: boolean; safety_score: number; issues: any[] };
+    ready_to_deploy: boolean;
+  }> {
+    return fetchJSON(`${API_BASE_URL}/v1/suggestions/suggestion-${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ final_description: finalDescription || null }),
+    });
+  },
+
+  async getDeviceCapabilities(entityId: string): Promise<{
+    entity_id: string;
+    friendly_name: string;
+    domain: string;
+    area: string;
+    supported_features: Record<string, any>;
+    friendly_capabilities: string[];
+    common_use_cases: string[];
+  }> {
+    return fetchJSON(`${API_BASE_URL}/v1/suggestions/devices/${entityId}/capabilities`);
   },
 
   async batchApproveSuggestions(suggestionIds: number[]): Promise<any> {

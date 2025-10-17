@@ -32,12 +32,17 @@
     {
       "page": "Dashboard",
       "check": "checkTouchTargets",
-      "message": "Found 69 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+      "message": "Found 18 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
     },
     {
       "page": "Patterns",
       "check": "hasPatternList",
       "message": "No patterns found"
+    },
+    {
+      "page": "Patterns",
+      "check": "hasCharts",
+      "message": "No charts found"
     },
     {
       "page": "Deployed",
@@ -47,7 +52,7 @@
     {
       "page": "Deployed",
       "check": "checkTouchTargets",
-      "message": "Found 4 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+      "message": "Found 2 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
     },
     {
       "page": "Settings",
