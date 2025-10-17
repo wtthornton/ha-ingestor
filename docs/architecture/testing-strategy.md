@@ -187,3 +187,53 @@ testPatternsVisual();
 4. **Automated Comparison**: Use tools like `pixelmatch` for automated visual diff detection
 5. **CI Integration**: Run visual tests in CI/CD pipeline for regression detection
 
+### Visual Testing Suite
+
+We have implemented a comprehensive Puppeteer-based visual testing suite that validates all pages against design specifications.
+
+#### Location
+- **Test Suite**: `tests/visual/test-all-pages.js`
+- **Quick Check**: `tests/visual/test-quick-check.js`
+- **Documentation**: `tests/visual/README.md`
+
+#### Running Tests
+
+```bash
+# Full suite (all pages)
+node tests/visual/test-all-pages.js
+
+# Quick check (single page)
+node tests/visual/test-quick-check.js patterns
+```
+
+#### What Gets Tested
+- ✅ All 4 pages (Dashboard, Patterns, Deployed, Settings)
+- ✅ Light and dark mode screenshots
+- ✅ Design token compliance (colors, spacing, border radius)
+- ✅ Touch target sizes (44x44px minimum)
+- ✅ Navigation, cards, charts, buttons presence
+- ✅ Readable names vs hash IDs
+- ✅ Accessibility features (dark mode toggle)
+
+#### Test Output
+- Screenshots: `test-results/visual/{page}-{mode}.png`
+- JSON Report: `test-results/visual/test-report.json`
+- Console: Detailed pass/fail/warning summary
+
+#### Design Validation
+The suite validates against specifications in `docs/design-tokens.md`:
+- **Colors**: Status colors (green/yellow/red/blue), background, text, borders
+- **Spacing**: 4px/8px grid system (p-2, p-4, p-6, p-8, gap-*)
+- **Border Radius**: rounded, rounded-lg, rounded-xl, rounded-full
+- **Touch Targets**: Minimum 44x44px for all interactive elements
+- **Accessibility**: Dark mode support, navigation, focus states
+
+#### When to Run
+- Before committing UI changes
+- After design token updates
+- During PR reviews
+- As part of CI/CD pipeline
+- When fixing visual bugs
+
+See [tests/visual/README.md](mdc:tests/visual/README.md) for complete documentation.
+

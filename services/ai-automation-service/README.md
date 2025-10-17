@@ -91,10 +91,26 @@ docker-compose up -d ai-automation-service
 2. Phase 2: Fetch Events from InfluxDB (Shared)
 3. Phase 3: Pattern Detection (Epic AI-1)
 4. Phase 4: Feature Analysis (Epic AI-2)
-5. Phase 5: Combined Suggestion Generation
+5. Phase 5: Combined Suggestion Generation (OpenAI GPT-4o-mini)
 6. Phase 6: Publish MQTT Notification
 
-**Documentation:**
+### 📖 Complete System Documentation
+
+**🎯 START HERE:** [**Call Tree Index**](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md)
+
+The complete call tree documentation provides exhaustive detail on every phase:
+- Detailed call stacks from 3 AM wake-up to completion
+- OpenAI prompt templates and API integration
+- Database schemas and storage patterns
+- Performance characteristics and costs
+- Real-world examples with actual JSON payloads
+
+**Quick Links:**
+- [Complete Call Tree](../../implementation/analysis/AI_AUTOMATION_CALL_TREE.md) - All phases in one document
+- [OpenAI Integration Details](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md#6-phase-5-openai-suggestion-generation) - Prompts, templates, costs
+- [Device Discovery Process](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md#2-phase-1-device-capability-discovery) - Zigbee2MQTT integration
+
+**Additional Documentation:**
 - PRD: `docs/prd.md` (Stories AI1.*, AI2.*)
 - Epic AI-1 Stories: `docs/stories/story-ai1-*.md`
 - Epic AI-2 Stories: `docs/stories/story-ai2-*.md`
@@ -127,10 +143,17 @@ pytest tests/
 
 ## Performance
 
-- **Job Duration:** 7-15 minutes daily (3 AM)
+- **Job Duration:** 2-4 minutes typical (70-230s per phase breakdown in [call tree](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md))
 - **Memory Usage:** 200-400MB peak
-- **OpenAI Cost:** ~$0.003 per run (~$0.10/month)
+- **OpenAI Cost:** ~$0.001-0.005 per run (~$0.50/year) - See [detailed cost analysis](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md)
 - **Resource Reduction:** 99% less uptime vs real-time (2.5 hrs vs 730 hrs/month)
+
+**Detailed Performance Metrics:**
+See [Call Tree Index](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md) for:
+- Per-phase timing breakdown
+- Token usage per OpenAI call
+- Database query performance
+- Scaling characteristics (100-1000 devices)
 
 ## Documentation
 

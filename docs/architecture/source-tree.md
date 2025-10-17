@@ -43,7 +43,7 @@ ha-ingestor/
 │   ├── calendar-service/          # HA calendar integration (Port 8013)
 │   ├── smart-meter-service/       # Smart meter (Port 8014)
 │   ├── energy-correlator/         # Energy correlation analysis (Port 8017)
-│   ├── ai-automation-service/     # AI automation suggestions (Port 8018)
+│   ├── ai-automation-service/     # AI automation suggestions (Port 8018) [📖 Complete call tree: implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md]
 │   └── ha-simulator/              # Test event generator
 ├── shared/                        # Shared Python utilities
 │   ├── logging_config.py          # ⭐ Structured logging + correlation IDs
@@ -315,6 +315,7 @@ infrastructure/
 - **MQTT Integration**: Connected to 192.168.1.86:1883
 - **Home Assistant**: Connected to 192.168.1.86:8123
 - **Databases**: InfluxDB (8086) and SQLite working optimally
+- **AI Automation**: Daily 3 AM job running (~$0.50/year cost) [📖 Docs](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md)
 
 ### **Recent Major Fixes**
 - **MQTT Connection**: Fixed IP configuration (was 172.18.0.1, now 192.168.1.86)

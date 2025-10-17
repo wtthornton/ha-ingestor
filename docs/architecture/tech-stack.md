@@ -58,6 +58,10 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 - **pytest 7.4+**: Comprehensive testing framework for Python services
 - **Playwright 1.56.0**: Reliable E2E testing across multiple browsers with latest features
 - **Puppeteer**: Browser automation for visual testing, screenshot verification, and UI regression testing
+  - Comprehensive test suite: `tests/visual/test-all-pages.js` validates all pages against design specifications
+  - Quick check tool: `tests/visual/test-quick-check.js` for fast single-page validation
+  - Tests light/dark mode, design tokens, touch targets, and accessibility
+  - See `tests/visual/README.md` for documentation
 
 ### Deployment
 - **Docker Compose**: Simple orchestration for local development and production deployment

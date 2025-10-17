@@ -1,0 +1,68 @@
+{
+  "passed": [
+    {
+      "page": "Dashboard",
+      "message": "All checks completed"
+    },
+    {
+      "page": "Patterns",
+      "message": "All checks completed"
+    },
+    {
+      "page": "Deployed",
+      "message": "All checks completed"
+    },
+    {
+      "page": "Settings",
+      "message": "All checks completed"
+    }
+  ],
+  "failed": [],
+  "warnings": [
+    {
+      "page": "Dashboard",
+      "check": "hasCharts",
+      "message": "No charts found"
+    },
+    {
+      "page": "Dashboard",
+      "check": "hasDarkModeToggle",
+      "message": "Dark mode toggle missing"
+    },
+    {
+      "page": "Dashboard",
+      "check": "checkTouchTargets",
+      "message": "Found 69 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+    },
+    {
+      "page": "Patterns",
+      "check": "hasPatternList",
+      "message": "No patterns found"
+    },
+    {
+      "page": "Deployed",
+      "check": "hasAutomationList",
+      "message": "No automations found"
+    },
+    {
+      "page": "Deployed",
+      "check": "checkTouchTargets",
+      "message": "Found 4 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+    },
+    {
+      "page": "Settings",
+      "check": "hasSettingsForm",
+      "message": "Settings form missing"
+    },
+    {
+      "page": "Settings",
+      "check": "hasInputFields",
+      "message": "No input fields found"
+    },
+    {
+      "page": "Settings",
+      "check": "checkTouchTargets",
+      "message": "Found 2 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+    }
+  ]
+}

@@ -3,6 +3,23 @@ OpenAI Client for Automation Suggestion Generation
 
 Uses GPT-4o-mini to convert detected patterns into natural language
 automation suggestions with valid Home Assistant YAML.
+
+**Model:** GPT-4o-mini (cost-effective, sufficient for YAML generation)
+**Temperature:** 0.7 (balanced creativity + consistency)
+**Typical Cost:** $0.000137 per suggestion (~$0.50/year for daily runs)
+
+**Complete Documentation:**
+See implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md for:
+- Complete prompt templates (time-of-day, co-occurrence, anomaly)
+- API call flow and examples
+- Token usage and cost analysis
+- Response parsing strategies
+- Error handling and retry logic
+
+**Prompt Templates:**
+- Time-of-Day: Device activates consistently at specific time
+- Co-Occurrence: Two devices frequently used together
+- Anomaly: Unusual activity detection (future)
 """
 
 from openai import AsyncOpenAI
