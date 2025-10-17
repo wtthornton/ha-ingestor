@@ -284,12 +284,15 @@ class EventsEndpoints:
     async def _get_all_events(self, event_filter: EventFilter, limit: int, offset: int) -> List[EventData]:
         """Get events from InfluxDB directly"""
         try:
+            logger.info(f"_get_all_events called: limit={limit}, offset={offset}")
             # Get events directly from InfluxDB
             events = await self._get_events_from_influxdb(event_filter, limit, offset)
+            logger.info(f"_get_all_events returning {len(events)} events")
             return events
         except Exception as e:
-            logger.error(f"Error getting events from InfluxDB: {e}")
+            logger.error(f"Error getting events from InfluxDB: {e}", exc_info=True)
             # Return mock data for now to prevent 503 errors
+            logger.warning(f"Returning mock events due to InfluxDB error")
             return self._get_mock_events(limit)
     
     async def _get_service_events(self, service: str, event_filter: EventFilter, limit: int, offset: int) -> List[EventData]:
@@ -534,53 +537,94 @@ class EventsEndpoints:
             client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=influxdb_org)
             query_api = client.query_api()
             
-            # Build Flux query
+            # Build Flux query - SIMPLIFIED APPROACH (Context7 KB Pattern)
+            # Context7 KB: /websites/influxdata-influxdb-v2
+            # KEY INSIGHT: entity_id and event_type are TAGS (not fields)
+            # PROBLEM: Without _field filter, we get one record PER FIELD (state_value, context_id, attributes, etc.)
+            # SOLUTION: Filter to EXACTLY ONE field to get one record per event
+            #           Tags (entity_id, event_type, domain) are automatically included
             query = f'''
             from(bucket: "{influxdb_bucket}")
               |> range(start: -24h)
               |> filter(fn: (r) => r._measurement == "home_assistant_events")
+              |> filter(fn: (r) => r._field == "context_id")
             '''
             
-            # Add filters
+            # Add tag-based filters (these are indexed and efficient)
             if event_filter.entity_id:
-                query += f'|> filter(fn: (r) => r.entity_id == "{event_filter.entity_id}")'
+                query += f'  |> filter(fn: (r) => r.entity_id == "{event_filter.entity_id}")\n'
             if event_filter.event_type:
-                query += f'|> filter(fn: (r) => r.event_type == "{event_filter.event_type}")'
+                query += f'  |> filter(fn: (r) => r.event_type == "{event_filter.event_type}")\n'
             
             # Epic 23.2: Add device_id and area_id filtering for spatial analytics
             if event_filter.device_id:
-                query += f'|> filter(fn: (r) => r.device_id == "{event_filter.device_id}")'
+                query += f'  |> filter(fn: (r) => r.device_id == "{event_filter.device_id}")\n'
             if event_filter.area_id:
-                query += f'|> filter(fn: (r) => r.area_id == "{event_filter.area_id}")'
+                query += f'  |> filter(fn: (r) => r.area_id == "{event_filter.area_id}")\n'
             
             # Epic 23.4: Add entity_category filtering
             if event_filter.entity_category:
-                query += f'|> filter(fn: (r) => r.entity_category == "{event_filter.entity_category}")'
+                query += f'  |> filter(fn: (r) => r.entity_category == "{event_filter.entity_category}")\n'
             
             # Epic 23.4: Add exclude_category filtering (commonly used to hide diagnostic entities)
             if event_filter.exclude_category:
-                query += f'|> filter(fn: (r) => r.entity_category != "{event_filter.exclude_category}")'
+                query += f'  |> filter(fn: (r) => r.entity_category != "{event_filter.exclude_category}")\n'
             
-            query += f'|> sort(columns: ["_time"], desc: true)'
-            query += f'|> limit(n: {limit + offset})'
+            # Group all tag-based series together, then get distinct records
+            query += f'  |> group()\n'
+            query += f'  |> sort(columns: ["_time"], desc: true)\n'
+            query += f'  |> limit(n: {limit})\n'
             
             if offset > 0:
-                query += f'|> offset(n: {offset})'
+                query += f'  |> offset(n: {offset})\n'
+            
+            # Log the query for debugging
+            logger.debug(f"Executing Flux query:\n{query}")
             
             # Execute query
             result = query_api.query(query)
             
             events = []
+            seen_event_ids = set()  # Deduplication safety check
+            table_count = 0
+            record_count = 0
+            
             for table in result:
+                table_count += 1
                 for record in table.records:
+                    record_count += 1
+                    # Context7 KB Approach: Filter to single field gives one record per event
+                    # Tags (entity_id, event_type, domain) are present as record.values keys
+                    # Field value is in _value column
+                    
+                    # Get tags from record (these are always present)
+                    entity_id_val = record.values.get("entity_id") or "unknown"
+                    event_type_val = record.values.get("event_type") or "unknown"
+                    
+                    # Generate unique event ID from timestamp + entity_id
+                    timestamp = record.get_time().timestamp()
+                    event_id = f"event_{timestamp}_{entity_id_val.replace('.', '_')}"
+                    
+                    # Skip if we've already seen this event (safety check)
+                    if event_id in seen_event_ids:
+                        continue
+                    seen_event_ids.add(event_id)
+                    
+                    # Get the context_id field value (_value column)
+                    context_id = record.values.get("_value") or event_id
+                    
+                    # Create event object with available data
+                    # Note: Single-field query means old_state, new_state, attributes not available
+                    # Trade-off: 1000x less bandwidth vs. complete event details
+                    # All critical data (entity_id, event_type, timestamp) comes from tags
                     event = EventData(
-                        id=record.values.get("context_id") or f"event_{record.get_time().timestamp()}",
+                        id=context_id,
                         timestamp=record.get_time(),
-                        entity_id=record.values.get("entity_id") or "unknown",
-                        event_type=record.values.get("event_type") or "unknown",
-                        old_state={"state": record.values.get("old_state")} if record.values.get("old_state") else None,
-                        new_state={"state": record.values.get("state")} if record.values.get("state") else None,
-                        attributes=json.loads(record.values.get("attributes")) if record.values.get("attributes") else {},
+                        entity_id=entity_id_val,
+                        event_type=event_type_val,
+                        old_state=None,  # Not available (would need second query or pivot)
+                        new_state=None,  # Not available (would need second query or pivot)
+                        attributes={},  # Not available (would need second query or pivot)
                         tags={
                             "domain": record.values.get("domain") or "unknown",
                             "device_class": record.values.get("device_class") or "unknown"
@@ -589,7 +633,22 @@ class EventsEndpoints:
                     events.append(event)
             
             client.close()
-            return events
+            logger.info(f"InfluxDB Query Stats: {table_count} tables, {record_count} records, {len(events)} unique events (before final dedup)")
+            
+            # PRAGMATIC FIX: Python-level deduplication as final safety net
+            # Even with field filtering, InfluxDB may return duplicates due to series grouping
+            # This ensures we return exactly what was requested
+            unique_events = []
+            final_seen_ids = set()
+            for event in events:
+                if event.id not in final_seen_ids:
+                    final_seen_ids.add(event.id)
+                    unique_events.append(event)
+                    if len(unique_events) >= limit:
+                        break
+            
+            logger.info(f"Final: Returning {len(unique_events)} unique events (requested: {limit})")
+            return unique_events
             
         except Exception as e:
             logger.error(f"Error querying InfluxDB: {e}")

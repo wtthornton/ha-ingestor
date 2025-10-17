@@ -3,9 +3,12 @@
  * 
  * Real-time event stream with filtering, auto-scroll, and copy functionality
  * Epic 15.2: Live Event Stream & Log Viewer
+ * 
+ * Implementation: HTTP polling every 3 seconds for real-time updates
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { dataApi } from '../services/api';
 
 interface Event {
   id: string;
@@ -21,18 +24,102 @@ interface EventStreamViewerProps {
   darkMode: boolean;
 }
 
+// Helper function to infer severity from event type
+const inferSeverity = (eventType: string): 'info' | 'warning' | 'error' | 'debug' => {
+  const type = eventType.toLowerCase();
+  if (type.includes('error') || type.includes('fail')) return 'error';
+  if (type.includes('warn')) return 'warning';
+  if (type.includes('debug')) return 'debug';
+  return 'info';
+};
+
+// Helper function to map API event to component format
+const mapApiEvent = (apiEvent: any): Event => {
+  const entityId = apiEvent.entity_id || 'unknown';
+  const eventType = apiEvent.event_type || 'unknown';
+  
+  return {
+    id: apiEvent.id || `event_${Date.now()}_${Math.random()}`,
+    timestamp: apiEvent.timestamp || new Date().toISOString(),
+    service: 'home-assistant',
+    type: eventType,
+    severity: inferSeverity(eventType),
+    message: `${entityId}: ${eventType}`,
+    details: apiEvent
+  };
+};
+
 export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }) => {
-  // TODO: Implement HTTP polling for events from /api/v1/events endpoint
-  const [events] = useState<Event[]>([]);
+  // State management
+  const [events, setEvents] = useState<Event[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [selectedService, setSelectedService] = useState<string>('all');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   
   const eventsEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // HTTP Polling for events - Following React best practices from Context7 KB
+  useEffect(() => {
+    if (isPaused) return; // Don't fetch when paused
+    
+    let ignore = false; // Race condition prevention (Context7 KB pattern)
+    
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch latest events from API
+        const apiEvents = await dataApi.getEvents({ limit: 50 });
+        
+        if (ignore) return; // Prevent stale updates
+        
+        if (apiEvents && Array.isArray(apiEvents)) {
+          // Map API events to component format
+          const mappedEvents = apiEvents.map(mapApiEvent);
+          
+          // Filter out duplicates based on event ID
+          setEvents(prevEvents => {
+            const existingIds = new Set(prevEvents.map(e => e.id));
+            const newEvents = mappedEvents.filter(e => !existingIds.has(e.id));
+            
+            // Prepend new events (newest first), limit to 500 total
+            return [...newEvents, ...prevEvents].slice(0, 500);
+          });
+          
+          setLastFetchTime(new Date());
+        }
+      } catch (err: any) {
+        if (!ignore) {
+          setError(err.message || 'Failed to fetch events');
+          console.error('Event fetch error:', err);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    // Initial fetch
+    fetchEvents();
+    
+    // Poll every 3 seconds (Context7 KB: setInterval with cleanup)
+    const pollInterval = setInterval(fetchEvents, 3000);
+    
+    // Cleanup function - critical for preventing memory leaks (Context7 KB pattern)
+    return () => {
+      ignore = true;
+      clearInterval(pollInterval);
+    };
+  }, [isPaused]); // Re-run when pause state changes
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -40,6 +127,12 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
       eventsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [events, autoScroll]);
+
+  // Clear events callback
+  const clearEvents = useCallback(() => {
+    setEvents([]);
+    setError(null);
+  }, []);
 
   // Filter events
   const filteredEvents = events.filter(event => {
@@ -69,17 +162,29 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
   };
 
   // Copy event to clipboard
-  const copyToClipboard = (event: Event) => {
+  const copyToClipboard = useCallback((event: Event) => {
     navigator.clipboard.writeText(JSON.stringify(event, null, 2));
-  };
-
-  // Clear all events
-  const clearEvents = () => {
-    setEvents([]);
-  };
+  }, []);
 
   return (
     <div className="space-y-4">
+      {/* Error Banner */}
+      {error && (
+        <div className={`p-4 rounded-lg border ${
+          darkMode 
+            ? 'bg-red-900/30 border-red-700 text-red-400' 
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <strong className="font-semibold">Error fetching events</strong>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Controls */}
       <div className={`card-base p-4`}>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -156,7 +261,7 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
         </div>
         
         {/* Stats */}
-        <div className="flex gap-4 mt-3 text-sm">
+        <div className="flex flex-wrap gap-4 mt-3 text-sm">
           <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Total: <span className="font-semibold">{events.length}</span>
           </span>
@@ -166,6 +271,16 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
           <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Status: <span className="font-semibold">{isPaused ? 'Paused' : 'Live'}</span>
           </span>
+          {loading && (
+            <span className={`${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              <span className="animate-pulse">🔄 Fetching...</span>
+            </span>
+          )}
+          {lastFetchTime && !loading && (
+            <span className={`${darkMode ? 'text-gray-500' : 'text-gray-500'} text-xs`}>
+              Last update: {lastFetchTime.toLocaleTimeString()}
+            </span>
+          )}
         </div>
       </div>
       
@@ -174,10 +289,15 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
         ref={containerRef}
         className={`card-base p-4 max-h-[600px] overflow-y-auto`}
       >
-        {filteredEvents.length === 0 ? (
+        {loading && events.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-500">Loading events...</p>
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-12">
             <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {isPaused ? '⏸️ Stream paused' : '⏳ Waiting for events...'}
+              {isPaused ? '⏸️ Stream paused' : events.length > 0 ? '🔍 No events match your filters' : '⏳ Waiting for events...'}
             </p>
           </div>
         ) : (

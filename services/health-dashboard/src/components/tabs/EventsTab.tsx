@@ -3,7 +3,7 @@
  * Story 21.3: Enhanced with historical queries and statistics
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { EventStreamViewer } from '../EventStreamViewer';
 import { TabProps } from './types';
 import { dataApi } from '../../services/api';
@@ -21,15 +21,8 @@ export const EventsTab: React.FC<TabProps> = ({ darkMode }) => {
   const [loading, setLoading] = useState(false);
   const [showHistorical, setShowHistorical] = useState(false);
 
-  // Fetch historical events when time range changes
-  useEffect(() => {
-    if (showHistorical) {
-      fetchHistoricalEvents();
-      fetchEventStats();
-    }
-  }, [timeRange, showHistorical]);
-
-  const fetchHistoricalEvents = async () => {
+  // Fetch historical events - wrapped in useCallback for proper dependency tracking
+  const fetchHistoricalEvents = useCallback(async () => {
     try {
       setLoading(true);
       const events = await dataApi.getEvents({ limit: 100 });
@@ -40,16 +33,25 @@ export const EventsTab: React.FC<TabProps> = ({ darkMode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies - dataApi is stable
 
-  const fetchEventStats = async () => {
+  // Fetch event statistics - wrapped in useCallback with timeRange dependency
+  const fetchEventStats = useCallback(async () => {
     try {
       const statsData = await dataApi.getEventsStats(timeRange);
       setStats(statsData);
     } catch (error) {
       console.error('Error fetching event stats:', error);
     }
-  };
+  }, [timeRange]); // Depends on timeRange
+
+  // Fetch historical events when time range changes
+  useEffect(() => {
+    if (showHistorical) {
+      fetchHistoricalEvents();
+      fetchEventStats();
+    }
+  }, [timeRange, showHistorical, fetchHistoricalEvents, fetchEventStats]);
 
   return (
     <div className="space-y-6">
