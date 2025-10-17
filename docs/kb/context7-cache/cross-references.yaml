@@ -6,10 +6,14 @@ cross_references:
   frontend_development:
     primary_libraries: ["react", "typescript", "tailwindcss", "vite", "vitest"]
     supporting_libraries: ["heroicons"]
-    key_topics: ["components", "hooks", "state_management", "ui_design", "testing"]
+    key_topics: ["components", "hooks", "state_management", "ui_design", "testing", "polling", "real-time"]
     common_patterns:
       - "React component with TypeScript and TailwindCSS"
       - "Custom hooks for state management"
+      - "HTTP polling with useEffect (ignore flag pattern)"
+      - "Race condition prevention in async operations"
+      - "Cleanup functions for memory leak prevention"
+      - "useCallback for stable function references"
       - "Component testing with Vitest"
       - "Build optimization with Vite"
       - "Icon integration with Heroicons"
@@ -30,13 +34,16 @@ cross_references:
   data_storage:
     primary_libraries: ["influxdb", "redis", "elasticsearch"]
     supporting_libraries: []
-    key_topics: ["time_series", "caching", "data_processing", "performance"]
+    key_topics: ["time_series", "caching", "data_processing", "performance", "deduplication"]
     common_patterns:
       - "Time series data with InfluxDB"
+      - "InfluxDB single-field query for deduplication"
+      - "Flux query optimization (filter by _field)"
+      - "Python-level deduplication for safety"
       - "Caching strategies with Redis"
       - "Search and analytics with Elasticsearch"
       - "Data retention and cleanup"
-      - "Performance optimization"
+      - "Performance optimization (1,558x improvements possible)"
     
   # Infrastructure and DevOps
   infrastructure:
@@ -66,13 +73,17 @@ cross_references:
   development_workflow:
     primary_libraries: ["vite", "vitest", "playwright", "pytest"]
     supporting_libraries: ["docker"]
-    key_topics: ["testing", "build_tools", "performance", "container_management"]
+    key_topics: ["testing", "build_tools", "performance", "container_management", "debugging"]
     common_patterns:
       - "Frontend testing with Vitest and Playwright"
       - "Backend testing with pytest"
+      - "Puppeteer E2E testing with screenshots"
+      - "Performance measurement (before/after metrics)"
       - "Build and deployment with Vite and Docker"
+      - "Docker rebuild required for code changes (not just restart)"
       - "CI/CD pipeline setup"
       - "Performance testing and optimization"
+      - "Systematic debugging (research → plan → implement → test)"
 
   # Library Relationships
   library_relationships:
