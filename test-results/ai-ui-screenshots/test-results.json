@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-10-16T22:49:16.583Z",
+  "baseUrl": "http://localhost:3001",
+  "pages": [
+    {
+      "name": "Dashboard",
+      "path": "/",
+      "url": "http://localhost:3001/",
+      "description": "Main dashboard with automation suggestions",
+      "tests": [
+        {
+          "test": "Page loads",
+          "status": "PASS",
+          "details": "HTTP 200"
+        }
+      ]
+    },
+    {
+      "name": "Patterns",
+      "path": "/patterns",
+      "url": "http://localhost:3001/patterns",
+      "description": "Detected usage patterns",
+      "tests": [
+        {
+          "test": "Page loads",
+          "status": "PASS",
+          "details": "HTTP 200"
+        }
+      ]
+    },
+    {
+      "name": "Deployed",
+      "path": "/deployed",
+      "url": "http://localhost:3001/deployed",
+      "description": "Active deployed automations",
+      "tests": [
+        {
+          "test": "Page loads",
+          "status": "PASS",
+          "details": "HTTP 200"
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "path": "/settings",
+      "url": "http://localhost:3001/settings",
+      "description": "Configuration and settings",
+      "tests": [
+        {
+          "test": "Page loads",
+          "status": "PASS",
+          "details": "HTTP 200"
+        }
+      ]
+    },
+    {
+      "name": "API Connectivity",
+      "tests": [
+        {
+          "test": "Suggestions API",
+          "status": "PASS",
+          "details": "200 - Data received"
+        },
+        {
+          "test": "Patterns API",
+          "status": "PASS",
+          "details": "200 - Data received"
+        },
+        {
+          "test": "Analysis Status",
+          "status": "PASS",
+          "details": "200 - Data received"
+        },
+        {
+          "test": "Schedule Info",
+          "status": "PASS",
+          "details": "200 - Data received"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  }
+}

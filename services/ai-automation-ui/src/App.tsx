@@ -5,6 +5,8 @@
 
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { SelectionProvider } from './context/SelectionContext';
 import { Navigation } from './components/Navigation';
 import { Dashboard } from './pages/Dashboard';
 import { Patterns } from './pages/Patterns';
@@ -25,9 +27,10 @@ export const App: React.FC = () => {
   }, [darkMode]);
 
   return (
-    <Router>
-      <div className={`min-h-screen transition-colors ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <Navigation />
+    <SelectionProvider>
+      <Router>
+        <div className={`min-h-screen transition-colors ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+          <Navigation />
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Routes>
@@ -59,8 +62,42 @@ export const App: React.FC = () => {
             </div>
           </div>
         </footer>
-      </div>
-    </Router>
+
+        {/* Toast Notifications */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: darkMode ? '#374151' : '#fff',
+              color: darkMode ? '#f3f4f6' : '#1f2937',
+              border: `1px solid ${darkMode ? '#4b5563' : '#e5e7eb'}`,
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+            loading: {
+              iconTheme: {
+                primary: '#3b82f6',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        </div>
+      </Router>
+    </SelectionProvider>
   );
 };
 

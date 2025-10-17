@@ -1,11 +1,10 @@
 /**
- * Navigation Component
- * Beautiful top navigation with dark mode toggle
+ * Navigation Component - Fixed Version
+ * Without framer-motion dependency
  */
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAppStore } from '../store';
 
 export const Navigation: React.FC = () => {
@@ -26,50 +25,37 @@ export const Navigation: React.FC = () => {
   return (
     <nav className={`sticky top-0 z-50 ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border-b shadow-sm transition-colors`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-12">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="text-3xl">🤖</div>
-            <div>
-              <div className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                HA AutomateAI
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Smart Home Intelligence
-              </div>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="text-xl">🤖</div>
+            <div className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              HA AutomateAI
             </div>
           </Link>
 
           {/* Nav Links - Desktop */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className="relative"
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? darkMode
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-blue-500 text-white'
+                    : darkMode
+                    ? 'text-gray-300 hover:bg-gray-800'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    isActive(item.path)
-                      ? darkMode
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-500 text-white'
-                      : darkMode
-                      ? 'text-gray-300 hover:bg-gray-800'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {item.label}
-                </motion.div>
+                {item.label}
               </Link>
             ))}
 
             {/* Dark Mode Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={toggleDarkMode}
               className={`p-2 rounded-lg ml-2 ${
                 darkMode
@@ -78,7 +64,7 @@ export const Navigation: React.FC = () => {
               }`}
             >
               {darkMode ? '☀️' : '🌙'}
-            </motion.button>
+            </button>
 
             {/* Link to Admin Dashboard */}
             <a
@@ -135,4 +121,3 @@ export const Navigation: React.FC = () => {
     </nav>
   );
 };
-

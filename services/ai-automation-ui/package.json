@@ -16,7 +16,8 @@
     "framer-motion": "^10.16.16",
     "zustand": "^4.4.7",
     "chart.js": "^4.4.1",
-    "react-chartjs-2": "^5.2.0"
+    "react-chartjs-2": "^5.2.0",
+    "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

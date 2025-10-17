@@ -14,19 +14,22 @@ This document serves as the main entry point for the Home Assistant Ingestor arc
 **Tech Stack:** Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, SQLite 3.45+, Docker  
 **Database:** Hybrid architecture (InfluxDB for time-series, SQLite for metadata)  
 **Deployment:** Docker Compose with optimized Alpine images  
-**Purpose:** Capture Home Assistant events, enrich with weather context, store in time-series database
+**Purpose:** Capture Home Assistant events, enrich with weather context, store in time-series database  
+**Status:** ✅ FULLY OPERATIONAL - All services healthy, MQTT connected, 100% success rate  
+**Last Updated:** October 17, 2025
 
 ## Architecture Diagram
 
 ```mermaid
 graph TB
-    HA[Home Assistant] -->|WebSocket| WS[WebSocket Ingestion<br/>Port: 8001]
-    WS --> ENRICH[Enrichment Pipeline<br/>Port: 8002]
-    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Time-Series<br/>Port: 8086)]
+    HA[Home Assistant<br/>192.168.1.86:8123] -->|WebSocket| WS[WebSocket Ingestion<br/>localhost:8001]
+    HA -->|MQTT| MQTT[MQTT Broker<br/>192.168.1.86:1883]
+    WS --> ENRICH[Enrichment Pipeline<br/>localhost:8002]
+    ENRICH --> INFLUX[(InfluxDB 2.7<br/>Time-Series<br/>localhost:8086)]
     
-    DASH[Health Dashboard<br/>Port: 3000] -->|REST API| ADMIN[Admin API<br/>Port: 8003]
-    DASH -->|Data API| DATA[Data API<br/>Port: 8006]
-    DASH -->|Sports API| SPORTS[Sports Data<br/>Port: 8005]
+    DASH[Health Dashboard<br/>localhost:3000] -->|REST API| ADMIN[Admin API<br/>localhost:8003]
+    DASH -->|Data API| DATA[Data API<br/>localhost:8006]
+    DASH -->|Sports API| SPORTS[Sports Data<br/>localhost:8005]
     
     ADMIN --> INFLUX
     DATA --> INFLUX
@@ -35,16 +38,16 @@ graph TB
     SPORTS --> SQLITE2[(SQLite<br/>webhooks.db<br/>Webhooks)]
     
     WEATHER[Weather API<br/>Internal] --> ENRICH
-    CARBON[Carbon Intensity<br/>Port: 8010] --> ENRICH
-    PRICING[Electricity Pricing<br/>Port: 8011] --> ENRICH
-    AIRQ[Air Quality<br/>Port: 8012] --> ENRICH
-    CAL[Calendar<br/>Port: 8013] --> ENRICH
-    METER[Smart Meter<br/>Port: 8014] --> ENRICH
+    CARBON[Carbon Intensity<br/>localhost:8010] --> ENRICH
+    PRICING[Electricity Pricing<br/>localhost:8011] --> ENRICH
+    AIRQ[Air Quality<br/>localhost:8012] --> ENRICH
+    CAL[Calendar<br/>localhost:8013] --> ENRICH
+    METER[Smart Meter<br/>localhost:8014] --> ENRICH
     
-    RETENTION[Data Retention<br/>Port: 8080] --> INFLUX
+    RETENTION[Data Retention<br/>localhost:8080] --> INFLUX
     RETENTION -->|S3 Archive| S3[(S3/Glacier)]
     
-    subgraph "Core Services"
+    subgraph "Local Services (localhost)"
         WS
         ENRICH
         ADMIN
@@ -52,6 +55,11 @@ graph TB
         SPORTS
         DASH
         RETENTION
+    end
+    
+    subgraph "Home Assistant Server (192.168.1.86)"
+        HA
+        MQTT
     end
     
     subgraph "Databases - Epic 22 Hybrid Architecture"

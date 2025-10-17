@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/wtthornton/ha-ingestor#readme",
   "dependencies": {
-    "@playwright/test": "^1.56.0"
+    "@playwright/test": "^1.56.0",
+    "puppeteer": "^24.25.0"
   }
 }

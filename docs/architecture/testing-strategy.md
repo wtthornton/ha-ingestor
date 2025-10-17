@@ -3,6 +3,8 @@
 ### Testing Pyramid
 
 ```
+Visual Tests (Puppeteer)
+/        \
 E2E Tests (Integration)
 /        \
 Integration Tests (API)
@@ -42,6 +44,18 @@ tests/
 ├── test_data_flow.py
 └── fixtures/
     └── sample_events.json
+```
+
+#### Visual Tests (Puppeteer)
+```
+tests/visual/
+├── test-patterns-visual.js
+├── test-dashboard-visual.js
+├── test-ui-regression.js
+└── screenshots/
+    ├── patterns-baseline.png
+    ├── dashboard-baseline.png
+    └── regression-comparisons/
 ```
 
 ### Test Examples
@@ -96,4 +110,80 @@ async def test_end_to_end_data_flow():
     stored_event = await query_influxdb(event.entity_id)
     assert stored_event is not None
 ```
-
+
+#### Visual Test (Puppeteer)
+```javascript
+const puppeteer = require('puppeteer');
+
+async function testPatternsVisual() {
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+  
+  try {
+    // Navigate to patterns page
+    await page.goto('http://localhost:3001/patterns', { waitUntil: 'networkidle2' });
+    
+    // Wait for patterns to load
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Take screenshot for visual verification
+    await page.screenshot({ path: 'patterns-test.png', fullPage: true });
+    
+    // Verify readable pattern names
+    const patternTexts = await page.evaluate(() => {
+      const elements = document.querySelectorAll('*');
+      const texts = [];
+      elements.forEach(el => {
+        const text = el.textContent?.trim();
+        if (text && text.length > 20 && text.length < 100 && 
+            (text.includes('Co-occurrence') || text.includes('Pattern'))) {
+          texts.push(text);
+        }
+      });
+      return [...new Set(texts)].slice(0, 10);
+    });
+    
+    // Assert readable names are present
+    const hasReadableNames = patternTexts.some(text => 
+      text.includes('Co-occurrence') || text.includes('Pattern')
+    );
+    
+    if (hasReadableNames) {
+      console.log('✅ SUCCESS: Found readable pattern names!');
+    } else {
+      throw new Error('❌ FAILED: Still showing hash IDs instead of readable names');
+    }
+    
+  } finally {
+    await browser.close();
+  }
+}
+
+testPatternsVisual();
+```
+
+### Visual Testing with Puppeteer
+
+#### When to Use Puppeteer
+- **UI Regression Testing**: Verify visual changes don't break existing functionality
+- **Screenshot Verification**: Capture and compare UI states
+- **User Experience Testing**: Test actual browser behavior and interactions
+- **Cross-browser Testing**: Verify functionality across different browsers
+- **Performance Testing**: Measure page load times and rendering performance
+
+#### Puppeteer vs Other Testing Tools
+
+| Tool | Use Case | Strengths |
+|------|----------|-----------|
+| **Puppeteer** | Visual testing, screenshots, browser automation | Real browser, screenshot capture, reliable automation |
+| **Playwright** | E2E testing, cross-browser | Multi-browser support, built-in assertions |
+| **Vitest** | Unit testing, component testing | Fast, Vite integration, TypeScript support |
+| **pytest** | Backend testing, API testing | Python ecosystem, comprehensive assertions |
+
+#### Best Practices for Visual Testing
+1. **Screenshot Baselines**: Store reference screenshots for comparison
+2. **Selective Testing**: Focus on critical UI components and user flows
+3. **Environment Consistency**: Use consistent browser settings and viewport sizes
+4. **Automated Comparison**: Use tools like `pixelmatch` for automated visual diff detection
+5. **CI Integration**: Run visual tests in CI/CD pipeline for regression detection
+

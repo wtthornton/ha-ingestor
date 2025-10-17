@@ -1,9 +1,9 @@
-# Front-End Specification
+# Front-End Specification & UI Standards
 
-**Version**: 1.0  
-**Last Updated**: October 13, 2025  
+**Version**: 2.0  
+**Last Updated**: January 17, 2025  
 **Status**: Production-Ready  
-**Based On**: Overview Tab Redesign (Phase 1-3)
+**Based On**: Streamlined UI Redesign & AI Automation UX Improvements
 
 ---
 
@@ -24,31 +24,56 @@
 
 ### Core Principles
 
-1. **Glanceable Information Architecture**
+1. **Streamlined & Professional**
+   - Clean, compact interfaces that maximize information density
+   - Minimal visual noise and excessive decorations
+   - Professional enterprise-ready appearance
+   - Efficient use of screen real estate
+
+2. **Glanceable Information Architecture**
    - Most critical information visible above the fold
    - Users should understand system state in < 5 seconds
    - Progressive disclosure: summary first, details on demand
 
-2. **Single Source of Truth**
+3. **Single Source of Truth**
    - Never duplicate information
    - One metric = one display location
    - Consistency across all tabs
 
-3. **Visual Hierarchy First**
+4. **Visual Hierarchy First**
    - Primary info: Largest, most prominent
    - Secondary info: Supporting, contextual
    - Tertiary info: Available via interaction
 
-4. **Actionable Data Only**
+5. **Actionable Data Only**
    - Show metrics that inform decisions
    - Hide vanity metrics
    - Provide clear next actions
 
-5. **Accessibility is Non-Negotiable**
+6. **Accessibility is Non-Negotiable**
    - WCAG 2.1 AA compliance minimum
    - Keyboard navigation for all interactions
    - Screen reader compatible
    - Reduced motion support
+
+### Anti-Patterns (What We Avoid)
+
+1. **Bubbly Design Elements**
+   - ❌ Excessive rounded corners (rounded-xl, rounded-2xl)
+   - ❌ Overly large buttons and pills
+   - ❌ Nested rounded elements
+   - ❌ Playful gradients and animations
+
+2. **Visual Clutter**
+   - ❌ Too many shadows and effects
+   - ❌ Excessive padding and spacing
+   - ❌ Decorative elements that don't serve function
+   - ❌ Complex hover animations
+
+3. **Inconsistent Sizing**
+   - ❌ Inconsistent button sizes
+   - ❌ Varying text sizes without hierarchy
+   - ❌ Misaligned spacing
 
 ---
 
@@ -191,61 +216,209 @@ leading-normal: 1.5  - Body text
 leading-relaxed: 1.75 - Long-form content
 ```
 
-### Spacing System
+### Spacing System (Streamlined)
 
-#### Scale (Tailwind)
+#### Scale (Tailwind) - Updated for Efficiency
 ```css
 0:   0px
-1:   4px   (0.25rem)
-2:   8px   (0.5rem)
-3:   12px  (0.75rem)
-4:   16px  (1rem)
-5:   20px  (1.25rem)
-6:   24px  (1.5rem)
-8:   32px  (2rem)
-10:  40px  (2.5rem)
-12:  48px  (3rem)
+1:   4px   (0.25rem) - Micro spacing
+2:   8px   (0.5rem)  - Small gaps
+3:   12px  (0.75rem) - Standard gaps
+4:   16px  (1rem)    - Component padding
+6:   24px  (1.5rem)  - Section spacing
+8:   32px  (2rem)    - Large sections
 ```
 
-#### Component Spacing
+#### Streamlined Component Spacing
 ```css
-/* Cards */
-card-padding:      p-6 (24px)
-card-gap:          gap-6 (24px between cards)
+/* Cards - Reduced padding */
+card-padding:      p-4 (16px) - was p-6
+card-gap:          gap-4 (16px) - was gap-6
 
-/* Sections */
-section-margin:    mb-8 (32px between sections)
-section-padding:   py-6 (24px vertical)
+/* Sections - Compact spacing */
+section-margin:    mb-4 (16px) - was mb-8
+section-padding:   py-3 (12px) - was py-6
 
-/* Grids */
-grid-gap:          gap-6 (24px)
+/* Grids - Tighter spacing */
+grid-gap:          gap-4 (16px) - was gap-6
 grid-cols:         1/2/3/4 based on breakpoint
 
-/* Micro-spacing */
-item-spacing:      space-y-2 (8px)
-inline-spacing:    space-x-2 (8px)
+/* Micro-spacing - Consistent */
+item-spacing:      space-y-1 (4px) - was space-y-2
+inline-spacing:    space-x-1 (4px) - was space-x-2
+
+/* Headers - Minimal height */
+header-height:     h-12 (48px) - was h-16
+header-padding:    px-4 py-2 (16px 8px)
 ```
 
-### Shadows
+#### Space Efficiency Guidelines
+- **Headers**: Use `h-12` instead of `h-16` (25% reduction)
+- **Padding**: Use `p-4` instead of `p-6` (33% reduction)
+- **Margins**: Use `mb-4` instead of `mb-8` (50% reduction)
+- **Gaps**: Use `gap-4` instead of `gap-6` (33% reduction)
+- **Micro-spacing**: Use `space-y-1` instead of `space-y-2` (50% reduction)
+
+### Shadows (Streamlined)
 
 ```css
-/* Elevations */
-shadow-sm:   Small elevation (cards)
-shadow:      Default card shadow
-shadow-lg:   Prominent elements (hero, modals)
-shadow-xl:   Hover states
+/* Minimal Shadow Usage */
+shadow-sm:   Small elevation (cards) - PREFERRED
+shadow:      Default card shadow - USE SPARINGLY
+shadow-lg:   AVOID - Too heavy for streamlined design
+shadow-xl:   AVOID - Too heavy for streamlined design
 
-/* Custom Shadows */
-.card-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)
-.card-hover-shadow: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04)
+/* Preferred Approach */
+border:      Simple 1px borders instead of shadows
+no-shadow:   Clean, flat design preferred
+subtle:      Use shadows only when necessary for hierarchy
+
+/* Custom Shadows - Minimal */
+.card-shadow: 0 1px 2px rgba(0,0,0,0.05) - Very subtle
+.card-hover-shadow: AVOID - Use border changes instead
+
+/* Anti-Pattern */
+❌ shadow-lg, shadow-xl - Too heavy and bubbly
+❌ Complex multi-layer shadows
+❌ Shadows on every element
 ```
 
-### Border Radius
+### Border Radius (Streamlined Standards)
 
 ```css
-rounded-lg:  8px  - Standard cards
-rounded-xl:  12px - Hero sections, prominent cards
-rounded-full: 9999px - Badges, pills
+/* NEW STREAMLINED STANDARDS */
+rounded:     4px  - Standard elements (buttons, inputs)
+rounded-md:  6px  - Cards, containers
+rounded-lg:  8px  - Hero sections only
+rounded-xl:  AVOID - Too bubbly
+rounded-2xl: AVOID - Too bubbly
+rounded-full: AVOID - Only for circular elements (avatars)
+
+/* PREFERRED PATTERNS */
+border:      Simple 1px borders instead of rounded corners
+sharp:       Clean rectangular elements when appropriate
+```
+
+---
+
+## Streamlined Component Standards
+
+### Button Standards (NEW)
+
+#### Primary Action Buttons
+```tsx
+// ✅ CORRECT: Compact, professional
+<button className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+  Primary Action
+</button>
+
+// ❌ AVOID: Bubbly, oversized
+<button className="px-6 py-3.5 rounded-xl font-semibold bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 shadow-lg hover:shadow-xl">
+  Primary Action
+</button>
+```
+
+#### Secondary Action Buttons
+```tsx
+// ✅ CORRECT: Clean, minimal
+<button className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-medium transition-colors">
+  Secondary Action
+</button>
+```
+
+#### Status Filter Pills
+```tsx
+// ✅ CORRECT: Compact, clean
+<button className="px-3 py-1 text-sm font-medium bg-blue-500 text-white">
+  Status
+  <span className="ml-1 px-1 text-xs bg-white/20">17</span>
+</button>
+
+// ❌ AVOID: Bubbly, oversized
+<button className="px-6 py-3 rounded-xl font-semibold shadow-lg">
+  Status
+  <span className="ml-2 px-2 py-0.5 rounded-full text-xs">17</span>
+</button>
+```
+
+### Navigation Standards
+
+#### Compact Navigation Bar
+```tsx
+// ✅ CORRECT: Minimal height, clean spacing
+<nav className="h-12 border-b shadow-sm">
+  <div className="flex justify-between items-center h-12">
+    <div className="flex items-center gap-2">
+      <div className="text-xl">🤖</div>
+      <div className="text-sm font-semibold">HA AutomateAI</div>
+    </div>
+    <div className="flex items-center gap-1">
+      <Link className="px-3 py-1 text-sm font-medium">Tab</Link>
+    </div>
+  </div>
+</nav>
+
+// ❌ AVOID: Excessive height and spacing
+<nav className="h-16 border-b shadow-lg">
+  <div className="flex justify-between items-center h-16">
+    <div className="flex items-center gap-3">
+      <div className="text-3xl">🤖</div>
+      <div className="text-lg font-semibold">HA AutomateAI</div>
+    </div>
+  </div>
+</nav>
+```
+
+### Card Standards
+
+#### Streamlined Cards
+```tsx
+// ✅ CORRECT: Clean borders, minimal padding
+<div className="border overflow-hidden bg-white">
+  <div className="p-4 border-b bg-gray-50">
+    <h3 className="text-lg font-semibold">Title</h3>
+  </div>
+  <div className="p-4">
+    Content
+  </div>
+</div>
+
+// ❌ AVOID: Excessive rounding and shadows
+<div className="rounded-2xl shadow-xl bg-white">
+  <div className="p-6 rounded-t-2xl bg-gradient-to-r from-blue-50 to-purple-50">
+    <h3 className="text-xl font-bold">Title</h3>
+  </div>
+</div>
+```
+
+### Header Standards
+
+#### Compact Page Headers
+```tsx
+// ✅ CORRECT: Minimal height, essential info only
+<div className="border-b pb-3">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-4">
+      <h1 className="text-lg font-semibold">Page Title</h1>
+      <span className="text-sm text-gray-500">17 items</span>
+    </div>
+    <div className="flex items-center gap-3">
+      <div className="w-2 h-2 bg-green-500" />
+      <span className="text-sm">Ready</span>
+      <button className="px-4 py-2 bg-white border text-sm">Action</button>
+    </div>
+  </div>
+</div>
+
+// ❌ AVOID: Excessive height and spacing
+<div className="py-8 mb-8">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-6">
+      <h1 className="text-3xl font-bold">Page Title</h1>
+      <span className="text-lg text-gray-600">17 items</span>
+    </div>
+  </div>
+</div>
 ```
 
 ---

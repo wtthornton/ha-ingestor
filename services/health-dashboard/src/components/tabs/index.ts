@@ -1,6 +1,9 @@
 /**
  * Tab Components Index
  * Centralized exports for all dashboard tab components
+ * 
+ * Note: AI Automation functionality has been moved to the dedicated
+ * AI Automation UI at http://localhost:3001
  */
 
 export * from './types';
@@ -16,5 +19,4 @@ export { AlertsTab } from './AlertsTab';
 export { ConfigurationTab } from './ConfigurationTab';
 export { DevicesTab } from './DevicesTab';
 export { EnergyTab } from './EnergyTab';
-export { AIAutomationTab } from './AIAutomationTab';
 

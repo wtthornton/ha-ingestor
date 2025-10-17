@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-10-17T00:01:04.803Z",
+  "baseUrl": "http://localhost:3001",
+  "tests": [
+    {
+      "name": "Navigation & Main Page",
+      "status": "PASS",
+      "httpStatus": 200,
+      "hasNavigation": true,
+      "hasReactRoot": true,
+      "hasAssets": true
+    },
+    {
+      "name": "All Pages Accessible",
+      "status": "PASS",
+      "pagesTested": 4,
+      "pagesPassed": 4
+    },
+    {
+      "name": "API Connectivity",
+      "status": "PASS",
+      "httpStatus": 200,
+      "suggestionsCount": 20,
+      "hasData": true
+    },
+    {
+      "name": "Assets Loading",
+      "status": "FAIL",
+      "jsStatus": 404,
+      "cssStatus": 404,
+      "iconStatus": 200
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1,
+    "successRate": "75.0%"
+  }
+}

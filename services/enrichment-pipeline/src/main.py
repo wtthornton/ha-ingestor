@@ -22,6 +22,7 @@ from shared.correlation_middleware import create_correlation_middleware
 from data_normalizer import DataNormalizer
 from influxdb_wrapper import InfluxDBClientWrapper
 from health_check import health_check_handler
+from historical_event_counter import HistoricalEventCounter
 from data_validator import DataValidationEngine
 # TEMPORARILY DISABLED: from quality_metrics import QualityMetricsCollector
 from quality_alerts import QualityAlertManager, alert_manager
@@ -44,6 +45,9 @@ class EnrichmentPipelineService:
         self.influxdb_token = os.getenv("INFLUXDB_TOKEN", "ha-ingestor-token")
         self.influxdb_org = os.getenv("INFLUXDB_ORG", "ha-ingestor")
         self.influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
+        
+        # Historical event counter for persistent totals
+        self.historical_counter = None
         
         # Core Components
         self.data_normalizer = DataNormalizer()
@@ -106,6 +110,16 @@ class EnrichmentPipelineService:
                 url=self.influxdb_url,
                 org=self.influxdb_org,
                 bucket=self.influxdb_bucket
+            )
+            
+            # Initialize historical event counter for persistent totals
+            self.historical_counter = HistoricalEventCounter(self.influxdb_client)
+            historical_totals = await self.historical_counter.initialize_historical_totals()
+            log_with_context(
+                logger, "INFO", "Historical processed totals initialized",
+                operation="historical_counter_init",
+                correlation_id=corr_id,
+                total_events=historical_totals.get('total_events_processed', 0)
             )
             
             # TEMPORARILY DISABLED: Start quality reporting system
@@ -368,11 +382,28 @@ class EnrichmentPipelineService:
         Returns:
             Dictionary with service status
         """
+        # Get current session statistics
+        normalization_stats = self.data_normalizer.get_normalization_statistics()
+        
+        # Get historical totals if available
+        historical_total = 0
+        if self.historical_counter and self.historical_counter.is_initialized():
+            historical_total = self.historical_counter.get_total_events_processed()
+        
+        # Calculate combined total (historical + current session)
+        session_total = normalization_stats.get('normalized_events', 0)
+        combined_total = historical_total + session_total
+        
         return {
             "service": "enrichment-pipeline",
             "is_running": self.is_running,
             "uptime": asyncio.get_event_loop().time() - self.start_time if self.start_time else 0,
-            "normalization": self.data_normalizer.get_normalization_statistics(),
+            "normalization": {
+                **normalization_stats,
+                "total_events_processed": combined_total,  # Historical + current session
+                "session_events_processed": session_total,  # Current session only
+                "historical_events_processed": historical_total,  # Historical only
+            },
             "influxdb": self.influxdb_client.get_statistics(),
             # TEMPORARILY DISABLED: "quality_metrics": self.quality_metrics.get_metrics(),
             # TEMPORARILY DISABLED: "quality_health": self.quality_metrics.get_health_status(),
@@ -401,6 +432,7 @@ async def main():
         # Set service instance for health checks
         from health_check import health_handler
         health_handler.set_service(service)
+        health_handler.set_historical_counter(service.historical_counter)
         
         # Add routes
         app.router.add_get('/health', health_check_handler)

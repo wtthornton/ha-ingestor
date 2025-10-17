@@ -20,9 +20,11 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 | **Migrations** | Alembic | 1.13.1 | Schema migrations | Standard migration tool for SQLAlchemy schemas |
 | **File Storage** | Local Docker Volumes | - | Persistent data storage | Simple local storage with Docker Compose |
 | **Authentication** | Long-lived Access Tokens | - | Home Assistant authentication | HA's standard auth method for WebSocket connections |
+| **Home Assistant IP** | 192.168.1.86 | - | HA server connection | Fixed IP for API (8123) and MQTT (1883) connections |
 | **Frontend Testing** | Vitest | 3.2.4 | Frontend component testing | Fast, Vite-native testing with excellent TypeScript support (upgraded from 1.0.4) |
 | **Backend Testing** | pytest | 7.4.3+ | Backend service testing | Simple, comprehensive testing for Python services |
 | **E2E Testing** | Playwright | 1.56.0 | End-to-end testing | Modern, reliable E2E testing for full application |
+| **Visual Testing** | Puppeteer | Latest | Browser automation & visual verification | Chrome/Chromium automation for UI testing and screenshot verification |
 | **Build Tool** | Docker | 24+ | Containerization | Standard deployment with multi-stage builds |
 | **Bundler** | Vite | 5.0.8 | Frontend build tool | Fast, simple build tool with excellent TypeScript support |
 | **Orchestration** | Docker Compose | 2.20+ | Service orchestration | Simple orchestration for local deployment |
@@ -55,6 +57,7 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 - **Vitest 3.2.4**: Fast, modern testing for React components with TypeScript support and enhanced performance (major upgrade from 1.0.4)
 - **pytest 7.4+**: Comprehensive testing framework for Python services
 - **Playwright 1.56.0**: Reliable E2E testing across multiple browsers with latest features
+- **Puppeteer**: Browser automation for visual testing, screenshot verification, and UI regression testing
 
 ### Deployment
 - **Docker Compose**: Simple orchestration for local development and production deployment
@@ -62,9 +65,16 @@ This is the DEFINITIVE technology selection for the entire Home Assistant Ingest
 
 ### Sports Data Integration
 - **ESPN API**: Free public API for NFL and NHL game data (no API key required)
-- **FastAPI Service**: sports-data microservice (port 8005) with team-based filtering
+- **FastAPI Service**: sports-data microservice (localhost:8005) with team-based filtering
 - **Caching Strategy**: 15-second TTL for live games, 5-minute TTL for upcoming games
 - **Architecture Choice**: Selected ESPN API over API-SPORTS.io to eliminate ongoing costs while meeting all current requirements
+
+### Home Assistant Integration
+- **API Endpoint**: http://192.168.1.86:8123 (REST API for device/entity queries)
+- **MQTT Broker**: 192.168.1.86:1883 (Real-time event streaming) ✅ **CONNECTED**
+- **WebSocket**: ws://192.168.1.86:8123 (Live event stream)
+- **Authentication**: Long-lived access tokens for secure API access
+- **Status**: ✅ **FULLY OPERATIONAL** - All connections established and working
 
 **Note**: The sports-api service (Epic 10 - API-SPORTS.io integration) has been archived. It provided more comprehensive features (player stats, injuries, historical data) but required a paid API key. The implementation is preserved in the codebase for future restoration if advanced features become necessary.
 
@@ -95,6 +105,23 @@ All versions are pinned to ensure reproducible builds and consistent behavior ac
 - data-api: SQLite for devices/entities (`data/metadata.db`)
 - sports-data: SQLite for webhooks (`data/webhooks.db`)
 - Both services: InfluxDB for time-series data
+
+## System Status (October 17, 2025)
+
+### ✅ **CURRENT STATUS: FULLY OPERATIONAL**
+- **All Services**: 17/17 healthy and running
+- **MQTT Integration**: Connected and functional
+- **Web Interfaces**: Both dashboards accessible (3000, 3001)
+- **API Services**: All endpoints responding correctly
+- **Database**: InfluxDB and SQLite working optimally
+- **Success Rate**: 100% - No critical issues
+
+### **Recent Fixes Applied**
+- **MQTT Connection**: Fixed IP address configuration (192.168.1.86:1883)
+- **Health Checks**: Corrected all service health check endpoints
+- **Data API**: Fixed health check to use localhost:8006
+- **Energy Correlator**: Corrected health check port (8017)
+- **Documentation**: Updated all docs with correct IP addresses
 
 ## Future Technology Considerations
 

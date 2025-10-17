@@ -15,6 +15,7 @@ interface SuggestionCardProps {
   onEdit?: (id: number) => void;
   onDeploy?: (id: number) => void;
   darkMode?: boolean;
+  isSelected?: boolean;
 }
 
 export const SuggestionCard: React.FC<SuggestionCardProps> = ({
@@ -23,7 +24,8 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   onReject,
   onEdit,
   onDeploy,
-  darkMode = false
+  darkMode = false,
+  isSelected = false
 }) => {
   const [showYaml, setShowYaml] = useState(false);
 
@@ -47,22 +49,18 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
     return icons[suggestion.category || 'convenience'];
   };
 
-  const getPriorityColor = () => {
-    const colors = {
-      high: 'text-red-600 dark:text-red-400',
-      medium: 'text-yellow-600 dark:text-yellow-400',
-      low: 'text-green-600 dark:text-green-400',
-    };
-    return colors[suggestion.priority || 'medium'];
-  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`rounded-2xl shadow-lg border overflow-hidden ${
-        darkMode
+      className={`border overflow-hidden transition-all ${
+        isSelected
+          ? darkMode
+            ? 'bg-blue-900 border-blue-500 ring-1 ring-blue-500'
+            : 'bg-blue-50 border-blue-400 ring-1 ring-blue-400'
+          : darkMode
           ? 'bg-gray-800 border-gray-700'
           : 'bg-white border-gray-200'
       }`}
@@ -85,16 +83,16 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
                 {getCategoryIcon()} {suggestion.category}
               </span>
             )}
-            {suggestion.priority && (
-              <span className={`text-xs font-bold uppercase ${getPriorityColor()}`}>
-                {suggestion.priority}
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Confidence Meter */}
-        <ConfidenceMeter confidence={suggestion.confidence} darkMode={darkMode} />
+        {/* Enhanced Confidence Meter - Integrated display */}
+        <ConfidenceMeter 
+          confidence={suggestion.confidence} 
+          darkMode={darkMode}
+          variant="standard"
+          accessibility={true}
+        />
       </div>
 
       {/* Body */}
@@ -135,54 +133,61 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
           )}
         </div>
 
-        {/* Action Buttons (Only for pending suggestions) */}
+        {/* Enhanced Action Buttons */}
         {suggestion.status === 'pending' && onApprove && onReject && (
           <div className="flex gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            {/* Approve Button */}
+            <button
               onClick={() => onApprove(suggestion.id)}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-semibold shadow-lg transition-all"
+              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-1"
             >
-              ✅ Approve
-            </motion.button>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Approve</span>
+            </button>
 
+            {/* Edit Button (Optional) */}
             {onEdit && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={() => onEdit(suggestion.id)}
-                className={`px-6 py-3 rounded-xl font-semibold shadow-lg transition-all ${
+                className={`px-3 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                   darkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
                 }`}
               >
-                ✏️ Edit
-              </motion.button>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Edit</span>
+              </button>
             )}
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            {/* Reject Button */}
+            <button
               onClick={() => onReject(suggestion.id)}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg transition-all"
+              className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-1"
             >
-              ❌ Reject
-            </motion.button>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Reject</span>
+            </button>
           </div>
         )}
 
-        {/* Deploy Button for approved suggestions */}
+        {/* Deploy Button */}
         {suggestion.status === 'approved' && onDeploy && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => onDeploy(suggestion.id)}
-            className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-bold shadow-2xl transition-all text-lg"
+            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >
-            🚀 Deploy to Home Assistant
-          </motion.button>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Deploy to Home Assistant</span>
+          </button>
         )}
 
         {/* Status Badge for deployed/rejected */}

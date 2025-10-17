@@ -135,7 +135,8 @@ class CoOccurrencePatternDetector:
             
             # Confidence: how reliable the association is
             # Use the smaller device count to get a conservative estimate
-            confidence = count / min(device1_count, device2_count)
+            # Cap at 1.0 (100%) to prevent values over 100%
+            confidence = min(count / min(device1_count, device2_count), 1.0)
             
             # Filter by thresholds
             if count >= self.min_support and confidence >= self.min_confidence:

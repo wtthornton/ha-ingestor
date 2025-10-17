@@ -15,10 +15,15 @@ class HealthCheckHandler:
     def __init__(self):
         self.start_time = datetime.now()
         self.service = None
+        self.historical_counter = None
     
     def set_service(self, service):
         """Set the service instance for health checks"""
         self.service = service
+    
+    def set_historical_counter(self, historical_counter):
+        """Set the historical counter for persistent totals"""
+        self.historical_counter = historical_counter
     
     async def health_check(self, request):
         """

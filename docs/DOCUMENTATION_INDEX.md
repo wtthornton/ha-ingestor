@@ -1,256 +1,168 @@
-# Documentation Index
+# Documentation Index - Home Assistant Data Ingestor
 
-**Last Updated:** 2025-10-16  
-**Version:** 2.0.0
-
-This document provides a complete index of all project documentation for the HA-Ingestor system.
+**Last Updated**: October 17, 2025  
+**System Status**: ✅ **FULLY OPERATIONAL** - 100% Success Rate
 
 ---
 
-## 📚 Quick Navigation
+## 📚 **Quick Reference**
 
-### For New Users
-1. Start with `README.md` - Project overview
-2. Read `docs/brief.md` - Complete project brief
-3. Review `docs/prd.md` - Product requirements
-4. Check `CHANGELOG.md` - Recent updates
+### **System Status**
+- [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status and health
+- [System Status Update](implementation/SYSTEM_STATUS_UPDATE.md) - Recent fixes and improvements
 
-### For Developers
-1. Read `docs/ARCHITECTURE_OVERVIEW.md` - System architecture
-2. Review `services/ai-automation-service/README.md` - AI service docs
-3. Check story files in `docs/stories/` - Implementation details
-4. See `implementation/` - Implementation guides
+### **Architecture & Design**
+- [Architecture Overview](architecture.md) - Main architecture documentation
+- [Tech Stack](architecture/tech-stack.md) - Complete technology stack
+- [Source Tree](architecture/source-tree.md) - Project structure and organization
 
-### For Operations
-1. Read `implementation/DEPLOYMENT_STORY_AI2-5.md` - Deployment guide
-2. Check `implementation/QUICK_REFERENCE_AI2.md` - Quick reference
-3. Review `CHANGELOG.md` - Version history
+### **Getting Started**
+- [README](README.md) - Project overview and quick start
+- [Quick Start Guide](QUICK_START.md) - Step-by-step setup instructions
+- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Comprehensive deployment instructions
 
 ---
 
-## 📁 Documentation Structure
+## 🏗️ **Architecture Documentation**
 
-### Root Level
+### **Core Architecture**
+- [Architecture Overview](architecture.md) - System design and components
+- [Tech Stack](architecture/tech-stack.md) - Technology choices and rationale
+- [Source Tree](architecture/source-tree.md) - Project structure and file organization
+- [Database Schema](architecture/database-schema.md) - Database design and relationships
 
-| File | Purpose | Audience |
-|------|---------|----------|
-| `README.md` | Project overview, quick start | Everyone |
-| `CHANGELOG.md` | Version history, changes | Operations, PM |
-| `LICENSE` | Software license | Legal |
+### **Service Documentation**
+- [Services Overview](SERVICES_OVERVIEW.md) - All microservices documentation
+- [API Reference](API_DOCUMENTATION.md) - Complete API documentation
+- [API Endpoints](API_ENDPOINTS_REFERENCE.md) - Detailed endpoint reference
 
-### docs/
-
-| File | Purpose | Audience |
-|------|---------|----------|
-| `docs/brief.md` | Complete project brief | PM, stakeholders |
-| `docs/prd.md` | Product requirements (v2.0) | PM, developers |
-| `docs/architecture.md` | Main architecture entry point | Developers |
-| `docs/ARCHITECTURE_OVERVIEW.md` | Detailed architecture guide | Developers, architects |
-| `docs/architecture-device-intelligence.md` | Epic AI-2 architecture | Developers |
-
-### docs/stories/
-
-**Epic AI-1 (Pattern Automation):**
-- `story-ai1-1-infrastructure-mqtt-integration.md`
-- `story-ai1-2-backend-foundation.md`
-- `story-ai1-3-data-api-integration.md`
-- `story-ai1-4-time-of-day-detection.md`
-- `story-ai1-5-co-occurrence-detection.md`
-- `story-ai1-6-pattern-detection-anomaly.md`
-- `story-ai1-7-llm-integration.md`
-- ... (Stories 1.1-1.18)
-
-**Epic AI-2 (Device Intelligence):**
-- `story-ai2-1-mqtt-capability-listener.md`
-- `story-ai2-2-capability-database-schema.md`
-- `story-ai2-3-device-matching-feature-analysis.md`
-- `story-ai2-4-feature-suggestion-generator.md`
-- `story-ai2-5-unified-daily-batch.md`
-- ... (Stories 2.1-2.9, 5 complete, 4 planned)
-
-**Helper Guides:**
-- `MQTT_SETUP_GUIDE.md` - MQTT configuration
-
-### implementation/
-
-**Epic AI-2 Implementation Docs:**
-- `FINAL_SUMMARY_EPIC_AI2.md` - Complete epic summary
-- `DEPLOYMENT_STORY_AI2-5.md` - Deployment guide
-- `REVIEW_GUIDE_STORY_AI2-5.md` - Review checklist
-- `QUICK_REFERENCE_AI2.md` - Quick reference
-- `STORY_AI2-5_COMPLETE.md` - Story 2.5 summary
-- `STORY_AI2-5_STATUS.md` - Story 2.5 status tracker
-- `STORY_AI2-5_IMPLEMENTATION_PLAN.md` - Implementation plan
-
-**Analysis & Decisions:**
-- `REALTIME_VS_BATCH_ANALYSIS.md` - Batch architecture decision
-- `EPIC_AI1_VS_AI2_SUMMARY.md` - Epic comparison
-- `DATA_INTEGRATION_ANALYSIS.md` - Data source analysis
-- `STORY_UPDATES_UNIFIED_BATCH.md` - Story update summary
-
-**Story Summaries:**
-- `STORIES_AI2_1-2-3_COMPLETE.md` - Stories 2.1-2.3 summary
-- `STORY_AI2-1_IMPLEMENTATION_COMPLETE.md` - Story 2.1 summary
-- `STORY_AI2-2_IMPLEMENTATION_COMPLETE.md` - Story 2.2 summary
-- `MQTT_ARCHITECTURE_SUMMARY.md` - MQTT usage summary
-
-**Previous Work:**
-- `SESSION_COMPLETE_DEVICE_INTELLIGENCE_PLANNING.md` - Planning session summary
-- Various other implementation notes
+### **Integration Guides**
+- [Home Assistant Integration](HOME_ASSISTANT_DEPLOYMENT_PLAN.md) - HA setup and configuration
+- [MQTT Setup Guide](stories/MQTT_SETUP_GUIDE.md) - MQTT broker configuration
+- [Context7 Integration](CONTEXT7_INTEGRATION.md) - AI automation integration
 
 ---
 
-## 📖 Documentation by Topic
+## 🚀 **Deployment & Operations**
 
-### Architecture & Design
+### **Deployment**
+- [Deployment Status](DEPLOYMENT_STATUS.md) - Current deployment status
+- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Step-by-step deployment
+- [Production Deployment](PRODUCTION_DEPLOYMENT.md) - Production setup
+- [Docker Structure Guide](DOCKER_STRUCTURE_GUIDE.md) - Container architecture
 
-| Document | Focus | Status |
-|----------|-------|--------|
-| `docs/ARCHITECTURE_OVERVIEW.md` | Complete system architecture | ✅ Current |
-| `docs/architecture-device-intelligence.md` | Epic AI-2 architecture | ✅ v2.0 |
-| `docs/architecture/` | Legacy architecture docs | ✅ Reference |
-| `implementation/REALTIME_VS_BATCH_ANALYSIS.md` | Batch decision analysis | ✅ Complete |
+### **Configuration**
+- [Environment Setup](development-environment-setup.md) - Development environment
+- [Security Configuration](SECURITY_CONFIGURATION.md) - Security settings
+- [GitHub Secrets Setup](GITHUB_SECRETS_SETUP.md) - CI/CD configuration
 
-### Product Requirements
-
-| Document | Focus | Status |
-|----------|-------|--------|
-| `docs/prd.md` | Complete PRD (v2.0) | ✅ Current |
-| `docs/brief.md` | Project brief | ✅ Current |
-
-### Implementation Guides
-
-| Document | Focus | Status |
-|----------|-------|--------|
-| `implementation/DEPLOYMENT_STORY_AI2-5.md` | Deployment steps | ✅ Complete |
-| `implementation/QUICK_REFERENCE_AI2.md` | Quick debugging | ✅ Complete |
-| `implementation/FINAL_SUMMARY_EPIC_AI2.md` | Epic AI-2 summary | ✅ Complete |
-| `implementation/REVIEW_GUIDE_STORY_AI2-5.md` | Review checklist | ✅ Complete |
-
-### Stories
-
-| Epic | Stories | Status |
-|------|---------|--------|
-| **Epic AI-1** | Stories 1.1-1.18 | ✅ Defined |
-| **Epic AI-2** | Stories 2.1-2.5 | ✅ Complete |
-| **Epic AI-2** | Stories 2.6-2.9 | 📝 Defined |
+### **Monitoring & Maintenance**
+- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - Common issues and solutions
+- [Quick Fix Guide](QUICK_FIX_GUIDE.md) - Quick troubleshooting
+- [E2E Testing Guide](E2E_TESTING_GUIDE.md) - End-to-end testing
 
 ---
 
-## 🔍 Finding Documentation
+## 📖 **User Guides**
 
-### By Role
+### **End User Documentation**
+- [User Manual](USER_MANUAL.md) - Complete user guide
+- [Quick Start Integration](QUICK_START_INTEGRATION_MANAGEMENT.md) - Integration setup
+- [Simple Integration Management](SIMPLE_INTEGRATION_MANAGEMENT.md) - Basic integration
 
-**Product Manager:**
-- Start: `docs/brief.md`
-- Requirements: `docs/prd.md`
-- Changes: `CHANGELOG.md`
-
-**Architect:**
-- Start: `docs/ARCHITECTURE_OVERVIEW.md`
-- Details: `docs/architecture-device-intelligence.md`
-- Decisions: `implementation/REALTIME_VS_BATCH_ANALYSIS.md`
-
-**Developer:**
-- Start: `services/ai-automation-service/README.md`
-- Stories: `docs/stories/story-ai2-*.md`
-- Implementation: `implementation/`
-
-**QA:**
-- Tests: `services/ai-automation-service/tests/`
-- Coverage: See test files (56/56 passing)
-
-**Operations:**
-- Deployment: `implementation/DEPLOYMENT_STORY_AI2-5.md`
-- Troubleshooting: `implementation/QUICK_REFERENCE_AI2.md`
-- Monitoring: See deployment guide
-
-### By Epic
-
-**Epic AI-1 (Pattern Automation):**
-- PRD: `docs/prd.md` (Stories 1.1-1.18)
-- Stories: `docs/stories/story-ai1-*.md`
-- Code: `services/ai-automation-service/src/pattern_analyzer/`
-
-**Epic AI-2 (Device Intelligence):**
-- PRD: `docs/prd.md` (Stories 2.1-2.9)
-- Stories: `docs/stories/story-ai2-*.md`
-- Architecture: `docs/architecture-device-intelligence.md`
-- Code: `services/ai-automation-service/src/device_intelligence/`
-- Summary: `implementation/FINAL_SUMMARY_EPIC_AI2.md`
+### **Developer Documentation**
+- [CLI Reference](CLI_REFERENCE.md) - Command-line interface
+- [Development Workflow](architecture/development-workflow.md) - Development process
+- [Coding Standards](architecture/coding-standards.md) - Code quality guidelines
 
 ---
 
-## 📊 Documentation Statistics
+## 🔧 **Technical Documentation**
 
-### Coverage
-- **Story Files:** 23 (18 AI-1 + 5 AI-2 complete)
-- **Architecture Docs:** 4 major documents
-- **Implementation Guides:** 15+ documents
-- **Test Files:** 5 (56 tests total)
-- **Total Documentation:** 50+ files
+### **Data & Storage**
+- [Data Backend Implementation](DATA_BACKEND_IMPLEMENTATION_GUIDE.md) - Database implementation
+- [Data Enhancement Guide](DATA_ENHANCEMENT_QUICK_REFERENCE.md) - Data processing
+- [Data Enrichment Architecture](DATA_ENRICHMENT_ARCHITECTURE.md) - Data enrichment design
+- [Hybrid Database Architecture](HYBRID_DATABASE_ARCHITECTURE.md) - Database architecture
 
-### Quality
-- **PRD:** Complete with all functional/non-functional requirements
-- **Architecture:** Multi-document with detailed component design
-- **Stories:** Detailed acceptance criteria, code examples, test specs
-- **Implementation:** Step-by-step guides, troubleshooting, quick references
+### **API Documentation**
+- [API Comprehensive Reference](API_COMPREHENSIVE_REFERENCE.md) - Complete API docs
+- [API Enhancements Epic 23](API_ENHANCEMENTS_EPIC_23.md) - Recent API improvements
+- [Data Sources Enhancement](DATA_SOURCES_AND_STRUCTURES_ENHANCEMENT.md) - Data source docs
 
----
-
-## 🚀 Documentation Maintenance
-
-### When to Update
-
-**After Each Story:**
-- Update story file with implementation notes
-- Create implementation summary in `implementation/`
-- Update test coverage stats
-
-**After Each Epic:**
-- Update PRD with actual vs. planned
-- Update architecture docs with changes
-- Create epic summary document
-- Update CHANGELOG.md
-
-**After Major Releases:**
-- Update README.md
-- Update ARCHITECTURE_OVERVIEW.md
-- Version architecture documents
-- Create migration guides
+### **Testing & Quality**
+- [E2E Test Results](E2E_TEST_RESULTS.md) - Test execution results
+- [Smoke Tests](SMOKE_TESTS.md) - Basic functionality tests
+- [Ready for QA](READY_FOR_QA.md) - QA readiness checklist
 
 ---
 
-## 📝 Document Templates
+## 📋 **Project Management**
 
-### Story Files
-Located in: `.bmad-core/templates/story-template.md`
+### **Requirements & Planning**
+- [PRD](prd.md) - Product Requirements Document
+- [Requirements](REQUIREMENTS.md) - System requirements
+- [Brief](brief.md) - Project brief
+- [What's Next Roadmap](WHATS_NEXT_ROADMAP.md) - Future development plans
 
-### Architecture Docs
-Located in: `.bmad-core/templates/architecture-template.md`
-
-### Implementation Summaries
-Located in: `implementation/` (see existing for examples)
-
----
-
-## 🔗 Quick Links
-
-### Most Important Docs
-1. `README.md` - Start here
-2. `docs/prd.md` - Complete requirements
-3. `docs/ARCHITECTURE_OVERVIEW.md` - System design
-4. `implementation/FINAL_SUMMARY_EPIC_AI2.md` - Latest work
-5. `CHANGELOG.md` - Version history
-
-### For Current Work (Epic AI-2)
-1. `implementation/DEPLOYMENT_STORY_AI2-5.md` - Deploy now
-2. `implementation/QUICK_REFERENCE_AI2.md` - Debug reference
-3. `docs/architecture-device-intelligence.md` - Architecture
-4. `docs/stories/story-ai2-5-unified-daily-batch.md` - Story details
+### **Stories & Epics**
+- [Stories Directory](stories/) - All user stories and epics
+- [QA Directory](qa/) - Quality assurance documentation
+- [Architecture Directory](architecture/) - Architecture documentation
 
 ---
 
-**Last Updated:** 2025-10-16  
-**Documentation Version:** 2.0  
-**Status:** Complete ✅
+## 🔍 **Troubleshooting & Support**
+
+### **Common Issues**
+- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - General troubleshooting
+- [Quick Fix Guide](QUICK_FIX_GUIDE.md) - Quick solutions
+- [Weather API Fix Guide](WEATHER_API_FIX_GUIDE.md) - Weather integration issues
+- [WebSocket Troubleshooting](WEBSOCKET_TROUBLESHOOTING.md) - WebSocket issues
+
+### **System Analysis**
+- [AI Automation Call Tree](AI_AUTOMATION_CALL_TREE.md) - AI automation flow
+- [HA WebSocket Call Tree](HA_WEBSOCKET_CALL_TREE.md) - WebSocket flow analysis
+- [Calendar Service Documentation](CALENDAR_SERVICE_DOCUMENTATION_INDEX.md) - Calendar integration
+
+---
+
+## 📊 **Status & Reports**
+
+### **Current Status**
+- [Deployment Status](DEPLOYMENT_STATUS.md) - ✅ **CURRENT** - System fully operational
+- [System Status Update](implementation/SYSTEM_STATUS_UPDATE.md) - Recent fixes and improvements
+- [Documentation Updates](DOCUMENTATION_UPDATES_OCTOBER_2025.md) - Recent documentation changes
+
+### **Historical Reports**
+- [Deployment Success Report](DEPLOYMENT_SUCCESS_REPORT.md) - Previous deployment success
+- [Documentation Complete](DOCUMENTATION_COMPLETE.md) - Documentation completion status
+- [Changelog](CHANGELOG.md) - Version history and changes
+
+---
+
+## 🎯 **Quick Access**
+
+### **Most Important Documents**
+1. [README](README.md) - Start here for project overview
+2. [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status
+3. [Architecture Overview](architecture.md) - System design
+4. [User Manual](USER_MANUAL.md) - How to use the system
+5. [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - When things go wrong
+
+### **For Developers**
+- [Source Tree](architecture/source-tree.md) - Project structure
+- [Tech Stack](architecture/tech-stack.md) - Technology choices
+- [API Documentation](API_DOCUMENTATION.md) - API reference
+- [Coding Standards](architecture/coding-standards.md) - Code guidelines
+
+### **For Users**
+- [User Manual](USER_MANUAL.md) - Complete user guide
+- [Quick Start](QUICK_START.md) - Get started quickly
+- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - Solve problems
+
+---
+
+**System Status**: ✅ **FULLY OPERATIONAL** - All 17 services healthy, MQTT connected, 100% success rate  
+**Last Updated**: October 17, 2025  
+**Next Review**: As needed for system changes

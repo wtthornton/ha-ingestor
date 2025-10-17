@@ -68,6 +68,25 @@ class UserFeedback(Base):
         return f"<UserFeedback(id={self.id}, suggestion_id={self.suggestion_id}, action={self.action})>"
 
 
+class AutomationVersion(Base):
+    """
+    Simple version history for automations.
+    Keeps last 3 versions per automation for rollback.
+    
+    Story AI1.20: Simple Rollback
+    """
+    __tablename__ = 'automation_versions'
+    
+    id = Column(Integer, primary_key=True)
+    automation_id = Column(String(100), nullable=False, index=True)
+    yaml_content = Column(Text, nullable=False)
+    deployed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    safety_score = Column(Integer, nullable=False)
+    
+    def __repr__(self):
+        return f"<AutomationVersion(id={self.id}, automation_id={self.automation_id}, deployed_at={self.deployed_at})>"
+
+
 # ============================================================================
 # Epic AI-2: Device Intelligence Models (Story AI2.2)
 # ============================================================================

@@ -3,7 +3,7 @@
  * Interactive charts for pattern analysis
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +18,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import type { Pattern } from '../types';
+import api from '../services/api';
 
 ChartJS.register(
   CategoryScale,
@@ -138,6 +139,9 @@ export const ConfidenceDistributionChart: React.FC<PatternChartProps> = ({ patte
 };
 
 export const TopDevicesChart: React.FC<PatternChartProps> = ({ patterns, darkMode }) => {
+  const [deviceNames, setDeviceNames] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
   const deviceCounts = patterns.reduce((acc, p) => {
     acc[p.device_id] = (acc[p.device_id] || 0) + 1;
     return acc;
@@ -147,8 +151,47 @@ export const TopDevicesChart: React.FC<PatternChartProps> = ({ patterns, darkMod
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
 
+  // Load device names when component mounts or patterns change
+  useEffect(() => {
+    const loadDeviceNames = async () => {
+      if (sorted.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const deviceIds = sorted.map(([deviceId]) => deviceId);
+        const names = await api.getDeviceNames(deviceIds);
+        setDeviceNames(names);
+      } catch (error) {
+        console.error('Failed to load device names:', error);
+        // Fallback to more meaningful names
+        const fallbackNames: Record<string, string> = {};
+        const deviceIds = sorted.map(([deviceId]) => deviceId);
+        deviceIds.forEach((id: string) => {
+          if (id.includes('+')) {
+            // Co-occurrence pattern
+            const parts = id.split('+');
+            if (parts.length === 2) {
+              fallbackNames[id] = `Co-occurrence (${parts[0].substring(0, 8)}... + ${parts[1].substring(0, 8)}...)`;
+            } else {
+              fallbackNames[id] = `Pattern (${id.substring(0, 20)}...)`;
+            }
+          } else {
+            fallbackNames[id] = id.length > 20 ? `${id.substring(0, 20)}...` : id;
+          }
+        });
+        setDeviceNames(fallbackNames);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDeviceNames();
+  }, [patterns]);
+
   const data = {
-    labels: sorted.map(([device]) => device.split('.')[1] || device),
+    labels: sorted.map(([deviceId]) => deviceNames[deviceId] || deviceId),
     datasets: [{
       label: 'Pattern Count',
       data: sorted.map(([, count]) => count),
@@ -184,6 +227,17 @@ export const TopDevicesChart: React.FC<PatternChartProps> = ({ patterns, darkMod
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          Loading device names...
+        </div>
+      </div>
+    );
+  }
 
   return <Bar data={data} options={options} />;
 };

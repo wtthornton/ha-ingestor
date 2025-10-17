@@ -15,16 +15,25 @@ export const Patterns: React.FC = () => {
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [deviceNames, setDeviceNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadPatterns = async () => {
       try {
-        const [patternsRes, statsRes] = await Promise.all([
-          api.getPatterns(undefined, 0.7),
-          api.getPatternStats()
-        ]);
-        setPatterns(patternsRes.data || []);
-        setStats(statsRes);
+      const [patternsRes, statsRes] = await Promise.all([
+        api.getPatterns(undefined, 0.7),
+        api.getPatternStats()
+      ]);
+      const patternsData = patternsRes.data.patterns || [];
+      setPatterns(patternsData);
+      setStats(statsRes);
+
+      // Load device names for the patterns
+      if (patternsData.length > 0) {
+        const uniqueDeviceIds = [...new Set(patternsData.map(p => p.device_id))];
+        const names = await api.getDeviceNames(uniqueDeviceIds);
+        setDeviceNames(names);
+      }
       } catch (err) {
         console.error('Failed to load patterns:', err);
       } finally {
@@ -42,6 +51,16 @@ export const Patterns: React.FC = () => {
       anomaly: '⚠️',
     };
     return icons[type as keyof typeof icons] || '📊';
+  };
+
+  const getFallbackName = (deviceId: string) => {
+    if (deviceId.includes('+')) {
+      const parts = deviceId.split('+');
+      if (parts.length === 2) {
+        return `Co-occurrence (${parts[0].substring(0, 8)}... + ${parts[1].substring(0, 8)}...)`;
+      }
+    }
+    return deviceId.length > 20 ? `${deviceId.substring(0, 20)}...` : deviceId;
   };
 
   return (
@@ -163,11 +182,16 @@ export const Patterns: React.FC = () => {
                   <div className="text-3xl">{getPatternIcon(pattern.pattern_type)}</div>
                   <div>
                     <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {pattern.device_id}
+                      {deviceNames[pattern.device_id] || getFallbackName(pattern.device_id)}
                     </div>
                     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       {pattern.pattern_type.replace('_', ' ')} • {pattern.occurrences} occurrences
                     </div>
+                    {deviceNames[pattern.device_id] && (
+                      <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                        ID: {pattern.device_id}
+                      </div>
+                    )}
                   </div>
                 </div>
 

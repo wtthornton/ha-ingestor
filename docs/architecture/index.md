@@ -108,6 +108,7 @@ This directory contains the comprehensive architectural documentation for the Ho
 ### System Architecture
 
 - **[Core Workflows](core-workflows.md)** - Primary system workflows and data flow diagrams
+- **[AI Automation System](ai-automation-system.md)** - AI-powered automation generation with safety validation ✨ NEW
 - **[Deployment Architecture](deployment-architecture.md)** - Deployment patterns and infrastructure setup
 - **[Source Tree](source-tree.md)** - Project structure and file organization
 - **[Data Models](data-models.md)** - Data structures and type definitions
@@ -117,6 +118,7 @@ This directory contains the comprehensive architectural documentation for the Ho
 - **[Development Workflow](development-workflow.md)** - Developer setup and contribution guide
 - **[Coding Standards](coding-standards.md)** - Code quality standards and best practices
 - **[Frontend Specification](frontend-specification.md)** - UI/UX design system, component patterns, and accessibility standards
+- **[AI Automation UI Standards](ai-automation-ui-standards.md)** - Streamlined UI standards and patterns for AI automation dashboard ✨ NEW
 - **[Configuration Management](configuration-management.md)** - Environment and configuration guidelines
 - **[API Guidelines](api-guidelines.md)** - REST API design standards and conventions
 
@@ -150,8 +152,9 @@ This directory contains the comprehensive architectural documentation for the Ho
 | **admin-api** | Python/FastAPI | 8003→8004 | System monitoring, health checks, Docker management |
 | **data-api** | Python/FastAPI | 8006 | **Feature data hub** (events, devices, sports, analytics, alerts) |
 | **data-retention** | Python/FastAPI | 8080 | Data lifecycle and cleanup management |
-| **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface (12 tabs) |
+| **health-dashboard** | React/TypeScript | 3000 | Web-based monitoring interface (13 tabs) |
 | **sports-data** | Python/FastAPI | 8005 | ESPN sports API integration (NFL/NHL) |
+| **ai-automation-service** | Python/FastAPI | 8018 | **AI automation suggestions** (NL generation, pattern detection, safety validation) ✨ |
 | **influxdb** | InfluxDB 2.7 | 8086 | Time-series data storage |
 
 #### External Data Services
@@ -283,7 +286,7 @@ This architecture documentation should be updated whenever:
 
 ---
 
-**Last Updated**: October 2025  
-**Version**: 4.0  
+**Last Updated**: October 16, 2025  
+**Version**: 5.0 (Enhanced with AI Automation - Epic AI1.19-22)  
 **Status**: Production Ready  
 **Maintained By**: HA Ingestor Team

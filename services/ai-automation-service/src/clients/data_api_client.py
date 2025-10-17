@@ -199,6 +199,15 @@ class DataAPIClient:
             logger.error(f"❌ Unexpected error fetching devices: {e}")
             raise
     
+    async def get_all_devices(self) -> List[Dict[str, Any]]:
+        """
+        Get all devices from Data API (alias for fetch_devices with no filters).
+        
+        Returns:
+            List of all device dictionaries
+        """
+        return await self.fetch_devices()
+    
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -287,6 +296,109 @@ class DataAPIClient:
         except httpx.HTTPError as e:
             logger.error(f"❌ Data API health check failed: {e}")
             raise
+    
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
+        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
+        reraise=True
+    )
+    async def get_entity_metadata(self, entity_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch entity metadata including friendly name and device info.
+        
+        Args:
+            entity_id: Entity ID to lookup (e.g., 'light.office_lamp')
+        
+        Returns:
+            Dictionary with entity metadata including friendly_name, or None if not found
+        """
+        try:
+            # Query data-api for entity metadata
+            response = await self.client.get(
+                f"{self.base_url}/api/entities/{entity_id}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.debug(f"Retrieved metadata for {entity_id}: {data.get('friendly_name', entity_id)}")
+                return data
+            elif response.status_code == 404:
+                logger.warning(f"Entity {entity_id} not found in metadata")
+                return None
+            else:
+                logger.warning(f"Unexpected status {response.status_code} fetching entity {entity_id}")
+                return None
+                
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to fetch entity metadata for {entity_id}: {e}")
+            return None
+    
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
+        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
+        reraise=True
+    )
+    async def get_device_metadata(self, device_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch device metadata including name, manufacturer, model, and area.
+        
+        Args:
+            device_id: Device ID to lookup
+        
+        Returns:
+            Dictionary with device metadata, or None if not found
+        """
+        try:
+            response = await self.client.get(
+                f"{self.base_url}/api/devices/{device_id}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.debug(f"Retrieved device metadata for {device_id}: {data.get('name', device_id)}")
+                return data
+            elif response.status_code == 404:
+                logger.warning(f"Device {device_id} not found in metadata")
+                return None
+            else:
+                logger.warning(f"Unexpected status {response.status_code} fetching device {device_id}")
+                return None
+                
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to fetch device metadata for {device_id}: {e}")
+            return None
+    
+    def extract_friendly_name(self, entity_id: str, metadata: Optional[Dict] = None) -> str:
+        """
+        Extract friendly name from entity metadata or generate from entity_id.
+        
+        Args:
+            entity_id: Entity ID (e.g., 'light.office_lamp')
+            metadata: Optional entity metadata dict
+        
+        Returns:
+            User-friendly name (e.g., 'Office Lamp' instead of 'light.office_lamp')
+        """
+        # Try to get from metadata first
+        if metadata and 'friendly_name' in metadata:
+            return metadata['friendly_name']
+        
+        if metadata and 'name' in metadata:
+            return metadata['name']
+        
+        # Fallback: Generate from entity_id
+        # Remove domain prefix (e.g., 'light.', 'switch.')
+        if '.' in entity_id:
+            name = entity_id.split('.', 1)[1]
+        else:
+            name = entity_id
+        
+        # Replace underscores with spaces and title case
+        friendly = name.replace('_', ' ').title()
+        
+        return friendly
     
     async def close(self):
         """Close HTTP client connection pool"""

@@ -148,39 +148,49 @@ class OpenAIClient:
         occurrences = pattern.get('occurrences', 0)
         confidence = pattern.get('confidence', 0.0)
         
+        # Extract friendly name from device_context
         device_name = device_context.get('name', device_id) if device_context else device_id
+        domain = device_context.get('domain', 'unknown') if device_context else 'unknown'
+        area = device_context.get('area', '') if device_context else ''
+        
+        # Build device description
+        device_desc = f"{device_name}"
+        if area:
+            device_desc += f" in {area}"
         
         return f"""Create a Home Assistant automation for this detected usage pattern:
 
 PATTERN DETECTED:
-- Device: {device_id} ({device_name})
+- Device: {device_desc}
+- Entity ID: {device_id}
+- Device Type: {domain}
 - Pattern: Device activates at {hour:02d}:{minute:02d} consistently
 - Occurrences: {occurrences} times in last 30 days
 - Confidence: {confidence:.0%}
 
 INSTRUCTIONS:
 1. Create a valid Home Assistant automation in YAML format
-2. Use a descriptive alias starting with "AI Suggested: "
+2. Use a descriptive alias starting with "AI Suggested: " and include the DEVICE NAME ({device_name}), not the entity ID
 3. Use time trigger for {hour:02d}:{minute:02d}:00
-4. Determine appropriate service call based on device type (light.turn_on, switch.turn_on, climate.set_temperature, etc.)
+4. Determine appropriate service call based on device type ({domain}.turn_on, {domain}.turn_off, climate.set_temperature, etc.)
 5. Provide a brief rationale (1-2 sentences) explaining why this automation makes sense
 6. Categorize as: energy, comfort, security, or convenience
 7. Assign priority: high, medium, or low
 
 OUTPUT FORMAT:
 ```yaml
-alias: "AI Suggested: [Descriptive Name]"
-description: "[Brief description]"
+alias: "AI Suggested: {device_name} at {hour:02d}:{minute:02d}"
+description: "Automatically control {device_name} based on usage pattern"
 trigger:
   - platform: time
     at: "{hour:02d}:{minute:02d}:00"
 action:
-  - service: [appropriate service]
+  - service: {domain}.turn_on
     target:
       entity_id: {device_id}
 ```
 
-RATIONALE: [1-2 sentence explanation]
+RATIONALE: [1-2 sentence explanation mentioning "{device_name}" by name]
 CATEGORY: [energy|comfort|security|convenience]
 PRIORITY: [high|medium|low]
 """
@@ -193,39 +203,57 @@ PRIORITY: [high|medium|low]
         confidence = pattern.get('confidence', 0.0)
         avg_delta = pattern.get('metadata', {}).get('avg_time_delta_seconds', 0)
         
+        # Extract friendly names from device_context
+        if device_context and 'device1' in device_context:
+            device1_name = device_context['device1'].get('name', device1)
+            device1_domain = device_context['device1'].get('domain', 'unknown')
+        else:
+            device1_name = device1
+            device1_domain = device1.split('.')[0] if '.' in device1 else 'unknown'
+        
+        if device_context and 'device2' in device_context:
+            device2_name = device_context['device2'].get('name', device2)
+            device2_domain = device_context['device2'].get('domain', 'unknown')
+        else:
+            device2_name = device2
+            device2_domain = device2.split('.')[0] if '.' in device2 else 'unknown'
+        
         return f"""Create a Home Assistant automation for this device co-occurrence pattern:
 
 PATTERN DETECTED:
-- Device 1: {device1} (trigger)
-- Device 2: {device2} (response)
+- Trigger Device: {device1_name} (entity: {device1}, type: {device1_domain})
+- Response Device: {device2_name} (entity: {device2}, type: {device2_domain})
 - Co-occurrences: {occurrences} times in last 30 days
 - Confidence: {confidence:.0%}
 - Average time between events: {avg_delta:.1f} seconds
+
+USER BEHAVIOR INSIGHT:
+When the user activates "{device1_name}", they typically also activate "{device2_name}" about {int(avg_delta)} seconds later.
 
 INSTRUCTIONS:
 1. Create a valid Home Assistant automation in YAML format
 2. Use {device1} state change as trigger
 3. {device2} should be activated after approximately {int(avg_delta)} seconds
-4. Use descriptive alias starting with "AI Suggested: "
-5. Provide rationale explaining the pattern
+4. Use descriptive alias starting with "AI Suggested: " and include BOTH DEVICE NAMES ({device1_name} and {device2_name}), NOT entity IDs
+5. Provide rationale explaining the pattern using the device names
 6. Categorize and prioritize appropriately
 
 OUTPUT FORMAT:
 ```yaml
-alias: "AI Suggested: [Descriptive Name]"
-description: "[Brief description]"
+alias: "AI Suggested: Turn On {device2_name} When {device1_name} Activates"
+description: "Automatically activate {device2_name} when {device1_name} is turned on"
 trigger:
   - platform: state
     entity_id: {device1}
     to: 'on'
 action:
   - delay: '00:00:{int(avg_delta):02d}'
-  - service: [appropriate service for {device2}]
+  - service: {device2_domain}.turn_on
     target:
       entity_id: {device2}
 ```
 
-RATIONALE: [Explanation based on co-occurrence pattern]
+RATIONALE: [Explanation based on co-occurrence pattern, mentioning "{device1_name}" and "{device2_name}" by their friendly names]
 CATEGORY: [energy|comfort|security|convenience]
 PRIORITY: [high|medium|low]
 """
@@ -412,8 +440,12 @@ action:
             device1 = pattern.get('device1', 'unknown')
             device2 = pattern.get('device2', 'unknown')
             
-            return f"""alias: "AI Suggested: {device1} triggers {device2}"
-description: "Activate {device2} when {device1} changes"
+            # Try to extract friendly names for fallback
+            device1_name = device1.split('.')[-1].replace('_', ' ').title() if '.' in device1 else device1
+            device2_name = device2.split('.')[-1].replace('_', ' ').title() if '.' in device2 else device2
+            
+            return f"""alias: "AI Suggested: Turn On {device2_name} When {device1_name} Activates"
+description: "Activate {device2_name} when {device1_name} changes"
 trigger:
   - platform: state
     entity_id: {device1}

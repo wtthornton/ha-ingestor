@@ -1,10 +1,10 @@
 # Epic AI-1: AI Automation Suggestion System - Story Summary
 
 **Epic ID:** Epic-AI-1  
-**Epic Goal:** Enable users to discover and deploy Home Assistant automations based on AI-detected patterns and natural language requests, with comprehensive safety validation and audit trail  
-**Phase:** Phase 1 MVP (Enhanced)  
-**Timeline:** 5-7 weeks  
-**Total Effort:** 192-228 hours
+**Epic Goal:** Enable users to discover and deploy Home Assistant automations based on AI-detected patterns and natural language requests, with safety validation and simple rollback  
+**Phase:** Phase 1 MVP (Simplified for Single Home)  
+**Timeline:** 4-5 weeks  
+**Total Effort:** 173-201 hours
 
 ---
 
@@ -31,12 +31,14 @@
 | **AI1.17** | Frontend - Insights Tab | 10-12h | Medium | AI1.16 |
 | **AI1.18** | E2E Testing & Documentation | 12-14h | High | AI1.17 |
 | **AI1.19** | Safety Validation Engine | 8-10h | Critical | AI1.11 |
-| **AI1.20** | Audit Trail & Rollback | 6-8h | High | AI1.11, AI1.19 |
+| **AI1.20** | Simple Rollback (Simplified) | 2-3h | High | AI1.11, AI1.19 |
 | **AI1.21** | Natural Language Request Generation | 10-12h | High | AI1.7, AI1.8 |
-| **AI1.22** | Integrate with Health Dashboard | 8-10h | Critical | AI1.10, AI1.19, AI1.20 |
+| **AI1.22** | Simple Dashboard Integration (Simplified) | 2-3h | Critical | AI1.10, AI1.19, AI1.20 |
 
 **Total Stories:** 22  
-**Total Effort:** 192-228 hours (Enhanced with safety, audit, NL, and UX improvements)
+**Total Effort:** 173-201 hours (Simplified for single-home use case)
+
+**Note:** AI1.20 and AI1.22 simplified to reduce complexity for single-home deployment. AI1.21 kept full version as it provides highest value.
 
 ---
 
@@ -222,9 +224,9 @@ All story files located in: `docs/stories/`
 - `story-ai1-17-frontend-insights-tab.md`
 - `story-ai1-18-e2e-testing-documentation.md`
 - `story-ai1-19-safety-validation-engine.md`
-- `story-ai1-20-audit-trail-rollback.md`
+- `story-ai1-20-simple-rollback.md` (simplified)
 - `story-ai1-21-natural-language-request-generation.md`
-- `story-ai1-22-integrate-health-dashboard.md`
+- `story-ai1-22-simple-dashboard-integration.md` (simplified)
 
 ---
 

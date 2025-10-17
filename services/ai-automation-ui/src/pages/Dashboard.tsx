@@ -5,11 +5,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useAppStore } from '../store';
+import { useSelection } from '../context/SelectionContext';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { SuggestionCard } from '../components/SuggestionCard';
 import { SetupWizard } from '../components/SetupWizard';
 import { BatchActions } from '../components/BatchActions';
 import { SearchBar } from '../components/SearchBar';
+import { AnalysisStatusButton } from '../components/AnalysisStatusButton';
 import api from '../services/api';
 
 export const Dashboard: React.FC = () => {
@@ -29,10 +33,19 @@ export const Dashboard: React.FC = () => {
   
   // UX Enhancements
   const [showWizard, setShowWizard] = useState(!localStorage.getItem('setup_complete'));
-  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [minConfidenceFilter, setMinConfidenceFilter] = useState(0);
+  const [selectedConfidenceLevels, setSelectedConfidenceLevels] = useState<string[]>([]);
+  
+  // Selection Context
+  const {
+    selectedCount,
+    selectItem,
+    deselectItem,
+    clearSelection,
+    isSelected,
+    getSelectedIds,
+  } = useSelection();
 
   const loadData = async () => {
     try {
@@ -44,7 +57,7 @@ export const Dashboard: React.FC = () => {
         api.getScheduleInfo()
       ]);
 
-      setSuggestions(suggestionsRes.data || []);
+      setSuggestions(suggestionsRes.data.suggestions || []);
       setScheduleInfo(scheduleRes);
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -64,10 +77,11 @@ export const Dashboard: React.FC = () => {
     try {
       setTriggering(true);
       await api.triggerManualJob();
-      alert('✅ Analysis started! Refresh in 1-2 minutes to see new suggestions.');
+      // Toast notification is handled by AnalysisStatusButton
       setTimeout(loadData, 2000);
     } catch (err) {
-      alert(`❌ Failed to start analysis: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      // Error toast is handled by AnalysisStatusButton
+      throw err; // Re-throw so AnalysisStatusButton can handle the error
     } finally {
       setTriggering(false);
     }
@@ -76,10 +90,11 @@ export const Dashboard: React.FC = () => {
   const handleApprove = async (id: number) => {
     try {
       await api.approveSuggestion(id);
-      alert(`✅ Suggestion approved successfully!`);
+      toast.success('✅ Suggestion approved successfully!');
       await loadData(); // Refresh data
     } catch (error) {
-      alert(`❌ Failed to approve suggestion: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to approve suggestion: ${message}`);
     }
   };
 
@@ -87,10 +102,11 @@ export const Dashboard: React.FC = () => {
     const reason = prompt('Why are you rejecting this suggestion? (optional)');
     try {
       await api.rejectSuggestion(id, reason || undefined);
-      alert(`✅ Suggestion rejected successfully!`);
+      toast.success('✅ Suggestion rejected successfully!');
       await loadData(); // Refresh data
     } catch (error) {
-      alert(`❌ Failed to reject suggestion: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to reject suggestion: ${message}`);
     }
   };
 
@@ -102,10 +118,11 @@ export const Dashboard: React.FC = () => {
     if (newYaml && newYaml !== suggestion.automation_yaml) {
       try {
         await api.updateSuggestion(id, { automation_yaml: newYaml });
-        alert(`✅ Suggestion updated successfully!`);
+        toast.success('✅ Suggestion updated successfully!');
         await loadData(); // Refresh data
       } catch (error) {
-        alert(`❌ Failed to update suggestion: ${error}`);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`❌ Failed to update suggestion: ${message}`);
       }
     }
   };
@@ -117,10 +134,13 @@ export const Dashboard: React.FC = () => {
     
     try {
       const result = await api.deploySuggestion(id);
-      alert(`✅ ${result.message}\n\nAutomation ID: ${result.data?.automation_id}`);
+      toast.success(`✅ ${result.message}\n\nAutomation ID: ${result.data?.automation_id}`, {
+        duration: 6000,
+      });
       await loadData(); // Refresh data
     } catch (error) {
-      alert(`❌ Failed to deploy automation: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to deploy automation: ${message}`);
     }
   };
 
@@ -129,55 +149,42 @@ export const Dashboard: React.FC = () => {
     setShowWizard(false);
   };
 
-  const toggleSelection = (id: number) => {
-    const newSelection = new Set(selectedSuggestions);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedSuggestions(newSelection);
-  };
 
-  const handleBatchApprove = async () => {
-    const ids = Array.from(selectedSuggestions);
-    if (ids.length === 0) return;
-    
-    if (!confirm(`Approve ${ids.length} suggestion${ids.length > 1 ? 's' : ''}?`)) {
-      return;
-    }
+  const handleBatchApprove = async (ids?: number[]) => {
+    const targetIds = ids || getSelectedIds();
+    if (targetIds.length === 0) return;
     
     try {
-      await api.batchApproveSuggestions(ids);
-      alert(`✅ Approved ${ids.length} suggestion${ids.length > 1 ? 's' : ''} successfully!`);
-      setSelectedSuggestions(new Set());
+      await api.batchApproveSuggestions(targetIds);
+      toast.success(`✅ Approved ${targetIds.length} suggestion${targetIds.length > 1 ? 's' : ''} successfully!`);
+      clearSelection();
       await loadData(); // Refresh data
     } catch (error) {
-      alert(`❌ Failed to approve suggestions: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to approve suggestions: ${message}`);
+      throw error; // Re-throw for modal error handling
     }
   };
 
-  const handleBatchReject = async () => {
-    const ids = Array.from(selectedSuggestions);
-    if (ids.length === 0) return;
-    
-    if (!confirm(`Reject ${ids.length} suggestion${ids.length > 1 ? 's' : ''}?`)) {
-      return;
-    }
+  const handleBatchReject = async (ids?: number[]) => {
+    const targetIds = ids || getSelectedIds();
+    if (targetIds.length === 0) return;
     
     try {
-      await api.batchRejectSuggestions(ids);
-      alert(`✅ Rejected ${ids.length} suggestion${ids.length > 1 ? 's' : ''} successfully!`);
-      setSelectedSuggestions(new Set());
+      await api.batchRejectSuggestions(targetIds);
+      toast.success(`✅ Rejected ${targetIds.length} suggestion${targetIds.length > 1 ? 's' : ''} successfully!`);
+      clearSelection();
       await loadData(); // Refresh data
     } catch (error) {
-      alert(`❌ Failed to reject suggestions: ${error}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to reject suggestions: ${message}`);
+      throw error; // Re-throw for modal error handling
     }
   };
 
   const handleExport = () => {
     const selectedSuggs = suggestions.filter(s => 
-      selectedSuggestions.size > 0 ? selectedSuggestions.has(s.id) : s.status === selectedStatus
+      selectedCount > 0 ? isSelected(s.id) : s.status === selectedStatus
     );
     
     const yaml = selectedSuggs.map(s => s.automation_yaml).join('\n\n# ---\n\n');
@@ -191,8 +198,22 @@ export const Dashboard: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    alert(`✅ Exported ${selectedSuggs.length} automation${selectedSuggs.length > 1 ? 's' : ''} to YAML file!`);
+    toast.success(`✅ Exported ${selectedSuggs.length} automation${selectedSuggs.length > 1 ? 's' : ''} to YAML file!`);
   };
+
+  // Keyboard Shortcuts (moved after function definitions)
+  const keyboardShortcuts = useKeyboardShortcuts({
+    availableIds: suggestions.filter(s => s.status === 'pending').map(s => s.id),
+    onBatchApprove: handleBatchApprove,
+    onBatchReject: handleBatchReject,
+    onSelectAll: () => {
+      const pendingIds = suggestions.filter(s => s.status === 'pending').map(s => s.id);
+      if (pendingIds.length > 0) {
+        // Select all pending suggestions
+        pendingIds.forEach(id => selectItem(id));
+      }
+    },
+  });
 
   // Apply all filters
   let filteredSuggestions = suggestions.filter(s => s.status === selectedStatus);
@@ -212,10 +233,32 @@ export const Dashboard: React.FC = () => {
     filteredSuggestions = filteredSuggestions.filter(s => s.category === categoryFilter);
   }
   
-  // Confidence filter
-  if (minConfidenceFilter > 0) {
-    filteredSuggestions = filteredSuggestions.filter(s => s.confidence >= minConfidenceFilter);
+  // Confidence level filter
+  if (selectedConfidenceLevels.length > 0) {
+    filteredSuggestions = filteredSuggestions.filter(s => {
+      const confidenceLevel = s.confidence >= 90 ? 'high' : s.confidence >= 70 ? 'medium' : 'low';
+      return selectedConfidenceLevels.includes(confidenceLevel);
+    });
   }
+
+  // Calculate suggestion counts for filter pills
+  const getSuggestionCounts = () => {
+    const baseSuggestions = suggestions.filter(s => s.status === selectedStatus);
+    
+    return {
+      categories: {
+        energy: baseSuggestions.filter(s => s.category === 'energy').length,
+        comfort: baseSuggestions.filter(s => s.category === 'comfort').length,
+        security: baseSuggestions.filter(s => s.category === 'security').length,
+        convenience: baseSuggestions.filter(s => s.category === 'convenience').length,
+      },
+      confidence: {
+        high: baseSuggestions.filter(s => s.confidence >= 90).length,
+        medium: baseSuggestions.filter(s => s.confidence >= 70 && s.confidence < 90).length,
+        low: baseSuggestions.filter(s => s.confidence < 70).length,
+      }
+    };
+  };
 
   return (
     <>
@@ -224,126 +267,93 @@ export const Dashboard: React.FC = () => {
         <SetupWizard onComplete={handleWizardComplete} darkMode={darkMode} />
       )}
 
-      <div className="space-y-6">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`rounded-2xl shadow-xl p-8 ${
-          darkMode
-            ? 'bg-gradient-to-br from-blue-900 to-purple-900'
-            : 'bg-gradient-to-br from-blue-500 to-purple-600'
-        } text-white`}
-      >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              🤖 AI Automation Suggestions
+      <div className="space-y-4">
+      {/* Compact Header */}
+      <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-3`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              AI Automation Suggestions
             </h1>
-            <p className="text-blue-100 text-sm md:text-base">
-              Intelligent automation recommendations powered by machine learning
-            </p>
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {suggestions.length} suggestions
+            </span>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleTriggerAnalysis}
-            disabled={triggering || scheduleInfo?.is_running}
-            className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {triggering || scheduleInfo?.is_running ? '⏳ Analyzing...' : '▶️ Run Analysis'}
-          </motion.button>
-        </div>
-
-        {/* Schedule Info */}
-        {scheduleInfo && (
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-              <div className="text-xs text-blue-200">Next Run</div>
-              <div className="text-sm font-bold mt-1">
-                {scheduleInfo.next_run ? new Date(scheduleInfo.next_run).toLocaleString() : 'Not scheduled'}
-              </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <div className={`w-2 h-2 ${scheduleInfo?.is_running ? 'bg-yellow-500' : 'bg-green-500'}`} />
+              <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                {scheduleInfo?.is_running ? 'Running' : 'Ready'}
+              </span>
             </div>
             
-            <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-              <div className="text-xs text-blue-200">Status</div>
-              <div className="text-sm font-bold mt-1">
-                {scheduleInfo.is_running ? '🔄 Running' : '✅ Ready'}
-              </div>
-            </div>
-
-            {scheduleInfo.recent_jobs?.[0] && (
-              <>
-                <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                  <div className="text-xs text-blue-200">Last Run</div>
-                  <div className="text-sm font-bold mt-1">
-                    {scheduleInfo.recent_jobs[0].suggestions_generated || 0} suggestions
-                  </div>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                  <div className="text-xs text-blue-200">Cost</div>
-                  <div className="text-sm font-bold mt-1">
-                    ${(scheduleInfo.recent_jobs[0].openai_cost_usd || 0).toFixed(4)}
-                  </div>
-                </div>
-              </>
-            )}
+            <AnalysisStatusButton
+              status={
+                scheduleInfo?.is_running ? 'running' :
+                triggering ? 'running' :
+                'ready'
+              }
+              progress={scheduleInfo?.is_running ? 50 : 0}
+              estimatedTime={scheduleInfo?.is_running ? 120 : undefined}
+              onRunAnalysis={handleTriggerAnalysis}
+              darkMode={darkMode}
+              disabled={triggering || scheduleInfo?.is_running}
+            />
           </div>
-        )}
-      </motion.div>
+        </div>
+      </div>
 
-      {/* Batch Actions Bar */}
+      {/* Enhanced Batch Actions Bar */}
       <AnimatePresence>
         <BatchActions
-          selectedCount={selectedSuggestions.size}
-          onApproveAll={handleBatchApprove}
-          onRejectAll={handleBatchReject}
+          selectedCount={selectedCount}
+          onApproveAll={() => handleBatchApprove()}
+          onRejectAll={() => handleBatchReject()}
           onExport={handleExport}
-          onClearSelection={() => setSelectedSuggestions(new Set())}
+          onClearSelection={clearSelection}
           darkMode={darkMode}
+          keyboardShortcuts={keyboardShortcuts.shortcuts}
         />
       </AnimatePresence>
 
-      {/* Search & Filters */}
+      {/* Enhanced Search & Filters */}
       <SearchBar
         value={searchQuery}
         onChange={setSearchQuery}
         onCategoryFilter={setCategoryFilter}
-        onConfidenceFilter={setMinConfidenceFilter}
+        onConfidenceFilter={setSelectedConfidenceLevels}
         selectedCategory={categoryFilter}
-        minConfidence={minConfidenceFilter}
+        selectedConfidenceLevels={selectedConfidenceLevels}
         darkMode={darkMode}
+        suggestionCounts={getSuggestionCounts()}
       />
 
       {/* Status Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-1 overflow-x-auto pb-1">
         {(['pending', 'approved', 'deployed', 'rejected'] as const).map((status) => (
-          <motion.button
+          <button
             key={status}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedStatus(status)}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+            className={`px-3 py-1 text-sm font-medium transition-colors whitespace-nowrap ${
               selectedStatus === status
                 ? darkMode
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-blue-500 text-white shadow-lg'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-500 text-white'
                 : darkMode
                 ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
-            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+            <span className={`ml-1 px-1 text-xs ${
               selectedStatus === status
                 ? 'bg-white/20'
                 : darkMode ? 'bg-gray-600' : 'bg-gray-200'
             }`}>
               {suggestions.filter(s => s.status === status).length}
             </span>
-          </motion.button>
+          </button>
         ))}
       </div>
 
@@ -410,14 +420,21 @@ export const Dashboard: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {/* Selection Checkbox for Batch Operations */}
+                {/* Enhanced Selection for Batch Operations */}
                 {suggestion.status === 'pending' && (
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
-                      checked={selectedSuggestions.has(suggestion.id)}
-                      onChange={() => toggleSelection(suggestion.id)}
+                      checked={isSelected(suggestion.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          selectItem(suggestion.id);
+                        } else {
+                          deselectItem(suggestion.id);
+                        }
+                      }}
                       className="mt-6 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      aria-label={`Select suggestion: ${suggestion.title}`}
                     />
                     <div className="flex-1">
                       <SuggestionCard
@@ -427,6 +444,7 @@ export const Dashboard: React.FC = () => {
                         onEdit={handleEdit}
                         onDeploy={handleDeploy}
                         darkMode={darkMode}
+                        isSelected={isSelected(suggestion.id)}
                       />
                     </div>
                   </div>
@@ -439,6 +457,7 @@ export const Dashboard: React.FC = () => {
                     onEdit={handleEdit}
                     onDeploy={handleDeploy}
                     darkMode={darkMode}
+                    isSelected={false}
                   />
                 )}
               </motion.div>

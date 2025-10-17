@@ -23,7 +23,7 @@ except ImportError:
 
 from .config import settings
 from .database.models import init_db
-from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router
+from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router
 from .api.analysis_router import set_scheduler
 from .api.health import set_capability_listener
 from .scheduler import DailyAnalysisScheduler
@@ -50,7 +50,11 @@ app.add_middleware(
         "http://localhost:3001",  # AI Automation standalone UI
         "http://127.0.0.1:3001",
         "http://localhost:3002",  # Legacy
-        "http://127.0.0.1:3002"
+        "http://127.0.0.1:3002",
+        "http://ai-automation-ui",  # Container network
+        "http://ai-automation-ui:80",
+        "http://ha-ingestor-dashboard",  # Health dashboard container
+        "http://ha-ingestor-dashboard:80"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -65,6 +69,7 @@ app.include_router(suggestion_router)
 app.include_router(analysis_router)
 app.include_router(suggestion_management_router)
 app.include_router(deployment_router)
+app.include_router(nl_generation_router)  # Story AI1.21: Natural Language
 
 # Initialize scheduler
 scheduler = DailyAnalysisScheduler()

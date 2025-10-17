@@ -13,19 +13,23 @@ import logging
 from ..config import settings
 from ..clients.ha_client import HomeAssistantClient
 from ..database.models import get_db_session, Suggestion
+from ..safety_validator import get_safety_validator, SafetyResult
+from ..rollback import store_version, rollback_to_previous, get_versions
 from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/deploy", tags=["deployment"])
 
-# Initialize HA client
+# Initialize HA client and safety validator
 ha_client = HomeAssistantClient(settings.ha_url, settings.ha_token)
+safety_validator = get_safety_validator(getattr(settings, 'safety_level', 'moderate'))
 
 
 class DeployRequest(BaseModel):
     """Request to deploy an automation"""
     skip_validation: bool = False
+    force_deploy: bool = False  # Override safety checks (for admins)
 
 
 @router.post("/{suggestion_id}")
@@ -60,29 +64,105 @@ async def deploy_suggestion(suggestion_id: int, request: DeployRequest = DeployR
             
             logger.info(f"🚀 Deploying suggestion {suggestion_id}: {suggestion.title}")
             
+            # SAFETY VALIDATION (AI1.19)
+            if not request.force_deploy:
+                logger.info(f"🛡️ Running safety validation for suggestion {suggestion_id}")
+                
+                # Get existing automations for conflict detection
+                existing_automations = await ha_client.list_automations()
+                
+                # Run safety validation
+                safety_result: SafetyResult = await safety_validator.validate(
+                    suggestion.automation_yaml,
+                    existing_automations
+                )
+                
+                if not safety_result.passed:
+                    logger.warning(
+                        f"⚠️ Safety validation failed for suggestion {suggestion_id}: "
+                        f"{safety_result.summary}"
+                    )
+                    
+                    # Return detailed safety validation error
+                    raise HTTPException(
+                        status_code=400,
+                        detail={
+                            "error": "Safety validation failed",
+                            "safety_score": safety_result.safety_score,
+                            "issues": [
+                                {
+                                    "rule": issue.rule,
+                                    "severity": issue.severity,
+                                    "message": issue.message,
+                                    "suggested_fix": issue.suggested_fix
+                                }
+                                for issue in safety_result.issues
+                            ],
+                            "can_override": safety_result.can_override,
+                            "summary": safety_result.summary,
+                            "suggestion": "Review issues and fix automation, or use force_deploy=true to override (if allowed)"
+                        }
+                    )
+                
+                logger.info(
+                    f"✅ Safety validation passed: score={safety_result.safety_score}/100, "
+                    f"issues={len(safety_result.issues)}"
+                )
+            else:
+                logger.warning(f"⚠️ FORCE DEPLOY: Skipping safety validation for suggestion {suggestion_id}")
+                safety_result = None
+            
             # Deploy to Home Assistant
             deployment_result = await ha_client.deploy_automation(
                 automation_yaml=suggestion.automation_yaml
             )
             
             if deployment_result.get('success'):
+                automation_id = deployment_result.get('automation_id')
+                
+                # Store version for rollback (AI1.20)
+                await store_version(
+                    db,
+                    automation_id,
+                    suggestion.automation_yaml,
+                    safety_result.safety_score if safety_result else 100
+                )
+                logger.info(f"📝 Version stored for rollback capability")
+                
                 # Update suggestion status
                 suggestion.status = 'deployed'
+                suggestion.ha_automation_id = automation_id
+                suggestion.deployed_at = datetime.now(timezone.utc)
                 suggestion.updated_at = datetime.now(timezone.utc)
                 await db.commit()
                 
                 logger.info(f"✅ Successfully deployed suggestion {suggestion_id}")
                 
-                return {
+                response_data = {
                     "success": True,
                     "message": "Automation deployed successfully to Home Assistant",
                     "data": {
                         "suggestion_id": suggestion_id,
-                        "automation_id": deployment_result.get('automation_id'),
+                        "automation_id": automation_id,
                         "status": "deployed",
                         "title": suggestion.title
                     }
                 }
+                
+                # Include safety score if validation was run
+                if safety_result:
+                    response_data["data"]["safety_score"] = safety_result.safety_score
+                    if safety_result.issues:
+                        response_data["data"]["safety_warnings"] = [
+                            {
+                                "severity": issue.severity,
+                                "message": issue.message
+                            }
+                            for issue in safety_result.issues
+                            if issue.severity in ['warning', 'info']
+                        ]
+                
+                return response_data
             else:
                 # Deployment failed
                 error_msg = deployment_result.get('error', 'Unknown error')
@@ -312,5 +392,84 @@ async def test_ha_connection():
         raise
     except Exception as e:
         logger.error(f"HA connection test failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Story AI1.20: Simple Rollback Endpoints
+# ============================================================================
+
+@router.post("/{automation_id}/rollback")
+async def rollback_automation(automation_id: str):
+    """
+    Rollback automation to previous version.
+    Simple: just restores the last version with safety validation.
+    
+    Args:
+        automation_id: HA automation ID (e.g., "automation.morning_lights")
+    
+    Returns:
+        Rollback result
+    """
+    try:
+        async with get_db_session() as db:
+            result = await rollback_to_previous(
+                db,
+                automation_id,
+                ha_client,
+                safety_validator
+            )
+            
+            logger.info(f"✅ Rollback completed for {automation_id}")
+            
+            return {
+                "success": True,
+                "message": f"Automation {automation_id} rolled back successfully",
+                "data": result
+            }
+            
+    except ValueError as e:
+        # Expected errors (no previous version, safety failure)
+        logger.warning(f"Rollback rejected: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Rollback failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{automation_id}/versions")
+async def get_version_history(automation_id: str):
+    """
+    Get version history for automation (last 3 versions).
+    
+    Args:
+        automation_id: HA automation ID
+    
+    Returns:
+        List of versions (most recent first)
+    """
+    try:
+        async with get_db_session() as db:
+            versions = await get_versions(db, automation_id)
+            
+            return {
+                "success": True,
+                "automation_id": automation_id,
+                "versions": [
+                    {
+                        "id": v.id,
+                        "deployed_at": v.deployed_at.isoformat(),
+                        "safety_score": v.safety_score,
+                        "yaml_preview": v.yaml_content[:100] + "..." if len(v.yaml_content) > 100 else v.yaml_content,
+                        "is_current": i == 0  # First is current
+                    }
+                    for i, v in enumerate(versions)
+                ],
+                "count": len(versions),
+                "can_rollback": len(versions) >= 2
+            }
+            
+    except Exception as e:
+        logger.error(f"Error getting versions for {automation_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 

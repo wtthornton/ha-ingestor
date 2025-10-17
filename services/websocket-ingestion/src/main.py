@@ -32,6 +32,7 @@ from memory_manager import MemoryManager
 from weather_enrichment import WeatherEnrichmentService
 from http_client import SimpleHTTPClient
 from influxdb_wrapper import InfluxDBConnectionManager
+from historical_event_counter import HistoricalEventCounter
 
 # Load environment variables
 load_dotenv()
@@ -89,6 +90,9 @@ class WebSocketIngestionService:
         self.influxdb_token = os.getenv('INFLUXDB_TOKEN')
         self.influxdb_org = os.getenv('INFLUXDB_ORG', 'homeassistant')
         self.influxdb_bucket = os.getenv('INFLUXDB_BUCKET', 'home_assistant_events')
+        
+        # Historical event counter for persistent totals
+        self.historical_counter = None
         
         if self.home_assistant_enabled and (not self.home_assistant_url or not self.home_assistant_token):
             raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
@@ -177,6 +181,16 @@ class WebSocketIngestionService:
                 correlation_id=corr_id
             )
             
+            # Initialize historical event counter for persistent totals
+            self.historical_counter = HistoricalEventCounter(self.influxdb_manager)
+            historical_totals = await self.historical_counter.initialize_historical_totals()
+            log_with_context(
+                logger, "INFO", "Historical event totals initialized",
+                operation="historical_counter_init",
+                correlation_id=corr_id,
+                total_events=historical_totals.get('total_events_received', 0)
+            )
+            
             # Initialize connection manager (only if Home Assistant is enabled)
             if self.home_assistant_enabled:
                 self.connection_manager = ConnectionManager(
@@ -208,8 +222,9 @@ class WebSocketIngestionService:
                     mode="standalone"
                 )
             
-            # Update health handler with connection manager
+            # Update health handler with connection manager and historical counter
             self.health_handler.set_connection_manager(self.connection_manager)
+            self.health_handler.set_historical_counter(self.historical_counter)
             
             log_with_context(
                 logger, "INFO", "WebSocket Ingestion Service started successfully",

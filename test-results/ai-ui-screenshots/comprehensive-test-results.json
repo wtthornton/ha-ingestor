@@ -1,0 +1,253 @@
+{
+  "timestamp": "2025-10-16T22:50:09.382Z",
+  "baseUrl": "http://localhost:3001",
+  "sections": {
+    "pages": [
+      {
+        "name": "Dashboard",
+        "path": "/",
+        "url": "http://localhost:3001/",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "Content Type",
+            "status": "PASS",
+            "value": "text/html"
+          },
+          {
+            "test": "HTML Size",
+            "status": "PASS",
+            "value": "600 bytes"
+          }
+        ]
+      },
+      {
+        "name": "Patterns",
+        "path": "/patterns",
+        "url": "http://localhost:3001/patterns",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "Content Type",
+            "status": "PASS",
+            "value": "text/html"
+          },
+          {
+            "test": "HTML Size",
+            "status": "PASS",
+            "value": "600 bytes"
+          }
+        ]
+      },
+      {
+        "name": "Deployed",
+        "path": "/deployed",
+        "url": "http://localhost:3001/deployed",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "Content Type",
+            "status": "PASS",
+            "value": "text/html"
+          },
+          {
+            "test": "HTML Size",
+            "status": "PASS",
+            "value": "600 bytes"
+          }
+        ]
+      },
+      {
+        "name": "Settings",
+        "path": "/settings",
+        "url": "http://localhost:3001/settings",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "Content Type",
+            "status": "PASS",
+            "value": "text/html"
+          },
+          {
+            "test": "HTML Size",
+            "status": "PASS",
+            "value": "600 bytes"
+          }
+        ]
+      }
+    ],
+    "apis": [
+      {
+        "name": "Suggestions List",
+        "endpoint": "/api/suggestions/list",
+        "url": "http://localhost:3001/api/suggestions/list",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "JSON Valid",
+            "status": "PASS",
+            "value": "Valid JSON"
+          },
+          {
+            "test": "Expected Fields",
+            "status": "PASS",
+            "value": "data, success"
+          },
+          {
+            "test": "Data Validation",
+            "status": "PASS",
+            "value": "✓ 20 suggestions"
+          }
+        ]
+      },
+      {
+        "name": "Patterns List",
+        "endpoint": "/api/patterns/list",
+        "url": "http://localhost:3001/api/patterns/list",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "JSON Valid",
+            "status": "PASS",
+            "value": "Valid JSON"
+          },
+          {
+            "test": "Expected Fields",
+            "status": "PASS",
+            "value": "data"
+          },
+          {
+            "test": "Data Validation",
+            "status": "PASS",
+            "value": "✓ 100 patterns"
+          }
+        ]
+      },
+      {
+        "name": "Analysis Status",
+        "endpoint": "/api/analysis/status",
+        "url": "http://localhost:3001/api/analysis/status",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "JSON Valid",
+            "status": "PASS",
+            "value": "Valid JSON"
+          },
+          {
+            "test": "Expected Fields",
+            "status": "PASS",
+            "value": "status"
+          },
+          {
+            "test": "Data Validation",
+            "status": "PASS",
+            "value": "✓ Status: ready"
+          }
+        ]
+      },
+      {
+        "name": "Schedule Info",
+        "endpoint": "/api/analysis/schedule",
+        "url": "http://localhost:3001/api/analysis/schedule",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "JSON Valid",
+            "status": "PASS",
+            "value": "Valid JSON"
+          },
+          {
+            "test": "Expected Fields",
+            "status": "PASS",
+            "value": "schedule"
+          },
+          {
+            "test": "Data Validation",
+            "status": "PASS",
+            "value": "✓ Schedule: 0 3 * * *"
+          }
+        ]
+      },
+      {
+        "name": "Usage Stats",
+        "endpoint": "/api/suggestions/usage-stats",
+        "url": "http://localhost:3001/api/suggestions/usage-stats",
+        "tests": [
+          {
+            "test": "HTTP Status",
+            "status": "PASS",
+            "value": 200
+          },
+          {
+            "test": "JSON Valid",
+            "status": "PASS",
+            "value": "Valid JSON"
+          },
+          {
+            "test": "Expected Fields",
+            "status": "PASS",
+            "value": "data"
+          },
+          {
+            "test": "Data Validation",
+            "status": "PASS",
+            "value": "✓ API calls: 0"
+          }
+        ]
+      }
+    ],
+    "navigation": [
+      {
+        "test": "React Router",
+        "status": "FAIL"
+      },
+      {
+        "test": "Navigation Links",
+        "status": "FAIL"
+      },
+      {
+        "test": "Admin Dashboard Link",
+        "status": "FAIL"
+      }
+    ]
+  },
+  "summary": {
+    "total": 35,
+    "passed": 32,
+    "failed": 3,
+    "successRate": "91.4%"
+  }
+}

@@ -16,10 +16,15 @@ class HealthCheckHandler:
     def __init__(self):
         self.start_time = datetime.now()
         self.connection_manager: Optional[object] = None
+        self.historical_counter: Optional[object] = None
     
     def set_connection_manager(self, connection_manager):
         """Set the connection manager for health checks"""
         self.connection_manager = connection_manager
+    
+    def set_historical_counter(self, historical_counter):
+        """Set the historical counter for persistent totals"""
+        self.historical_counter = historical_counter
     
     async def handle(self, request):
         """Handle health check request - optimized for fast response"""
@@ -46,10 +51,24 @@ class HealthCheckHandler:
                 event_subscription = getattr(self.connection_manager, 'event_subscription', None)
                 if event_subscription:
                     sub_status = event_subscription.get_subscription_status()
+                    
+                    # Get current session totals
+                    session_total = sub_status.get("total_events_received", 0)
+                    
+                    # Get historical totals if available
+                    historical_total = 0
+                    if self.historical_counter and self.historical_counter.is_initialized():
+                        historical_total = self.historical_counter.get_total_events_received()
+                    
+                    # Calculate combined total (historical + current session)
+                    combined_total = historical_total + session_total
+                    
                     health_data["subscription"] = {
                         "is_subscribed": sub_status.get("is_subscribed", False),
                         "active_subscriptions": sub_status.get("active_subscriptions", 0),
-                        "total_events_received": sub_status.get("total_events_received", 0),
+                        "total_events_received": combined_total,  # Historical + current session
+                        "session_events_received": session_total,  # Current session only
+                        "historical_events_received": historical_total,  # Historical only
                         "events_by_type": sub_status.get("events_by_type", {}),
                         "last_event_time": sub_status.get("last_event_time")
                     }

@@ -39,6 +39,17 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     
+    # Safety Validation (AI1.19)
+    safety_level: str = "moderate"  # strict, moderate, or permissive
+    safety_allow_override: bool = True  # Allow force_deploy override
+    safety_min_score: int = 60  # Minimum safety score for moderate level
+    
+    # Natural Language Generation (AI1.21)
+    nl_generation_enabled: bool = True
+    nl_model: str = "gpt-4o-mini"  # OpenAI model for NL generation
+    nl_max_tokens: int = 1500
+    nl_temperature: float = 0.3  # Lower = more consistent
+    
     class Config:
         env_file = "infrastructure/env.ai-automation"
         case_sensitive = False

@@ -12,7 +12,6 @@ const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
   events: Tabs.EventsTab,
   logs: Tabs.LogsTab,
   sports: Tabs.SportsTab,
-  'ai-automation': Tabs.AIAutomationTab,
   'data-sources': Tabs.DataSourcesTab,
   energy: Tabs.EnergyTab,
   analytics: Tabs.AnalyticsTab,
@@ -28,7 +27,6 @@ const TAB_CONFIG = [
   { id: 'events', label: '📡 Events', icon: '📡', shortLabel: 'Events' },
   { id: 'logs', label: '📜 Logs', icon: '📜', shortLabel: 'Logs' },
   { id: 'sports', label: '🏈 Sports', icon: '🏈', shortLabel: 'Sports' },
-  { id: 'ai-automation', label: '🤖 AI Automations', icon: '🤖', shortLabel: 'AI' },
   { id: 'data-sources', label: '🌐 Data Sources', icon: '🌐', shortLabel: 'Data' },
   { id: 'energy', label: '⚡ Energy', icon: '⚡', shortLabel: 'Energy' },
   { id: 'analytics', label: '📈 Analytics', icon: '📈', shortLabel: 'Analytics' },
@@ -135,6 +133,18 @@ export const Dashboard: React.FC = () => {
                 <option value="24h">24h</option>
                 <option value="7d">7d</option>
               </select>
+              
+              {/* AI Automation UI Link */}
+              <a
+                href="http://localhost:3001"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`px-3 py-2 rounded-lg border text-sm min-h-[44px] flex items-center gap-2 ${darkMode ? 'bg-blue-700 border-blue-600 text-white hover:bg-blue-600' : 'bg-blue-100 border-blue-300 text-blue-900 hover:bg-blue-200'} transition-colors duration-200`}
+                title="Open AI Automation UI"
+              >
+                <span>🤖</span>
+                <span className="hidden sm:inline">AI Automations</span>
+              </a>
               
               {/* Last Updated - Hidden on mobile */}
               <div className="text-right hidden md:block">

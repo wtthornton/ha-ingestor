@@ -561,7 +561,7 @@ services:
         max-file: "3"
         labels: "service=energy-correlator,environment=production"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8016/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8017/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -768,11 +768,9 @@ services:
     restart: unless-stopped
     ports:
       - "3001:80"
-    environment:
-      - VITE_API_URL=http://localhost:8018/api
     depends_on:
       ai-automation-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - ha-ingestor-network
     deploy:
