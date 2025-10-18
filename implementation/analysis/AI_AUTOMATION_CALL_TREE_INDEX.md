@@ -31,6 +31,10 @@ The system runs automatically at **3:00 AM daily** via APScheduler cron job:
 
 ## 📚 Call Tree Documents
 
+> **✅ All Phase Documents Created:** The complete system flow has been split into 8 separate files for easier navigation. Each document is self-contained with cross-references.
+> 
+> **Alternative:** View the [complete unified document](AI_AUTOMATION_CALL_TREE.md) for all phases in one file.
+
 ### 1. [Main Execution Flow](AI_AUTOMATION_MAIN_FLOW.md)
 **Topics:**
 - Scheduler trigger at 3 AM
@@ -267,13 +271,13 @@ See each phase document for specific testing instructions.
 5. [Phase 5b: Storage](AI_AUTOMATION_PHASE5B_STORAGE.md) - Understand data persistence
 
 **For Code Review:**
-- Focus on the phase(s) being modified
-- Check cross-phase impacts
-- Verify database schema changes
+- Focus on the specific phase document being modified
+- Check cross-phase impacts using navigation links
+- Verify database schema changes in [Phase 5b](AI_AUTOMATION_PHASE5B_STORAGE.md)
 
 **For Debugging:**
-- Start with [Main Execution Flow](AI_AUTOMATION_MAIN_FLOW.md) error handling
-- Dive into specific phase causing issues
+- Start with [Main Execution Flow](AI_AUTOMATION_MAIN_FLOW.md) error handling section
+- Dive into specific phase document causing issues
 - Check logs against documented flow
 
 ---
@@ -292,9 +296,24 @@ A successful daily run produces:
 
 ---
 
-**Total Documentation:** 8 documents covering complete system flow from 3 AM wake-up to completion.
+**Total Documentation:** 9 documents covering complete system flow from 3 AM wake-up to completion.
 
-**Combined Length:** ~2500+ lines of detailed call trees, examples, and explanations.
+**Documents:**
+1. [AI_AUTOMATION_CALL_TREE_INDEX.md](AI_AUTOMATION_CALL_TREE_INDEX.md) - This index (master navigation)
+2. [AI_AUTOMATION_MAIN_FLOW.md](AI_AUTOMATION_MAIN_FLOW.md) - Overall execution flow
+3. [AI_AUTOMATION_PHASE1_CAPABILITIES.md](AI_AUTOMATION_PHASE1_CAPABILITIES.md) - Device capability discovery
+4. [AI_AUTOMATION_PHASE2_EVENTS.md](AI_AUTOMATION_PHASE2_EVENTS.md) - Historical event fetching
+5. [AI_AUTOMATION_PHASE3_PATTERNS.md](AI_AUTOMATION_PHASE3_PATTERNS.md) - Pattern detection
+6. [AI_AUTOMATION_PHASE4_FEATURES.md](AI_AUTOMATION_PHASE4_FEATURES.md) - Feature analysis
+7. [AI_AUTOMATION_PHASE5_OPENAI.md](AI_AUTOMATION_PHASE5_OPENAI.md) - OpenAI suggestion generation
+8. [AI_AUTOMATION_PHASE5B_STORAGE.md](AI_AUTOMATION_PHASE5B_STORAGE.md) - Suggestion storage
+9. [AI_AUTOMATION_PHASE6_MQTT.md](AI_AUTOMATION_PHASE6_MQTT.md) - MQTT notification
+
+**Alternative:** View [AI_AUTOMATION_CALL_TREE.md](AI_AUTOMATION_CALL_TREE.md) for unified 2,644-line document with all phases.
+
+**Combined Length:** ~2,800+ lines of detailed call trees, examples, and explanations across all documents.
 
 **Coverage:** 100% of AutomateAI subsystem execution path with deep dives into each phase.
+
+**Cross-References:** All documents include navigation links to previous/next phases and related documentation.
 
