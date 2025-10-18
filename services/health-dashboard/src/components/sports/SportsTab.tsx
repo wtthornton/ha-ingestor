@@ -251,7 +251,7 @@ export const SportsTab: React.FC<SportsTabProps> = ({ darkMode = false }) => {
         {!gamesLoading && upcomingGames.length > 0 && (
           <div className="mb-8">
             <h2 className={`text-2xl font-bold ${textPrimary} mb-4`}>
-              📅 UPCOMING TODAY ({upcomingGames.length})
+              📅 UPCOMING THIS WEEK ({upcomingGames.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {upcomingGames.map(game => (

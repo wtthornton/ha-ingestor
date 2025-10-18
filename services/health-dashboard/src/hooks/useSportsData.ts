@@ -53,9 +53,9 @@ export const useSportsData = ({
       const liveData = await liveResponse.json();
       setLiveGames(liveData.games || []);
 
-      // Fetch upcoming games (next 24 hours)
+      // Fetch upcoming games (next 7 days)
       const upcomingResponse = await fetch(
-        `/api/sports/games/upcoming?team_ids=${teamIdsParam}&hours=24${leagueParam}`
+        `/api/sports/games/upcoming?team_ids=${teamIdsParam}&hours=168${leagueParam}`
       );
       
       if (!upcomingResponse.ok) {

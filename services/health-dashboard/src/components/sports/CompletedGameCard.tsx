@@ -31,7 +31,7 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
           Final
         </span>
         <span className={`text-xs ${textSecondary}`}>
-          {new Date(game.startTime).toLocaleDateString()}
+          {new Date(game.start_time).toLocaleDateString()}
         </span>
       </div>
 
@@ -45,11 +45,11 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
             <span className="text-xl">{game.league === 'NFL' ? '🏈' : '🏒'}</span>
             <div>
               <div className={`font-semibold ${textPrimary}`}>
-                {game.awayTeam.name}
+                {game.away_team.name}
               </div>
               <div className={`text-xs ${textSecondary}`}>
-                {game.awayTeam.record && 
-                  `${game.awayTeam.record.wins}-${game.awayTeam.record.losses}`
+                {game.away_team.record && 
+                  `${game.away_team.record.wins}-${game.away_team.record.losses}`
                 }
               </div>
             </div>
@@ -67,11 +67,11 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
             <span className="text-xl">{game.league === 'NFL' ? '🏈' : '🏒'}</span>
             <div>
               <div className={`font-semibold ${textPrimary}`}>
-                {game.homeTeam.name}
+                {game.home_team.name}
               </div>
               <div className={`text-xs ${textSecondary}`}>
-                {game.homeTeam.record && 
-                  `${game.homeTeam.record.wins}-${game.homeTeam.record.losses}`
+                {game.home_team.record && 
+                  `${game.home_team.record.wins}-${game.home_team.record.losses}`
                 }
               </div>
             </div>

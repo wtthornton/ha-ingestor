@@ -18,6 +18,18 @@ This document serves as the main entry point for the Home Assistant Ingestor arc
 **Status:** ✅ FULLY OPERATIONAL - All services healthy, MQTT connected, 100% success rate  
 **Last Updated:** October 17, 2025
 
+## Interactive Dependency Visualization
+
+The Health Dashboard (localhost:3000) includes an **interactive dependency graph** that provides real-time visualization of the system architecture:
+
+- **Animated SVG Flow**: Real-time data flow visualization with animated particles
+- **Horizontal Layout**: Optimized layout with no overlapping nodes for clear data flow
+- **Interactive Nodes**: Click any service to highlight its dependencies and connections
+- **Live Metrics**: Real-time throughput and connection status indicators
+- **Multi-Layer Architecture**: Clear separation of external sources, ingestion, processing, AI, storage, and UI layers
+
+**Access:** Navigate to the "Dependencies" tab in the Health Dashboard for the interactive visualization.
+
 ## Architecture Diagram
 
 ```mermaid
