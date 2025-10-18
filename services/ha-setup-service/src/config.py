@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     ha_token: str = ""
     
     # Database configuration
-    database_url: str = "sqlite+aiosqlite:///./data/ha-setup.db"
+    database_url: str = "sqlite+aiosqlite:////app/data/ha-setup.db"  # Absolute path for Docker volume
     
     # Data API configuration
     data_api_url: str = "http://ha-ingestor-data-api:8006"

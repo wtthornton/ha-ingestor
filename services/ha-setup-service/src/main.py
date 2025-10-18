@@ -25,7 +25,8 @@ from .schemas import (
     EnvironmentHealthResponse,
     HealthCheckResponse,
     IntegrationHealthResponse,
-    PerformanceMetricResponse
+    PerformanceMetricResponse,
+    IntegrationStatus
 )
 
 settings = get_settings()

@@ -50,7 +50,7 @@ class PerformanceMetric(Base):
     metric_type = Column(String, nullable=False, index=True)  # response_time, cpu, memory
     metric_value = Column(Float, nullable=False)
     component = Column(String)  # Which component (ha_core, mqtt, etc.)
-    metadata = Column(JSON)  # Additional metric context
+    metric_metadata = Column(JSON)  # Additional metric context (renamed from 'metadata' - reserved in SQLAlchemy)
     
     def __repr__(self):
         return f"<PerformanceMetric(type={self.metric_type}, value={self.metric_value})>"

@@ -6,6 +6,7 @@ import * as Tabs from './tabs';
 // Tab configuration
 const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
   overview: Tabs.OverviewTab,
+  setup: Tabs.SetupTab,
   services: Tabs.ServicesTab,
   dependencies: Tabs.DependenciesTab,
   devices: Tabs.DevicesTab,
@@ -21,6 +22,7 @@ const TAB_COMPONENTS: Record<string, React.FC<Tabs.TabProps>> = {
 
 const TAB_CONFIG = [
   { id: 'overview', label: '📊 Overview', icon: '📊', shortLabel: 'Overview' },
+  { id: 'setup', label: '🏥 Setup & Health', icon: '🏥', shortLabel: 'Setup' },
   { id: 'services', label: '🔧 Services', icon: '🔧', shortLabel: 'Services' },
   { id: 'dependencies', label: '🔗 Dependencies', icon: '🔗', shortLabel: 'Deps' },
   { id: 'devices', label: '📱 Devices', icon: '📱', shortLabel: 'Devices' },

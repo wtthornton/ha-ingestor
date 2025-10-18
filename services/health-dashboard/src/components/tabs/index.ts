@@ -8,6 +8,7 @@
 
 export * from './types';
 export { OverviewTab } from './OverviewTab';
+export { SetupTab } from './SetupTab';
 export { ServicesTab } from './ServicesTab';
 export { SportsTab } from './SportsTab';
 export { DependenciesTab } from './DependenciesTab';

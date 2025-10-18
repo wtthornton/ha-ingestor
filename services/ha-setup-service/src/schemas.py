@@ -117,7 +117,7 @@ class PerformanceMetricCreate(BaseModel):
     metric_type: str
     metric_value: float
     component: Optional[str] = None
-    metadata: Optional[Dict] = None
+    metric_metadata: Optional[Dict] = None  # Renamed from 'metadata' to match model
 
 
 class PerformanceMetricResponse(BaseModel):
@@ -127,7 +127,7 @@ class PerformanceMetricResponse(BaseModel):
     metric_type: str
     metric_value: float
     component: Optional[str]
-    metadata: Optional[Dict]
+    metric_metadata: Optional[Dict]  # Renamed from 'metadata' to match model
     
     class Config:
         from_attributes = True
