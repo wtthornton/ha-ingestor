@@ -15,8 +15,8 @@ This document serves as the main entry point for the Home Assistant Ingestor arc
 **Database:** Hybrid architecture (InfluxDB for time-series, SQLite for metadata)  
 **Deployment:** Docker Compose with optimized Alpine images  
 **Purpose:** Capture Home Assistant events, enrich with weather context, store in time-series database  
-**Status:** ✅ FULLY OPERATIONAL - All services healthy, MQTT connected, 100% success rate  
-**Last Updated:** October 17, 2025
+**Status:** ✅ FULLY OPERATIONAL - All services healthy, MQTT connected, 100% success rate, Sports tab with team ID migration  
+**Last Updated:** October 18, 2025
 
 ## Interactive Dependency Visualization
 
@@ -29,6 +29,25 @@ The Health Dashboard (localhost:3000) includes an **interactive dependency graph
 - **Multi-Layer Architecture**: Clear separation of external sources, ingestion, processing, AI, storage, and UI layers
 
 **Access:** Navigate to the "Dependencies" tab in the Health Dashboard for the interactive visualization.
+
+## Sports Tab Integration
+
+The Health Dashboard includes a **Sports tab** for monitoring NFL and NHL games:
+
+- **Team Selection**: Users can select favorite NFL and NHL teams
+- **Live Game Monitoring**: Real-time scores and game status updates
+- **7-Day Schedule Window**: Shows upcoming games for the next week
+- **Automatic Migration**: Team ID migration preserves user selections
+- **League Separation**: Prevents cross-league team contamination (e.g., Dallas Cowboys vs Dallas Stars)
+
+**Recent Fixes (October 18, 2025):**
+- ✅ Fixed duplicate team ID issue with league prefixes (`nfl-dal`, `nhl-vgk`)
+- ✅ Extended NHL API to fetch 7 days of games instead of current day only
+- ✅ Added automatic migration for existing team selections
+- ✅ Fixed property name mismatches between API and frontend
+- ✅ Improved error handling and debugging
+
+**Access:** Navigate to the "Sports" tab in the Health Dashboard for team monitoring.
 
 ## Architecture Diagram
 

@@ -1,15 +1,36 @@
 # Sports API Integration Architecture
 
-**Status:** Draft  
-**Version:** 1.0  
-**Date:** October 11, 2025  
+**Status:** ✅ IMPLEMENTED  
+**Version:** 2.0  
+**Date:** October 18, 2025  
 **Author:** Winston (Architect)  
+**Last Updated:** October 18, 2025 (Team ID Migration Fix)  
 
 ---
 
 ## Executive Summary
 
-This document defines the architecture for integrating API-SPORTS (NFL, NCAA, and NHL) into the Home Assistant Ingestor ecosystem. The sports API service will follow established patterns from existing services (weather-api, enrichment-pipeline) while providing real-time sports data enrichment for Home Assistant events.
+This document defines the architecture for integrating ESPN APIs (NFL and NHL) into the Home Assistant Ingestor ecosystem. The sports data service follows established patterns from existing services while providing real-time sports data for the Health Dashboard Sports tab.
+
+**✅ IMPLEMENTATION STATUS:** Fully operational with recent fixes for team ID duplicates and NHL game fetching.
+
+## Recent Fixes (October 18, 2025)
+
+### Team ID Duplicate Issue Resolution
+- **Problem**: NFL and NHL teams shared identical abbreviations (e.g., `dal` for both Dallas Cowboys and Dallas Stars)
+- **Solution**: Added league prefixes to team IDs (`nfl-dal`, `nhl-dal`, `nhl-vgk`)
+- **Impact**: Users now see only games for their selected teams, no cross-league contamination
+- **Migration**: Automatic migration preserves existing user team selections
+
+### NHL Game Fetching Enhancement
+- **Problem**: NHL API only returned current day games, missing upcoming games
+- **Solution**: Extended NHL API to fetch games for next 7 days with date parameters
+- **Impact**: Vegas Golden Knights and other NHL teams now show upcoming games correctly
+
+### Frontend Property Name Fixes
+- **Problem**: API returned snake_case properties but frontend expected camelCase
+- **Solution**: Updated React components to use correct property names (`start_time`, `home_team`, `away_team`)
+- **Impact**: Sports tab now displays games without JavaScript errors
 
 ### Key Design Principles
 
