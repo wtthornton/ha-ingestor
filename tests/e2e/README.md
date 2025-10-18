@@ -115,6 +115,171 @@ Run tests with Playwright UI:
 npx playwright test --config=tests/e2e/docker-deployment.config.ts --ui
 ```
 
+## AI Automation Testing ✨ NEW
+
+### Quick Start for AI Automation Tests
+
+```bash
+# Run all AI automation tests
+./tests/e2e/run-docker-tests.sh --service ai-automation
+
+# Run specific AI automation test file
+npx playwright test tests/e2e/ai-automation-smoke.spec.ts
+
+# Debug AI automation tests
+npx playwright test tests/e2e/ai-automation-*.spec.ts --debug
+```
+
+### Test Suites
+
+**1. Smoke Tests** (`ai-automation-smoke.spec.ts`)
+- UI loads successfully
+- Navigation works across all 4 pages
+- Page Object Models functional
+
+**2. Approval Workflow** (`ai-automation-approval-workflow.spec.ts`) - *Planned*
+- Browse and filter suggestions
+- Approve suggestions
+- Deploy to Home Assistant
+- Error handling
+
+**3. Rejection Workflow** (`ai-automation-rejection-workflow.spec.ts`) - *Planned*
+- Reject suggestions with feedback
+- Verify hiding behavior
+- Feedback persistence
+
+**4. Pattern Visualization** (`ai-automation-patterns.spec.ts`) - *Planned*
+- View time-of-day and co-occurrence patterns
+- Filter patterns
+- Chart interactions
+
+**5. Manual Analysis** (`ai-automation-analysis.spec.ts`) - *Planned*
+- Trigger analysis manually
+- Monitor progress
+- Real-time UI updates
+
+**6. Device Intelligence** (`ai-automation-device-intelligence.spec.ts`) - *Planned*
+- Device utilization metrics
+- Feature suggestions
+- Capability discovery
+
+**7. Settings** (`ai-automation-settings.spec.ts`) - *Planned*
+- Configuration management
+- API key validation
+- Persistence verification
+
+### Test Architecture
+
+**Page Object Models:**
+```
+tests/e2e/page-objects/
+├── DashboardPage.ts    # Suggestion browsing, filtering, approval
+├── PatternsPage.ts     # Pattern visualization and analysis
+├── DeployedPage.ts     # Deployed automations management
+└── SettingsPage.ts     # Configuration management
+```
+
+**Test Utilities:**
+```
+tests/e2e/utils/
+├── mock-data-generators.ts  # Generate realistic test data
+├── custom-assertions.ts      # AI-specific assertions
+└── api-mocks.ts             # Mock backend endpoints
+```
+
+**Test Fixtures:**
+```
+tests/e2e/fixtures/
+└── ai-automation.ts  # Default mock data sets
+```
+
+### Example Test
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { DashboardPage } from './page-objects/DashboardPage';
+import { mockSuggestionsEndpoint } from './utils/api-mocks';
+import { expectToastMessage } from './utils/custom-assertions';
+
+test('approve and deploy suggestion', async ({ page }) => {
+  const dashboardPage = new DashboardPage(page);
+  
+  // Mock API
+  await mockSuggestionsEndpoint(page);
+  
+  // Navigate and approve
+  await dashboardPage.goto();
+  await dashboardPage.approveSuggestion(0);
+  
+  // Deploy
+  await dashboardPage.deploySuggestion('sug-1');
+  
+  // Verify success
+  await expectToastMessage(page, 'success', 'deployed');
+});
+```
+
+### Mock Data Utilities
+
+```typescript
+import { MockDataGenerator } from './utils/mock-data-generators';
+
+// Generate suggestions
+const suggestions = MockDataGenerator.generateSuggestions({
+  count: 5,
+  category: 'energy',
+  confidence: 'high'
+});
+
+// Generate patterns
+const patterns = MockDataGenerator.generatePatterns({ count: 8 });
+
+// Generate device capabilities
+const devices = MockDataGenerator.generateDeviceCapabilities({ count: 10 });
+```
+
+### Custom Assertions
+
+```typescript
+import { 
+  expectToastMessage,
+  expectSuggestionVisible,
+  expectDeploymentSuccess,
+  expectChartRendered 
+} from './utils/custom-assertions';
+
+// Assert success toast appears
+await expectToastMessage(page, 'success', 'Successfully deployed');
+
+// Assert suggestion is visible
+await expectSuggestionVisible(page, 'sug-123');
+
+// Assert automation deployed
+await expectDeploymentSuccess(page, 'sug-123');
+
+// Assert chart rendered
+await expectChartRendered(page);
+```
+
+### API Mocking
+
+```typescript
+import {
+  mockSuggestionsEndpoint,
+  mockDeployEndpoint,
+  mockPatternsEndpoint,
+  mockAllEndpoints
+} from './utils/api-mocks';
+
+// Mock individual endpoints
+await mockSuggestionsEndpoint(page);
+await mockDeployEndpoint(page, true);  // success
+await mockDeployEndpoint(page, false); // failure
+
+// Mock all endpoints at once
+await mockAllEndpoints(page);
+```
+
 ## Test Coverage
 
 ### Backend Services
@@ -125,12 +290,14 @@ npx playwright test --config=tests/e2e/docker-deployment.config.ts --ui
 - ✅ **Admin API** - REST API endpoints and functionality
 - ✅ **Data Retention** - Data cleanup and management
 - ✅ **Weather API** - Weather data integration (if enabled)
+- ✨ **AI Automation Service** - AI-powered automation suggestions (Port 8018)
 
 ### Frontend Screens
 
-- ✅ **Dashboard** - Main dashboard with health cards, statistics, and events
+- ✅ **Health Dashboard** - Main dashboard with health cards, statistics, and events (Port 3000)
 - ✅ **Monitoring** - System monitoring interface with service status
 - ✅ **Settings** - Configuration management interface
+- ✨ **AI Automation UI** - AI-powered automation suggestions interface (Port 3001)
 
 ### UI Components
 

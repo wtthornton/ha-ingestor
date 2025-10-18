@@ -71,7 +71,7 @@ export const Patterns: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="patterns-container">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -179,6 +179,7 @@ export const Patterns: React.FC = () => {
           patterns.slice(0, 20).map((pattern, idx) => (
             <motion.div
               key={pattern.id}
+              data-testid="pattern-item"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.05 }}
@@ -188,7 +189,7 @@ export const Patterns: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <div className="text-3xl">{getPatternIcon(pattern.pattern_type)}</div>
                   <div>
-                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`} data-testid="pattern-devices">
                       {deviceNames[pattern.device_id] || getFallbackName(pattern.device_id)}
                     </div>
                     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>

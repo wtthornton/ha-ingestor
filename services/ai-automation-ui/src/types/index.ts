@@ -78,3 +78,31 @@ export interface UsageStats {
   };
 }
 
+/**
+ * Synergy Opportunity Type
+ * Story AI3.8: Frontend Synergy Tab
+ * Epic AI-3: Cross-Device Synergy & Contextual Opportunities
+ */
+export interface SynergyOpportunity {
+  id: number;
+  synergy_id: string;
+  synergy_type: 'device_pair' | 'weather_context' | 'energy_context' | 'event_context';
+  device_ids: string;  // JSON array
+  opportunity_metadata: {
+    trigger_entity?: string;
+    trigger_name?: string;
+    action_entity?: string;
+    action_name?: string;
+    relationship?: string;
+    rationale?: string;
+    weather_condition?: string;
+    suggested_action?: string;
+    estimated_savings?: string;
+  };
+  impact_score: number;
+  complexity: 'low' | 'medium' | 'high';
+  confidence: number;
+  area?: string;
+  created_at: string;
+}
+

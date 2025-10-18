@@ -267,7 +267,7 @@ export const Dashboard: React.FC = () => {
         <SetupWizard onComplete={handleWizardComplete} darkMode={darkMode} />
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="dashboard-container">
       {/* Compact Header */}
       <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-3`}>
         <div className="flex items-center justify-between">
@@ -371,7 +371,7 @@ export const Dashboard: React.FC = () => {
       {/* Suggestions List */}
       <AnimatePresence mode="wait">
         {loading ? (
-          <div className="grid gap-6">
+          <div className="grid gap-6" data-testid="loading-spinner">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}

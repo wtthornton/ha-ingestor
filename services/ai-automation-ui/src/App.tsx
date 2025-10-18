@@ -5,11 +5,12 @@
 
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { CustomToaster } from './components/CustomToast';
 import { SelectionProvider } from './context/SelectionContext';
 import { Navigation } from './components/Navigation';
 import { Dashboard } from './pages/Dashboard';
 import { Patterns } from './pages/Patterns';
+import { Synergies } from './pages/Synergies';  // Epic AI-3, Story AI3.8
 import { Deployed } from './pages/Deployed';
 import { Settings } from './pages/Settings';
 import { useAppStore } from './store';
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/patterns" element={<Patterns />} />
+            <Route path="/synergies" element={<Synergies />} />
             <Route path="/deployed" element={<Deployed />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
@@ -64,37 +66,7 @@ export const App: React.FC = () => {
         </footer>
 
         {/* Toast Notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: darkMode ? '#374151' : '#fff',
-              color: darkMode ? '#f3f4f6' : '#1f2937',
-              border: `1px solid ${darkMode ? '#4b5563' : '#e5e7eb'}`,
-              borderRadius: '12px',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
-            loading: {
-              iconTheme: {
-                primary: '#3b82f6',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
+        <CustomToaster darkMode={darkMode} />
         </div>
       </Router>
     </SelectionProvider>

@@ -64,7 +64,7 @@ export const Deployed: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="deployed-container">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,6 +103,8 @@ export const Deployed: React.FC = () => {
           {automations.map((automation, index) => (
             <motion.div
               key={automation.entity_id}
+              data-testid="deployed-automation"
+              data-id={automation.entity_id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}

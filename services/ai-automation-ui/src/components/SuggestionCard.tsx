@@ -52,6 +52,8 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
   return (
     <motion.div
+      data-testid="suggestion-card"
+      data-id={suggestion.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -138,6 +140,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
           <div className="flex gap-3">
             {/* Approve Button */}
             <button
+              data-testid="approve-button"
               onClick={() => onApprove(suggestion.id)}
               className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-1"
             >
@@ -150,6 +153,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
             {/* Edit Button (Optional) */}
             {onEdit && (
               <button
+                data-testid="edit-button"
                 onClick={() => onEdit(suggestion.id)}
                 className={`px-3 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                   darkMode
@@ -166,6 +170,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
             {/* Reject Button */}
             <button
+              data-testid="reject-button"
               onClick={() => onReject(suggestion.id)}
               className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-1"
             >
@@ -180,6 +185,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
         {/* Deploy Button */}
         {suggestion.status === 'approved' && onDeploy && (
           <button
+            data-testid={`deploy-${suggestion.id}`}
             onClick={() => onDeploy(suggestion.id)}
             className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >

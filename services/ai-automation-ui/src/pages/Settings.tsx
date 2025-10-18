@@ -101,7 +101,7 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="settings-container">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -115,7 +115,7 @@ export const Settings: React.FC = () => {
       </motion.div>
 
       {/* Settings Form */}
-      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6" data-testid="settings-form">
         {/* Analysis Schedule Section */}
         <div className={`rounded-xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
           <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>

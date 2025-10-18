@@ -3,7 +3,7 @@
  * Connects to ai-automation-service on port 8018
  */
 
-import type { Suggestion, Pattern, ScheduleInfo, AnalysisStatus, UsageStats } from '../types';
+import type { Suggestion, Pattern, ScheduleInfo, AnalysisStatus, UsageStats, SynergyOpportunity } from '../types';
 
 // Use relative path - nginx will proxy to ai-automation-service
 // In production (Docker), nginx proxies /api to http://ai-automation-service:8018/api
@@ -343,6 +343,23 @@ export const api = {
     }
     
     return nameMap;
+  },
+
+  // Synergies (Epic AI-3, Story AI3.8)
+  async getSynergies(synergyType?: string | null, minConfidence = 0.7): Promise<{ data: { synergies: SynergyOpportunity[] } }> {
+    const params = new URLSearchParams();
+    if (synergyType) params.append('synergy_type', synergyType);
+    params.append('min_confidence', minConfidence.toString());
+    
+    return fetchJSON(`${API_BASE_URL}/synergies?${params}`);
+  },
+
+  async getSynergyStats(): Promise<{ data: { total_synergies: number; by_type: Record<string, number>; by_complexity: Record<string, number>; avg_impact_score: number } }> {
+    return fetchJSON(`${API_BASE_URL}/synergies/stats`);
+  },
+
+  async getSynergy(synergyId: string): Promise<{ data: { synergy: SynergyOpportunity } }> {
+    return fetchJSON(`${API_BASE_URL}/synergies/${synergyId}`);
   },
 };
 
