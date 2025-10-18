@@ -27,10 +27,11 @@ ha-ingestor/
 │   ├── analysis/                  # Technical analysis and diagnosis
 │   ├── verification/              # Test and verification results
 │   └── archive/                   # Old/superseded implementation notes
-├── services/                      # 15 Microservices (Alpine-based)
+├── services/                      # 16 Microservices (Alpine-based)
 │   ├── admin-api/                 # System monitoring & control API (Port 8003 external → 8004 internal) [Epic 13]
 │   ├── data-api/                  # Feature data hub API (Port 8006) [Epic 13]
-│   ├── health-dashboard/          # React frontend (12 tabs, Port 3000)
+│   ├── ha-setup-service/          # HA Setup & Recommendation Service (Port 8020) [Epic 27-30] ✨ NEW
+│   ├── health-dashboard/          # React frontend (13 tabs, Port 3000) - Added Setup tab
 │   ├── websocket-ingestion/       # WebSocket client service (Port 8001)
 │   ├── enrichment-pipeline/       # Data processing service (Port 8002)
 │   ├── data-retention/            # Data lifecycle management (Port 8080)
