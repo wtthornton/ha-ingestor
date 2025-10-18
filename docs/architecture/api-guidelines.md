@@ -732,4 +732,154 @@ class EventRepository:
         }
 ```
 
+## Real-Time Metrics API (Epic 23)
+
+### Standardized Event Rate Endpoint
+
+All microservices expose a standardized `/api/v1/event-rate` endpoint for real-time metrics collection.
+
+#### Endpoint Specification
+
+```
+GET /api/v1/event-rate
+```
+
+**Response Format**:
+```json
+{
+  "service": "service-name",
+  "events_per_second": 0.0,
+  "events_per_hour": 0.0,
+  "total_events_processed": 0,
+  "uptime_seconds": 3600.0,
+  "processing_stats": {
+    "is_running": true,
+    "max_workers": 4,
+    "active_workers": 2,
+    "processed_events": 1000,
+    "failed_events": 10,
+    "success_rate": 99.0,
+    "processing_rate_per_second": 0.5,
+    "average_processing_time_ms": 100.0,
+    "queue_size": 5,
+    "queue_maxsize": 1000,
+    "uptime_seconds": 3600.0,
+    "last_processing_time": "2024-01-15T10:30:00.000Z",
+    "event_handlers_count": 8
+  },
+  "connection_stats": {
+    "is_connected": true,
+    "is_subscribed": false,
+    "total_events_received": 1000,
+    "events_by_type": {
+      "event_type_1": 400,
+      "event_type_2": 300,
+      "event_type_3": 200,
+      "event_type_4": 100
+    },
+    "last_event_time": "2024-01-15T10:30:00.000Z"
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+**Services Implementing This Endpoint**:
+- websocket-ingestion (port 8000)
+- admin-api (port 8001)
+- enrichment-pipeline (port 8002)
+- data-api (port 8006)
+- ai-automation-service (port 8008)
+- air-quality-service (port 8010)
+- calendar-service (port 8011)
+- carbon-intensity-service (port 8012)
+- data-retention (port 8013)
+- electricity-pricing-service (port 8014)
+- energy-correlator (port 8015)
+- smart-meter-service (port 8016)
+- sports-api (port 8018)
+- sports-data (port 8019)
+- weather-api (port 8020)
+
+### Consolidated Metrics Endpoint
+
+The Admin API provides a consolidated endpoint that aggregates metrics from all services.
+
+#### Endpoint Specification
+
+```
+GET /api/v1/real-time-metrics
+```
+
+**Features**:
+- Parallel collection from all 15 services
+- Individual timeouts per service (3-10s based on priority)
+- Overall timeout protection (15s)
+- Fallback metrics for unavailable services
+- Health scoring and status categorization
+
+**Response Format**:
+```json
+{
+  "events_per_second": 0.0,
+  "api_calls_active": 5,
+  "data_sources_active": ["home_assistant", "weather_api", "sports_api"],
+  "api_metrics": [
+    {
+      "service": "websocket-ingestion",
+      "events_per_second": 2.5,
+      "events_per_hour": 9000.0,
+      "uptime_seconds": 3600.0,
+      "status": "active",
+      "response_time_ms": 150,
+      "last_success": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "service": "data-api",
+      "events_per_second": 0.0,
+      "events_per_hour": 0.0,
+      "uptime_seconds": 0.0,
+      "status": "timeout",
+      "response_time_ms": null,
+      "last_success": null,
+      "error_message": "Timeout after 5s",
+      "is_fallback": true
+    }
+  ],
+  "inactive_apis": 5,
+  "error_apis": 2,
+  "total_apis": 15,
+  "health_summary": {
+    "healthy": 8,
+    "unhealthy": 7,
+    "total": 15,
+    "health_percentage": 53.3
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+**Status Values**:
+- `active` - Service responding normally with events
+- `inactive` - Service responding but no events processing
+- `timeout` - Service didn't respond within timeout
+- `not_configured` - Service URL not configured
+- `error` - Service returned an error
+
+**Implementation Details**:
+- Uses `asyncio.gather()` for parallel requests
+- Implements per-service timeout configuration
+- Graceful degradation with fallback metrics
+- Error message propagation for debugging
+
+**Usage Example**:
+```typescript
+// Frontend polling example
+const { metrics, loading, error } = useRealTimeMetrics(5000); // 5s polling
+
+// Access metrics
+console.log(`Active APIs: ${metrics.api_calls_active}`);
+console.log(`Health: ${metrics.health_summary.health_percentage}%`);
+console.log(`Events/hour: ${metrics.api_metrics[0].events_per_hour}`);
+```
+
 These API guidelines ensure consistent, secure, and performant API design and implementation across the Home Assistant Ingestor project.

@@ -45,6 +45,7 @@ class WebSocketIngestionService:
     """Main service class for WebSocket ingestion"""
     
     def __init__(self):
+        self.start_time = datetime.now()
         self.connection_manager: Optional[ConnectionManager] = None
         self.health_handler = HealthCheckHandler()
         # Pass self reference to health handler for weather statistics
@@ -66,8 +67,11 @@ class WebSocketIngestionService:
         self.influxdb_manager: Optional[InfluxDBConnectionManager] = None
         
         # Get configuration from environment
-        self.home_assistant_url = os.getenv('HOME_ASSISTANT_URL')
-        self.home_assistant_token = os.getenv('HOME_ASSISTANT_TOKEN')
+        # Support both new (HA_HTTP_URL/HA_WS_URL/HA_TOKEN) and old (HOME_ASSISTANT_URL/HOME_ASSISTANT_TOKEN) variable names
+        self.home_assistant_url = os.getenv('HA_HTTP_URL') or os.getenv('HOME_ASSISTANT_URL')
+        # Prioritize HA_WS_URL, then fall back to HA_URL (for backward compatibility with .env.websocket)
+        self.home_assistant_ws_url = os.getenv('HA_WS_URL') or os.getenv('HA_URL')
+        self.home_assistant_token = os.getenv('HA_TOKEN') or os.getenv('HOME_ASSISTANT_TOKEN')
         self.home_assistant_enabled = os.getenv('ENABLE_HOME_ASSISTANT', 'true').lower() == 'true'
         
         # High-volume processing configuration
@@ -95,7 +99,7 @@ class WebSocketIngestionService:
         self.historical_counter = None
         
         if self.home_assistant_enabled and (not self.home_assistant_url or not self.home_assistant_token):
-            raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
+            raise ValueError("HA_HTTP_URL/HA_WS_URL and HA_TOKEN must be set when ENABLE_HOME_ASSISTANT=true")
     
     @performance_monitor("service_startup")
     async def start(self):
@@ -193,8 +197,17 @@ class WebSocketIngestionService:
             
             # Initialize connection manager (only if Home Assistant is enabled)
             if self.home_assistant_enabled:
+                # Use WebSocket URL if available, otherwise derive from HTTP URL
+                if self.home_assistant_ws_url:
+                    ws_url = self.home_assistant_ws_url
+                else:
+                    # Derive WebSocket URL from HTTP URL
+                    ws_url = self.home_assistant_url.replace('http://', 'ws://').replace('https://', 'wss://') + '/api/websocket'
+                
+                logger.info(f"Connecting to Home Assistant WebSocket: {ws_url}", extra={'correlation_id': corr_id})
+                
                 self.connection_manager = ConnectionManager(
-                    self.home_assistant_url,
+                    ws_url,
                     self.home_assistant_token,
                     influxdb_manager=self.influxdb_manager
                 )
@@ -431,6 +444,64 @@ class WebSocketIngestionService:
             correlation_id=corr_id,
             error_type="service_error"
         )
+    
+    async def get_event_rate(self, request):
+        """Get standardized event rate metrics"""
+        try:
+            # Get processing statistics from async event processor
+            processing_stats = {}
+            if self.async_event_processor:
+                processing_stats = self.async_event_processor.get_processing_statistics()
+            
+            # Get connection statistics
+            connection_stats = {}
+            if self.connection_manager and hasattr(self.connection_manager, 'event_subscription'):
+                event_subscription = self.connection_manager.event_subscription
+                if event_subscription:
+                    sub_status = event_subscription.get_subscription_status()
+                    connection_stats = {
+                        "is_connected": getattr(self.connection_manager, 'is_running', False),
+                        "is_subscribed": sub_status.get("is_subscribed", False),
+                        "total_events_received": sub_status.get("total_events_received", 0),
+                        "events_by_type": sub_status.get("events_by_type", {}),
+                        "last_event_time": sub_status.get("last_event_time")
+                    }
+            
+            # Calculate event rate per second
+            events_per_second = processing_stats.get("processing_rate_per_second", 0)
+            
+            # Calculate events per hour
+            events_per_hour = events_per_second * 3600
+            
+            # Get uptime
+            uptime_seconds = (datetime.now() - self.start_time).total_seconds()
+            
+            # Build response
+            response_data = {
+                "service": "websocket-ingestion",
+                "events_per_second": round(events_per_second, 2),
+                "events_per_hour": round(events_per_hour, 2),
+                "total_events_processed": processing_stats.get("processed_events", 0),
+                "uptime_seconds": round(uptime_seconds, 2),
+                "processing_stats": processing_stats,
+                "connection_stats": connection_stats,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return web.json_response(response_data, status=200)
+            
+        except Exception as e:
+            logger.error(f"Error getting event rate: {e}")
+            return web.json_response(
+                {
+                    "service": "websocket-ingestion",
+                    "error": str(e),
+                    "events_per_second": 0,
+                    "events_per_hour": 0,
+                    "timestamp": datetime.now().isoformat()
+                },
+                status=500
+            )
 
 
 async def websocket_handler(request):
@@ -549,6 +620,9 @@ async def create_app():
     
     # Add health check endpoint
     app.router.add_get('/health', service.health_handler.handle)
+    
+    # Add standardized event rate endpoint
+    app.router.add_get('/api/v1/event-rate', service.get_event_rate)
     
     # Add WebSocket endpoint
     app.router.add_get('/ws', websocket_handler)

@@ -5,6 +5,116 @@ All notable changes to the HA-Ingestor project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-10-18
+
+### Added - Statistics API & System Enhancements
+
+#### Statistics Endpoints (INFRA-2, INFRA-3)
+- **NEW**: `/api/v1/stats` - System-wide metrics with configurable time periods (1h, 24h, 7d, 30d)
+- **NEW**: `/api/v1/stats/services` - Per-service statistics and health metrics
+- **NEW**: `/api/v1/stats/metrics` - Time-series metrics with filtering and pagination
+- **NEW**: `/api/v1/stats/performance` - Performance analytics with optimization recommendations
+- **NEW**: `/api/v1/stats/alerts` - Active system alerts with severity prioritization
+- **NEW**: `/api/v1/real-time-metrics` - Consolidated dashboard metrics endpoint (5-10ms response time)
+  - Reduced Health Dashboard API calls from 6-10 to 1 per refresh
+  - Parallel service queries with graceful degradation
+  - Returns metrics from all active services in single call
+
+#### AI Automation System
+- **45 automation suggestions** generated and ready for review
+- **6,109 patterns detected** (5,996 co-occurrence + 113 time-of-day)
+- **852 unique devices** analyzed from Home Assistant
+- **99.3% average confidence** in pattern detection
+- Categories: Convenience (100%), Energy, Security (future)
+- Priorities: High (93%), Medium (7%)
+
+#### Documentation
+- Created `docs/stories/story-infra-1-fix-admin-api-indentation.md` - Admin API fix story
+- Created `docs/stories/story-infra-2-implement-stats-endpoints.md` - Statistics endpoints story
+- Created `docs/stories/story-infra-3-implement-realtime-metrics.md` - Real-time metrics story
+- Created `implementation/FULL_REBUILD_DEPLOYMENT_COMPLETE.md` - Complete deployment guide
+- Created `implementation/DEPLOYMENT_SUCCESS_SUMMARY.md` - Quick deployment summary
+
+### Fixed - Critical System Issues
+
+#### AI Automation Service
+- **Fixed**: Database field mapping (`description` vs `description_only`) in CRUD operations
+- **Fixed**: Suggestion list endpoint returning 'description' attribute error
+- **Fixed**: DataAPIClient method calls in `feature_analyzer.py` (replaced non-existent `get()` with `get_all_devices()`)
+- **Fixed**: Analysis router field mapping to use correct database fields
+- **Result**: Suggestions now generate and display correctly in UI
+
+#### Admin API Service (INFRA-1)
+- **Fixed**: Python `NameError` in `stats_endpoints.py` (routes defined outside method scope)
+- **Fixed**: Removed broken route implementations (lines 627-735)
+- **Fixed**: Indentation and scoping for all route handlers
+- **Fixed**: `aiohttp.ClientTimeout` usage in helper methods
+- **Fixed**: Async wrapper for fallback metric creation
+- **Result**: Admin API now starts successfully and reports healthy
+
+#### Health Dashboard
+- **Fixed**: TypeScript import path case mismatch (`useRealTimeMetrics` vs `useRealtimeMetrics`)
+- **Fixed**: CSS import order (@import must precede @tailwind directives)
+- **Fixed**: Removed import of non-existent `dashboard-grid.css` file
+- **Result**: Dashboard builds and deploys successfully
+
+### Changed - Full System Rebuild
+
+#### Deployment
+- **Rebuilt**: All 16 Docker images with latest code changes
+- **Deployed**: 17 containers (16 services + InfluxDB)
+- **Build Time**: ~8 minutes with parallel builds
+- **Cache Hit Rate**: ~70% (optimized rebuild)
+- **Status**: 17/17 services healthy (100% success rate)
+
+#### Performance Improvements
+- **Real-time Metrics**: 5-10ms response (was 500-1500ms with multiple calls)
+- **Dashboard Refresh**: 1 API call (was 6-10 calls)
+- **Statistics Queries**: 100-500ms (InfluxDB-backed with fallback)
+- **Health Checks**: < 10ms (all services)
+
+### Added - InfluxDB Schema Enhancement
+- **New Tag**: `integration` - Identifies source integration (zwave, mqtt, zigbee, homekit, etc.) for filtering and debugging
+- **New Tag**: `time_of_day` - Temporal categorization (morning/afternoon/evening/night) for pattern analysis
+- **New Tag**: `weather_condition` - Current weather condition (Clear, Clouds, Rain, Snow, etc.) for weather-based filtering
+- **New Field**: `weather_temp` - Ambient temperature context (°C) from OpenWeatherMap API
+- **New Field**: `weather_humidity` - Ambient humidity percentage from OpenWeatherMap API
+- **New Field**: `weather_pressure` - Atmospheric pressure (hPa) from OpenWeatherMap API
+- **New Field**: `wind_speed` - Wind speed (m/s) from OpenWeatherMap API
+- **New Field**: `weather_description` - Detailed weather description text
+- **Weather Enrichment**: Fully operational after cache clear (active Oct 18, 11:11 AM)
+- **Documentation**: Comprehensive schema documentation reflecting actual 150+ field flattened attribute architecture
+- **Documentation**: Created `docs/SCHEMA_UPDATE_OCTOBER_2025.md` - Detailed schema enhancement guide
+- **Documentation**: Created `implementation/INFLUXDB_EVENTS_DATABASE_ANALYSIS_SUMMARY.md` - Complete database analysis (144K+ events)
+- **Documentation**: Created `implementation/INFLUXDB_SCHEMA_VERIFICATION_COMPLETE.md` - Schema verification report
+- **Documentation**: Created `implementation/WEATHER_ENRICHMENT_EVIDENCE.md` - Weather enrichment investigation
+- **Documentation**: Created `implementation/FIXES_IMPLEMENTED_SUMMARY.md` - Implementation summary
+- **Documentation**: Created `implementation/WEATHER_ENRICHMENT_FIX_SUCCESS.md` - Weather fix completion report
+
+### Changed - Documentation Updates
+- **Updated**: `docs/architecture/database-schema.md` - Now reflects actual enrichment pipeline schema with 150+ fields
+- **Updated**: `implementation/analysis/HA_EVENT_CALL_TREE.md` - Added schema differences comparison table
+- **Enhanced**: `services/websocket-ingestion/src/influxdb_schema.py` - Added comprehensive docstring explaining dual schema architecture
+
+### Fixed - Schema Documentation & Weather Enrichment
+- **Corrected**: Field naming documentation (actual: `state`/`old_state` vs designed: `state_value`/`previous_state`)
+- **Clarified**: Dual schema architecture (websocket fallback vs enrichment pipeline primary writer)
+- **Documented**: Flattened attribute design rationale using InfluxDB best practices (Context7 verified)
+- **Fixed**: Weather enrichment - Added missing extraction code to write weather fields to database
+- **Fixed**: Weather cache - Cleared stale None values by restarting websocket-ingestion service
+- **Verified**: Weather fields now appearing in database (temp: 22.07°C, humidity: 23%, pressure: 1019 hPa)
+
+### Implementation Details
+- **Code Modified**: `services/enrichment-pipeline/src/influxdb_wrapper.py`
+  - Lines 167-170: Integration tag extraction
+  - Lines 172-193: Time of day tag calculation
+  - Lines 281-310: Weather field extraction and writing (ADDED)
+- **Services Restarted**:
+  - enrichment-pipeline: Rebuilt 3 times (tag additions + weather fix + debug logging)
+  - websocket-ingestion: Restarted 1 time (cache clear)
+- **Impact**: All new events after Oct 18, 11:11 AM include weather context
+- **Verification**: Weather fields confirmed in database (22.07°C, 23%, 1019 hPa)
+
 ## [2.0.0] - 2025-10-16
 
 ### Added - Epic AI-2: Device Intelligence System

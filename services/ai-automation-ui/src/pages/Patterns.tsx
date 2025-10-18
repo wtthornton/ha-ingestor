@@ -26,7 +26,7 @@ export const Patterns: React.FC = () => {
       ]);
       const patternsData = patternsRes.data.patterns || [];
       setPatterns(patternsData);
-      setStats(statsRes);
+      setStats(statsRes.data || statsRes);
 
       // Load device names for the patterns
       if (patternsData.length > 0) {
@@ -60,6 +60,13 @@ export const Patterns: React.FC = () => {
         return `Co-occurrence (${parts[0].substring(0, 8)}... + ${parts[1].substring(0, 8)}...)`;
       }
     }
+    
+    // Try to create a more descriptive name based on the device ID pattern
+    if (deviceId.length === 32) {
+      // Looks like a hash - create a more friendly name
+      return `Device ${deviceId.substring(0, 8)}...`;
+    }
+    
     return deviceId.length > 20 ? `${deviceId.substring(0, 20)}...` : deviceId;
   };
 

@@ -16,13 +16,37 @@ interface AnimatedDependencyGraphProps {
   services: ServiceStatus[];
   darkMode: boolean;
   realTimeData?: RealTimeMetrics;
+  loading?: boolean;
+  error?: string | null;
 }
 
 interface RealTimeMetrics {
   eventsPerSecond: number;
   apiCallsActive: number;
   dataSourcesActive: string[];
+  apiMetrics: ApiMetric[];
+  inactiveApis: number;
+  errorApis: number;
+  totalApis: number;
+  healthSummary: {
+    healthy: number;
+    unhealthy: number;
+    total: number;
+    health_percentage: number;
+  };
   lastUpdate: Date;
+}
+
+interface ApiMetric {
+  service: string;
+  events_per_second: number;
+  events_per_hour: number;
+  uptime_seconds: number;
+  status: 'active' | 'inactive' | 'error' | 'timeout' | 'not_configured';
+  response_time_ms?: number;
+  last_success?: string;
+  error_message?: string;
+  is_fallback?: boolean;
 }
 
 interface DataFlowPath {
@@ -55,10 +79,27 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   services,
   darkMode,
   realTimeData,
+  loading = false,
+  error = null,
 }) => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Helper function to format uptime
+  const formatUptime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
 
   // Define service nodes with optimized spacing to prevent line crossings
   const nodes: ServiceNode[] = [
@@ -454,7 +495,83 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
                     active APIs
                   </div>
                 </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
+                    {realTimeData.inactiveApis}
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    inactive APIs
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                    {realTimeData.errorApis}
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    error APIs
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                    {realTimeData.healthSummary.health_percentage}%
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    health score
+                  </div>
+                </div>
               </div>
+              
+              {/* Per-API Metrics Table */}
+              {realTimeData.apiMetrics && realTimeData.apiMetrics.length > 0 && (
+                <div className="mt-4">
+                  <h4 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Per-API Metrics
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className={`w-full text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <thead>
+                        <tr className={`border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                          <th className="text-left py-1">Service</th>
+                          <th className="text-right py-1">Events/sec</th>
+                          <th className="text-right py-1">Events/hour</th>
+                          <th className="text-right py-1">Uptime</th>
+                          <th className="text-center py-1">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {realTimeData.apiMetrics.map((metric, index) => (
+                          <tr key={index} className={`border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                            <td className="py-1 font-mono">{metric.service}</td>
+                            <td className="text-right py-1">{metric.events_per_second.toFixed(2)}</td>
+                            <td className="text-right py-1">{metric.events_per_hour.toFixed(0)}</td>
+                            <td className="text-right py-1">{formatUptime(metric.uptime_seconds)}</td>
+                            <td className="text-center py-1">
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                metric.status === 'active' 
+                                  ? (darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800')
+                                  : metric.status === 'inactive'
+                                  ? (darkMode ? 'bg-yellow-800 text-yellow-200' : 'bg-yellow-100 text-yellow-800')
+                                  : metric.status === 'timeout'
+                                  ? (darkMode ? 'bg-orange-800 text-orange-200' : 'bg-orange-100 text-orange-800')
+                                  : metric.status === 'not_configured'
+                                  ? (darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800')
+                                  : (darkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800')
+                              }`}>
+                                {metric.status}
+                              </span>
+                              {metric.error_message && (
+                                <div className={`text-xs mt-1 ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
+                                  {metric.error_message}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

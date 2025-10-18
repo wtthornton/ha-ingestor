@@ -62,8 +62,11 @@ class HomeAssistantWebSocketClient:
             # Create session
             self.session = ClientSession()
             
-            # Build WebSocket URL
-            ws_url = f"{self.base_url.replace('http', 'ws')}/api/websocket"
+            # Build WebSocket URL (if base_url already has ws:// and /api/websocket, use it as-is)
+            if self.base_url.startswith('ws://') or self.base_url.startswith('wss://'):
+                ws_url = self.base_url
+            else:
+                ws_url = f"{self.base_url.replace('http', 'ws')}/api/websocket"
             
             # Connect to WebSocket
             self.websocket = await self.session.ws_connect(

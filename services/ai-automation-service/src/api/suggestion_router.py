@@ -192,7 +192,7 @@ async def list_suggestions(
                 "id": s.id,
                 "pattern_id": s.pattern_id,
                 "title": s.title,
-                "description": s.description,
+                "description": s.description_only,  # Fixed: use description_only field
                 "automation_yaml": s.automation_yaml,
                 "status": s.status,
                 "confidence": s.confidence,

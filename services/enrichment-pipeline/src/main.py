@@ -437,6 +437,7 @@ async def main():
         # Add routes
         app.router.add_get('/health', health_check_handler)
         app.router.add_get('/api/v1/health', health_check_handler)
+        app.router.add_get('/api/v1/event-rate', health_handler.get_event_rate)
         app.router.add_post('/events', events_handler)  # New endpoint for WebSocket service
         app.router.add_post('/process-event', process_event_handler)
         app.router.add_post('/process-events', process_events_handler)

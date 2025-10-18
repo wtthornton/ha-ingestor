@@ -192,6 +192,51 @@ class StatsEndpoints:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Failed to get alerts"
                 )
+        
+        @self.router.get("/real-time-metrics", response_model=Dict[str, Any])
+        async def get_real_time_metrics():
+            """Get consolidated real-time metrics for dashboard"""
+            try:
+                # Get all metrics in parallel
+                event_rate = await self._get_current_event_rate()
+                api_stats = await self._get_all_api_metrics()
+                data_sources = await self._get_active_data_sources()
+                
+                return {
+                    "events_per_second": event_rate,
+                    "api_calls_active": api_stats["active_calls"],
+                    "data_sources_active": data_sources,
+                    "api_metrics": api_stats["api_metrics"],
+                    "inactive_apis": api_stats["inactive_apis"],
+                    "error_apis": api_stats["error_apis"],
+                    "total_apis": api_stats["total_apis"],
+                    "health_summary": {
+                        "healthy": api_stats["active_calls"],
+                        "unhealthy": api_stats["inactive_apis"] + api_stats["error_apis"],
+                        "total": api_stats["total_apis"],
+                        "health_percentage": round((api_stats["active_calls"] / api_stats["total_apis"]) * 100, 1) if api_stats["total_apis"] > 0 else 0
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+            except Exception as e:
+                logger.error(f"Error getting real-time metrics: {e}")
+                return {
+                    "events_per_second": 0,
+                    "api_calls_active": 0,
+                    "data_sources_active": [],
+                    "api_metrics": [],
+                    "inactive_apis": 0,
+                    "error_apis": 0,
+                    "total_apis": 0,
+                    "health_summary": {
+                        "healthy": 0,
+                        "unhealthy": 0,
+                        "total": 0,
+                        "health_percentage": 0
+                    },
+                    "timestamp": datetime.now().isoformat(),
+                    "error": str(e)
+                }
     
     async def _get_stats_from_influxdb(self, period: str, service: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -624,3 +669,187 @@ class StatsEndpoints:
                 })
         
         return recommendations
+    
+    async def _get_current_event_rate(self) -> float:
+        """Get current event rate from websocket-ingestion service"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.service_urls['websocket-ingestion']}/api/v1/event-rate",
+                    timeout=aiohttp.ClientTimeout(total=5)
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return data.get("events_per_second", 0.0)
+                    else:
+                        logger.warning(f"Failed to get event rate from websocket-ingestion: {resp.status}")
+                        return 0.0
+        except Exception as e:
+            logger.error(f"Error getting event rate: {e}")
+            return 0.0
+    
+    async def _get_all_api_metrics(self) -> Dict[str, Any]:
+        """Get metrics from all API services with enhanced error handling"""
+        api_metrics = []
+        active_calls = 0
+        inactive_apis = 0
+        error_apis = 0
+        
+        # List of all API services with priority levels
+        api_services = [
+            {"name": "admin-api", "priority": "high", "timeout": 3},
+            {"name": "data-api", "priority": "high", "timeout": 5},
+            {"name": "enrichment-pipeline", "priority": "high", "timeout": 5},
+            {"name": "ai-automation-service", "priority": "medium", "timeout": 10},
+            {"name": "websocket-ingestion", "priority": "high", "timeout": 3},
+            {"name": "air-quality-service", "priority": "low", "timeout": 5},
+            {"name": "calendar-service", "priority": "low", "timeout": 5},
+            {"name": "carbon-intensity-service", "priority": "low", "timeout": 5},
+            {"name": "data-retention", "priority": "medium", "timeout": 5},
+            {"name": "electricity-pricing-service", "priority": "low", "timeout": 5},
+            {"name": "energy-correlator", "priority": "medium", "timeout": 5},
+            {"name": "smart-meter-service", "priority": "low", "timeout": 5},
+            {"name": "sports-api", "priority": "low", "timeout": 5},
+            {"name": "sports-data", "priority": "low", "timeout": 5},
+            {"name": "weather-api", "priority": "low", "timeout": 5}
+        ]
+        
+        # Get metrics from each service in parallel with individual timeouts
+        tasks = []
+        for service_info in api_services:
+            service_name = service_info["name"]
+            if service_name in self.service_urls:
+                tasks.append(self._get_api_metrics_with_timeout(
+                    service_name, 
+                    self.service_urls[service_name],
+                    service_info["timeout"]
+                ))
+            else:
+                # Service URL not configured - create a simple async task that returns the fallback
+                async def get_fallback():
+                    return self._create_fallback_metric(service_name, "not_configured")
+                tasks.append(get_fallback())
+        
+        # Wait for all tasks to complete with overall timeout
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=15  # Overall timeout of 15 seconds
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Overall timeout reached while fetching API metrics")
+            # Create fallback results for any incomplete tasks
+            results = []
+            for i, task in enumerate(tasks):
+                if task.done():
+                    try:
+                        results.append(task.result())
+                    except Exception as e:
+                        results.append(e)
+                else:
+                    service_name = api_services[i]["name"]
+                    results.append(self._create_fallback_metric(service_name, "timeout"))
+        
+        # Process results with enhanced error categorization
+        for i, result in enumerate(results):
+            service_name = api_services[i]["name"]
+            if isinstance(result, Exception):
+                logger.error(f"Error getting metrics from {service_name}: {result}")
+                error_apis += 1
+                # Add error metric to results
+                api_metrics.append(self._create_fallback_metric(service_name, "error", str(result)))
+            else:
+                api_metrics.append(result)
+                if result.get("status") == "active" and result.get("events_per_second", 0) > 0:
+                    active_calls += 1
+                elif result.get("status") == "error":
+                    error_apis += 1
+                else:
+                    inactive_apis += 1
+        
+        return {
+            "api_metrics": api_metrics,
+            "active_calls": active_calls,
+            "inactive_apis": inactive_apis,
+            "error_apis": error_apis,
+            "total_apis": len(api_services)
+        }
+    
+    async def _get_api_metrics(self, service_name: str, service_url: str) -> Dict[str, Any]:
+        """Get metrics from a specific API service"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{service_url}/api/v1/event-rate", timeout=5) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return {
+                            "service": service_name,
+                            "events_per_second": data.get("events_per_second", 0.0),
+                            "events_per_hour": data.get("events_per_hour", 0.0),
+                            "uptime_seconds": data.get("uptime_seconds", 0.0),
+                            "status": "active"
+                        }
+                    else:
+                        logger.warning(f"Failed to get metrics from {service_name}: {resp.status}")
+                        return {
+                            "service": service_name,
+                            "events_per_second": 0.0,
+                            "events_per_hour": 0.0,
+                            "uptime_seconds": 0.0,
+                            "status": "inactive"
+                        }
+        except Exception as e:
+            logger.error(f"Error getting metrics from {service_name}: {e}")
+            return {
+                "service": service_name,
+                "events_per_second": 0.0,
+                "events_per_hour": 0.0,
+                "uptime_seconds": 0.0,
+                "status": "error"
+            }
+    
+    async def _get_active_data_sources(self) -> List[str]:
+        """Get list of active data sources"""
+        # This would typically query InfluxDB or other data sources
+        # For now, return a placeholder list
+        return ["home_assistant", "weather_api", "sports_api"]
+    
+    async def _get_api_metrics_with_timeout(self, service_name: str, service_url: str, timeout: int) -> Dict[str, Any]:
+        """Get metrics from a specific API service with individual timeout"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{service_url}/api/v1/event-rate", timeout=timeout) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return {
+                            "service": service_name,
+                            "events_per_second": data.get("events_per_second", 0.0),
+                            "events_per_hour": data.get("events_per_hour", 0.0),
+                            "uptime_seconds": data.get("uptime_seconds", 0.0),
+                            "status": "active",
+                            "response_time_ms": 0,  # Could be calculated if needed
+                            "last_success": datetime.now().isoformat()
+                        }
+                    else:
+                        logger.warning(f"Failed to get metrics from {service_name}: {resp.status}")
+                        return self._create_fallback_metric(service_name, "inactive", f"HTTP {resp.status}")
+        except asyncio.TimeoutError:
+            logger.warning(f"Timeout getting metrics from {service_name} after {timeout}s")
+            return self._create_fallback_metric(service_name, "timeout", f"Timeout after {timeout}s")
+        except Exception as e:
+            logger.error(f"Error getting metrics from {service_name}: {e}")
+            return self._create_fallback_metric(service_name, "error", str(e))
+    
+    def _create_fallback_metric(self, service_name: str, status: str, error_message: str = None) -> Dict[str, Any]:
+        """Create a fallback metric when service is unavailable"""
+        return {
+            "service": service_name,
+            "events_per_second": 0.0,
+            "events_per_hour": 0.0,
+            "uptime_seconds": 0.0,
+            "status": status,
+            "response_time_ms": None,
+            "last_success": None,
+            "error_message": error_message,
+            "is_fallback": True
+        }

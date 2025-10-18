@@ -239,6 +239,11 @@ class AdminApiClient extends BaseApiClient {
       }
     );
   }
+
+  // Real-time metrics endpoint (Story 23.2)
+  async getRealTimeMetrics(): Promise<any> {
+    return this.fetchWithErrorHandling<any>(`${this.baseUrl}/v1/real-time-metrics`);
+  }
 }
 
 /**

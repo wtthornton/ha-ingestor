@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatedDependencyGraph } from '../AnimatedDependencyGraph';
 import { TabProps } from './types';
+import { useRealTimeMetrics } from '../../hooks/useRealtimeMetrics';
 
 export const DependenciesTab: React.FC<TabProps> = ({ darkMode }) => {
   const [services, setServices] = useState<any[]>([]);
-  const [realTimeMetrics, setRealTimeMetrics] = useState({
-    eventsPerSecond: 0,
-    apiCallsActive: 0,
-    dataSourcesActive: [],
-    lastUpdate: new Date(),
-  });
+  
+  // Use the new real-time metrics hook with 5-second polling
+  const { metrics, loading, error } = useRealTimeMetrics(5000);
 
   // Fetch services data for dependencies graph
   useEffect(() => {
@@ -30,11 +28,41 @@ export const DependenciesTab: React.FC<TabProps> = ({ darkMode }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Transform metrics for the dependency graph
+  const realTimeData = metrics ? {
+    eventsPerSecond: metrics.events_per_second,
+    apiCallsActive: metrics.api_calls_active,
+    dataSourcesActive: metrics.data_sources_active,
+    apiMetrics: metrics.api_metrics,
+    inactiveApis: metrics.inactive_apis,
+    errorApis: metrics.error_apis,
+    totalApis: metrics.total_apis,
+    healthSummary: metrics.health_summary,
+    lastUpdate: new Date(metrics.timestamp),
+  } : {
+    eventsPerSecond: 0,
+    apiCallsActive: 0,
+    dataSourcesActive: [],
+    apiMetrics: [],
+    inactiveApis: 0,
+    errorApis: 0,
+    totalApis: 0,
+    healthSummary: {
+      healthy: 0,
+      unhealthy: 0,
+      total: 0,
+      health_percentage: 0
+    },
+    lastUpdate: new Date(),
+  };
+
   return (
     <AnimatedDependencyGraph 
       services={services}
       darkMode={darkMode}
-      realTimeData={realTimeMetrics}
+      realTimeData={realTimeData}
+      loading={loading}
+      error={error}
     />
   );
 };

@@ -296,18 +296,9 @@ class EventProcessor:
             "device_metadata": device_metadata,
             # Epic 23.3: Add duration_in_state for time-based analytics
             "duration_in_state": duration_in_state,
-            "old_state": {
-                "state": old_state.get("state") if old_state else None,
-                "attributes": old_state.get("attributes", {}) if old_state else {},
-                "last_changed": old_state.get("last_changed") if old_state else None,
-                "last_updated": old_state.get("last_updated") if old_state else None
-            },
-            "new_state": {
-                "state": new_state.get("state"),
-                "attributes": new_state.get("attributes", {}),
-                "last_changed": new_state.get("last_changed"),
-                "last_updated": new_state.get("last_updated")
-            },
+            # CRITICAL FIX: Preserve original Home Assistant event structure
+            "old_state": old_state,  # Keep original structure
+            "new_state": new_state,  # Keep original structure
             "state_change": {
                 "from": old_state.get("state") if old_state else None,
                 "to": new_state.get("state"),

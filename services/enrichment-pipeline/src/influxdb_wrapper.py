@@ -164,6 +164,34 @@ class InfluxDBClientWrapper:
             if area_id:
                 point.tag("area_id", area_id)
             
+            # Add integration source tag (where the entity comes from)
+            integration = entity_metadata.get("platform") or entity_metadata.get("integration")
+            if integration:
+                point.tag("integration", integration)
+            
+            # Add time_of_day tag for temporal analytics
+            if timestamp:
+                try:
+                    from datetime import datetime as dt
+                    if isinstance(timestamp, str):
+                        ts = dt.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    else:
+                        ts = timestamp
+                    
+                    hour = ts.hour
+                    if 5 <= hour < 12:
+                        time_of_day = "morning"
+                    elif 12 <= hour < 17:
+                        time_of_day = "afternoon"
+                    elif 17 <= hour < 21:
+                        time_of_day = "evening"
+                    else:
+                        time_of_day = "night"
+                    
+                    point.tag("time_of_day", time_of_day)
+                except Exception as e:
+                    logger.debug(f"Could not determine time_of_day: {e}")
+            
             # Add fields based on event type
             if event_type == "state_changed":
                 point = self._add_state_changed_fields(point, event_data)
@@ -249,6 +277,37 @@ class InfluxDBClientWrapper:
                     point.field("model", str(device_metadata["model"]))
                 if device_metadata.get("sw_version"):
                     point.field("sw_version", str(device_metadata["sw_version"]))
+            
+            # Weather enrichment: Extract weather data added by websocket-ingestion
+            # Weather data is attached to events by WeatherEnrichmentService in websocket-ingestion
+            weather = event_data.get("weather", {})
+            logger.warning(f"[WEATHER_EXTRACT] Weather data present: {weather is not None and len(weather) > 0}, Keys: {list(weather.keys()) if weather else 'None'}, Sample: {str(weather)[:200]}")
+            if weather:
+                # Add weather temperature
+                if weather.get("temperature") is not None:
+                    point.field("weather_temp", float(weather["temperature"]))
+                
+                # Add weather humidity
+                if weather.get("humidity") is not None:
+                    point.field("weather_humidity", int(weather["humidity"]))
+                
+                # Add weather pressure
+                if weather.get("pressure") is not None:
+                    point.field("weather_pressure", float(weather["pressure"]))
+                
+                # Add wind speed
+                if weather.get("wind_speed") is not None:
+                    point.field("wind_speed", float(weather["wind_speed"]))
+                
+                # Add weather description
+                if weather.get("weather_description"):
+                    point.field("weather_description", str(weather["weather_description"]))
+                
+                # Add weather condition as tag for efficient filtering
+                if weather.get("weather_condition"):
+                    point.tag("weather_condition", str(weather["weather_condition"]))
+                
+                logger.debug(f"Added weather enrichment fields: temp={weather.get('temperature')}, humidity={weather.get('humidity')}")
             
             return point
             

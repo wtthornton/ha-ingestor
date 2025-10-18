@@ -225,7 +225,7 @@ async def _run_analysis_pipeline(request: AnalysisRequest):
                     stored_suggestion = await store_suggestion(db, {
                         'pattern_id': pattern.get('id'),
                         'title': suggestion.alias,
-                        'description': suggestion.description,
+                        'description': suggestion.description,  # This will be mapped to description_only in store_suggestion
                         'automation_yaml': suggestion.automation_yaml,
                         'confidence': pattern['confidence'],
                         'category': suggestion.category,

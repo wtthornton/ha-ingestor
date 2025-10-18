@@ -26,31 +26,141 @@ This system uses a **hybrid database architecture** optimizing for different dat
 **Purpose:** Store all Home Assistant events with enrichment data for time-series analysis
 
 #### Tags (for filtering and grouping):
+
+**Core Event Tags:**
 - `entity_id` - Home Assistant entity identifier (e.g., "sensor.living_room_temperature")
 - `domain` - Entity domain (sensor, switch, light, binary_sensor, etc.)
 - `device_class` - Device classification (temperature, motion, humidity, etc.)
-- `area` - Room/area location (living_room, bedroom, kitchen, etc.)
-- `device_name` - Friendly device name
-- `integration` - HA integration source (zwave, mqtt, zigbee, etc.)
-- `weather_condition` - Current weather condition (clear, cloudy, rain, etc.)
-- `time_of_day` - Time period (morning, afternoon, evening, night)
-- **[Epic 23.2]** `device_id` - Physical device identifier for device-level aggregation ✅
-- **[Epic 23.2]** `area_id` - Room/area ID for spatial analytics ✅
-- **[Epic 23.4]** `entity_category` - Entity classification (null, diagnostic, config) ✅
+- `event_type` - Event type (state_changed, call_service, etc.)
+
+**Spatial & Device Tags** [Epic 23.2]:
+- `device_id` - Physical device identifier for device-level aggregation ✅
+- `area_id` - Room/area ID for spatial analytics ✅
+
+**Integration & Classification Tags:**
+- `integration` - HA integration source (zwave, mqtt, zigbee, etc.) ✅ **NEW: Oct 2025**
+- `entity_category` - Entity classification (null, diagnostic, config) [Epic 23.4] ✅
+
+**Temporal Tags:**
+- `time_of_day` - Time period (morning: 5am-12pm, afternoon: 12pm-5pm, evening: 5pm-9pm, night: 9pm-5am) ✅ **NEW: Oct 2025**
+
+**Weather Tags:**
+- `weather_condition` - Current weather condition (Clear, Clouds, Rain, Snow, etc.) ✅ **NEW: Oct 2025**
+
+**Planned Tags** (designed but not currently implemented):
+- `area` - Room/area name (human-readable) - ⚠️ Have `area_id`, need name resolution
+- `device_name` - Friendly device name - ⚠️ NOT IMPLEMENTED
+- `location` - Geographic location - ⚠️ PARTIAL (only from weather entities)
 
 #### Fields (measurements and values):
-- `state_value` - Current state value (string)
-- `previous_state` - Previous state value (string)
-- `normalized_value` - Standardized numeric value (float)
-- `confidence` - Sensor confidence level if applicable (float)
-- `duration_seconds` - Time in current state (integer)
-- `weather_temp` - Current temperature in Celsius (float)
-- `weather_humidity` - Current humidity percentage (float)
-- `weather_pressure` - Current atmospheric pressure in hPa (float)
-- `unit_of_measurement` - Unit of measurement (string)
-- **[Epic 23.1]** `context_id` - Event context identifier for correlation (string) ✅
-- **[Epic 23.1]** `context_parent_id` - Parent automation context for causality tracking (string) ✅
-- **[Epic 23.1]** `context_user_id` - User who triggered the event (string) ✅
+
+**IMPORTANT**: The enrichment pipeline uses a **flattened attribute schema** where each Home Assistant attribute becomes a separate field. This provides better query performance but results in 150+ dynamic fields per measurement.
+
+**Core Event Fields:**
+- `state` - Current state value (string) - *Note: documented as `state_value` in design, implemented as `state`*
+- `old_state` - Previous state value (string) - *Note: documented as `previous_state` in design*
+- `context_id` - Context identifier for event correlation (string) [Epic 23.1]
+- `duration_in_state_seconds` - Time entity has been in current state (float) [Epic 23.3]
+
+**Device Metadata Fields** [Epic 23.5]:
+- `manufacturer` - Device manufacturer (string)
+- `model` - Device model (string)
+- `sw_version` - Software/firmware version (string)
+
+**Entity Metadata Fields:**
+- `friendly_name` - Human-readable entity name (string)
+- `icon` - Entity icon identifier (string)
+- `unit_of_measurement` - Measurement unit (string)
+
+**Flattened Attribute Fields** (dynamic, 120+ fields):
+Each Home Assistant attribute is stored as `attr_{attribute_name}`:
+- `attr_temperature` - Temperature from attributes (float)
+- `attr_humidity` - Humidity from attributes (float)
+- `attr_pressure` - Pressure from attributes (float)
+- `attr_battery_level` - Battery level (float)
+- `attr_brightness` - Light brightness (integer)
+- `attr_color_temp` - Color temperature (integer)
+- `attr_latitude` - Location latitude (float)
+- `attr_longitude` - Location longitude (float)
+- ... and 100+ more dynamic fields based on entity attributes
+
+**Weather Enrichment Fields** ✅ **ACTIVE (Oct 18, 2025)**:
+- `weather_temp` - Ambient temperature context in Celsius (float) ✅
+- `weather_humidity` - Ambient humidity percentage (integer) ✅
+- `weather_pressure` - Ambient pressure in hPa (float) ✅
+- `wind_speed` - Wind speed in m/s (float) ✅
+- `weather_description` - Weather description text (string) ✅
+
+**Weather Tags**:
+- `weather_condition` - Weather condition (Clear, Clouds, Rain, etc.) ✅ **NEW: Oct 2025**
+
+**Note**: Weather enrichment is now fully operational. All events include current weather context fetched from OpenWeatherMap API (Las Vegas, NV location). Weather cache cleared Oct 18, 2025 to resolve stale data issue.
+
+---
+
+### Schema Architecture Decision: Flattened Attributes
+
+**Design Choice**: The enrichment pipeline flattens all Home Assistant entity attributes into separate InfluxDB fields with an `attr_` prefix.
+
+**Rationale** (based on InfluxDB best practices from Context7):
+- ✅ **Better Query Performance**: Direct field access vs JSON parsing
+- ✅ **Type Preservation**: Numbers stay numeric, booleans stay boolean
+- ✅ **Easier Analytics**: Each attribute can be queried/aggregated independently
+- ✅ **InfluxDB Optimized**: Fields are optimized for time-series queries
+
+**Trade-offs Accepted**:
+- ⚠️ **Wide Schema**: ~150 fields vs designed 17 fields
+- ⚠️ **Storage Overhead**: Field names repeated per event
+- ✅ **Query Performance**: Significantly faster than JSON field queries
+
+**Implementation Location**: `services/enrichment-pipeline/src/influxdb_wrapper.py` (Line 214)
+
+```python
+# Flattens all attributes with attr_ prefix
+for key, value in attributes.items():
+    if self._is_valid_field_value(value):
+        point.field(f"attr_{key}", value)
+```
+
+**Alternative Design** (not used): Store all attributes in single JSON field (`attributes`)
+- Used in websocket-ingestion fallback schema
+- Requires JSON parsing for attribute queries
+- ~4x slower for attribute-based filtering
+
+---
+
+### Recent Schema Enhancements (October 2025)
+
+**New Tags Added**:
+1. **`integration` tag** - Identifies the source integration (zwave, mqtt, zigbee, homekit, etc.)
+   - Enables filtering by integration type
+   - Useful for debugging integration-specific issues
+   - Example query: "Show all zigbee device states"
+   - Implementation: `services/enrichment-pipeline/src/influxdb_wrapper.py` (Line 167-170)
+
+2. **`time_of_day` tag** - Temporal categorization of events
+   - Values: morning (5am-12pm), afternoon (12pm-5pm), evening (5pm-9pm), night (9pm-5am)
+   - Enables temporal pattern analysis
+   - Example query: "Show all lights turned on in the evening"
+   - Supports circadian rhythm analysis
+   - Implementation: `services/enrichment-pipeline/src/influxdb_wrapper.py` (Line 172-193)
+
+3. **`weather_condition` tag** - Current weather condition for context-aware queries
+   - Values: Clear, Clouds, Rain, Snow, Thunderstorm, etc.
+   - Enables weather-based filtering
+   - Example query: "Show all motion events when it was raining"
+   - Implementation: `services/enrichment-pipeline/src/influxdb_wrapper.py` (Line 306-307)
+
+**New Fields Added**:
+1. **Weather enrichment fields** - Current weather context for all events
+   - `weather_temp` (°C), `weather_humidity` (%), `weather_pressure` (hPa), `wind_speed` (m/s)
+   - Source: OpenWeatherMap API (Las Vegas, NV)
+   - Cache: 5-minute TTL with 97%+ hit rate
+   - Implementation: `services/enrichment-pipeline/src/influxdb_wrapper.py` (Line 281-310)
+
+**Impact**: All tags and fields are applied to new events. Weather enrichment activated after cache clear (Oct 18, 2025, 11:11 AM).
+
+---
 - **[Epic 23.3]** `duration_in_state_seconds` - Time entity was in previous state (float) ✅
 - **[Epic 23.5]** `manufacturer` - Device manufacturer for reliability analysis (string) ✅
 - **[Epic 23.5]** `model` - Device model for reliability analysis (string) ✅

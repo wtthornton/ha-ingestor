@@ -30,9 +30,9 @@ class CalendarService:
     """Home Assistant Calendar integration for occupancy prediction"""
     
     def __init__(self):
-        # Home Assistant configuration
-        self.ha_url = os.getenv('HOME_ASSISTANT_URL')
-        self.ha_token = os.getenv('HOME_ASSISTANT_TOKEN')
+        # Home Assistant configuration (support both new and old variable names)
+        self.ha_url = os.getenv('HA_HTTP_URL') or os.getenv('HOME_ASSISTANT_URL')
+        self.ha_token = os.getenv('HA_TOKEN') or os.getenv('HOME_ASSISTANT_TOKEN')
         self.calendar_entities = os.getenv('CALENDAR_ENTITIES', 'calendar.primary').split(',')
         
         # InfluxDB configuration
@@ -52,7 +52,7 @@ class CalendarService:
         
         # Validate
         if not self.ha_url or not self.ha_token:
-            raise ValueError("HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN required")
+            raise ValueError("HA_HTTP_URL and HA_TOKEN required")
         if not self.influxdb_token:
             raise ValueError("INFLUXDB_TOKEN required")
         

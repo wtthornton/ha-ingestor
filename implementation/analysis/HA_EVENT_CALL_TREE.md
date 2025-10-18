@@ -498,6 +498,58 @@ Timestamp: 2025-10-13T10:30:00.123Z
 
 ---
 
+#### ⚠️ IMPORTANT: Schema Differences Between Services
+
+**There are TWO different schemas writing to InfluxDB**:
+
+| Aspect | WebSocket Schema (Above) | Enrichment Pipeline Schema (Actual) |
+|--------|-------------------------|-------------------------------------|
+| **Usage** | Fallback/direct writes | **PRIMARY (98%+ of events)** ✅ |
+| **State Field** | `state_value` | `state` |
+| **Old State Field** | `previous_state` | `old_state` |
+| **Attributes** | Single `attributes` JSON field | **150+ flattened `attr_*` fields** |
+| **Metadata** | In attributes JSON | Separate fields: `friendly_name`, `icon`, `unit_of_measurement` |
+| **Field Count** | ~17 fields | **~150 fields** (dynamic based on entity) |
+| **Implementation** | `websocket-ingestion/influxdb_schema.py` | `enrichment-pipeline/influxdb_wrapper.py` (Line 180-257) |
+
+**Example Enrichment Pipeline Schema** (ACTUAL data in database):
+```
+Measurement: home_assistant_events
+Tags (indexed):
+  - entity_id: "sensor.temperature"
+  - domain: "sensor"
+  - event_type: "state_changed"
+  - device_class: "temperature"
+  - device_id: "abc123"
+Fields (data - FLATTENED):
+  - state: "21.0"                           ← Not "state_value"
+  - old_state: "20.5"                       ← Not "previous_state"
+  - friendly_name: "Living Room Temp"       ← Extracted from attributes
+  - icon: "mdi:thermometer"                 ← Extracted from attributes
+  - unit_of_measurement: "°C"               ← Extracted from attributes
+  - context_id: "01234567890abcdef"
+  - duration_in_state_seconds: 125.3
+  - manufacturer: "Sonoff"                  ← Device metadata
+  - model: "SNZB-02"
+  - sw_version: "2.3.6"
+  - attr_device_class: "temperature"        ← ALL attributes flattened
+  - attr_unit_of_measurement: "°C"
+  - attr_friendly_name: "Living Room Temp"
+  ... + 100+ more attr_* fields depending on entity
+Timestamp: 2025-10-13T10:30:00.123Z
+```
+
+**Why Two Schemas?**
+1. **WebSocket Schema**: Original design, used for weather_data, sports_data measurements
+2. **Enrichment Schema**: Optimized for query performance with flattened attributes
+3. **Trade-off**: More fields (~150 vs 17) but 4x faster queries (no JSON parsing)
+
+**Which Is Used?** 
+- **home_assistant_events**: Enrichment pipeline schema (150+ fields) ✅
+- **weather_data, sports_data**: WebSocket schema (17 fields)
+
+---
+
 #### 3.2 InfluxDB Batch Write
 
 **File**: `services/websocket-ingestion/src/influxdb_batch_writer.py`

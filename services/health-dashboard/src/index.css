@@ -1,12 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Import custom animations */
 @import './styles/animations.css';
 
-/* Import dashboard grid styles */
-@import './styles/dashboard-grid.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;

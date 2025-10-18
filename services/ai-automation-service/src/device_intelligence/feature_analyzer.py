@@ -299,8 +299,7 @@ class FeatureAnalyzer:
             ]
         """
         try:
-            response = await self.data_api.get("/api/devices")
-            devices = response.get('devices', [])
+            devices = await self.data_api.get_all_devices()
             logger.debug(f"Retrieved {len(devices)} devices from data-api")
             return devices
         except Exception as e:
@@ -318,8 +317,7 @@ class FeatureAnalyzer:
             Device metadata dict or None if not found
         """
         try:
-            response = await self.data_api.get(f"/api/devices/{device_id}")
-            device = response.get('device')
+            device = await self.data_api.get_device_metadata(device_id)
             if device:
                 logger.debug(f"Retrieved metadata for {device_id}")
             return device

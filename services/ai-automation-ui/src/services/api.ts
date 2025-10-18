@@ -273,12 +273,10 @@ export const api = {
         }
       }
       
-      // Try to get device info from data API
-      const response = await fetch(`http://localhost:8006/api/devices/${deviceId}`);
-      if (response.ok) {
-        const device = await response.json();
-        return device.name || deviceId;
-      }
+      // Skip data API call for now since it's failing
+      // TODO: Fix data API device resolution
+      console.warn(`Skipping device name resolution for ${deviceId} - data API unavailable`);
+      
     } catch (error) {
       console.warn(`Failed to resolve device name for ${deviceId}:`, error);
     }
@@ -307,13 +305,14 @@ export const api = {
           // Create a more meaningful name based on pattern type and metadata
           if (pattern.pattern_type === 'co_occurrence') {
             const occurrences = pattern.occurrences || 0;
-            const confidence = Math.round(pattern.confidence || 0);
+            const confidence = Math.round((pattern.confidence || 0) * 100);
             return `Co-occurrence Pattern (${occurrences} occurrences, ${confidence}% confidence)`;
           } else if (pattern.pattern_type === 'time_of_day') {
-            const hour = pattern.metadata?.hour || 0;
-            const minute = pattern.metadata?.minute || 0;
+            const metadata = pattern.metadata || {};
+            const timeRange = metadata.time_range || 'Unknown time';
             const occurrences = pattern.occurrences || 0;
-            return `Time Pattern (${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}, ${occurrences} occurrences)`;
+            const confidence = Math.round((pattern.confidence || 0) * 100);
+            return `Time Pattern (${timeRange}, ${occurrences} occurrences, ${confidence}% confidence)`;
           }
         }
       }

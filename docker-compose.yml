@@ -51,8 +51,10 @@ services:
       - infrastructure/.env.weather
       - infrastructure/.env.influxdb
     environment:
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
+      # Home Assistant Configuration (consolidated)
+      - HA_HTTP_URL=${HA_HTTP_URL:-}
+      - HA_WS_URL=${HA_WS_URL:-}
+      - HA_TOKEN=${HA_TOKEN:-}
       - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
       - DATA_API_URL=http://ha-ingestor-data-api:8006
       - WEBSOCKET_INGESTION_PORT=8001
@@ -167,8 +169,9 @@ services:
       - ENABLE_AUTH=false
       - DOCKER_HOST=unix:///var/run/docker.sock
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
+      # Home Assistant Configuration (consolidated)
+      - HA_HTTP_URL=${HA_HTTP_URL:-}
+      - HA_TOKEN=${HA_TOKEN:-}
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
@@ -443,9 +446,9 @@ services:
     ports:
       - "8013:8013"
     environment:
-      # Home Assistant Configuration
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      # Home Assistant Configuration (consolidated)
+      - HA_HTTP_URL=${HA_HTTP_URL}
+      - HA_TOKEN=${HA_TOKEN}
       - CALENDAR_ENTITIES=${CALENDAR_ENTITIES:-calendar.primary}
       - CALENDAR_FETCH_INTERVAL=${CALENDAR_FETCH_INTERVAL:-900}
       # InfluxDB Configuration
@@ -490,8 +493,9 @@ services:
       - "8014:8014"
     environment:
       - METER_TYPE=${METER_TYPE:-home_assistant}
-      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
-      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      # Home Assistant Configuration (consolidated)
+      - HA_HTTP_URL=${HA_HTTP_URL}
+      - HA_TOKEN=${HA_TOKEN}
       - METER_API_TOKEN=${METER_API_TOKEN:-}
       - METER_DEVICE_ID=${METER_DEVICE_ID:-}
       - INFLUXDB_URL=http://influxdb:8086
