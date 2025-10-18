@@ -45,9 +45,11 @@ async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
 export const api = {
   // Suggestions
   async getSuggestions(_status?: string, _limit = 50): Promise<{ data: { suggestions: Suggestion[], count: number } }> {
-    // For now, return empty list since we don't have the list endpoint yet
-    // TODO: Implement GET /api/v1/suggestions endpoint
-    return { data: { suggestions: [], count: 0 } };
+    const params = new URLSearchParams();
+    if (_status) params.append('status', _status);
+    params.append('limit', _limit.toString());
+    
+    return fetchJSON(`${API_BASE_URL}/suggestions/list?${params}`);
   },
 
   // Story AI1.23: Generate new suggestions

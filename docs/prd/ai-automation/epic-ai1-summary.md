@@ -34,9 +34,10 @@
 | **AI1.20** | Simple Rollback (Simplified) | 2-3h | High | AI1.11, AI1.19 |
 | **AI1.21** | Natural Language Request Generation | 10-12h | High | AI1.7, AI1.8 |
 | **AI1.22** | Simple Dashboard Integration (Simplified) | 2-3h | Critical | AI1.10, AI1.19, AI1.20 |
+| **AI1.23** | Frontend Data Display and UX Fixes | 6-8h | High | AI1.14, AI1.15, AI1.16, AI1.17 |
 
-**Total Stories:** 22  
-**Total Effort:** 173-201 hours (Simplified for single-home use case)
+**Total Stories:** 23  
+**Total Effort:** 179-209 hours (Simplified for single-home use case)
 
 **Note:** AI1.20 and AI1.22 simplified to reduce complexity for single-home deployment. AI1.21 kept full version as it provides highest value.
 
@@ -227,10 +228,11 @@ All story files located in: `docs/stories/`
 - `story-ai1-20-simple-rollback.md` (simplified)
 - `story-ai1-21-natural-language-request-generation.md`
 - `story-ai1-22-simple-dashboard-integration.md` (simplified)
+- `story-ai1-23-frontend-data-display-fix.md`
 
 ---
 
 **Epic Status:** Ready for Development (Enhanced)  
 **Created:** 2025-10-15  
-**Updated:** 2025-10-16
+**Updated:** 2025-10-18
 

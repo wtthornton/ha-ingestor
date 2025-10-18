@@ -54,14 +54,15 @@ export const Navigation: React.FC = () => {
               </Link>
             ))}
 
-            {/* Dark Mode Toggle */}
+            {/* Dark Mode Toggle - 44x44px minimum touch target */}
             <button
               onClick={toggleDarkMode}
-              className={`p-2 rounded-lg ml-2 ${
+              className={`p-3 rounded-lg ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 darkMode
                   ? 'bg-gray-800 hover:bg-gray-700'
                   : 'bg-gray-100 hover:bg-gray-200'
               }`}
+              aria-label="Toggle dark mode"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
@@ -85,9 +86,10 @@ export const Navigation: React.FC = () => {
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={toggleDarkMode}
-              className={`p-2 rounded-lg ${
+              className={`p-3 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 darkMode ? 'bg-gray-800' : 'bg-gray-100'
               }`}
+              aria-label="Toggle dark mode"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
