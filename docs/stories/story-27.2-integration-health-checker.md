@@ -22,13 +22,35 @@
 - [ ] Provide specific error messages for failed checks
 
 ## Technical Requirements
-- Create integration health checker service
-- Implement MQTT broker connectivity test
-- Add Zigbee2MQTT status verification
-- Create device discovery validation
-- Implement API endpoint health checks
-- Add authentication validation
-- Create detailed error reporting
+
+### Backend Integration Checker (FastAPI)
+- Create `IntegrationHealthChecker` service class with async methods
+- Implement MQTT broker connectivity test using aiohttp/asyncio
+- Add Zigbee2MQTT addon status verification via HA API
+- Create device discovery validation (check device registry sync)
+- Implement API endpoint health checks with timeout handling
+- Add HA token authentication validation
+- Create detailed error reporting with structured logging
+
+### Health Check Patterns (Context7 Best Practices)
+- Use FastAPI dependency injection for checker service
+- Implement async context managers for MQTT connections
+- Add proper exception handling with specific error types
+- Use Pydantic models for health check results
+- Implement retry logic with exponential backoff
+
+### Database Storage (SQLAlchemy 2.0)
+- Store integration health history in SQLite
+- Use async_sessionmaker for database operations
+- Create integration_health table with status and error fields
+- Implement proper transaction management
+
+## Context7 Best Practices Applied
+✅ FastAPI async dependency injection pattern
+✅ Proper async/await for all I/O operations
+✅ Pydantic models for data validation
+✅ SQLAlchemy async session management
+✅ Structured error handling and logging
 
 ## Definition of Done
 - [ ] Integration health checker service implemented

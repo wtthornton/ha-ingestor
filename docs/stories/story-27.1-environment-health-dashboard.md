@@ -22,12 +22,33 @@
 - [ ] Responsive design works on mobile and desktop
 
 ## Technical Requirements
-- Create React component for health dashboard
-- Implement health status API endpoints
-- Design health scoring algorithm
-- Add real-time updates via WebSocket
-- Create responsive CSS layout
-- Implement error handling for API failures
+
+### Backend (FastAPI)
+- Create `/api/health/environment` endpoint with response_model validation
+- Implement lifespan context manager for health service initialization
+- Use dependency injection for database session management
+- Add proper async/await patterns for HA API calls
+- Implement health scoring algorithm with configurable weights
+
+### Frontend (React)
+- Create `EnvironmentHealthCard` component with useState for state management
+- Use useEffect hook for real-time updates (30-second polling)
+- Implement Context API for sharing health status across components
+- Create responsive TailwindCSS layout with color-coded health indicators
+- Add error boundary for graceful error handling
+
+### Database (SQLAlchemy 2.0)
+- Use async_sessionmaker for async database access
+- Implement context managers for proper session lifecycle
+- Store health metrics in SQLite with proper transaction management
+- Create health_metrics table with timestamp indexing
+
+## Context7 Best Practices Applied
+✅ FastAPI lifespan context manager pattern
+✅ React useState/useEffect for real-time updates
+✅ SQLAlchemy async session management
+✅ Proper error handling with re-raise pattern
+✅ Response model validation for API consistency
 
 ## Definition of Done
 - [ ] Health dashboard component created and tested

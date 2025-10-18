@@ -32,6 +32,12 @@ The Admin API Service is a FastAPI-based REST API that provides comprehensive ad
 - Data export capabilities
 - Historical data analysis
 
+### Alert Management ✨ NEW
+- Real-time alert monitoring and management
+- Automatic cleanup of stale alerts (timeout alerts older than 1 hour)
+- Alert acknowledgment and resolution
+- Critical alert filtering and prioritization
+
 ## API Endpoints
 
 ### Health & Monitoring
@@ -154,6 +160,59 @@ Response:
 Restart a service (requires Docker socket access)
 ```bash
 curl -X POST http://localhost:8003/api/v1/services/websocket-ingestion/restart
+```
+
+### Alert Management ✨ NEW
+
+#### `GET /api/v1/alerts/active`
+Get all active alerts with automatic cleanup of stale alerts
+```bash
+curl http://localhost:8003/api/v1/alerts/active
+```
+
+**Features:**
+- Automatically resolves timeout alerts older than 1 hour
+- Filters by severity (optional): `?severity=critical`
+- Returns only currently relevant alerts
+
+**Response:**
+```json
+{
+  "value": [
+    {
+      "id": "service_unhealthy_1234567890",
+      "name": "service_unhealthy",
+      "severity": "critical",
+      "status": "active",
+      "message": "Service health is critical: critical",
+      "service": "admin-api",
+      "metric": "health_status",
+      "current_value": null,
+      "threshold_value": null,
+      "created_at": "2025-10-18T21:19:58.537970Z",
+      "resolved_at": null,
+      "acknowledged_at": null,
+      "metadata": {
+        "dependency": "WebSocket Ingestion",
+        "response_time_ms": 2000.0,
+        "message": "Timeout after 2.0s"
+      }
+    }
+  ],
+  "Count": 1
+}
+```
+
+#### `POST /api/v1/alerts/{alert_id}/acknowledge`
+Acknowledge an alert
+```bash
+curl -X POST http://localhost:8003/api/v1/alerts/service_unhealthy_1234567890/acknowledge
+```
+
+#### `POST /api/v1/alerts/{alert_id}/resolve`
+Resolve an alert
+```bash
+curl -X POST http://localhost:8003/api/v1/alerts/service_unhealthy_1234567890/resolve
 ```
 
 ## Configuration

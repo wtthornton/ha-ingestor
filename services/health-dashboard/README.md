@@ -67,10 +67,12 @@ The Health Dashboard is a modern React-based web interface that provides real-ti
 - Historical trends
 - Custom reports
 
-### 🚨 Alerts
-- System alerts and notifications
-- Alert history
-- Notification preferences
+### 🚨 Alerts ✨ ENHANCED
+- **Automatic cleanup** of stale alerts (timeout alerts older than 1 hour)
+- Real-time critical alert monitoring
+- Alert acknowledgment and resolution
+- Clean interface showing only relevant alerts
+- Historical alert context with timestamps
 
 ### 🔧 Configuration ✨ NEW
 - **Home Assistant WebSocket** - URL and access token configuration

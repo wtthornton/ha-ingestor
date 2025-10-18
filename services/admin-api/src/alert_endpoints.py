@@ -62,6 +62,29 @@ class AlertEndpoints:
         self.alert_manager = alert_manager or get_alert_manager("admin-api")
         self._add_routes()
     
+    async def _cleanup_stale_alerts(self):
+        """Automatically resolve stale timeout alerts older than 1 hour."""
+        from datetime import datetime, timezone, timedelta
+        
+        now = datetime.now(timezone.utc)
+        stale_threshold = now - timedelta(hours=1)
+        
+        alerts_to_clean = []
+        for alert in self.alert_manager.alerts.values():
+            if (alert.status == AlertStatus.ACTIVE and
+                alert.created_at and 
+                alert.created_at < stale_threshold and
+                alert.metadata and 
+                'Timeout' in alert.metadata.get('message', '')):
+                alerts_to_clean.append(alert.id)
+        
+        for alert_id in alerts_to_clean:
+            logger.info(f"Auto-resolving stale timeout alert: {alert_id}")
+            self.alert_manager.resolve_alert(alert_id, "Auto-resolved: Stale timeout alert")
+        
+        if alerts_to_clean:
+            logger.info(f"Auto-cleaned {len(alerts_to_clean)} stale alerts")
+
     def _add_routes(self):
         """Add alert routes"""
         
@@ -124,7 +147,7 @@ class AlertEndpoints:
             severity: Optional[str] = Query(None, description="Filter by severity")
         ):
             """
-            Get only active alerts
+            Get only active alerts with automatic cleanup of stale alerts
             
             Args:
                 severity: Filter by severity (optional)
@@ -133,6 +156,9 @@ class AlertEndpoints:
                 List of active alerts
             """
             try:
+                # Auto-cleanup stale timeout alerts (older than 1 hour)
+                await self._cleanup_stale_alerts()
+                
                 sev = None
                 if severity:
                     try:

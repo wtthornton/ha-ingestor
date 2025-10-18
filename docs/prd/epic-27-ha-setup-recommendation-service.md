@@ -39,12 +39,28 @@ Users struggle with complex Home Assistant integrations, leading to:
 5. **User Experience**: Intuitive dashboard for setup and maintenance
 
 ## Technical Scope
-- Backend health monitoring service
-- Frontend setup dashboard
-- Integration with HA APIs
-- Automated configuration management
-- Performance metrics collection
-- Recommendation engine
+- Backend health monitoring service (FastAPI with lifespan context managers)
+- Frontend setup dashboard (React with useState/useEffect hooks)
+- Integration with HA APIs (async/await patterns)
+- Automated configuration management (SQLAlchemy 2.0 async sessions)
+- Performance metrics collection (InfluxDB + SQLite hybrid)
+- Recommendation engine (AI-powered with OpenAI integration)
+
+## Context7 Validation
+✅ **FastAPI** - Validated with `/fastapi/fastapi` (Trust Score: 9.9)
+- Lifespan context managers for service initialization
+- Dependency injection for session management
+- Response models for API validation
+
+✅ **React** - Validated with `/websites/react_dev` (Trust Score: 9)
+- useState for component state management
+- useEffect for real-time monitoring
+- Context API for health status sharing
+
+✅ **SQLAlchemy 2.0** - Validated with `/websites/sqlalchemy_en_20` (Trust Score: 7.5)
+- async_sessionmaker for async database access
+- Context managers for session lifecycle
+- Proper transaction management
 
 ## Dependencies
 - Home Assistant API access
