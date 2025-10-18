@@ -350,7 +350,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                     { label: 'Events per Minute', value: websocketMetrics?.events_per_minute || 0, unit: 'evt/min' },
                     { label: 'Total Events Received', value: websocketMetrics?.total_events_received || 0, unit: 'events' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.status || 'unknown' },
-                    { label: 'Response Time', value: enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.response_time_ms?.toFixed(1) || 'N/A', unit: 'ms' },
+                    { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
                     { label: 'Uptime', value: enhancedHealth?.metrics?.uptime_human || 'N/A' }
                   ]
                 })}
@@ -391,7 +391,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                     { label: 'Processed per Minute', value: enrichmentMetrics?.events_per_minute || 0, unit: 'proc/min' },
                     { label: 'Total Processed', value: enrichmentMetrics?.total_events_received || 0, unit: 'events' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.status || 'unknown' },
-                    { label: 'Response Time', value: enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.response_time_ms?.toFixed(1) || 'N/A', unit: 'ms' },
+                    { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
                     { label: 'Uptime', value: enhancedHealth?.metrics?.uptime_human || 'N/A' }
                   ]
                 })}
@@ -410,7 +410,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                 metrics={{
                   primary: {
                     label: 'Response Time',
-                    value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.response_time_ms?.toFixed(1) || '0',
+                    value: (enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.response_time_ms ?? 0).toFixed(1),
                     unit: 'ms'
                   },
                   secondary: {
@@ -427,7 +427,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   service: 'InfluxDB Database',
                   status: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status === 'healthy' ? 'healthy' : 'unhealthy',
                   details: [
-                    { label: 'Response Time', value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.response_time_ms?.toFixed(1) || 'N/A', unit: 'ms' },
+                    { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
                     { label: 'Availability', value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status === 'healthy' ? '99.9' : '0', unit: '%' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status || 'unknown' },
                     { label: 'Database Type', value: 'InfluxDB 2.7' },

@@ -169,7 +169,7 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({ darkMode }) => {
                   )}
                   {alert.current_value !== undefined && (
                     <span>
-                      Current: {alert.current_value.toFixed(1)}
+                      Current: {(alert.current_value ?? 0).toFixed(1)}
                       {alert.threshold_value !== undefined && ` (threshold: ${alert.threshold_value})`}
                     </span>
                   )}

@@ -144,7 +144,7 @@ export const SystemStatusHero: React.FC<SystemStatusHeroProps> = ({
                 </span>
                 <div className="flex items-center space-x-2">
                   <span className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {throughput.toLocaleString()} <span className="text-sm font-normal">evt/min</span>
+                    {(throughput ?? 0).toLocaleString()} <span className="text-sm font-normal">evt/min</span>
                   </span>
                   {trends?.throughput !== undefined && (
                     <TrendIndicator 
@@ -164,13 +164,13 @@ export const SystemStatusHero: React.FC<SystemStatusHeroProps> = ({
                 </span>
                 <div className="flex items-center space-x-2">
                   <span className={`text-lg font-bold ${
-                    latency < 50 
+                    (latency ?? 0) < 50 
                       ? 'text-green-600 dark:text-green-400'
-                      : latency < 100
+                      : (latency ?? 0) < 100
                       ? 'text-yellow-600 dark:text-yellow-400'
                       : 'text-red-600 dark:text-red-400'
                   }`}>
-                    {latency != null ? latency.toFixed(1) : '0'} <span className="text-sm font-normal">ms avg</span>
+                    {(latency ?? 0).toFixed(1)} <span className="text-sm font-normal">ms avg</span>
                   </span>
                   {trends?.latency !== undefined && (
                     <TrendIndicator 
@@ -189,13 +189,13 @@ export const SystemStatusHero: React.FC<SystemStatusHeroProps> = ({
                   Error Rate
                 </span>
                 <span className={`text-lg font-bold ${
-                  errorRate < 1
+                  (errorRate ?? 0) < 1
                     ? 'text-green-600 dark:text-green-400'
-                    : errorRate < 5
+                    : (errorRate ?? 0) < 5
                     ? 'text-yellow-600 dark:text-yellow-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {errorRate != null ? errorRate.toFixed(2) : '0'} <span className="text-sm font-normal">%</span>
+                  {(errorRate ?? 0).toFixed(2)} <span className="text-sm font-normal">%</span>
                 </span>
               </div>
             </div>

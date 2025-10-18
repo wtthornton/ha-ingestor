@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
 import logging
 
-from .models import Pattern, Suggestion, UserFeedback, DeviceCapability, DeviceFeatureUsage
+from .models import Pattern, Suggestion, UserFeedback, DeviceCapability, DeviceFeatureUsage, SynergyOpportunity
 
 logger = logging.getLogger(__name__)
 
@@ -583,5 +583,195 @@ async def get_capability_stats(db: AsyncSession) -> Dict:
         
     except Exception as e:
         logger.error(f"Failed to get capability stats: {e}", exc_info=True)
+        raise
+
+
+# ============================================================================
+# Synergy Opportunity CRUD Operations (Epic AI-3, Story AI3.1)
+# ============================================================================
+
+async def store_synergy_opportunity(db: AsyncSession, synergy_data: Dict) -> SynergyOpportunity:
+    """
+    Store a synergy opportunity in database.
+    
+    Args:
+        db: Database session
+        synergy_data: Synergy opportunity dictionary from detector
+    
+    Returns:
+        Created SynergyOpportunity instance
+        
+    Story AI3.1: Device Synergy Detector Foundation
+    """
+    import json
+    
+    try:
+        synergy = SynergyOpportunity(
+            synergy_id=synergy_data['synergy_id'],
+            synergy_type=synergy_data['synergy_type'],
+            device_ids=json.dumps(synergy_data['devices']),
+            opportunity_metadata=synergy_data.get('opportunity_metadata', {}),
+            impact_score=synergy_data['impact_score'],
+            complexity=synergy_data['complexity'],
+            confidence=synergy_data['confidence'],
+            area=synergy_data.get('area'),
+            created_at=datetime.now(timezone.utc)
+        )
+        
+        db.add(synergy)
+        await db.commit()
+        await db.refresh(synergy)
+        
+        logger.debug(f"Stored synergy opportunity: {synergy.synergy_id}")
+        return synergy
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Failed to store synergy opportunity: {e}", exc_info=True)
+        raise
+
+
+async def store_synergy_opportunities(db: AsyncSession, synergies: List[Dict]) -> int:
+    """
+    Store multiple synergy opportunities in database.
+    
+    Args:
+        db: Database session
+        synergies: List of synergy dictionaries from detector
+    
+    Returns:
+        Number of synergies stored
+        
+    Story AI3.1: Device Synergy Detector Foundation
+    """
+    import json
+    
+    if not synergies:
+        logger.warning("No synergies to store")
+        return 0
+    
+    try:
+        stored_count = 0
+        
+        for synergy_data in synergies:
+            # Create metadata dict from synergy data
+            metadata = {
+                'trigger_entity': synergy_data.get('trigger_entity'),
+                'trigger_name': synergy_data.get('trigger_name'),
+                'action_entity': synergy_data.get('action_entity'),
+                'action_name': synergy_data.get('action_name'),
+                'relationship': synergy_data.get('relationship'),
+                'rationale': synergy_data.get('rationale')
+            }
+            
+            synergy = SynergyOpportunity(
+                synergy_id=synergy_data['synergy_id'],
+                synergy_type=synergy_data['synergy_type'],
+                device_ids=json.dumps(synergy_data['devices']),
+                opportunity_metadata=metadata,
+                impact_score=synergy_data['impact_score'],
+                complexity=synergy_data['complexity'],
+                confidence=synergy_data['confidence'],
+                area=synergy_data.get('area'),
+                created_at=datetime.now(timezone.utc)
+            )
+            
+            db.add(synergy)
+            stored_count += 1
+        
+        await db.commit()
+        logger.info(f"Stored {stored_count} synergy opportunities")
+        return stored_count
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Failed to store synergies: {e}", exc_info=True)
+        raise
+
+
+async def get_synergy_opportunities(
+    db: AsyncSession,
+    synergy_type: Optional[str] = None,
+    min_confidence: float = 0.0,
+    limit: int = 100
+) -> List[SynergyOpportunity]:
+    """
+    Retrieve synergy opportunities from database.
+    
+    Args:
+        db: Database session
+        synergy_type: Optional filter by synergy type
+        min_confidence: Minimum confidence threshold
+        limit: Maximum number of results
+    
+    Returns:
+        List of SynergyOpportunity instances
+        
+    Story AI3.1: Device Synergy Detector Foundation
+    """
+    try:
+        query = select(SynergyOpportunity).where(
+            SynergyOpportunity.confidence >= min_confidence
+        )
+        
+        if synergy_type:
+            query = query.where(SynergyOpportunity.synergy_type == synergy_type)
+        
+        query = query.order_by(SynergyOpportunity.impact_score.desc()).limit(limit)
+        
+        result = await db.execute(query)
+        synergies = result.scalars().all()
+        
+        logger.debug(f"Retrieved {len(synergies)} synergy opportunities")
+        return list(synergies)
+        
+    except Exception as e:
+        logger.error(f"Failed to get synergies: {e}", exc_info=True)
+        raise
+
+
+async def get_synergy_stats(db: AsyncSession) -> Dict:
+    """
+    Get synergy opportunity statistics.
+    
+    Returns:
+        Dictionary with synergy statistics
+        
+    Story AI3.1: Device Synergy Detector Foundation
+    """
+    try:
+        # Total synergies
+        total_result = await db.execute(select(func.count()).select_from(SynergyOpportunity))
+        total = total_result.scalar() or 0
+        
+        # By type
+        type_result = await db.execute(
+            select(SynergyOpportunity.synergy_type, func.count())
+            .group_by(SynergyOpportunity.synergy_type)
+        )
+        by_type = {row[0]: row[1] for row in type_result.all()}
+        
+        # By complexity
+        complexity_result = await db.execute(
+            select(SynergyOpportunity.complexity, func.count())
+            .group_by(SynergyOpportunity.complexity)
+        )
+        by_complexity = {row[0]: row[1] for row in complexity_result.all()}
+        
+        # Average impact score
+        avg_impact_result = await db.execute(
+            select(func.avg(SynergyOpportunity.impact_score))
+        )
+        avg_impact = avg_impact_result.scalar() or 0.0
+        
+        return {
+            'total_synergies': total,
+            'by_type': by_type,
+            'by_complexity': by_complexity,
+            'avg_impact_score': round(float(avg_impact), 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get synergy stats: {e}", exc_info=True)
         raise
 

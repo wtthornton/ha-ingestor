@@ -124,7 +124,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               🖥️ CPU Usage
             </h3>
             <span className={`text-2xl font-bold ${getUsageColor(latestMetrics.cpu_usage)}`}>
-              {latestMetrics.cpu_usage.toFixed(1)}%
+              {(latestMetrics.cpu_usage ?? 0).toFixed(1)}%
             </span>
           </div>
           <div className={`w-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full h-2`}>
@@ -142,7 +142,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               💾 Memory Usage
             </h3>
             <span className={`text-2xl font-bold ${getUsageColor(latestMetrics.memory_usage)}`}>
-              {latestMetrics.memory_usage.toFixed(1)}%
+              {(latestMetrics.memory_usage ?? 0).toFixed(1)}%
             </span>
           </div>
           <div className={`w-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full h-2`}>
@@ -160,7 +160,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               💿 Disk Usage
             </h3>
             <span className={`text-2xl font-bold ${getUsageColor(latestMetrics.disk_usage)}`}>
-              {latestMetrics.disk_usage.toFixed(1)}%
+              {(latestMetrics.disk_usage ?? 0).toFixed(1)}%
             </span>
           </div>
           <div className={`w-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full h-2`}>
@@ -226,7 +226,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                 </div>
               </div>
               <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                {time.toFixed(0)}ms
+                {(time ?? 0).toFixed(0)}ms
               </span>
             </div>
           ))}

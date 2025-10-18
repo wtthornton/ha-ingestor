@@ -102,7 +102,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
               Requests/min
             </span>
             <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {service.metrics.requests_per_minute.toFixed(1)}
+              {(service.metrics.requests_per_minute ?? 0).toFixed(1)}
             </span>
           </div>
         )}
@@ -117,7 +117,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 ? 'text-red-600' 
                 : darkMode ? 'text-green-400' : 'text-green-600'
             }`}>
-              {service.metrics.error_rate.toFixed(2)}%
+              {(service.metrics.error_rate ?? 0).toFixed(2)}%
             </span>
           </div>
         )}

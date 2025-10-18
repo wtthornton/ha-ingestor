@@ -26,23 +26,13 @@
     },
     {
       "page": "Dashboard",
-      "check": "hasDarkModeToggle",
-      "message": "Dark mode toggle missing"
-    },
-    {
-      "page": "Dashboard",
       "check": "checkTouchTargets",
-      "message": "Found 18 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+      "message": "Found 17 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":0,\"height\":0},{\"text\":\"Next →\",\"width\":101,\"height\":40}]"
     },
     {
       "page": "Patterns",
       "check": "hasPatternList",
       "message": "No patterns found"
-    },
-    {
-      "page": "Patterns",
-      "check": "hasCharts",
-      "message": "No charts found"
     },
     {
       "page": "Deployed",
@@ -52,22 +42,12 @@
     {
       "page": "Deployed",
       "check": "checkTouchTargets",
-      "message": "Found 2 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
-    },
-    {
-      "page": "Settings",
-      "check": "hasSettingsForm",
-      "message": "Settings form missing"
-    },
-    {
-      "page": "Settings",
-      "check": "hasInputFields",
-      "message": "No input fields found"
+      "message": "Found 3 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":0,\"height\":0},{\"text\":\"Disable\",\"width\":85,\"height\":40}]"
     },
     {
       "page": "Settings",
       "check": "checkTouchTargets",
-      "message": "Found 2 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":38,\"height\":40},{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
+      "message": "Found 1 buttons smaller than 44x44px: [{\"text\":\"🌙\",\"width\":0,\"height\":0}]"
     }
   ]
 }

@@ -401,9 +401,13 @@ class HealthEndpoints:
             # Get current time for uptime calculation
             current_time = datetime.now()
             
-            # Calculate uptime (assuming service started at startup)
-            # This is a simplified calculation - in production, you'd track actual start time
-            uptime_seconds = 3600  # Placeholder - would be actual uptime
+            # Story 24.1: Calculate uptime from service start time
+            try:
+                from .main import SERVICE_START_TIME
+                uptime_seconds = (datetime.utcnow() - SERVICE_START_TIME).total_seconds()
+            except Exception as e:
+                logger.warning(f"Could not get SERVICE_START_TIME: {e}")
+                uptime_seconds = 3600  # Fallback estimate
             
             # Simulate some realistic metrics for data-api
             # In production, these would come from actual request tracking

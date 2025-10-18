@@ -158,7 +158,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
       ctx.fillStyle = darkMode ? '#F3F4F6' : '#111827';
       ctx.font = 'bold 24px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText(currentValue.toFixed(1) + unit, centerX, centerY + 8);
+      ctx.fillText((currentValue ?? 0).toFixed(1) + unit, centerX, centerY + 8);
     }
 
     // Draw Y-axis labels
@@ -169,7 +169,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     for (let i = 0; i <= 4; i++) {
       const value = minValue + (valueRange / 4) * (4 - i);
       const y = padding + (chartHeight / 4) * i + 4;
-      ctx.fillText(value.toFixed(1), padding - 10, y);
+      ctx.fillText((value ?? 0).toFixed(1), padding - 10, y);
     }
 
     // Draw X-axis labels (time)
@@ -198,7 +198,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         </h3>
         {hoveredPoint && (
           <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} fade-in`}>
-            {hoveredPoint.value.toFixed(1)}{unit} at {hoveredPoint.timestamp}
+            {(hoveredPoint.value ?? 0).toFixed(1)}{unit} at {hoveredPoint.timestamp}
           </div>
         )}
       </div>

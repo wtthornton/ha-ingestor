@@ -66,6 +66,9 @@ load_dotenv()
 # Configure logging
 logger = setup_logging("data-api")
 
+# Story 24.1: Track service start time for accurate uptime calculation
+SERVICE_START_TIME = datetime.utcnow()
+
 
 class APIResponse(BaseModel):
     """Standard API response model"""

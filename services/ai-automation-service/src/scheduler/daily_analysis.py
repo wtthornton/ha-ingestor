@@ -99,17 +99,18 @@ class DailyAnalysisScheduler:
     
     async def run_daily_analysis(self):
         """
-        Unified daily batch job workflow (Story AI2.5):
+        Unified daily batch job workflow (Story AI2.5, Enhanced for Epic AI-3):
         
         Phase 1: Device Capability Update (Epic AI-2)
-        Phase 2: Fetch Historical Events (Shared by AI-1 + AI-2)
+        Phase 2: Fetch Historical Events (Shared by AI-1 + AI-2 + AI-3)
         Phase 3: Pattern Detection (Epic AI-1)
+        Phase 3c: Synergy Detection (Epic AI-3) - NEW
         Phase 4: Feature Analysis (Epic AI-2)
-        Phase 5: Combined Suggestion Generation (AI-1 + AI-2)
+        Phase 5: Combined Suggestion Generation (AI-1 + AI-2 + AI-3)
         Phase 6: Publish Notification & Store Results
         
         This method is called by the scheduler automatically at 3 AM daily.
-        Story AI2.5: Unified Daily Batch Job
+        Story AI2.5: Unified Daily Batch Job (Enhanced Story AI3.1)
         """
         # Prevent concurrent runs
         if self.is_running:
@@ -125,7 +126,7 @@ class DailyAnalysisScheduler:
         
         try:
             logger.info("=" * 80)
-            logger.info("🚀 Unified Daily AI Analysis Started (Epic AI-1 + AI-2)")
+            logger.info("🚀 Unified Daily AI Analysis Started (Epic AI-1 + AI-2 + AI-3)")
             logger.info("=" * 80)
             logger.info(f"Timestamp: {start_time.isoformat()}")
             
@@ -242,9 +243,78 @@ class DailyAnalysisScheduler:
                 job_result['patterns_stored'] = 0
             
             # ================================================================
-            # Phase 4: Feature Analysis (NEW - Epic AI-2)
+            # Phase 3c: Synergy Detection (NEW - Epic AI-3)
             # ================================================================
-            logger.info("🧠 Phase 4/6: Feature Analysis (Epic AI-2)...")
+            logger.info("🔗 Phase 3c/7: Synergy Detection (Epic AI-3)...")
+            
+            try:
+                from ..synergy_detection import DeviceSynergyDetector
+                from ..database.crud import store_synergy_opportunities
+                
+                synergy_detector = DeviceSynergyDetector(
+                    data_api_client=data_client,
+                    ha_client=None,  # TODO: Add HA client for automation checking (Story AI3.3)
+                    influxdb_client=data_client.influxdb_client,  # Enable advanced scoring (Story AI3.2)
+                    min_confidence=0.7,
+                    same_area_required=True
+                )
+                
+                synergies = await synergy_detector.detect_synergies()
+                
+                logger.info(f"✅ Device synergy detection complete:")
+                logger.info(f"   - Device synergies detected: {len(synergies)}")
+                
+                # ----------------------------------------------------------------
+                # Part B: Weather Opportunities (Epic AI-3, Story AI3.5)
+                # ----------------------------------------------------------------
+                logger.info("  → Part B: Weather opportunity detection (Epic AI-3)...")
+                
+                try:
+                    from ..contextual_patterns import WeatherOpportunityDetector
+                    
+                    weather_detector = WeatherOpportunityDetector(
+                        influxdb_client=data_client.influxdb_client,
+                        data_api_client=data_client,
+                        frost_threshold_f=32.0,
+                        heat_threshold_f=85.0
+                    )
+                    
+                    weather_opportunities = await weather_detector.detect_opportunities(days=7)
+                    
+                    # Add to synergies list
+                    synergies.extend(weather_opportunities)
+                    
+                    logger.info(f"     ✅ Found {len(weather_opportunities)} weather opportunities")
+                    
+                except Exception as e:
+                    logger.warning(f"     ⚠️ Weather opportunity detection failed: {e}")
+                    # Continue without weather opportunities
+                
+                logger.info(f"✅ Total synergies (device + weather): {len(synergies)}")
+                
+                # Store synergies in database
+                if synergies:
+                    async with get_db_session() as db:
+                        synergies_stored = await store_synergy_opportunities(db, synergies)
+                    logger.info(f"   💾 Stored {synergies_stored} synergies in database")
+                    job_result['synergies_detected'] = len(synergies)
+                    job_result['synergies_stored'] = synergies_stored
+                else:
+                    logger.info("   ℹ️  No synergies to store")
+                    job_result['synergies_detected'] = 0
+                    job_result['synergies_stored'] = 0
+                
+            except Exception as e:
+                logger.error(f"⚠️ Synergy detection failed: {e}")
+                logger.info("   → Continuing with feature analysis...")
+                synergies = []
+                job_result['synergies_detected'] = 0
+                job_result['synergies_stored'] = 0
+            
+            # ================================================================
+            # Phase 4: Feature Analysis (Epic AI-2)
+            # ================================================================
+            logger.info("🧠 Phase 4/7: Feature Analysis (Epic AI-2)...")
             
             try:
                 feature_analyzer = FeatureAnalyzer(
@@ -273,9 +343,9 @@ class DailyAnalysisScheduler:
                 job_result['opportunities_found'] = 0
             
             # ================================================================
-            # Phase 5: Combined Suggestion Generation (AI-1 + AI-2)
+            # Phase 5: Combined Suggestion Generation (AI-1 + AI-2 + AI-3)
             # ================================================================
-            logger.info("💡 Phase 5/6: Combined Suggestion Generation (AI-1 + AI-2)...")
+            logger.info("💡 Phase 5/7: Combined Suggestion Generation (AI-1 + AI-2)...")
             
             # Initialize OpenAI client
             openai_client = OpenAIClient(api_key=settings.openai_api_key)
@@ -344,17 +414,44 @@ class DailyAnalysisScheduler:
                 logger.info("     ℹ️  No opportunities available for suggestions")
             
             # ----------------------------------------------------------------
-            # Part C: Combine and rank all suggestions
+            # Part C: Synergy-based suggestions (Epic AI-3)
             # ----------------------------------------------------------------
-            logger.info("  → Part C: Combining and ranking all suggestions...")
+            logger.info("  → Part C: Synergy-based suggestions (Epic AI-3)...")
             
-            all_suggestions = pattern_suggestions + feature_suggestions
+            synergy_suggestions = []
+            
+            if synergies:
+                try:
+                    from ..synergy_detection.synergy_suggestion_generator import SynergySuggestionGenerator
+                    
+                    synergy_generator = SynergySuggestionGenerator(
+                        llm_client=openai_client
+                    )
+                    
+                    synergy_suggestions = await synergy_generator.generate_suggestions(
+                        synergies=synergies,
+                        max_suggestions=5
+                    )
+                    logger.info(f"     ✅ Generated {len(synergy_suggestions)} synergy suggestions")
+                    
+                except Exception as e:
+                    logger.error(f"     ❌ Synergy suggestion generation failed: {e}")
+            else:
+                logger.info("     ℹ️  No synergies available for suggestions")
+            
+            # ----------------------------------------------------------------
+            # Part D: Combine and rank all suggestions
+            # ----------------------------------------------------------------
+            logger.info("  → Part D: Combining and ranking all suggestions...")
+            
+            all_suggestions = pattern_suggestions + feature_suggestions + synergy_suggestions
             all_suggestions.sort(key=lambda s: s.get('confidence', 0.5), reverse=True)
             all_suggestions = all_suggestions[:10]  # Top 10 total
             
             logger.info(f"✅ Combined suggestions: {len(all_suggestions)} total")
             logger.info(f"   - Pattern-based (AI-1): {len(pattern_suggestions)}")
             logger.info(f"   - Feature-based (AI-2): {len(feature_suggestions)}")
+            logger.info(f"   - Synergy-based (AI-3): {len(synergy_suggestions)}")
             logger.info(f"   - Top suggestions kept: {len(all_suggestions)}")
             
             # Store all combined suggestions
@@ -382,13 +479,14 @@ class DailyAnalysisScheduler:
             job_result['suggestions_generated'] = suggestions_generated
             job_result['pattern_suggestions'] = len(pattern_suggestions)
             job_result['feature_suggestions'] = len(feature_suggestions)
+            job_result['synergy_suggestions'] = len(synergy_suggestions)
             job_result['openai_tokens'] = openai_client.total_tokens_used
             job_result['openai_cost_usd'] = round(openai_cost, 6)
             
             # ================================================================
             # Phase 6: Publish Notification & Results (MQTT)
             # ================================================================
-            logger.info("📢 Phase 6/6: Publishing MQTT notification...")
+            logger.info("📢 Phase 6/7: Publishing MQTT notification...")
             
             try:
                 notification = {

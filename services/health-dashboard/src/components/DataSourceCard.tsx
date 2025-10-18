@@ -88,7 +88,7 @@ export const DataSourceCard: React.FC<DataSourceCardProps> = ({
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Success Rate</span>
             <span className={`font-semibold ${successRate >= 0.95 ? 'text-green-600' : 'text-yellow-600'}`}>
-              {(successRate * 100).toFixed(1)}%
+              {((successRate ?? 0) * 100).toFixed(1)}%
             </span>
           </div>
           {lastFetch && (

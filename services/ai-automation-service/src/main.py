@@ -24,6 +24,7 @@ except ImportError:
 from .config import settings
 from .database.models import init_db
 from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router, conversational_router
+from .api.synergy_router import router as synergy_router  # Epic AI-3, Story AI3.8
 from .api.analysis_router import set_scheduler
 from .api.health import set_capability_listener
 from .scheduler import DailyAnalysisScheduler
@@ -66,6 +67,7 @@ app.include_router(health_router)
 app.include_router(data_router)
 app.include_router(pattern_router)
 app.include_router(suggestion_router)
+app.include_router(synergy_router)  # Epic AI-3, Story AI3.8
 app.include_router(analysis_router)
 app.include_router(suggestion_management_router)
 app.include_router(deployment_router)

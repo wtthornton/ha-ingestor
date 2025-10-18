@@ -70,7 +70,7 @@ export const PerformanceSparkline: React.FC<PerformanceSparklineProps> = ({
       .filter(point => point && point.x != null && point.y != null)
       .map((point, i) => {
         const command = i === 0 ? 'M' : 'L';
-        return `${command} ${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+        return `${command} ${(point.x ?? 0).toFixed(2)},${(point.y ?? 0).toFixed(2)}`;
       }).join(' ');
 
     return { path: pathCommands, points: chartPoints };

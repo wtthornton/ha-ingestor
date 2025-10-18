@@ -262,7 +262,7 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ darkMode }) => {
             </div>
             <div className="flex items-baseline gap-2">
               <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {analytics.eventsPerMinute.current.toFixed(1)}
+                {(analytics.eventsPerMinute.current ?? 0).toFixed(1)}
               </span>
               <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 events/min
@@ -277,15 +277,15 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ darkMode }) => {
           <div className={`mt-4 grid grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             <div>
               <div>Peak</div>
-              <div className="font-medium">{analytics.eventsPerMinute.peak.toFixed(1)}</div>
+              <div className="font-medium">{(analytics.eventsPerMinute.peak ?? 0).toFixed(1)}</div>
             </div>
             <div>
               <div>Avg</div>
-              <div className="font-medium">{analytics.eventsPerMinute.average.toFixed(1)}</div>
+              <div className="font-medium">{(analytics.eventsPerMinute.average ?? 0).toFixed(1)}</div>
             </div>
             <div>
               <div>Min</div>
-              <div className="font-medium">{analytics.eventsPerMinute.min.toFixed(1)}</div>
+              <div className="font-medium">{(analytics.eventsPerMinute.min ?? 0).toFixed(1)}</div>
             </div>
           </div>
         </div>

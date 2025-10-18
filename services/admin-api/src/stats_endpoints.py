@@ -485,8 +485,10 @@ class StatsEndpoints:
             # Total events = normalized events
             metrics["total_events_received"] = normalized_events
             
-            # Response time = average processing time (placeholder - not available in current API)
-            metrics["response_time_ms"] = 0
+            # Story 24.1: Response time not currently measured
+            # Removed placeholder value - metric calculation requires timing middleware
+            # Future enhancement: Add timing middleware to measure actual response times
+            # metrics["response_time_ms"] = 0  # REMOVED - was placeholder
             
             return {
                 "metrics": metrics,
@@ -809,10 +811,41 @@ class StatsEndpoints:
             }
     
     async def _get_active_data_sources(self) -> List[str]:
-        """Get list of active data sources"""
-        # This would typically query InfluxDB or other data sources
-        # For now, return a placeholder list
-        return ["home_assistant", "weather_api", "sports_api"]
+        """
+        Get list of active data sources from InfluxDB.
+        Story 24.1: Query InfluxDB for measurements with recent activity instead of hardcoded list.
+        
+        Returns:
+            List of active measurement names (data sources)
+        """
+        try:
+            if not self.use_influxdb or not self.influxdb_client.is_connected:
+                logger.warning("InfluxDB not available for data source discovery")
+                return []
+            
+            # Query InfluxDB for all measurements (data sources)
+            query = '''
+            import "influxdata/influxdb/schema"
+            schema.measurements(bucket: "home_assistant_events")
+            '''
+            
+            result = await self.influxdb_client.query(query)
+            
+            # Extract measurement names
+            measurements = []
+            for table in result:
+                for record in table.records:
+                    measurement = record.values.get("_value")
+                    if measurement:
+                        measurements.append(measurement)
+            
+            logger.info(f"Discovered {len(measurements)} active data sources from InfluxDB")
+            return measurements
+            
+        except Exception as e:
+            logger.error(f"Error querying active data sources from InfluxDB: {e}")
+            # Return empty list instead of hardcoded fallback
+            return []
     
     async def _get_api_metrics_with_timeout(self, service_name: str, service_url: str, timeout: int) -> Dict[str, Any]:
         """Get metrics from a specific API service with individual timeout"""

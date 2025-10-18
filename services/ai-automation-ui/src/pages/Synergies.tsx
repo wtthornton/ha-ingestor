@@ -167,7 +167,7 @@ export const Synergies: React.FC = () => {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            {getSynergyIcon(type)} {getSynergyTypeLabel(type)} ({count})
+            {getSynergyIcon(type)} {getSynergyTypeLabel(type)} ({count as number})
           </button>
         ))}
       </div>

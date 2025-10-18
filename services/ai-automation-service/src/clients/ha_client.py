@@ -87,6 +87,33 @@ class HomeAssistantClient:
             logger.error(f"Error getting automation {automation_id}: {e}")
             return None
     
+    async def get_automations(self) -> List[Dict]:
+        """
+        Get automation configurations from Home Assistant.
+        
+        Story AI3.3: Unconnected Relationship Analysis
+        
+        Returns:
+            List of automation configurations with trigger/action details
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.ha_url}/api/config/automation/config",
+                    headers=self.headers,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status == 200:
+                        configs = await response.json()
+                        logger.info(f"✅ Retrieved {len(configs)} automation configurations")
+                        return configs
+                    else:
+                        logger.warning(f"Failed to get automation configs: {response.status}")
+                        return []
+        except Exception as e:
+            logger.error(f"Error fetching automation configs: {e}")
+            return []
+    
     async def list_automations(self) -> List[Dict]:
         """
         List all automations in Home Assistant.

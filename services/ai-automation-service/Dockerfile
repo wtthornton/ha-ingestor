@@ -58,5 +58,5 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 EXPOSE 8018
 
 # Run migrations and start service
-CMD ["sh", "-c", "alembic upgrade head && python -m uvicorn src.main:app --host 0.0.0.0 --port 8018"]
+CMD ["sh", "-c", "alembic upgrade head || echo 'Migration skipped' && python -m uvicorn src.main:app --host 0.0.0.0 --port 8018"]
 

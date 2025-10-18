@@ -204,6 +204,37 @@ class DeviceFeatureUsage(Base):
         return f"<DeviceFeatureUsage(device='{self.device_id}', feature='{self.feature_name}', configured={self.configured})>"
 
 
+# ============================================================================
+# Epic AI-3: Cross-Device Synergy Models (Story AI3.1)
+# ============================================================================
+
+class SynergyOpportunity(Base):
+    """
+    Cross-device synergy opportunities for automation suggestions.
+    
+    Stores detected device pairs that could work together but currently
+    have no automation connecting them.
+    
+    Story AI3.1: Device Synergy Detector Foundation
+    Epic AI-3: Cross-Device Synergy & Contextual Opportunities
+    """
+    __tablename__ = 'synergy_opportunities'
+    
+    id = Column(Integer, primary_key=True)
+    synergy_id = Column(String(36), unique=True, nullable=False, index=True)  # UUID
+    synergy_type = Column(String(50), nullable=False, index=True)  # 'device_pair', 'weather_context', etc.
+    device_ids = Column(Text, nullable=False)  # JSON array of device IDs
+    opportunity_metadata = Column(JSON)  # Synergy-specific data (trigger, action, relationship, etc.)
+    impact_score = Column(Float, nullable=False)
+    complexity = Column(String(20), nullable=False)  # 'low', 'medium', 'high'
+    confidence = Column(Float, nullable=False)
+    area = Column(String(100))  # Area/room where devices are located
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    def __repr__(self):
+        return f"<SynergyOpportunity(id={self.id}, type={self.synergy_type}, area={self.area}, impact={self.impact_score})>"
+
+
 # Indexes for fast lookups (Epic AI-2)
 Index('idx_capabilities_manufacturer', DeviceCapability.manufacturer)
 Index('idx_capabilities_integration', DeviceCapability.integration_type)

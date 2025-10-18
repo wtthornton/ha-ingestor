@@ -231,12 +231,28 @@ Detect cross-device automation opportunities and context-aware patterns that use
 
 ---
 
+## HA Setup & Recommendation Service Epics (27-30)
+
+**Epic 27: HA Ingestor Setup & Recommendation Service Foundation** 📋 **NEW**
+Comprehensive setup and recommendation service addressing critical user pain points in Home Assistant environment setup and optimization. Establishes foundational infrastructure for automated environment health monitoring, setup assistance, and performance optimization.
+
+**Epic 28: Environment Health Monitoring System** 📋 **NEW**
+Real-time health monitoring system that continuously assesses Home Assistant environments, integrations, and services. Provides proactive issue detection, health scoring, and trend analysis.
+
+**Epic 29: Automated Setup Wizard System** 📋 **NEW**
+Intelligent setup wizard system guiding users through complex Home Assistant integrations with automated validation, error handling, and rollback capabilities.
+
+**Epic 30: Performance Optimization Engine** 📋 **NEW**
+Intelligent performance optimization system analyzing Home Assistant environments and providing automated recommendations and fixes to improve system performance and resource utilization.
+
+---
+
 ## Summary
 
-- **Total Epics**: 27 (26 infrastructure + 3 AI enhancement)
+- **Total Epics**: 31 (26 infrastructure + 3 AI enhancement + 4 setup service)
 - **Completed**: 24 (22 infrastructure + 2 AI)
 - **In Progress**: 1 (Epic 24)
-- **Planned**: 2 (Epic 24, 26)
+- **Planned**: 6 (Epic 24, 26, 27, 28, 29, 30)
 - **Ready for Approval**: 1 (Epic AI-3)
 - **Active Services**: 16 total (15 microservices + InfluxDB infrastructure)
 - **Microservices**: 15 custom services (admin-api, data-api, websocket-ingestion, enrichment-pipeline, data-retention, sports-data, log-aggregator, weather-api, carbon-intensity, electricity-pricing, air-quality, calendar, smart-meter, energy-correlator, ai-automation)
@@ -244,12 +260,13 @@ Detect cross-device automation opportunities and context-aware patterns that use
 - **Dashboard Tabs**: 12 (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Energy, Analytics, Alerts, Configuration)
 - **AI Suggestion Types**: 6 (time-of-day, co-occurrence, anomaly, feature discovery, device synergy, contextual opportunities)
 - **External Data Services**: 6 (carbon, electricity, air quality, calendar, smart meter, weather)
+- **Setup Service Features**: 4 (health monitoring, setup wizards, performance optimization, continuous monitoring)
 
 ---
 
-**Last Updated**: October 18, 2025  
-**Status**: Production Ready + Enhancement Planned  
+**Last Updated**: January 2025  
+**Status**: Production Ready + Setup Service Planned  
 **Latest Completion**: Epic AI-2 - Device Intelligence (5 stories in 2 weeks)  
 **Current Epic**: Epic 24 - Monitoring Data Quality & Accuracy (Fix hardcoded metrics)  
-**Next Epic**: Epic AI-3 - Cross-Device Synergy & Contextual Opportunities (Pending approval)
+**Next Epic**: Epic 27 - HA Setup & Recommendation Service Foundation (New initiative)
 
