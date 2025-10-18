@@ -7,7 +7,7 @@ RUN apk add --no-cache gcc musl-dev libffi-dev
 WORKDIR /app
 
 # Copy requirements and install dependencies
-COPY requirements.txt .
+COPY services/ha-setup-service/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Production stage
@@ -21,7 +21,7 @@ WORKDIR /app
 
 # Copy dependencies from builder
 COPY --from=builder /root/.local /home/appuser/.local
-COPY --chown=appuser:appuser . .
+COPY --chown=appuser:appuser services/ha-setup-service/ .
 
 # Set environment variables
 ENV PATH=/home/appuser/.local/bin:$PATH \
@@ -32,11 +32,11 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8010/health')"
+    CMD python -c "import requests; requests.get('http://localhost:8020/health')"
 
 # Expose port
-EXPOSE 8010
+EXPOSE 8020
 
 # Run application
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8010"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8020"]
 

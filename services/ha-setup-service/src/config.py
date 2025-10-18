@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     
     # Service configuration
     service_name: str = "ha-setup-service"
-    service_port: int = 8010
+    service_port: int = 8020  # Changed from 8010 (used by carbon-intensity)
     log_level: str = "INFO"
     
     # Home Assistant configuration

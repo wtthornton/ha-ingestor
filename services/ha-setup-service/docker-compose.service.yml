@@ -8,12 +8,12 @@
     container_name: ha-ingestor-setup-service
     restart: unless-stopped
     ports:
-      - "8010:8010"
+      - "8020:8020"  # Changed from 8010 (used by carbon-intensity)
     env_file:
       - infrastructure/.env.websocket  # Reuses existing HA_TOKEN
     environment:
       - SERVICE_NAME=ha-setup-service
-      - SERVICE_PORT=8010
+      - SERVICE_PORT=8020
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - HA_URL=${HA_HTTP_URL:-http://192.168.1.86:8123}
       # HA_TOKEN loaded from infrastructure/.env.websocket
@@ -41,7 +41,7 @@
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8010/health')"]
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8020/health')"]
       interval: 30s
       timeout: 10s
       retries: 3

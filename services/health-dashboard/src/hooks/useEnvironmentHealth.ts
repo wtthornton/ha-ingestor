@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EnvironmentHealth } from '../types/health';
 
-const SETUP_SERVICE_URL = 'http://localhost:8010';
+const SETUP_SERVICE_URL = 'http://localhost:8020';  // Port 8020 (8010 used by carbon-intensity)
 const POLL_INTERVAL = 30000; // 30 seconds
 
 interface UseEnvironmentHealthReturn {

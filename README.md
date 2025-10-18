@@ -16,9 +16,10 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
   - Admin API: localhost:8003
   - Sports Data: localhost:8005
   - Data API: localhost:8006
-  - HA Setup Service: localhost:8010 (NEW - Health Monitoring & Setup Wizards)
+  - Carbon Intensity: localhost:8010
   - Energy Services: localhost:8011-8017
   - AI Automation: localhost:8018
+  - HA Setup Service: localhost:8020 (NEW - Health Monitoring & Setup Wizards)
 - **Database**: 
   - InfluxDB: localhost:8086 (Time-series data)
   - SQLite: Local files (Metadata, devices, entities, health metrics)
@@ -309,7 +310,7 @@ This project follows security best practices:
 - **Health scoring** - 0-100 intelligent scoring with 4-component algorithm
 - **Trend analysis** - Historical health trends and issue detection
 - **Automatic alerting** - Proactive notifications for critical issues
-- Port: 8010 (external)
+- Port: 8020 (external)
 - Frontend: Setup tab in main dashboard
 
 #### WebSocket Ingestion Service
