@@ -48,15 +48,32 @@ async def get_game_status(
     Optimized for <50ms response time.
     Returns: "playing", "upcoming", "none"
     """
-    from src.main import cache
+    from src.main import cache, team_db
     
-    # Check cache for live games (fast!)
+    # Get all user teams to find the correct cache key
+    all_users = await team_db.get_all_user_teams()
+    
+    # Collect all unique teams across all users
+    all_teams = set()
+    for user_data in all_users.values():
+        if sport == 'nfl':
+            all_teams.update(user_data.get('nfl_teams', []))
+        else:
+            all_teams.update(user_data.get('nhl_teams', []))
+    
     # Try different cache key formats
-    live_games = await cache.get(f"live_games_{sport}")
-    if not live_games:
-        live_games = await cache.get(f"live_games_{sport}_all")
-    if not live_games:
-        live_games = await cache.get(f"live_games_{sport}_nfl-dal_nhl-vgk")
+    cache_keys_to_try = [
+        f"live_games_{sport}_{'_'.join(sorted(all_teams))}",  # With user teams
+        f"live_games_{sport}_all",  # All teams
+        f"live_games_{sport}",  # Fallback
+    ]
+    
+    live_games = None
+    for cache_key in cache_keys_to_try:
+        live_games = await cache.get(cache_key)
+        if live_games:
+            logger.debug(f"Found live games with cache key: {cache_key}")
+            break
     
     if live_games:
         for game in live_games:
@@ -73,12 +90,19 @@ async def get_game_status(
                     start_time=game.get('start_time')
                 )
     
-    # Check upcoming games
-    upcoming_games = await cache.get(f"upcoming_games_{sport}")
-    if not upcoming_games:
-        upcoming_games = await cache.get(f"upcoming_games_{sport}_all")
-    if not upcoming_games:
-        upcoming_games = await cache.get(f"upcoming_games_{sport}_nfl-dal_nhl-vgk")
+    # Check upcoming games with same approach
+    upcoming_cache_keys_to_try = [
+        f"upcoming_games_{sport}_24_{'_'.join(sorted(all_teams))}",  # With user teams
+        f"upcoming_games_{sport}_24_all",  # All teams
+        f"upcoming_games_{sport}_24",  # Fallback
+    ]
+    
+    upcoming_games = None
+    for cache_key in upcoming_cache_keys_to_try:
+        upcoming_games = await cache.get(cache_key)
+        if upcoming_games:
+            logger.debug(f"Found upcoming games with cache key: {cache_key}")
+            break
     
     if upcoming_games:
         for game in upcoming_games:
@@ -119,13 +143,35 @@ async def get_game_context(
     
     Includes current game, next game, and score details.
     """
-    from src.main import cache
+    from src.main import cache, team_db
+    
+    # Get all user teams to find the correct cache key
+    all_users = await team_db.get_all_user_teams()
+    
+    # Collect all unique teams across all users
+    all_teams = set()
+    for user_data in all_users.values():
+        if sport == 'nfl':
+            all_teams.update(user_data.get('nfl_teams', []))
+        else:
+            all_teams.update(user_data.get('nhl_teams', []))
     
     current_game = None
     next_game = None
     
-    # Get current game
-    live_games = await cache.get(f"live_games_{sport}")
+    # Get current game with correct cache key
+    cache_keys_to_try = [
+        f"live_games_{sport}_{'_'.join(sorted(all_teams))}",  # With user teams
+        f"live_games_{sport}_all",  # All teams
+        f"live_games_{sport}",  # Fallback
+    ]
+    
+    live_games = None
+    for cache_key in cache_keys_to_try:
+        live_games = await cache.get(cache_key)
+        if live_games:
+            break
+    
     if live_games:
         for game in live_games:
             home_abbr = game.get('home_team', {}).get('abbreviation', '').lower()
@@ -137,7 +183,18 @@ async def get_game_context(
     
     # Get next game if not playing
     if not current_game:
-        upcoming_games = await cache.get(f"upcoming_games_{sport}")
+        upcoming_cache_keys_to_try = [
+            f"upcoming_games_{sport}_24_{'_'.join(sorted(all_teams))}",  # With user teams
+            f"upcoming_games_{sport}_24_all",  # All teams
+            f"upcoming_games_{sport}_24",  # Fallback
+        ]
+        
+        upcoming_games = None
+        for cache_key in upcoming_cache_keys_to_try:
+            upcoming_games = await cache.get(cache_key)
+            if upcoming_games:
+                break
+        
         if upcoming_games:
             team_games = [
                 g for g in upcoming_games
