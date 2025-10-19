@@ -516,7 +516,7 @@ class IntegrationHealthChecker:
                         health_data = await response.json()
                         return CheckResult(
                             integration_name="Data API",
-                            integration_type="ha_ingestor",
+                            integration_type="homeiq",
                             status=IntegrationStatus.HEALTHY,
                             is_configured=True,
                             is_connected=True,
@@ -529,7 +529,7 @@ class IntegrationHealthChecker:
                     else:
                         return CheckResult(
                             integration_name="Data API",
-                            integration_type="ha_ingestor",
+                            integration_type="homeiq",
                             status=IntegrationStatus.WARNING,
                             is_configured=True,
                             is_connected=False,
@@ -562,7 +562,7 @@ class IntegrationHealthChecker:
                     if response.status == 200:
                         return CheckResult(
                             integration_name="Admin API",
-                            integration_type="ha_ingestor",
+                            integration_type="homeiq",
                             status=IntegrationStatus.HEALTHY,
                             is_configured=True,
                             is_connected=True,
@@ -574,7 +574,7 @@ class IntegrationHealthChecker:
                     else:
                         return CheckResult(
                             integration_name="Admin API",
-                            integration_type="ha_ingestor",
+                            integration_type="homeiq",
                             status=IntegrationStatus.WARNING,
                             is_configured=True,
                             is_connected=False,

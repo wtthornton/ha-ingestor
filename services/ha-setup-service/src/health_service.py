@@ -22,6 +22,7 @@ from .schemas import (
     IntegrationStatus
 )
 from .scoring_algorithm import HealthScoringAlgorithm
+from .integration_checker import IntegrationHealthChecker
 
 settings = get_settings()
 
@@ -210,17 +211,37 @@ class HealthMonitoringService:
             }
     
     async def _check_zigbee2mqtt_integration(self) -> Dict:
-        """Check Zigbee2MQTT integration status"""
-        # Similar pattern to MQTT check
-        return {
-            "name": "Zigbee2MQTT",
-            "type": "zigbee2mqtt",
-            "status": IntegrationStatus.WARNING.value,
-            "is_configured": True,
-            "is_connected": False,
-            "error_message": "Check pending - will be implemented in Story 27.2",
-            "last_check": datetime.now()
-        }
+        """Check Zigbee2MQTT integration status using integration checker"""
+        try:
+            # Use the integration checker to get real Zigbee2MQTT status
+            integration_checker = IntegrationHealthChecker(
+                ha_url=self.ha_url,
+                ha_token=self.ha_token
+            )
+            result = await integration_checker.check_zigbee2mqtt_integration()
+            
+            return {
+                "name": result.integration_name,
+                "type": result.integration_type,
+                "status": result.status.value,
+                "is_configured": result.is_configured,
+                "is_connected": result.is_connected,
+                "error_message": result.error_message,
+                "check_details": result.check_details,
+                "last_check": result.last_check
+            }
+        except Exception as e:
+            # Fallback if integration checker fails
+            return {
+                "name": "Zigbee2MQTT",
+                "type": "zigbee2mqtt",
+                "status": IntegrationStatus.ERROR.value,
+                "is_configured": False,
+                "is_connected": False,
+                "error_message": f"Integration check failed: {str(e)}",
+                "check_details": {"error_type": type(e).__name__},
+                "last_check": datetime.now()
+            }
     
     async def _check_data_api(self) -> Dict:
         """Check HA Ingestor Data API status"""
@@ -233,7 +254,7 @@ class HealthMonitoringService:
                     if response.status == 200:
                         return {
                             "name": "Data API",
-                            "type": "ha_ingestor",
+                            "type": "homeiq",
                             "status": IntegrationStatus.HEALTHY.value,
                             "is_configured": True,
                             "is_connected": True,
@@ -243,7 +264,7 @@ class HealthMonitoringService:
         except Exception as e:
             return {
                 "name": "Data API",
-                "type": "ha_ingestor",
+                "type": "homeiq",
                 "status": IntegrationStatus.ERROR.value,
                 "is_configured": True,
                 "is_connected": False,
