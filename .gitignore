@@ -85,3 +85,6 @@ coverage.xml
 docs/kb/context7-cache/.refresh-queue
 docs/kb/context7-cache/.refresh-queue.*
 docs/kb/context7-cache/**/*.tmp
+
+# Runtime database files
+data/
