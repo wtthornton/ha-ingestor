@@ -226,8 +226,8 @@ class SportsAPIClient:
         """Fetch NHL scoreboard for multiple days"""
         all_games = []
         
-        # Fetch games for next 7 days
-        for days_ahead in range(7):
+        # Fetch games for today and next 6 days (7 days total including today)
+        for days_ahead in range(-3, 6):  # Start from 3 days ago to catch games that might have started
             date = (datetime.utcnow() + timedelta(days=days_ahead)).strftime('%Y%m%d')
             
             if self.provider == 'nhl_official':

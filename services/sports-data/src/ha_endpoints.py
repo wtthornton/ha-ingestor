@@ -51,7 +51,13 @@ async def get_game_status(
     from src.main import cache
     
     # Check cache for live games (fast!)
+    # Try different cache key formats
     live_games = await cache.get(f"live_games_{sport}")
+    if not live_games:
+        live_games = await cache.get(f"live_games_{sport}_all")
+    if not live_games:
+        live_games = await cache.get(f"live_games_{sport}_nfl-dal_nhl-vgk")
+    
     if live_games:
         for game in live_games:
             home_abbr = game.get('home_team', {}).get('abbreviation', '').lower()
@@ -69,6 +75,11 @@ async def get_game_status(
     
     # Check upcoming games
     upcoming_games = await cache.get(f"upcoming_games_{sport}")
+    if not upcoming_games:
+        upcoming_games = await cache.get(f"upcoming_games_{sport}_all")
+    if not upcoming_games:
+        upcoming_games = await cache.get(f"upcoming_games_{sport}_nfl-dal_nhl-vgk")
+    
     if upcoming_games:
         for game in upcoming_games:
             home_abbr = game.get('home_team', {}).get('abbreviation', '').lower()

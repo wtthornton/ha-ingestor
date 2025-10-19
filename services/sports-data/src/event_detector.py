@@ -11,6 +11,7 @@ import asyncio
 import logging
 from typing import Dict, Optional
 from datetime import datetime
+from src.database import team_db
 
 
 logger = logging.getLogger(__name__)
@@ -79,11 +80,28 @@ class GameEventDetector:
                 await asyncio.sleep(60)  # Wait longer on error
     
     async def _check_for_events(self):
-        """Check live games for state changes"""
+        """Check live games for state changes (Story 11.5: Team Persistence)"""
         try:
-            # Get current live games from both leagues
-            nfl_games = await self.sports_client.get_live_games('nfl', [])
-            nhl_games = await self.sports_client.get_live_games('nhl', [])
+            # Get all user teams from database
+            all_users = await team_db.get_all_user_teams()
+            
+            if not all_users:
+                logger.info("No teams selected, skipping event detection")
+                return
+            
+            # Collect all unique teams across all users
+            all_nfl_teams = set()
+            all_nhl_teams = set()
+            
+            for user_data in all_users.values():
+                all_nfl_teams.update(user_data.get('nfl_teams', []))
+                all_nhl_teams.update(user_data.get('nhl_teams', []))
+            
+            logger.info(f"Monitoring {len(all_nfl_teams)} NFL teams and {len(all_nhl_teams)} NHL teams")
+            
+            # Get current live games for monitored teams
+            nfl_games = await self.sports_client.get_live_games('nfl', list(all_nfl_teams))
+            nhl_games = await self.sports_client.get_live_games('nhl', list(all_nhl_teams))
             
             all_games = nfl_games + nhl_games
             

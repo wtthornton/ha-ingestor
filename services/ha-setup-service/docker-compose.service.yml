@@ -41,11 +41,11 @@
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8020/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8020/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     logging:
       driver: "json-file"
       options:

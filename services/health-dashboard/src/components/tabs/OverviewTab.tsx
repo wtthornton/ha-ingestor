@@ -415,7 +415,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   },
                   secondary: {
                     label: 'Availability',
-                    value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status === 'healthy' ? '99.9' : '0',
+                    value: enhancedHealth?.metrics?.uptime_percentage?.toFixed(2) ?? '0.0',
                     unit: '%'
                   }
                 }}
@@ -428,7 +428,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   status: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status === 'healthy' ? 'healthy' : 'unhealthy',
                   details: [
                     { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
-                    { label: 'Availability', value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status === 'healthy' ? '99.9' : '0', unit: '%' },
+                    { label: 'Availability', value: enhancedHealth?.metrics?.uptime_percentage?.toFixed(2) ?? '0.0', unit: '%' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB')?.status || 'unknown' },
                     { label: 'Database Type', value: 'InfluxDB 2.7' },
                     { label: 'Uptime', value: enhancedHealth?.metrics?.uptime_human || 'N/A' }

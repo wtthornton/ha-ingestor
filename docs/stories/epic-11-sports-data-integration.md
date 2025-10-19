@@ -1,8 +1,9 @@
 # Epic 11: NFL & NHL Sports Data Integration - Brownfield Enhancement
 
-**Status:** ✅ COMPLETE (with Production Hotfix Applied)  
+**Status:** 🔄 IN PROGRESS (Critical Bug Fixes Required)  
 **Created:** October 12, 2025  
-**Hotfix Applied:** October 12, 2025 (nginx routing fix)
+**Hotfix Applied:** October 12, 2025 (nginx routing fix)  
+**Bug Fixes Required:** October 19, 2025 (team persistence & HA integration)
 
 ---
 
@@ -18,7 +19,26 @@
 - Verification: `implementation/sports-architecture-simplification-verification-results.md`
 - QA Gate: `docs/qa/gates/11.x-sports-architecture-simplification.yml`
 
-**Status:** ✅ Technical Implementation Complete, ⏳ Frontend Testing Pending
+**Status:** 🔄 IN PROGRESS - Critical Bug Fixes Required
+
+## 🚨 CRITICAL BUGS FOUND (Oct 19, 2025)
+
+**Issue 1: Team Persistence Broken**
+- Team selections don't persist across service restarts
+- POST endpoint only logs teams, doesn't save them
+- GET endpoint reads from environment variables, not user data
+
+**Issue 2: HA Automation Endpoints Broken**
+- HA endpoints return "none" even for live games
+- Cache key mismatch between main API and HA endpoints
+- Event detector can't find games to monitor
+
+**Issue 3: Event Detection Not Working**
+- Event detector calls API with empty team lists
+- No teams = No games monitored = No score change detection
+- Webhook system exists but can't trigger events
+
+**Impact**: Users cannot trigger HA automations when teams score
 
 ---
 
@@ -104,6 +124,58 @@ Add Recharts-powered visualizations for game statistics, score timelines, and te
 - Data transformation for charts
 - Interactive tooltips
 
+### Story 11.5: Team Persistence Implementation ⚠️ CRITICAL BUG FIX
+Implement actual database storage for team selections to fix persistence across service restarts.
+
+**Key Tasks:**
+- Add SQLite table for user team preferences
+- Implement team selection storage in POST endpoint
+- Update GET endpoint to read from database
+- Add team persistence to event detector
+- Test team selections across service restarts
+- Add migration for existing team data
+
+**Acceptance Criteria:**
+- [ ] Team selections persist across Docker restarts
+- [ ] POST `/api/v1/user/teams` actually saves to database
+- [ ] GET `/api/v1/user/teams` reads from database
+- [ ] Event detector uses persisted team selections
+- [ ] No data loss on service restart
+
+### Story 11.6: HA Automation Endpoint Cache Fix ⚠️ CRITICAL BUG FIX
+Fix cache key mismatch between main API and HA automation endpoints.
+
+**Key Tasks:**
+- Standardize cache key format across all endpoints
+- Update HA endpoints to use correct cache keys
+- Add fallback cache key lookups
+- Test HA endpoints with live games
+- Ensure HA endpoints return correct game status
+
+**Acceptance Criteria:**
+- [ ] HA endpoints return "playing" for live games
+- [ ] HA endpoints return "upcoming" for scheduled games
+- [ ] Cache key format consistent across all endpoints
+- [ ] HA automation endpoints respond in <50ms
+- [ ] No cache key mismatches
+
+### Story 11.7: Event Detector Team Integration ⚠️ CRITICAL BUG FIX
+Connect event detector to user's selected teams for proper game monitoring.
+
+**Key Tasks:**
+- Update event detector to use user's selected teams
+- Fix team list passing to sports API client
+- Test event detection with live games
+- Verify score change detection works
+- Test webhook delivery on score changes
+
+**Acceptance Criteria:**
+- [ ] Event detector monitors user's selected teams
+- [ ] Score changes detected within 15 seconds
+- [ ] Webhooks fired on score changes
+- [ ] Game start/end events detected
+- [ ] Event detection works with multiple teams
+
 ## Compatibility Requirements
 
 - [x] Existing APIs remain unchanged (new service on separate port)
@@ -129,14 +201,18 @@ Add Recharts-powered visualizations for game statistics, score timelines, and te
 
 ## Definition of Done
 
-- [x] All 4 stories completed with acceptance criteria met
-- [x] Existing dashboard functionality verified (no regressions)
-- [x] Sports service integrates via Docker Compose
-- [x] API usage monitoring in place
-- [x] E2E tests for sports features
-- [x] Mobile responsive on iOS and Android
-- [x] Dark mode support consistent with existing UI
-- [x] Documentation updated (API docs, user guide)
+- [ ] All 7 stories completed with acceptance criteria met
+- [ ] Team selections persist across service restarts
+- [ ] HA automation endpoints return correct game status
+- [ ] Event detector monitors user's selected teams
+- [ ] Score change detection and webhook delivery working
+- [ ] Existing dashboard functionality verified (no regressions)
+- [ ] Sports service integrates via Docker Compose
+- [ ] API usage monitoring in place
+- [ ] E2E tests for sports features
+- [ ] Mobile responsive on iOS and Android
+- [ ] Dark mode support consistent with existing UI
+- [ ] Documentation updated (API docs, user guide)
 
 ## Dependencies
 
@@ -146,12 +222,15 @@ Add Recharts-powered visualizations for game statistics, score timelines, and te
 
 ## Estimated Effort
 
-- Story 11.1: 3 days (backend service)
-- Story 11.2: 2 days (team selection UI)
-- Story 11.3: 3 days (live games display)
-- Story 11.4: 2 days (statistics visualization)
+- Story 11.1: ✅ COMPLETE (backend service)
+- Story 11.2: ✅ COMPLETE (team selection UI) 
+- Story 11.3: ✅ COMPLETE (live games display)
+- Story 11.4: ⏳ PENDING (statistics visualization)
+- Story 11.5: 🔄 CRITICAL (team persistence) - 1 day
+- Story 11.6: 🔄 CRITICAL (HA endpoint cache fix) - 0.5 days
+- Story 11.7: 🔄 CRITICAL (event detector integration) - 0.5 days
 
-**Total:** ~10 days (2 weeks)
+**Total Remaining:** ~2 days (critical bug fixes)
 
 ---
 

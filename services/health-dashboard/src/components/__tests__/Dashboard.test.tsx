@@ -1,17 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '../../tests/test-utils';
 import userEvent from '@testing-library/user-event';
 import { Dashboard } from '../Dashboard';
 
 describe('Dashboard Component', () => {
-  it('should render without crashing', async () => {
+  afterEach(() => {
+    // ✅ Context7 Best Practice: Cleanup after each test
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('displays dashboard heading when component loads', async () => {
     render(<Dashboard />);
     
     // Wait for dashboard title to appear (use heading role to be specific)
     expect(await screen.findByRole('heading', { name: /HA Ingestor Dashboard/i })).toBeInTheDocument();
   });
 
-  it('should switch tabs when navigation button is clicked', async () => {
+  it('switches active tab when navigation button is clicked', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
     
@@ -26,7 +32,7 @@ describe('Dashboard Component', () => {
     expect(servicesTab).toHaveClass('bg-blue-600');
   });
 
-  it('should toggle dark mode when theme button is clicked', async () => {
+  it('toggles dark mode when theme button is clicked', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
     

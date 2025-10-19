@@ -1,8 +1,9 @@
 # Epic 12: Sports Data InfluxDB Persistence & HA Automation Hub - Brownfield Enhancement
 
-**Status:** ✅ **COMPLETE** (All 3 phases complete)  
+**Status:** 🔄 IN PROGRESS (Event Detection Integration Required)  
 **Created:** 2025-10-13  
 **Reopened:** 2025-10-14 (Epic incorrectly marked complete - work not done)  
+**Bug Fixes Required:** 2025-10-19 (event detector team integration)  
 **Epic Owner:** Product Team  
 **Development Lead:** BMad Master Agent  
 **System Context:** API data hub for HA automations and external integrations
@@ -775,27 +776,65 @@ The epic should maintain system integrity while transforming sports-data from tr
 
 ---
 
-**Epic Status:** 🔄 **IN PROGRESS** - Ready for Phase 1 Implementation  
+**Epic Status:** 🔄 **IN PROGRESS** - Event Detection Integration Required
 
 **Phase Status**:
 - ✅ **Phase 0** (Epic 11): ESPN cache integration - COMPLETE
 - ✅ **Phase 1** (Story 12.1): InfluxDB persistence - COMPLETE
 - ✅ **Phase 2** (Story 12.2): Historical query APIs - COMPLETE
-- ✅ **Phase 3** (Story 12.3): Event monitor + webhooks - COMPLETE
+- 🔄 **Phase 3** (Story 12.3): Event monitor + webhooks - INFRASTRUCTURE COMPLETE, INTEGRATION BROKEN
+
+**Critical Issue Found (Oct 19, 2025)**:
+- Event detector runs but has no teams to monitor
+- Team persistence broken (Epic 11 dependency)
+- Webhook system exists but can't trigger events
+- Score change detection not working
 
 **Completion Summary:**
 1. ✅ Story 12.1 implemented with simple, maintainable design
 2. ✅ Story 12.2 delivered with built-in pagination (no extra deps)
-3. ✅ Story 12.3 completed with Context7 KB best practices
-4. ✅ Deployed and tested - all features working
-5. ✅ ~5 hours implementation (vs 9 weeks estimated)
+3. 🔄 Story 12.3 infrastructure complete, team integration broken
+4. 🔄 Deployed but event detection not working
+5. 🔄 ~5 hours implementation + 1 day integration fixes needed
 
 **Related Stories:**
 - ✅ Epic 11: Basic ESPN integration (COMPLETE)
-- ⏳ Story 12.1: InfluxDB persistence layer
-- ⏳ Story 12.2: Historical query endpoints
-- ⏳ Story 12.3: Adaptive monitor + webhooks ⭐
-- ~~Story 13.4~~ - SUPERSEDED (absorbed into Epic 12 Stories 12.2 and 12.3)
+- ✅ Story 12.1: InfluxDB persistence layer (COMPLETE)
+- ✅ Story 12.2: Historical query endpoints (COMPLETE)
+- 🔄 Story 12.3: Adaptive monitor + webhooks (INFRASTRUCTURE COMPLETE, INTEGRATION BROKEN)
+- 🔄 Story 12.4: Event Detector Team Integration (NEW - CRITICAL BUG FIX)
+
+### Story 12.4: Event Detector Team Integration ⚠️ CRITICAL BUG FIX
+
+**Goal**: Connect event detector to user's selected teams for proper game monitoring and webhook delivery
+
+**Problem**: Event detector infrastructure exists but can't monitor games because:
+- Event detector calls `get_live_games()` with empty team lists
+- No teams = No games monitored = No score change detection
+- Webhook system exists but can't trigger events
+
+**Key Tasks:**
+- Update event detector to fetch user's selected teams from database
+- Pass team lists to `get_live_games()` calls
+- Test event detection with live games
+- Verify score change detection works
+- Test webhook delivery on score changes
+- Add logging for event detection debugging
+
+**Acceptance Criteria:**
+- [ ] Event detector monitors user's selected teams
+- [ ] Score changes detected within 15 seconds
+- [ ] Webhooks fired on score changes
+- [ ] Game start/end events detected
+- [ ] Event detection works with multiple teams
+- [ ] Event detector logs show team monitoring activity
+- [ ] Webhook delivery verified with test registrations
+
+**Dependencies:**
+- Epic 11 Story 11.5: Team Persistence Implementation (must complete first)
+- Epic 11 Story 11.7: Event Detector Team Integration (related work)
+
+**Estimated Effort**: 0.5 days (integration work only)
 
 **System Context**: API data hub for Home Assistant automations and external analytics platforms
 

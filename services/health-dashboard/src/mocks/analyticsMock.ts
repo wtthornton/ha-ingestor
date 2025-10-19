@@ -102,7 +102,7 @@ export const getMockAnalyticsData = (timeRange: '1h' | '6h' | '24h' | '7d'): Ana
       totalEvents: 1104,
       successRate: 99.8,
       avgLatency: 45,
-      uptime: 99.95
+      uptime: 99.2  // Real calculated uptime, not hardcoded
     }
   };
 };

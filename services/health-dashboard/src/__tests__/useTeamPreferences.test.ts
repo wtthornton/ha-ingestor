@@ -36,7 +36,13 @@ describe('useTeamPreferences', () => {
     localStorageMock.clear();
   });
 
-  it('should initialize with empty preferences', () => {
+  afterEach(() => {
+    // ✅ Context7 Best Practice: Cleanup after each test
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('initializes with empty team preferences', () => {
     const { result } = renderHook(() => useTeamPreferences());
 
     expect(result.current.nflTeams).toEqual([]);
@@ -44,7 +50,7 @@ describe('useTeamPreferences', () => {
     expect(result.current.setupCompleted).toBe(false);
   });
 
-  it('should add NFL team', async () => {
+  it('adds NFL team to preferences when addTeam called', async () => {
     const { result } = renderHook(() => useTeamPreferences());
 
     act(() => {
@@ -55,7 +61,7 @@ describe('useTeamPreferences', () => {
     expect(result.current.nhlTeams).toEqual([]);
   });
 
-  it('should add NHL team', async () => {
+  it('adds NHL team to preferences when addTeam called', async () => {
     const { result } = renderHook(() => useTeamPreferences());
 
     act(() => {
@@ -66,7 +72,7 @@ describe('useTeamPreferences', () => {
     expect(result.current.nflTeams).toEqual([]);
   });
 
-  it('should remove team', async () => {
+  it('removes team from preferences when removeTeam called', async () => {
     const { result } = renderHook(() => useTeamPreferences());
 
     act(() => {

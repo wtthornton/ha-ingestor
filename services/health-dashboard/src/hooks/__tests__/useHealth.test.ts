@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useHealth } from '../useHealth';
 import { server } from '../../tests/mocks/server';
@@ -9,7 +9,14 @@ describe('useHealth Hook', () => {
     vi.useFakeTimers();
   });
 
-  it('should fetch health data successfully', async () => {
+  afterEach(() => {
+    // ✅ Context7 Best Practice: Cleanup after each test
+    vi.useRealTimers();
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('displays health status when health data loads', async () => {
     const { result } = renderHook(() => useHealth(1000));
     
     // Initially loading
@@ -29,7 +36,7 @@ describe('useHealth Hook', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle API error gracefully', async () => {
+  it('shows error message when health API returns 500 error', async () => {
     // Mock API to return 500 error
     server.use(
       http.get('/api/health', () => {
@@ -50,7 +57,7 @@ describe('useHealth Hook', () => {
     expect(result.current.error).toContain('500');
   });
 
-  it('should handle network error', async () => {
+  it('shows error message when network connection fails', async () => {
     // Mock network failure
     server.use(
       http.get('/api/health', () => {
@@ -70,7 +77,7 @@ describe('useHealth Hook', () => {
     expect(result.current.error).toBeDefined();
   });
 
-  it('should refresh health data on interval', async () => {
+  it('refreshes health data automatically at polling interval', async () => {
     const { result } = renderHook(() => useHealth(1000));
     
     // Wait for initial fetch

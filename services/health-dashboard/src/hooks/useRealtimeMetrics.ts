@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 
 export interface RealTimeMetrics {
-  events_per_second: number;
+  events_per_hour: number;
   api_calls_active: number;
   data_sources_active: string[];
   api_metrics: ApiMetric[];
@@ -26,7 +26,6 @@ export interface RealTimeMetrics {
 
 export interface ApiMetric {
   service: string;
-  events_per_second: number;
   events_per_hour: number;
   uptime_seconds: number;
   status: 'active' | 'inactive' | 'error' | 'timeout' | 'not_configured';

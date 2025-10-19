@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 
 from shared.influxdb_query_client import InfluxDBQueryClient as AdminAPIInfluxDBClient
+from .metrics_tracker import get_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -409,13 +410,17 @@ class StatsEndpoints:
                 "alerts": [{"service": service_name, "level": "error", "message": str(e)}]
             }
     
-    def _transform_websocket_health_to_stats(self, health_data: Dict[str, Any], period: str) -> Dict[str, Any]:
+    async def _transform_websocket_health_to_stats(self, health_data: Dict[str, Any], period: str) -> Dict[str, Any]:
         """Transform websocket-ingestion health data to stats format"""
         try:
+            # Get response time from tracker
+            tracker = get_tracker()
+            websocket_stats = await tracker.get_stats("websocket-ingestion")
+            
             metrics = {
                 "events_per_minute": 0,
                 "error_rate": 0,
-                "response_time_ms": 0,
+                "response_time_ms": round(websocket_stats.get('avg', 0), 2),
                 "connection_attempts": 0,
                 "total_events_received": 0
             }
@@ -462,13 +467,17 @@ class StatsEndpoints:
                 "timestamp": health_data.get("timestamp", "")
             }
     
-    def _transform_enrichment_stats_to_stats(self, stats_data: Dict[str, Any], period: str) -> Dict[str, Any]:
+    async def _transform_enrichment_stats_to_stats(self, stats_data: Dict[str, Any], period: str) -> Dict[str, Any]:
         """Transform enrichment-pipeline stats data to admin-api stats format"""
         try:
+            # Get response time from tracker
+            tracker = get_tracker()
+            enrichment_stats = await tracker.get_stats("enrichment-pipeline")
+            
             metrics = {
                 "events_per_minute": 0,
                 "error_rate": 0,
-                "response_time_ms": 0,
+                "response_time_ms": round(enrichment_stats.get('avg', 0), 2),
                 "connection_attempts": 0,
                 "total_events_received": 0
             }
@@ -828,7 +837,7 @@ class StatsEndpoints:
                             "events_per_hour": events_per_hour,
                             "uptime_seconds": uptime_seconds,
                             "status": "active",
-                            "response_time_ms": 0,
+                            "response_time_ms": (datetime.now() - start_time).total_seconds() * 1000,
                             "last_success": datetime.now().isoformat(),
                             "error_message": None,
                             "is_fallback": False
@@ -1002,7 +1011,7 @@ class StatsEndpoints:
                             "events_per_hour": events_per_hour,
                             "uptime_seconds": uptime_seconds,
                             "status": "active",
-                            "response_time_ms": 0,  # Could be calculated if needed
+                            "response_time_ms": (datetime.now() - start_time).total_seconds() * 1000,  # Could be calculated if needed
                             "last_success": datetime.now().isoformat()
                         }
                     else:

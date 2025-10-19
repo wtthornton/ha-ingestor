@@ -28,6 +28,7 @@ from src.stats_calculator import calculate_team_record
 from src.webhook_manager import WebhookManager
 from src.event_detector import GameEventDetector
 from src.ha_endpoints import router as ha_router
+from src.database import team_db
 
 # Load environment variables
 load_dotenv()
@@ -74,6 +75,10 @@ async def lifespan(app: FastAPI):
     # Initialize webhook manager (Story 22.3: SQLite storage)
     webhook_manager = WebhookManager(db_path="data/webhooks.db")
     await webhook_manager.startup()
+    
+    # Initialize team database (Story 11.5: Team Persistence)
+    await team_db.init_db()
+    logger.info("Team database initialized")
     
     # Start event detector (Story 12.3)
     event_detector = GameEventDetector(
@@ -259,27 +264,29 @@ async def get_available_teams(
 
 @app.get("/api/v1/user/teams", tags=["User Preferences"])
 async def get_user_selected_teams(user_id: str = Query("default")):
-    """Get user's selected teams from preferences"""
-    # In production, fetch from database
-    # For now, return from environment or default empty
-    selected = os.getenv('SELECTED_TEAMS', '').split(',')
-    selected = [t.strip().lower() for t in selected if t.strip()]
+    """Get user's selected teams from database (Story 11.5: Team Persistence)"""
+    # Get teams from database
+    teams_data = await team_db.get_user_teams(user_id)
     
-    # Split into NFL/NHL (basic logic, can be improved)
-    nfl_teams = [t for t in selected if t in ['sf', 'dal', 'gb', 'ne', 'kc']]  # Example
-    nhl_teams = [t for t in selected if t in ['bos', 'wsh', 'pit', 'chi']]  # Example
-    
-    return UserTeams(
-        user_id=user_id,
-        nfl_teams=nfl_teams,
-        nhl_teams=nhl_teams
-    )
+    if teams_data:
+        return UserTeams(
+            user_id=user_id,
+            nfl_teams=teams_data["nfl_teams"],
+            nhl_teams=teams_data["nhl_teams"]
+        )
+    else:
+        # Return empty teams if no data found
+        return UserTeams(
+            user_id=user_id,
+            nfl_teams=[],
+            nhl_teams=[]
+        )
 
 
 @app.post("/api/v1/user/teams", tags=["User Preferences"])
 async def save_user_selected_teams(teams: UserTeams):
     """
-    Save user's selected teams
+    Save user's selected teams to database (Story 11.5: Team Persistence)
     
     Body example:
     {
@@ -287,9 +294,15 @@ async def save_user_selected_teams(teams: UserTeams):
         "nhl_teams": ["bos", "wsh"]
     }
     """
-    # In production, save to database
-    # For now, log and return success
-    logger.info(f"User {teams.user_id} selected teams: NFL={teams.nfl_teams}, NHL={teams.nhl_teams}")
+    # Save to database
+    success = await team_db.save_user_teams(
+        teams.user_id, 
+        teams.nfl_teams, 
+        teams.nhl_teams
+    )
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save team preferences")
     
     # Calculate estimated API usage
     total_teams = len(teams.nfl_teams) + len(teams.nhl_teams)

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useStatistics } from '../useStatistics';
 import { server } from '../../tests/mocks/server';
@@ -9,7 +9,14 @@ describe('useStatistics Hook', () => {
     vi.useFakeTimers();
   });
 
-  it('should fetch statistics data successfully', async () => {
+  afterEach(() => {
+    // ✅ Context7 Best Practice: Cleanup after each test
+    vi.useRealTimers();
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('displays statistics data when API responds successfully', async () => {
     const { result } = renderHook(() => useStatistics('1h', 1000));
     
     // Initially loading
@@ -29,7 +36,7 @@ describe('useStatistics Hook', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle API error gracefully', async () => {
+  it('shows error message when statistics API returns error', async () => {
     // Mock API to return 500 error
     server.use(
       http.get('/api/stats', () => {
@@ -50,7 +57,7 @@ describe('useStatistics Hook', () => {
     expect(result.current.error).toContain('500');
   });
 
-  it('should use correct period parameter', async () => {
+  it('passes correct period parameter to API request', async () => {
     let requestedPeriod = '';
     
     server.use(
