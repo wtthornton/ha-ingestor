@@ -108,11 +108,12 @@ class WeatherOpportunityDetector:
             logger.info(f"   🧊 Pre-cooling: {len(cooling_opps)} opportunities")
             
             # Always create at least one generic weather opportunity if no specific ones found
+            # This ensures weather-aware automations are suggested even with minimal data
             if not opportunities and (weather_data or climate_devices):
                 generic_opp = {
                     'synergy_id': str(uuid.uuid4()),
                     'synergy_type': 'weather_context',
-                    'devices': [d.get('entity_id', 'unknown') for d in climate_devices[:2]] if climate_devices else ['weather'],
+                    'devices': [d.get('entity_id', 'unknown') for d in climate_devices[:2]] if climate_devices else ['weather.forecast_home'],
                     'relationship': 'weather_aware_automation',
                     'area': 'home',
                     'impact_score': 0.6,
@@ -138,7 +139,7 @@ class WeatherOpportunityDetector:
     
     async def _get_weather_data(self, days: int) -> List[Dict]:
         """
-        Get weather data from InfluxDB.
+        Get weather data from normalized Home Assistant events in InfluxDB.
         
         Args:
             days: Days of history to query
@@ -150,38 +151,51 @@ class WeatherOpportunityDetector:
             return self._weather_cache
         
         try:
-            # Query weather data from InfluxDB - try multiple measurement names
-            # Weather data might be stored as "weather", "weather_data", or "openweathermap"
+            # Query normalized HA weather events from InfluxDB
+            # Weather data is stored as HA events with domain="weather" and domain="sensor" for weather sensors
             query = f'''
+            import "strings"
+            
             from(bucket: "home_assistant_events")
               |> range(start: -{days}d)
-              |> filter(fn: (r) => r["_measurement"] == "weather" or r["_measurement"] == "weather_data" or r["_measurement"] == "openweathermap")
-              |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "forecast_low" or r["_field"] == "forecast_high" or r["_field"] == "temp")
+              |> filter(fn: (r) => r["domain"] == "weather" or 
+                        (r["domain"] == "sensor" and (
+                          strings.containsStr(v: r["entity_id"], substr: "weather") or
+                          strings.containsStr(v: r["entity_id"], substr: "temperature") or
+                          strings.containsStr(v: r["entity_id"], substr: "humidity") or
+                          strings.containsStr(v: r["entity_id"], substr: "pressure") or
+                          strings.containsStr(v: r["entity_id"], substr: "wind") or
+                          strings.containsStr(v: r["entity_id"], substr: "sun")
+                        )))
+              |> filter(fn: (r) => r["_field"] == "state")
               |> sort(columns: ["_time"])
+              |> limit(n: 500)
             '''
             
             result = self.influxdb.query_api.query(query, org=self.influxdb.org)
             
-            # Parse weather records
+            # Parse weather records from normalized HA events
             weather_records = []
-            logger.info(f"   → Weather query returned {len(result)} tables")
+            logger.info(f"🌤️  Weather query returned {len(result)} tables")
+            
             for table in result:
-                logger.info(f"   → Table has {len(table.records)} records")
                 for record in table.records:
                     weather_records.append({
                         'time': record.get_time(),
-                        'field': record.values.get('_field'),
+                        'entity_id': record.values.get('entity_id'),
+                        'domain': record.values.get('domain'),
+                        'field': record.values.get('_field', 'state'),
                         'value': record.get_value(),
-                        'location': record.values.get('location', 'home')
+                        'location': record.values.get('area_id', 'home')
                     })
             
             self._weather_cache = weather_records
-            logger.debug(f"Retrieved {len(weather_records)} weather records from InfluxDB")
+            logger.info(f"📊 Retrieved {len(weather_records)} normalized weather events from HA")
             
             return weather_records
             
         except Exception as e:
-            logger.warning(f"Failed to get weather data: {e}")
+            logger.warning(f"Failed to get weather data from HA events: {e}")
             return []
     
     async def _get_climate_devices(self) -> List[Dict]:

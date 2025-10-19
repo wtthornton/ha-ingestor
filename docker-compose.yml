@@ -705,8 +705,11 @@ services:
       - LOG_FORMAT=json
       - PORT=8015
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/app/logs
       - homeiq_logs:/var/log/ha-ingestor
+    group_add:
+      - "0"  # root group for docker socket access
     networks:
       - homeiq-network
     deploy:

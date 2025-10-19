@@ -297,8 +297,50 @@ Intelligent performance optimization system analyzing Home Assistant environment
 
 ---
 
+## Architecture Enhancement Epics (31)
+
+**Epic 31: Weather API Service Migration** ⏳ **DRAFT** (Brownfield Enhancement)
+Migrate weather data integration from event enrichment pattern to standalone external API service, achieving architectural consistency with all other external data sources (sports, carbon, electricity, air quality). Eliminates coupling between weather API and event processing pipeline, improves performance by 30%, and follows industry best practices for microservices.
+
+**Key Benefits:**
+- ✅ Architectural consistency (all external APIs use same pattern)
+- ✅ 30% faster event processing (remove weather blocking)
+- ✅ 80% fewer weather API calls (better caching)
+- ✅ Independent scaling and failure isolation
+- ⚠️ Trade-off: 5-min time windows for correlation (95% accuracy)
+
+**Stories:** 5 stories (3-4 weeks estimated)
+- 31.1: Weather API Service Foundation ✅ CREATED
+- 31.2: Weather Data Collection & InfluxDB Persistence ✅ CREATED
+- 31.3: Weather API Endpoints & Query Support ✅ CREATED
+- 31.4: Event Pipeline Decoupling ✅ CREATED
+- 31.5: Dashboard & Query Integration ✅ CREATED
+
+**Research:** `implementation/analysis/WEATHER_ARCHITECTURE_ANALYSIS.md` (1,200 lines)
+**Context7 Validated:** FastAPI patterns, InfluxDB3 client, caching strategies
+
+---
+
+## Summary
+
+- **Total Epics**: 33 (26 infrastructure + 4 AI enhancement + 4 setup service + 1 architecture)
+- **Completed**: 32 (25 infrastructure + 4 AI + 4 setup service) ✅
+- **In Progress**: 0
+- **Draft/Planned**: 1 (Epic 31 - Weather Migration)
+- **Active Services**: 19 total (17 microservices + weather-api planned + InfluxDB infrastructure)
+- **Microservices**: 17 custom services + 1 planned (weather-api on Port 8009)
+- **API Endpoints**: ~84 planned (22 admin-api + 40 data-api + 9 setup-service + 8 automation-miner + 5 weather-api)
+- **Dashboard Tabs**: 12 (Overview, Services, Dependencies, Devices, Events, Logs, Sports, Data Sources, Energy, Analytics, Alerts, Configuration)
+- **AI UI Tabs**: 5 (Suggestions, Patterns, Synergies, Deployed, Discovery)
+- **E2E Tests**: 43 total (17 health dashboard + 26 AI automation)
+- **AI Suggestion Types**: 6 (time-of-day, co-occurrence, anomaly, feature discovery, device synergy, contextual opportunities)
+- **External Data Services**: 6 operational + 1 planned (carbon, electricity, air quality, calendar, smart meter, weather-api planned)
+- **Setup Service Features**: 4 (health monitoring, setup wizards, performance optimization, continuous monitoring)
+
+---
+
 **Last Updated**: October 19, 2025  
-**Status**: 🎉 **PROJECT 100% COMPLETE** 🎉  
+**Status**: 🎉 **32/33 Epics Complete** 🎉  
 **Latest Completions**: 
 - **Epic 11** - Sports Data Integration (Bug Fixes Complete - 4 stories, 2 hours) ✅
 - **Epic 12** - Sports Data InfluxDB Persistence (Bug Fixes Complete - 4 stories, 2 hours) ✅
@@ -310,6 +352,10 @@ Intelligent performance optimization system analyzing Home Assistant environment
 - ✅ Epic 11 - HA automation endpoints fixed (cache key mismatch)
 - ✅ Epic 12 - Event detection integrated with team database
 
-**Project Completion**: 100% (32/32 epics) 🚀🎉  
-**Next Steps**: Optional enhancements or live testing with next VGK game
+**Latest Epic Created**: 🆕 **Epic 31** - Weather API Service Migration (5 stories, BMAD + Context7 verified)
+
+**Project Completion**: 97% (32/33 epics) 🚀  
+**Next Steps**: 
+- **Optional**: Implement Epic 31 (Weather Migration - 3-4 weeks)
+- **Alternative**: Live testing with current system (100% functional)
 

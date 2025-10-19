@@ -24,9 +24,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN groupadd -g 1001 appgroup && \
-    useradd -r -u 1001 -g appgroup appuser
+# Create non-root user with docker group access
+# Docker group GID is typically 999 or varies by system
+# We'll add appuser to a group that matches docker GID
+RUN groupadd -g 999 docker || true && \
+    groupadd -g 1001 appgroup && \
+    useradd -r -u 1001 -g appgroup -G docker appuser
 
 # Copy Python dependencies from builder stage
 COPY --from=builder /root/.local /home/appuser/.local

@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from aiohttp import web
 import aiofiles
+import docker
+from docker.errors import DockerException
 
 # Add shared directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
@@ -23,36 +25,71 @@ class LogAggregator:
     """Simple log aggregation service for collecting logs from all services"""
     
     def __init__(self):
-        self.log_directory = Path("/var/log/homeiq")
+        # Use app directory for local log storage
+        self.log_directory = Path("/app/logs")
         self.log_directory.mkdir(exist_ok=True)
         self.aggregated_logs = []
         self.max_logs = 10000  # Keep last 10k log entries in memory
         
+        # Initialize Docker client (Context7 recommended pattern for 2025)
+        try:
+            self.docker_client = docker.from_env()
+            self.docker_client.ping()
+            logger.info("✅ Docker client initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Docker client: {e}")
+            logger.debug("Check that /var/run/docker.sock is mounted and accessible")
+            self.docker_client = None
+        
     async def collect_logs(self) -> List[Dict]:
-        """Collect logs from Docker logging directories"""
+        """Collect logs from Docker containers using Docker API"""
         logs = []
         
+        if not self.docker_client:
+            logger.warning("Docker client not available, skipping log collection")
+            return []
+        
         try:
-            # Read from Docker log files (simplified approach)
-            docker_log_dir = Path("/var/lib/docker/containers")
-            if docker_log_dir.exists():
-                for container_dir in docker_log_dir.iterdir():
-                    if container_dir.is_dir():
-                        log_file = container_dir / "container.log"
-                        if log_file.exists():
-                            # Read recent logs (last 100 lines)
-                            async with aiofiles.open(log_file, 'r') as f:
-                                lines = await f.readlines()
-                                recent_lines = lines[-100:] if len(lines) > 100 else lines
+            # Get all containers
+            containers = self.docker_client.containers.list(all=False)
+            
+            for container in containers:
+                try:
+                    # Get container logs (last 100 lines)
+                    container_logs = container.logs(
+                        tail=100,
+                        timestamps=True,
+                        stream=False
+                    ).decode('utf-8', errors='ignore')
+                    
+                    # Parse log lines
+                    for line in container_logs.split('\n'):
+                        if not line.strip():
+                            continue
+                            
+                        try:
+                            # Try to parse as JSON log
+                            log_entry = json.loads(line.strip())
+                            log_entry['container_name'] = container.name
+                            log_entry['container_id'] = container.short_id
+                            logs.append(log_entry)
+                        except json.JSONDecodeError:
+                            # Handle non-JSON logs
+                            # Docker logs format: "timestamp log_message"
+                            parts = line.strip().split(' ', 1)
+                            if len(parts) == 2:
+                                log_entry = {
+                                    'timestamp': parts[0],
+                                    'message': parts[1],
+                                    'container_name': container.name,
+                                    'container_id': container.short_id,
+                                    'level': 'INFO'
+                                }
+                                logs.append(log_entry)
                                 
-                                for line in recent_lines:
-                                    try:
-                                        log_entry = json.loads(line.strip())
-                                        log_entry['source'] = container_dir.name
-                                        logs.append(log_entry)
-                                    except json.JSONDecodeError:
-                                        # Skip non-JSON lines
-                                        continue
+                except Exception as e:
+                    logger.debug(f"Error reading logs from container {container.name}: {e}")
+                    continue
             
             # Store in aggregated logs
             self.aggregated_logs.extend(logs)
@@ -61,7 +98,7 @@ class LogAggregator:
             if len(self.aggregated_logs) > self.max_logs:
                 self.aggregated_logs = self.aggregated_logs[-self.max_logs:]
                 
-            logger.info(f"Collected {len(logs)} log entries")
+            logger.info(f"Collected {len(logs)} log entries from {len(containers)} containers")
             return logs
             
         except Exception as e:

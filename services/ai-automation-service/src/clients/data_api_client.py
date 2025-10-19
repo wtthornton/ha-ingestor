@@ -656,6 +656,37 @@ class DataAPIClient:
             "cached": False
         }
     
+    async def get_weather_entities(self) -> List[Dict[str, Any]]:
+        """
+        Get all weather-related entities from Home Assistant.
+        
+        Returns:
+            List of weather entity dictionaries
+        """
+        try:
+            # Get all entities with weather domain
+            weather_entities = await self.fetch_entities(domain="weather", limit=100)
+            
+            # Also get sensor entities that might be weather-related
+            sensor_entities = await self.fetch_entities(domain="sensor", limit=1000)
+            
+            # Filter sensor entities for weather-related ones
+            weather_sensors = [
+                entity for entity in sensor_entities
+                if any(keyword in entity.get('entity_id', '').lower() 
+                      for keyword in ['weather', 'temperature', 'humidity', 'pressure', 'wind', 'precipitation', 'sun'])
+            ]
+            
+            # Combine weather domain and weather-related sensors
+            all_weather_entities = weather_entities + weather_sensors
+            
+            logger.info(f"Found {len(all_weather_entities)} weather entities")
+            return all_weather_entities
+            
+        except Exception as e:
+            logger.error(f"Failed to get weather entities: {e}")
+            return []
+
     async def close(self):
         """Close HTTP client connection pool"""
         await self.client.aclose()
