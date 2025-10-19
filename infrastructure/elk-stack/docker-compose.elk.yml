@@ -3,13 +3,13 @@ version: '3.8'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: ha-ingestor-elasticsearch
+    container_name: homeiq-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - cluster.name=ha-ingestor-cluster
-      - node.name=ha-ingestor-node
+      - cluster.name=homeiq-cluster
+      - node.name=homeiq-node
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -17,7 +17,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -27,7 +27,7 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.11.0
-    container_name: ha-ingestor-logstash
+    container_name: homeiq-logstash
     environment:
       - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
     ports:
@@ -36,9 +36,9 @@ services:
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
       - ./logstash/config:/usr/share/logstash/config:ro
-      - /var/log/ha-ingestor:/var/log/ha-ingestor:ro
+      - /var/log/homeiq:/var/log/homeiq:ro
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -51,17 +51,17 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: ha-ingestor-kibana
+    container_name: homeiq-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - SERVER_NAME=ha-ingestor-kibana
+      - SERVER_NAME=homeiq-kibana
       - SERVER_PUBLICBASEURL=http://localhost:5601
     ports:
       - "5601:5601"
     volumes:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -74,15 +74,15 @@ services:
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.11.0
-    container_name: ha-ingestor-filebeat
+    container_name: homeiq-filebeat
     user: root
     volumes:
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/log/ha-ingestor:/var/log/ha-ingestor:ro
+      - /var/log/homeiq:/var/log/homeiq:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -93,5 +93,5 @@ volumes:
     driver: local
 
 networks:
-  ha-ingestor-network:
+  homeiq-network:
     driver: bridge

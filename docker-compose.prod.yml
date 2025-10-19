@@ -4,7 +4,7 @@
 services:
   influxdb:
     image: influxdb:2.7
-    container_name: ha-ingestor-influxdb
+    container_name: homeiq-influxdb
     restart: unless-stopped
     ports:
       - "8086:8086"
@@ -22,7 +22,7 @@ services:
       - influxdb_config:/etc/influxdb2
       - influxdb_logs:/var/log/influxdb
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
       interval: 30s
@@ -53,7 +53,7 @@ services:
     build:
       context: ./services/websocket-ingestion
       dockerfile: Dockerfile
-    container_name: ha-ingestor-websocket
+    container_name: homeiq-websocket
     restart: unless-stopped
     ports:
       - "8001:8001"
@@ -76,7 +76,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -109,7 +109,7 @@ services:
     build:
       context: .
       dockerfile: services/enrichment-pipeline/Dockerfile
-    container_name: ha-ingestor-enrichment
+    container_name: homeiq-enrichment
     restart: unless-stopped
     ports:
       - "8002:8002"
@@ -129,7 +129,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 30s
@@ -161,7 +161,7 @@ services:
     build:
       context: ./services/weather-api
       dockerfile: Dockerfile
-    container_name: ha-ingestor-weather
+    container_name: homeiq-weather
     restart: unless-stopped
     environment:
       - WEATHER_API_KEY=${WEATHER_API_KEY}
@@ -177,7 +177,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -209,7 +209,7 @@ services:
     build:
       context: ./services/admin-api
       dockerfile: Dockerfile
-    container_name: ha-ingestor-admin
+    container_name: homeiq-admin
     restart: unless-stopped
     ports:
       - "8003:8004"
@@ -240,7 +240,7 @@ services:
       enrichment-pipeline:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/health"]
       interval: 30s
@@ -272,7 +272,7 @@ services:
     build:
       context: ./services/data-retention
       dockerfile: Dockerfile
-    container_name: ha-ingestor-data-retention
+    container_name: homeiq-data-retention
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -293,7 +293,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -326,7 +326,7 @@ services:
     build:
       context: ./services/health-dashboard
       dockerfile: Dockerfile
-    container_name: ha-ingestor-dashboard
+    container_name: homeiq-dashboard
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -334,7 +334,7 @@ services:
       - VITE_API_BASE_URL=${DASHBOARD_API_BASE_URL:-http://localhost:8003/api/v1}
       - VITE_ENVIRONMENT=${ENVIRONMENT:-production}
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
@@ -387,13 +387,13 @@ volumes:
     driver: local
 
 networks:
-  ha-ingestor-network:
+  homeiq-network:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.0.0/16
     driver_opts:
-      com.docker.network.bridge.name: ha-ingestor-br
+      com.docker.network.bridge.name: homeiq-br
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
       com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"

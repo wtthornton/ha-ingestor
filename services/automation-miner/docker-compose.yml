@@ -24,9 +24,9 @@ services:
       start_period: 10s
     restart: unless-stopped
     networks:
-      - ha-ingestor
+      - homeiq
 
 networks:
-  ha-ingestor:
+  homeiq:
     external: true
 

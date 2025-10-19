@@ -1,9 +1,9 @@
-name: ha-ingestor
+name: homeiq
 
 services:
   influxdb:
     image: influxdb:2.7
-    container_name: ha-ingestor-influxdb
+    container_name: homeiq-influxdb
     restart: unless-stopped
     ports:
       - "8086:8086"
@@ -13,12 +13,12 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-admin123}
       - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: services/websocket-ingestion/Dockerfile
-    container_name: ha-ingestor-websocket
+    container_name: homeiq-websocket
     restart: unless-stopped
     ports:
       - "8001:8001"
@@ -56,7 +56,7 @@ services:
       - HA_WS_URL=${HA_WS_URL:-}
       - HA_TOKEN=${HA_TOKEN:-}
       - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
-      - DATA_API_URL=http://ha-ingestor-data-api:8006
+      - DATA_API_URL=http://homeiq-data-api:8006
       - WEBSOCKET_INGESTION_PORT=8001
       - ENABLE_HOME_ASSISTANT=true
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -84,14 +84,14 @@ services:
         max-file: "3"
         labels: "service=websocket-ingestion,environment=production"
     volumes:
-      - ha_ingestor_logs:/var/log/ha-ingestor
+      - homeiq_logs:/var/log/ha-ingestor
     depends_on:
       enrichment-pipeline:
         condition: service_healthy
       data-api:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -109,7 +109,7 @@ services:
     build:
       context: .
       dockerfile: services/enrichment-pipeline/Dockerfile
-    container_name: ha-ingestor-enrichment
+    container_name: homeiq-enrichment
     restart: unless-stopped
     ports:
       - "8002:8002"
@@ -118,7 +118,7 @@ services:
       - infrastructure/.env.weather
     environment:
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -128,7 +128,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -152,7 +152,7 @@ services:
     build:
       context: .
       dockerfile: services/admin-api/Dockerfile
-    container_name: ha-ingestor-admin
+    container_name: homeiq-admin
     restart: unless-stopped
     ports:
       - "8003:8004"
@@ -173,7 +173,7 @@ services:
       - HA_HTTP_URL=${HA_HTTP_URL:-}
       - HA_TOKEN=${HA_TOKEN:-}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super-secret-jwt-key}
@@ -192,7 +192,7 @@ services:
       data-api:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -216,7 +216,7 @@ services:
     build:
       context: .
       dockerfile: services/data-api/Dockerfile
-    container_name: ha-ingestor-data-api
+    container_name: homeiq-data-api
     restart: unless-stopped
     ports:
       - "8006:8006"
@@ -224,7 +224,7 @@ services:
       - DATA_API_HOST=0.0.0.0
       - DATA_API_PORT=8006
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - DATABASE_URL=sqlite+aiosqlite:///./data/metadata.db
@@ -240,7 +240,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -264,13 +264,13 @@ services:
     build:
       context: .
       dockerfile: services/data-retention/Dockerfile
-    container_name: ha-ingestor-data-retention
+    container_name: homeiq-data-retention
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -285,7 +285,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -311,7 +311,7 @@ services:
     build:
       context: .
       dockerfile: services/carbon-intensity-service/Dockerfile
-    container_name: ha-ingestor-carbon-intensity
+    container_name: homeiq-carbon-intensity
     restart: unless-stopped
     ports:
       - "8010:8010"
@@ -325,7 +325,7 @@ services:
       - GRID_REGION=${GRID_REGION:-CAISO_NORTH}
       # InfluxDB configuration
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - SERVICE_PORT=8010
@@ -334,7 +334,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -358,7 +358,7 @@ services:
     build:
       context: .
       dockerfile: services/electricity-pricing-service/Dockerfile
-    container_name: ha-ingestor-electricity-pricing
+    container_name: homeiq-electricity-pricing
     restart: unless-stopped
     ports:
       - "8011:8011"
@@ -366,7 +366,7 @@ services:
       - PRICING_PROVIDER=${PRICING_PROVIDER:-awattar}
       - PRICING_API_KEY=${PRICING_API_KEY:-}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - SERVICE_PORT=8011
@@ -375,7 +375,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -399,7 +399,7 @@ services:
     build:
       context: .
       dockerfile: services/air-quality-service/Dockerfile
-    container_name: ha-ingestor-air-quality
+    container_name: homeiq-air-quality
     restart: unless-stopped
     ports:
       - "8012:8012"
@@ -408,7 +408,7 @@ services:
       - LATITUDE=${LATITUDE:-36.1699}
       - LONGITUDE=${LONGITUDE:--115.1398}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - SERVICE_PORT=8012
@@ -417,7 +417,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -441,7 +441,7 @@ services:
     build:
       context: .
       dockerfile: services/calendar-service/Dockerfile
-    container_name: ha-ingestor-calendar
+    container_name: homeiq-calendar
     restart: unless-stopped
     ports:
       - "8013:8013"
@@ -453,7 +453,7 @@ services:
       - CALENDAR_FETCH_INTERVAL=${CALENDAR_FETCH_INTERVAL:-900}
       # InfluxDB Configuration
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       # Service Configuration
@@ -463,7 +463,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -487,7 +487,7 @@ services:
     build:
       context: .
       dockerfile: services/smart-meter-service/Dockerfile
-    container_name: ha-ingestor-smart-meter
+    container_name: homeiq-smart-meter
     restart: unless-stopped
     ports:
       - "8014:8014"
@@ -499,7 +499,7 @@ services:
       - METER_API_TOKEN=${METER_API_TOKEN:-}
       - METER_DEVICE_ID=${METER_DEVICE_ID:-}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - SERVICE_PORT=8014
@@ -508,7 +508,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -532,13 +532,13 @@ services:
     build:
       context: .
       dockerfile: services/energy-correlator/Dockerfile
-    container_name: ha-ingestor-energy-correlator
+    container_name: homeiq-energy-correlator
     restart: unless-stopped
     ports:
       - "8017:8017"
     environment:
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - PROCESSING_INTERVAL=${ENERGY_CORRELATION_INTERVAL:-60}
@@ -551,7 +551,7 @@ services:
       smart-meter:
         condition: service_started
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -595,7 +595,7 @@ services:
   #     - NFL_ENABLED=${NFL_ENABLED:-true}
   #     - NHL_ENABLED=${NHL_ENABLED:-true}
   #     - INFLUXDB_URL=http://influxdb:8086
-  #     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+  #     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
   #     - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
   #     - INFLUXDB_BUCKET=sports_data
   #     - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -603,7 +603,7 @@ services:
   #     influxdb:
   #       condition: service_healthy
   #   networks:
-  #     - ha-ingestor-network
+  #     - homeiq-network
   #   deploy:
   #     resources:
   #       limits:
@@ -621,7 +621,7 @@ services:
     build:
       context: ./services/sports-data
       dockerfile: Dockerfile
-    container_name: ha-ingestor-sports-data
+    container_name: homeiq-sports-data
     restart: unless-stopped
     ports:
       - "8005:8005"
@@ -633,7 +633,7 @@ services:
     volumes:
       - ./data:/app/data
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -657,12 +657,12 @@ services:
     build:
       context: ./services/health-dashboard
       dockerfile: Dockerfile
-    container_name: ha-ingestor-dashboard
+    container_name: homeiq-dashboard
     restart: unless-stopped
     ports:
       - "3000:80"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8003/api/v1
+      - VITE_API_BASE_URL=http://localhost:8003
       - VITE_WS_URL=ws://localhost:8001/ws
       - VITE_ENVIRONMENT=production
     depends_on:
@@ -671,7 +671,7 @@ services:
       sports-data:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -695,7 +695,7 @@ services:
     build:
       context: .
       dockerfile: services/log-aggregator/Dockerfile
-    container_name: ha-ingestor-log-aggregator
+    container_name: homeiq-log-aggregator
     restart: unless-stopped
     ports:
       - "8015:8015"
@@ -706,9 +706,9 @@ services:
       - PORT=8015
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ha_ingestor_logs:/var/log/ha-ingestor
+      - homeiq_logs:/var/log/ha-ingestor
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -747,7 +747,7 @@ services:
       - ai_automation_data:/app/data
       - ai_automation_models:/app/models  # Phase 1: OpenVINO model cache
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -779,7 +779,7 @@ services:
       ai-automation-service:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -803,7 +803,7 @@ services:
     build:
       context: .
       dockerfile: services/weather-api/Dockerfile
-    container_name: ha-ingestor-weather-api
+    container_name: homeiq-weather-api
     restart: unless-stopped
     ports:
       - "8007:8001"
@@ -826,7 +826,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -860,7 +860,7 @@ services:
     volumes:
       - automation_miner_data:/app/data
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8019/health"]
       interval: 30s
@@ -880,16 +880,68 @@ services:
         max-file: "3"
         labels: "service=automation-miner,environment=production,epic=ai-4"
 
+  ha-setup-service:
+    build:
+      context: .
+      dockerfile: services/ha-setup-service/Dockerfile
+    container_name: homeiq-setup-service
+    restart: unless-stopped
+    ports:
+      - "8020:8020"
+    env_file:
+      - infrastructure/.env.websocket
+    environment:
+      - SERVICE_NAME=ha-setup-service
+      - SERVICE_PORT=8020
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - HA_URL=${HA_HTTP_URL:-http://192.168.1.86:8123}
+      - DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
+      - DATA_API_URL=http://homeiq-data-api:8006
+      - ADMIN_API_URL=http://homeiq-admin-api:8003
+      - HEALTH_CHECK_INTERVAL=60
+      - INTEGRATION_CHECK_INTERVAL=300
+      - ENABLE_PERFORMANCE_MONITORING=true
+      - PERFORMANCE_SAMPLE_INTERVAL=30
+    volumes:
+      - ha_setup_data:/app/data
+      - homeiq_logs:/var/log/ha-ingestor
+    depends_on:
+      data-api:
+        condition: service_healthy
+      admin-api:
+        condition: service_healthy
+    networks:
+      - homeiq-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=ha-setup-service,environment=production"
+
 volumes:
   influxdb_data:
   influxdb_config:
   data_retention_backups:
-  ha_ingestor_logs:
+  homeiq_logs:
   sqlite-data:
   ai_automation_data:
+  ha_setup_data:
   ai_automation_models:  # Phase 1: Persistent model cache (OpenVINO INT8 models)
   automation_miner_data:  # Epic AI-4: Community automation corpus
 
 networks:
-  ha-ingestor-network:
+  homeiq-network:
     driver: bridge

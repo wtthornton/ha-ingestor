@@ -5,7 +5,7 @@
     build:
       context: .
       dockerfile: services/ha-setup-service/Dockerfile
-    container_name: ha-ingestor-setup-service
+    container_name: homeiq-setup-service
     restart: unless-stopped
     ports:
       - "8020:8020"  # Changed from 8010 (used by carbon-intensity)
@@ -18,22 +18,22 @@
       - HA_URL=${HA_HTTP_URL:-http://192.168.1.86:8123}
       # HA_TOKEN loaded from infrastructure/.env.websocket
       - DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
-      - DATA_API_URL=http://ha-ingestor-data-api:8006
-      - ADMIN_API_URL=http://ha-ingestor-admin-api:8003
+      - DATA_API_URL=http://homeiq-data-api:8006
+      - ADMIN_API_URL=http://homeiq-admin-api:8003
       - HEALTH_CHECK_INTERVAL=60
       - INTEGRATION_CHECK_INTERVAL=300
       - ENABLE_PERFORMANCE_MONITORING=true
       - PERFORMANCE_SAMPLE_INTERVAL=30
     volumes:
       - ha_setup_data:/app/data
-      - ha_ingestor_logs:/var/log/ha-ingestor
+      - ha_ingestor_logs:/var/log/homeiq
     depends_on:
       data-api:
         condition: service_healthy
       admin-api:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:

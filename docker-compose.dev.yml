@@ -3,7 +3,7 @@ version: '3.8'
 services:
   influxdb:
     image: influxdb:2.7
-    container_name: ha-ingestor-influxdb-dev
+    container_name: homeiq-influxdb-dev
     restart: unless-stopped
     ports:
       - "8086:8086"
@@ -11,15 +11,15 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-admin123}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-homeiq}
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
       - TZ=America/Los_Angeles
     volumes:
       - influxdb_data_dev:/var/lib/influxdb2
       - influxdb_config_dev:/etc/influxdb2
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
       interval: 30s
@@ -31,7 +31,7 @@ services:
     build:
       context: ./services/websocket-ingestion
       dockerfile: Dockerfile.dev
-    container_name: ha-ingestor-websocket-dev
+    container_name: homeiq-websocket-dev
     restart: unless-stopped
     command: ["python", "src/websocket_fallback_enhanced.py"]
     environment:
@@ -40,8 +40,8 @@ services:
       - NABU_CASA_URL=https://lwzisze94hrpqde9typkwgu5pptxdkoh.ui.nabu.casa
       - NABU_CASA_TOKEN=${NABU_CASA_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=DEBUG
       - TZ=America/Los_Angeles
@@ -63,7 +63,7 @@ services:
       ha-simulator:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -75,14 +75,14 @@ services:
     build:
       context: .
       dockerfile: services/enrichment-pipeline/Dockerfile.dev
-    container_name: ha-ingestor-enrichment-dev
+    container_name: homeiq-enrichment-dev
     restart: unless-stopped
     ports:
       - "8002:8002"
     environment:
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=DEBUG
     volumes:
@@ -93,7 +93,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 30s
@@ -105,14 +105,14 @@ services:
     build:
       context: ./services/weather-api
       dockerfile: Dockerfile.dev
-    container_name: ha-ingestor-weather-dev
+    container_name: homeiq-weather-dev
     restart: unless-stopped
     environment:
       - WEATHER_API_KEY=${WEATHER_API_KEY}
       - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=DEBUG
     volumes:
@@ -123,7 +123,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -135,7 +135,7 @@ services:
     build:
       context: ./services/admin-api
       dockerfile: Dockerfile.dev
-    container_name: ha-ingestor-admin-dev
+    container_name: homeiq-admin-dev
     restart: unless-stopped
     ports:
       - "8003:8004"
@@ -146,8 +146,8 @@ services:
       - WEBSOCKET_INGESTION_URL=http://websocket-ingestion:8000
       - ENRICHMENT_PIPELINE_URL=http://enrichment-pipeline:8002
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - TZ=America/Los_Angeles
     command: ["python", "src/simple_main.py"]
@@ -162,7 +162,7 @@ services:
       enrichment-pipeline:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/health"]
       interval: 30s
@@ -174,14 +174,14 @@ services:
     build:
       context: ./services/data-retention
       dockerfile: Dockerfile.dev
-    container_name: ha-ingestor-data-retention-dev
+    container_name: homeiq-data-retention-dev
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
       - LOG_LEVEL=DEBUG
       - CLEANUP_INTERVAL_HOURS=${CLEANUP_INTERVAL_HOURS:-24}
@@ -198,7 +198,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -210,7 +210,7 @@ services:
     build:
       context: ./services/health-dashboard
       dockerfile: Dockerfile.dev
-    container_name: ha-ingestor-dashboard-dev
+    container_name: homeiq-dashboard-dev
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -223,7 +223,7 @@ services:
       influxdb:
         condition: service_healthy
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -235,7 +235,7 @@ services:
     build:
       context: ./services/ha-simulator
       dockerfile: Dockerfile
-    container_name: ha-ingestor-simulator-dev
+    container_name: homeiq-simulator-dev
     restart: unless-stopped
     ports:
       - "8123:8123"
@@ -250,7 +250,7 @@ services:
       - ./services/ha-simulator/data:/app/data
       - ./ha_events.log:/app/data/ha_events.log:ro
     networks:
-      - ha-ingestor-network-dev
+      - homeiq-network-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/health"]
       interval: 30s
@@ -264,5 +264,5 @@ volumes:
   data_retention_backups_dev:
 
 networks:
-  ha-ingestor-network-dev:
+  homeiq-network-dev:
     driver: bridge
