@@ -362,7 +362,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
               textShadow: darkMode ? '0 0 4px rgba(0,0,0,0.8)' : '0 0 4px rgba(255,255,255,0.8)'
             }}
           >
-            {flow.throughput.toFixed(1)}/s
+            {(flow.throughput || 0).toFixed(1)}/s
           </text>
         )}
       </g>
@@ -481,7 +481,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                    {realTimeData.eventsPerSecond.toFixed(1)}
+                    {(realTimeData.eventsPerSecond || 0).toFixed(1)}
                   </div>
                   <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     events/sec
@@ -542,8 +542,8 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
                         {realTimeData.apiMetrics.map((metric, index) => (
                           <tr key={index} className={`border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                             <td className="py-1 font-mono">{metric.service}</td>
-                            <td className="text-right py-1">{metric.events_per_second.toFixed(2)}</td>
-                            <td className="text-right py-1">{metric.events_per_hour.toFixed(0)}</td>
+                            <td className="text-right py-1">{(metric.events_per_second || 0).toFixed(2)}</td>
+                            <td className="text-right py-1">{(metric.events_per_hour || 0).toFixed(0)}</td>
                             <td className="text-right py-1">{formatUptime(metric.uptime_seconds)}</td>
                             <td className="text-center py-1">
                               <span className={`px-2 py-1 rounded text-xs ${
