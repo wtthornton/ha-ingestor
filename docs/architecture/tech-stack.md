@@ -136,5 +136,4 @@ All versions are pinned to ensure reproducible builds and consistent behavior ac
 - **State Management**: Consider Redux Toolkit if state complexity grows
 - **Database**: Current hybrid architecture (InfluxDB + SQLite) excellent for current scale
 - **PostgreSQL**: Consider if need multi-server writes or >10k devices
-- **Monitoring**: May add Prometheus/Grafana for advanced monitoring in future
 - **Caching**: Redis could be added for API response caching if needed

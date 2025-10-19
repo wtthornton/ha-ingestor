@@ -21,7 +21,7 @@ interface AnimatedDependencyGraphProps {
 }
 
 interface RealTimeMetrics {
-  eventsPerSecond: number;
+  eventsPerHour: number;
   apiCallsActive: number;
   dataSourcesActive: string[];
   apiMetrics: ApiMetric[];
@@ -39,7 +39,6 @@ interface RealTimeMetrics {
 
 interface ApiMetric {
   service: string;
-  events_per_second: number;
   events_per_hour: number;
   uptime_seconds: number;
   status: 'active' | 'inactive' | 'error' | 'timeout' | 'not_configured';
@@ -101,6 +100,25 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
     }
   };
 
+  // Helper function to get service category color
+  const getServiceIcon = (serviceName: string): string => {
+    if (serviceName.includes('admin') || serviceName.includes('data-api')) {
+      return 'bg-blue-500'; // Core services
+    } else if (serviceName.includes('websocket') || serviceName.includes('enrichment')) {
+      return 'bg-green-500'; // Ingestion services
+    } else if (serviceName.includes('weather') || serviceName.includes('sports') || serviceName.includes('air-quality')) {
+      return 'bg-purple-500'; // External APIs
+    } else if (serviceName.includes('carbon') || serviceName.includes('electricity') || serviceName.includes('energy')) {
+      return 'bg-orange-500'; // Energy services
+    } else if (serviceName.includes('calendar') || serviceName.includes('smart-meter')) {
+      return 'bg-indigo-500'; // Integration services
+    } else if (serviceName.includes('retention') || serviceName.includes('log-aggregator')) {
+      return 'bg-gray-500'; // Storage/utility services
+    } else {
+      return 'bg-gray-400'; // Default
+    }
+  };
+
   // Define service nodes with optimized spacing to prevent line crossings
   const nodes: ServiceNode[] = [
     // Layer 1: External Sources (Spread horizontally across top)
@@ -138,7 +156,7 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   const dataFlows: DataFlowPath[] = [
     // ===== LEFT SIDE: PRIMARY DATA FLOWS (Non-AI) =====
     // Primary HA Event Flow (Always Active)
-    { id: 'ha-ws', from: 'home-assistant', to: 'websocket-ingestion', type: 'websocket', active: true, throughput: realTimeData?.eventsPerSecond || 0, color: '#3B82F6' },
+    { id: 'ha-ws', from: 'home-assistant', to: 'websocket-ingestion', type: 'websocket', active: true, throughput: realTimeData?.eventsPerHour || 0, color: '#3B82F6' },
     { id: 'ws-direct-influx', from: 'websocket-ingestion', to: 'influxdb', type: 'storage', active: true, color: '#10B981' },
     
     // Enhancement Path (Optional)
@@ -466,56 +484,56 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
       <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-3`}>
-              <span className="animate-pulse">🌊</span>
-              Complete Architecture Flow
+            <h2 className={`text-xl font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-3`}>
+              <span className="text-lg">🏗️</span>
+              Architecture Overview
             </h2>
-            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              AI Automation • Hybrid Database • Pattern Detection • Click nodes for details
+            <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Real-time data flow from Home Assistant through processing to storage
             </p>
           </div>
           
           {/* Clean Live Metrics */}
           {realTimeData && (
-            <div className={`px-6 py-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-              <div className="flex items-center gap-4">
+            <div className={`px-6 py-4 rounded-lg border ${darkMode ? 'bg-gray-750 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                    {(realTimeData.eventsPerSecond || 0).toFixed(1)}
+                  <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-green-300' : 'text-green-600'}`}>
+                    {(realTimeData.eventsPerHour || 0).toFixed(0)}
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    events/sec
+                  <div className={`text-xs font-medium tracking-wide uppercase ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    events/hour
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>
                     {realTimeData.apiCallsActive}
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className={`text-xs font-medium tracking-wide uppercase ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     active APIs
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
                     {realTimeData.inactiveApis}
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className={`text-xs font-medium tracking-wide uppercase ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     inactive APIs
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                  <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-orange-300' : 'text-orange-600'}`}>
                     {realTimeData.errorApis}
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className={`text-xs font-medium tracking-wide uppercase ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     error APIs
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                  <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-purple-300' : 'text-purple-600'}`}>
                     {realTimeData.healthSummary.health_percentage}%
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className={`text-xs font-medium tracking-wide uppercase ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     health score
                   </div>
                 </div>
@@ -524,39 +542,48 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
               {/* Per-API Metrics Table */}
               {realTimeData.apiMetrics && realTimeData.apiMetrics.length > 0 && (
                 <div className="mt-4">
-                  <h4 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <h4 className={`text-sm font-medium mb-3 tracking-wide ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                     Per-API Metrics
                   </h4>
                   <div className="overflow-x-auto">
                     <table className={`w-full text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       <thead>
-                        <tr className={`border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-                          <th className="text-left py-1">Service</th>
-                          <th className="text-right py-1">Events/sec</th>
-                          <th className="text-right py-1">Events/hour</th>
-                          <th className="text-right py-1">Uptime</th>
-                          <th className="text-center py-1">Status</th>
+                        <tr className={`border-b ${darkMode ? 'border-gray-600 bg-gray-750' : 'border-gray-200 bg-gray-50'}`}>
+                          <th className="text-left py-2 px-1 font-medium text-xs tracking-wide">Service</th>
+                          <th className="text-right py-2 px-1 font-medium text-xs tracking-wide">Events/hour</th>
+                          <th className="text-right py-2 px-1 font-medium text-xs tracking-wide">Uptime</th>
+                          <th className="text-center py-2 px-1 font-medium text-xs tracking-wide">Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {realTimeData.apiMetrics.map((metric, index) => (
-                          <tr key={index} className={`border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-                            <td className="py-1 font-mono">{metric.service}</td>
-                            <td className="text-right py-1">{(metric.events_per_second || 0).toFixed(2)}</td>
-                            <td className="text-right py-1">{(metric.events_per_hour || 0).toFixed(0)}</td>
-                            <td className="text-right py-1">{formatUptime(metric.uptime_seconds)}</td>
-                            <td className="text-center py-1">
-                              <span className={`px-2 py-1 rounded text-xs ${
+                          <tr key={index} className={`border-b hover:${darkMode ? 'bg-gray-750' : 'bg-gray-50'} transition-colors ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                            <td className="py-2 px-1 font-mono text-xs">
+                              <span className="inline-flex items-center gap-2">
+                                <span className={`w-1.5 h-1.5 rounded-full ${getServiceIcon(metric.service)}`}></span>
+                                {metric.service}
+                              </span>
+                            </td>
+                            <td className="text-right py-2 px-1 text-xs font-mono">{(metric.events_per_hour || 0).toFixed(0)}</td>
+                            <td className="text-right py-2 px-1 text-xs font-mono text-gray-500">{formatUptime(metric.uptime_seconds)}</td>
+                            <td className="text-center py-2 px-1">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                 metric.status === 'active' 
-                                  ? (darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800')
+                                  ? (darkMode ? 'bg-green-900/30 text-green-300 border border-green-700/50' : 'bg-green-50 text-green-700 border border-green-200')
                                   : metric.status === 'inactive'
-                                  ? (darkMode ? 'bg-yellow-800 text-yellow-200' : 'bg-yellow-100 text-yellow-800')
+                                  ? (darkMode ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
                                   : metric.status === 'timeout'
-                                  ? (darkMode ? 'bg-orange-800 text-orange-200' : 'bg-orange-100 text-orange-800')
+                                  ? (darkMode ? 'bg-orange-900/30 text-orange-300 border border-orange-700/50' : 'bg-orange-50 text-orange-700 border border-orange-200')
                                   : metric.status === 'not_configured'
-                                  ? (darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800')
-                                  : (darkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800')
+                                  ? (darkMode ? 'bg-gray-900/30 text-gray-300 border border-gray-700/50' : 'bg-gray-50 text-gray-700 border border-gray-200')
+                                  : (darkMode ? 'bg-red-900/30 text-red-300 border border-red-700/50' : 'bg-red-50 text-red-700 border border-red-200')
                               }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                  metric.status === 'active' ? 'bg-green-400' : 
+                                  metric.status === 'inactive' ? 'bg-yellow-400' :
+                                  metric.status === 'timeout' ? 'bg-orange-400' :
+                                  metric.status === 'not_configured' ? 'bg-gray-400' : 'bg-red-400'
+                                }`}></span>
                                 {metric.status}
                               </span>
                               {metric.error_message && (

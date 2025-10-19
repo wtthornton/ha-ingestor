@@ -243,6 +243,71 @@ class DailyAnalysisScheduler:
                 job_result['patterns_stored'] = 0
             
             # ================================================================
+            # Phase 3b: Community Pattern Enhancement (NEW - Epic AI-4, Story AI4.2)
+            # ================================================================
+            community_enhancements = []
+            if settings.enable_pattern_enhancement and all_patterns:
+                logger.info("🌐 Phase 3b/7: Community Pattern Enhancement (Epic AI-4)...")
+                
+                try:
+                    from ..miner import MinerClient, EnhancementExtractor
+                    
+                    # Initialize Miner client
+                    miner_client = MinerClient(
+                        base_url=settings.miner_base_url,
+                        timeout=settings.miner_query_timeout_ms / 1000.0,
+                        cache_ttl_days=settings.miner_cache_ttl_days
+                    )
+                    
+                    # Extract device types from patterns
+                    pattern_devices = set()
+                    for pattern in all_patterns:
+                        if 'devices' in pattern:
+                            pattern_devices.update(pattern['devices'])
+                    
+                    # Query Miner for similar community automations
+                    logger.info(f"  → Querying Miner for {len(pattern_devices)} device types...")
+                    
+                    community_automations = []
+                    for device in list(pattern_devices)[:5]:  # Top 5 devices to avoid too many queries
+                        results = await miner_client.search_corpus(
+                            device=device,
+                            min_quality=0.8,
+                            limit=5
+                        )
+                        community_automations.extend(results)
+                    
+                    logger.info(f"    ✅ Found {len(community_automations)} community automations")
+                    
+                    # Extract enhancements
+                    if community_automations:
+                        extractor = EnhancementExtractor()
+                        user_devices = [d.device_type for d in devices_response.get('devices', [])]
+                        
+                        community_enhancements = extractor.extract_enhancements(
+                            community_automations,
+                            user_devices
+                        )
+                        
+                        logger.info(f"    ✅ Extracted {len(community_enhancements)} applicable enhancements")
+                        logger.info(f"       Top enhancements: {[e.category for e in community_enhancements[:3]]}")
+                        
+                        job_result['community_enhancements_found'] = len(community_enhancements)
+                    else:
+                        logger.info("    ℹ️  No community automations found for user's devices")
+                        job_result['community_enhancements_found'] = 0
+                
+                except Exception as e:
+                    logger.warning(f"    ⚠️ Community enhancement failed (graceful degradation): {e}")
+                    community_enhancements = []
+                    job_result['community_enhancement_error'] = str(e)
+            else:
+                if not settings.enable_pattern_enhancement:
+                    logger.info("ℹ️  Phase 3b: Community enhancement disabled (feature flag off)")
+                else:
+                    logger.info("ℹ️  Phase 3b: No patterns to enhance")
+            
+            # ================================================================
             # Phase 3c: Synergy Detection (NEW - Epic AI-3)
             # ================================================================
             logger.info("🔗 Phase 3c/7: Synergy Detection (Epic AI-3)...")
@@ -365,7 +430,11 @@ class DailyAnalysisScheduler:
                 
                 for i, pattern in enumerate(top_patterns, 1):
                     try:
-                        suggestion = await openai_client.generate_automation_suggestion(pattern)
+                        # NEW: Pass community enhancements if available (Epic AI-4, Story AI4.2)
+                        suggestion = await openai_client.generate_automation_suggestion(
+                            pattern,
+                            community_enhancements=community_enhancements if community_enhancements else None
+                        )
                         
                         pattern_suggestions.append({
                             'type': 'pattern_automation',

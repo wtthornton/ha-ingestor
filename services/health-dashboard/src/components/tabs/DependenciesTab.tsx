@@ -30,7 +30,7 @@ export const DependenciesTab: React.FC<TabProps> = ({ darkMode }) => {
 
   // Transform metrics for the dependency graph
   const realTimeData = metrics ? {
-    eventsPerSecond: metrics.events_per_second,
+    eventsPerHour: metrics.events_per_hour,
     apiCallsActive: metrics.api_calls_active,
     dataSourcesActive: metrics.data_sources_active,
     apiMetrics: metrics.api_metrics,
@@ -40,7 +40,7 @@ export const DependenciesTab: React.FC<TabProps> = ({ darkMode }) => {
     healthSummary: metrics.health_summary,
     lastUpdate: new Date(metrics.timestamp),
   } : {
-    eventsPerSecond: 0,
+    eventsPerHour: 0,
     apiCallsActive: 0,
     dataSourcesActive: [],
     apiMetrics: [],

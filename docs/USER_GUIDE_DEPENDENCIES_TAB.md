@@ -274,7 +274,7 @@ Services have different timeout values based on their importance:
 
 - [API Guidelines](../architecture/api-guidelines.md) - Technical details of the metrics APIs
 - [Epic 23 Implementation](../../implementation/EPIC_23_ENHANCED_DEPENDENCIES_METRICS_COMPLETE.md) - Complete implementation details
-- [Health Dashboard Overview](../REVIEW_GUIDE_START_HERE.md) - General dashboard usage
+- [Health Dashboard Overview](../../implementation/REVIEW_GUIDE_START_HERE.md) - General dashboard usage
 
 ## Support
 

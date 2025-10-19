@@ -61,7 +61,6 @@ The Admin API currently lacks dedicated statistics endpoints (`/stats`, `/stats/
 - [ ] WebSocket endpoint for real-time metrics streaming
 - [ ] Historical data comparison (week-over-week, etc.)
 - [ ] Exportable metrics (CSV, JSON formats)
-- [ ] Grafana-compatible metrics format
 
 ## Technical Details
 

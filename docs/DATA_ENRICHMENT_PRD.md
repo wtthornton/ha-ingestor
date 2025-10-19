@@ -422,7 +422,6 @@ Complex Aggregation (last 30 days, group by device):
 
 The following are explicitly **not** included in this PRD:
 
-- ❌ Visualization tools (Grafana, dashboards)
 - ❌ Machine Learning / AI (anomaly detection, forecasting)
 - ❌ Device recommendation engine
 - ❌ Graph database (Neo4j)

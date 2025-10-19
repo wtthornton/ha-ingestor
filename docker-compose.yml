@@ -797,6 +797,85 @@ services:
       retries: 3
       start_period: 10s
 
+  weather-api:
+    build:
+      context: .
+      dockerfile: services/weather-api/Dockerfile
+    container_name: ha-ingestor-weather-api
+    restart: unless-stopped
+    ports:
+      - "8007:8001"
+    env_file:
+      - infrastructure/.env.weather
+    environment:
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
+      - WEATHER_LAT=${WEATHER_LAT:-36.1699}
+      - WEATHER_LON=${WEATHER_LON:--115.1398}
+      - WEATHER_UNITS=${WEATHER_UNITS:-metric}
+      - WEATHER_CACHE_SECONDS=${WEATHER_CACHE_SECONDS:-300}
+      - WEATHER_PROVIDER=${WEATHER_PROVIDER:-openweathermap}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - ha-ingestor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=weather-api,environment=production"
+
+  automation-miner:
+    build:
+      context: .
+      dockerfile: services/automation-miner/Dockerfile
+    container_name: automation-miner
+    restart: unless-stopped
+    ports:
+      - "8019:8019"
+    environment:
+      - ENABLE_AUTOMATION_MINER=${ENABLE_AUTOMATION_MINER:-false}
+      - MINER_DB_PATH=data/automation_miner.db
+      - DISCOURSE_BASE_URL=https://community.home-assistant.io
+      - DISCOURSE_MIN_LIKES=${DISCOURSE_MIN_LIKES:-500}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - automation_miner_data:/app/data
+    networks:
+      - ha-ingestor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8019/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=automation-miner,environment=production"
+
 volumes:
   influxdb_data:
   influxdb_config:
@@ -805,6 +884,7 @@ volumes:
   sqlite-data:
   ai_automation_data:
   ai_automation_models:  # Phase 1: Persistent model cache (OpenVINO INT8 models)
+  automation_miner_data:  # Epic AI-4: Community automation corpus
 
 networks:
   ha-ingestor-network:

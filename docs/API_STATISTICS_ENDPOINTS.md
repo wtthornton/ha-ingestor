@@ -228,14 +228,13 @@ curl "http://localhost:8003/api/v1/stats/alerts"
 **Response:**
 ```json
 {
-  "events_per_second": 12.5,
+  "events_per_hour": 45000,
   "api_calls_active": 5,
   "data_sources_active": ["influxdb", "websocket", "home-assistant"],
   "api_metrics": [
     {
       "service": "websocket-ingestion",
       "status": "active",
-      "events_per_second": 0.05,
       "events_per_hour": 180.0,
       "uptime_seconds": 1196.3,
       "response_time_ms": 0,
@@ -244,7 +243,6 @@ curl "http://localhost:8003/api/v1/stats/alerts"
     {
       "service": "enrichment-pipeline",
       "status": "active",
-      "events_per_second": 2.79,
       "events_per_hour": 10027.4,
       "uptime_seconds": 1206.28,
       "response_time_ms": 0,
@@ -328,7 +326,7 @@ All endpoints handle service failures gracefully:
 **Example Response with Errors:**
 ```json
 {
-  "events_per_second": 0,
+  "events_per_hour": 0,
   "api_calls_active": 0,
   "error": "Failed to get event rate: Connection timeout",
   "timestamp": "2025-10-18T18:00:00Z"
@@ -395,7 +393,7 @@ const metrics = await fetch('http://localhost:8003/api/v1/real-time-metrics');
 
 ```typescript
 interface DashboardMetrics {
-  events_per_second: number;
+  events_per_hour: number;
   api_calls_active: number;
   data_sources_active: string[];
   api_metrics: ServiceMetric[];
@@ -414,7 +412,7 @@ async function updateDashboard() {
     const metrics: DashboardMetrics = await response.json();
     
     // Update UI components
-    updateEventRate(metrics.events_per_second);
+    updateEventRate(metrics.events_per_hour);
     updateServiceHealth(metrics.health_summary);
     updateServiceList(metrics.api_metrics);
     
@@ -426,33 +424,6 @@ async function updateDashboard() {
 
 // Refresh every 5 seconds
 setInterval(updateDashboard, 5000);
-```
-
----
-
-### Grafana Integration Example
-
-```python
-# Python script to export metrics to Grafana
-import requests
-import json
-
-def get_metrics_for_grafana():
-    """Export HA Ingestor metrics to Grafana format"""
-    
-    # Get real-time metrics
-    response = requests.get('http://localhost:8003/api/v1/real-time-metrics')
-    metrics = response.json()
-    
-    # Transform to Grafana format
-    grafana_metrics = []
-    for service_metric in metrics['api_metrics']:
-        grafana_metrics.append({
-            'target': f"{service_metric['service']}.events_per_second",
-            'datapoints': [[service_metric['events_per_second'], int(time.time() * 1000)]]
-        })
-    
-    return grafana_metrics
 ```
 
 ---
@@ -530,7 +501,6 @@ curl http://localhost:8006/health  # data-api
 - [ ] Exportable formats (CSV, JSON)
 - [ ] Rate limiting
 - [ ] API key authentication
-- [ ] Grafana datasource plugin
 
 ---
 

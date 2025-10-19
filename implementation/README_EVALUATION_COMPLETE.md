@@ -33,8 +33,8 @@
 - Cost tracking
 - Performance metrics
 
-### **QUICK STATUS (Root)**
-**File:** `DEMO_READY.md`
+### **QUICK STATUS (Implementation)**
+**File:** `implementation/DEMO_READY.md`
 
 **5-Minute Read:**
 - What's working
@@ -80,7 +80,7 @@
 
 **Where to See:**
 - `implementation/API_DEMO_GUIDE.md` - Section "API Best Practices Applied"
-- `EVALUATION_SUMMARY.md` - Section "Context7 KB Research Applied"
+- `implementation/EVALUATION_SUMMARY.md` - Section "Context7 KB Research Applied"
 
 ---
 
@@ -164,7 +164,7 @@
 5. ✅ **DEPLOYMENT_STATUS.md** - Deployment status
 6. ✅ **OPTION3_API_DEMO_COMPLETE.md** - Option 3 summary
 
-**Location:** Root + `implementation/` folder
+**Location:** `implementation/` folder
 
 ---
 

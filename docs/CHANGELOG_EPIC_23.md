@@ -161,7 +161,6 @@ curl "http://localhost:8003/api/devices/reliability?period=7d"
 
 ### Optional
 - Epic 22 (SQLite) - Enhanced but not required
-- Grafana - For advanced visualization (future)
 
 ---
 
@@ -253,7 +252,6 @@ docker-compose restart websocket-ingestion enrichment-pipeline data-api
 2. Monitor for 24 hours
 3. Create dashboard visualizations for new features
 4. Enable automation chain visualization (future enhancement)
-5. Add Grafana dashboards for device reliability (future enhancement)
 
 ---
 

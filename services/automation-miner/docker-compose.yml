@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  automation-miner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: automation-miner
+    ports:
+      - "8019:8019"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - ENABLE_AUTOMATION_MINER=false  # Set to true after Story AI4.1 deployed
+      - MINER_DB_PATH=data/automation_miner.db
+      - DISCOURSE_BASE_URL=https://community.home-assistant.io
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}  # Optional
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8019/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - ha-ingestor
+
+networks:
+  ha-ingestor:
+    external: true
+

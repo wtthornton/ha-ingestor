@@ -70,7 +70,8 @@ class OpenAIClient:
     async def generate_automation_suggestion(
         self,
         pattern: Dict,
-        device_context: Optional[Dict] = None
+        device_context: Optional[Dict] = None,
+        community_enhancements: Optional[list] = None  # NEW: Epic AI-4, Story AI4.2
     ) -> AutomationSuggestion:
         """
         Generate automation suggestion from detected pattern.
@@ -88,6 +89,12 @@ class OpenAIClient:
         try:
             # Build prompt based on pattern type
             prompt = self._build_prompt(pattern, device_context)
+            
+            # NEW: Add community enhancements if available (Epic AI-4, Story AI4.2)
+            if community_enhancements:
+                community_context = self._build_community_context(community_enhancements)
+                prompt = f"{prompt}\n\n{community_context}"
+                logger.info(f"Added {len(community_enhancements)} community enhancements to prompt")
             
             logger.info(f"Generating suggestion for {pattern['pattern_type']} pattern: {pattern.get('device_id', 'N/A')}")
             
@@ -766,4 +773,51 @@ OK: [yes/no]
                 'error': error
             }
         }
+    
+    def _build_community_context(self, enhancements: list) -> str:
+        """
+        Build community enhancement context for prompt augmentation
+        
+        Epic AI-4, Story AI4.2
+        
+        Args:
+            enhancements: List of Enhancement objects from EnhancementExtractor
+        
+        Returns:
+            Formatted community context string
+        """
+        if not enhancements:
+            return ""
+        
+        # Group by type
+        by_type = {
+            'condition': [],
+            'timing': [],
+            'action': []
+        }
+        
+        for enh in enhancements[:10]:  # Top 10 only to keep prompt concise
+            if hasattr(enh, 'type'):
+                by_type.get(enh.type, []).append(enh)
+        
+        context = "\n**COMMUNITY BEST PRACTICES** (80% weight YOUR patterns, 20% weight community insights):\n"
+        
+        if by_type['condition']:
+            context += "\n**Optional Conditions** (used in high-quality community automations):\n"
+            for enh in by_type['condition'][:3]:  # Top 3
+                context += f"- {enh.description} (used by {enh.frequency} automations, avg quality {enh.quality_score:.2f})\n"
+        
+        if by_type['timing']:
+            context += "\n**Optional Timing Improvements:**\n"
+            for enh in by_type['timing'][:3]:
+                context += f"- {enh.example}\n"
+        
+        if by_type['action']:
+            context += "\n**Optional Action Variations:**\n"
+            for enh in by_type['action'][:3]:
+                context += f"- {enh.description}\n"
+        
+        context += "\n**IMPORTANT:** These are optional enhancements. Prioritize the user's detected patterns (PRIMARY). Community insights should augment, not replace, personal patterns.\n"
+        
+        return context
 

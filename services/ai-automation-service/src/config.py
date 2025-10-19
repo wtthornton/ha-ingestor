@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     nl_max_tokens: int = 1500
     nl_temperature: float = 0.3  # Lower = more consistent
     
+    # Automation Miner Integration (Epic AI-4, Story AI4.2)
+    enable_pattern_enhancement: bool = False
+    miner_base_url: str = "http://automation-miner:8019"
+    miner_query_timeout_ms: int = 100
+    miner_cache_ttl_days: int = 7
+    
     class Config:
         env_file = "infrastructure/env.ai-automation"
         case_sensitive = False

@@ -93,8 +93,8 @@ Services → Structured Logs → Log Aggregation → Storage → Analysis
 ```
 Services → Metrics Collection → Metrics Storage → Monitoring Dashboard
     ↓           ↓                  ↓               ↓
-  Custom      Prometheus        InfluxDB        Grafana
-  Metrics     Collection        Storage         Visualization
+  Custom      Admin API         InfluxDB        Health Dashboard
+  Metrics     Aggregation       Storage         Visualization
 ```
 
 ## Dependencies
@@ -105,8 +105,6 @@ Services → Metrics Collection → Metrics Storage → Monitoring Dashboard
 - **Docker Infrastructure**: Use existing Docker Compose setup
 
 ### External Dependencies
-- **ELK Stack or Similar**: Elasticsearch, Logstash, Kibana
-- **Monitoring Tools**: Prometheus, Grafana (optional)
 - **Storage**: InfluxDB for metrics storage
 
 ## Risks and Mitigations

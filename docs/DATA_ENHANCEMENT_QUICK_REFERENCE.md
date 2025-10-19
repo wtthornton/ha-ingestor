@@ -99,7 +99,7 @@
 
 ### Current: InfluxDB Time-Series Only
 ```
-[Home Assistant Events] → [InfluxDB] → [Grafana]
+[Home Assistant Events] → [InfluxDB] → [Health Dashboard]
                             ↓
                     Time-based queries only
                     No relationships

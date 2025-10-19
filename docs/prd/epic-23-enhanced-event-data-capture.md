@@ -372,7 +372,6 @@ Enhance the event data capture pipeline to include critical missing fields ident
 
 ### Optional
 - **Epic 22:** SQLite Metadata Storage - Could optimize device registry lookups (future)
-- **Grafana** - Enhanced visualization of device reliability metrics (future)
 
 ---
 

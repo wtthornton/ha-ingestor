@@ -20,7 +20,7 @@
 ### Primary Criteria
 - [ ] Admin API provides `/api/v1/real-time-metrics` endpoint
 - [ ] Endpoint aggregates metrics from all 15 services in parallel
-- [ ] Response includes system-wide events/sec and events/hour totals
+- [ ] Response includes system-wide events/hour totals
 - [ ] Response includes per-API metrics array with individual service data
 - [ ] Response includes active/inactive API counts
 - [ ] Endpoint responds within 500ms under normal load
@@ -38,7 +38,6 @@
 ```json
 GET /api/v1/real-time-metrics
 Response: {
-  "events_per_second": 45.2,
   "events_per_hour": 162720,
   "active_apis": [
     {
@@ -46,7 +45,6 @@ Response: {
       "port": 8001,
       "service_type": "core",
       "status": "active",
-      "events_per_second": 25.5,
       "events_per_hour": 91800,
       "total_events": 2500000,
       "uptime_seconds": 86400,
@@ -58,7 +56,6 @@ Response: {
       "port": 8002,
       "service_type": "core",
       "status": "active",
-      "events_per_second": 19.7,
       "events_per_hour": 70920,
       "total_events": 1800000,
       "uptime_seconds": 86400,
@@ -76,7 +73,6 @@ Response: {
 ### Error Response
 ```json
 {
-  "events_per_second": 0,
   "events_per_hour": 0,
   "active_apis": [],
   "inactive_apis": 15,
@@ -98,7 +94,7 @@ API_SERVICES = {
     "admin-api": {"port": 8003, "type": "core"},
     "data-api": {"port": 8006, "type": "core"},
     "sports-data": {"port": 8005, "type": "data"},
-    "weather-api": {"port": 8009, "type": "data"},
+    "weather-api": {"port": 8007, "type": "data"},
     "carbon-intensity-service": {"port": 8010, "type": "data"},
     "electricity-pricing-service": {"port": 8011, "type": "data"},
     "air-quality-service": {"port": 8012, "type": "data"},
@@ -124,9 +120,6 @@ async def get_real_time_metrics():
         data_sources = await self._get_active_data_sources()
         
         # Calculate system-wide totals
-        total_events_per_second = sum(
-            api["events_per_second"] for api in api_metrics["active_apis"]
-        )
         total_events_per_hour = sum(
             api["events_per_hour"] for api in api_metrics["active_apis"]
         )
@@ -134,7 +127,6 @@ async def get_real_time_metrics():
         collection_time = int((time.time() - start_time) * 1000)
         
         return {
-            "events_per_second": total_events_per_second,
             "events_per_hour": total_events_per_hour,
             "active_apis": api_metrics["active_apis"],
             "inactive_apis": api_metrics["inactive_apis"],
@@ -146,7 +138,6 @@ async def get_real_time_metrics():
     except Exception as e:
         logger.error(f"Error getting real-time metrics: {e}")
         return {
-            "events_per_second": 0,
             "events_per_hour": 0,
             "active_apis": [],
             "inactive_apis": len(API_SERVICES),

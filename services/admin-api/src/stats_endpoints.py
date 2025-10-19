@@ -47,10 +47,22 @@ class StatsEndpoints:
         self.influxdb_client = AdminAPIInfluxDBClient()
         self.use_influxdb = os.getenv("USE_INFLUXDB_STATS", "true").lower() == "true"
         
-        # Keep service URLs for fallback
+        # Keep service URLs for fallback - use Docker service names for internal communication
         self.service_urls = {
-            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002")
+            "admin-api": os.getenv("ADMIN_API_URL", "http://ha-ingestor-admin:8004"),
+            "data-api": os.getenv("DATA_API_URL", "http://ha-ingestor-data-api:8006"),
+            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://ha-ingestor-websocket:8001"),
+            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://ha-ingestor-enrichment:8002"),
+            "sports-data": os.getenv("SPORTS_DATA_URL", "http://ha-ingestor-sports-data:8005"),
+            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://ha-ingestor-air-quality:8012"),
+            "calendar-service": os.getenv("CALENDAR_URL", "http://ha-ingestor-calendar:8013"),
+            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010"),
+            "data-retention": os.getenv("DATA_RETENTION_URL", "http://ha-ingestor-data-retention:8080"),
+            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://ha-ingestor-electricity-pricing:8011"),
+            "energy-correlator": os.getenv("ENERGY_CORRELATOR_URL", "http://ha-ingestor-energy-correlator:8017"),
+            "smart-meter-service": os.getenv("SMART_METER_URL", "http://ha-ingestor-smart-meter:8014"),
+            "log-aggregator": os.getenv("LOG_AGGREGATOR_URL", "http://ha-ingestor-log-aggregator:8015"),
+            "weather-api": os.getenv("WEATHER_API_URL", "http://ha-ingestor-weather-api:8001")
         }
         
         self._add_routes()
@@ -203,7 +215,7 @@ class StatsEndpoints:
                 data_sources = await self._get_active_data_sources()
                 
                 return {
-                    "events_per_second": event_rate,
+                    "events_per_hour": event_rate * 3600,  # Convert events/sec to events/hour
                     "api_calls_active": api_stats["active_calls"],
                     "data_sources_active": data_sources,
                     "api_metrics": api_stats["api_metrics"],
@@ -221,7 +233,7 @@ class StatsEndpoints:
             except Exception as e:
                 logger.error(f"Error getting real-time metrics: {e}")
                 return {
-                    "events_per_second": 0,
+                    "events_per_hour": 0,
                     "api_calls_active": 0,
                     "data_sources_active": [],
                     "api_metrics": [],
@@ -697,22 +709,21 @@ class StatsEndpoints:
         inactive_apis = 0
         error_apis = 0
         
-        # List of all API services with priority levels
+        # List of all running API services with priority levels
         api_services = [
             {"name": "admin-api", "priority": "high", "timeout": 3},
             {"name": "data-api", "priority": "high", "timeout": 5},
             {"name": "enrichment-pipeline", "priority": "high", "timeout": 5},
-            {"name": "ai-automation-service", "priority": "medium", "timeout": 10},
             {"name": "websocket-ingestion", "priority": "high", "timeout": 3},
-            {"name": "air-quality-service", "priority": "low", "timeout": 5},
-            {"name": "calendar-service", "priority": "low", "timeout": 5},
-            {"name": "carbon-intensity-service", "priority": "low", "timeout": 5},
+            {"name": "sports-data", "priority": "medium", "timeout": 5},
+            {"name": "air-quality-service", "priority": "medium", "timeout": 5},
+            {"name": "calendar-service", "priority": "medium", "timeout": 5},
+            {"name": "carbon-intensity-service", "priority": "medium", "timeout": 5},
             {"name": "data-retention", "priority": "medium", "timeout": 5},
-            {"name": "electricity-pricing-service", "priority": "low", "timeout": 5},
+            {"name": "electricity-pricing-service", "priority": "medium", "timeout": 5},
             {"name": "energy-correlator", "priority": "medium", "timeout": 5},
-            {"name": "smart-meter-service", "priority": "low", "timeout": 5},
-            {"name": "sports-api", "priority": "low", "timeout": 5},
-            {"name": "sports-data", "priority": "low", "timeout": 5},
+            {"name": "smart-meter-service", "priority": "medium", "timeout": 5},
+            {"name": "log-aggregator", "priority": "low", "timeout": 5},
             {"name": "weather-api", "priority": "low", "timeout": 5}
         ]
         
@@ -762,7 +773,7 @@ class StatsEndpoints:
                 api_metrics.append(self._create_fallback_metric(service_name, "error", str(result)))
             else:
                 api_metrics.append(result)
-                if result.get("status") == "active" and result.get("events_per_second", 0) > 0:
+                if result.get("status") == "active":
                     active_calls += 1
                 elif result.get("status") == "error":
                     error_apis += 1
@@ -781,33 +792,45 @@ class StatsEndpoints:
         """Get metrics from a specific API service"""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{service_url}/api/v1/event-rate", timeout=5) as resp:
+                # Try /health endpoint first, then fall back to /api/v1/event-rate
+                health_url = f"{service_url}/health"
+                async with session.get(health_url, timeout=5) as resp:
                     if resp.status == 200:
                         data = await resp.json()
+                        # Extract basic health info and set default metrics
                         return {
                             "service": service_name,
-                            "events_per_second": data.get("events_per_second", 0.0),
-                            "events_per_hour": data.get("events_per_hour", 0.0),
-                            "uptime_seconds": data.get("uptime_seconds", 0.0),
-                            "status": "active"
+                            "events_per_hour": 0.0,    # Default for services without event-rate
+                            "uptime_seconds": 0.0,     # Default for services without event-rate
+                            "status": "active",
+                            "response_time_ms": 0,
+                            "last_success": datetime.now().isoformat(),
+                            "error_message": None,
+                            "is_fallback": False
                         }
                     else:
-                        logger.warning(f"Failed to get metrics from {service_name}: {resp.status}")
+                        logger.warning(f"Failed to get health from {service_name}: {resp.status}")
                         return {
                             "service": service_name,
-                            "events_per_second": 0.0,
                             "events_per_hour": 0.0,
                             "uptime_seconds": 0.0,
-                            "status": "inactive"
+                            "status": "inactive",
+                            "response_time_ms": None,
+                            "last_success": None,
+                            "error_message": f"HTTP {resp.status}",
+                            "is_fallback": True
                         }
         except Exception as e:
-            logger.error(f"Error getting metrics from {service_name}: {e}")
+            logger.error(f"Error getting health from {service_name}: {e}")
             return {
                 "service": service_name,
-                "events_per_second": 0.0,
                 "events_per_hour": 0.0,
                 "uptime_seconds": 0.0,
-                "status": "error"
+                "status": "error",
+                "response_time_ms": None,
+                "last_success": None,
+                "error_message": str(e),
+                "is_fallback": True
             }
     
     async def _get_active_data_sources(self) -> List[str]:
@@ -851,12 +874,13 @@ class StatsEndpoints:
         """Get metrics from a specific API service with individual timeout"""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{service_url}/api/v1/event-rate", timeout=timeout) as resp:
+                # Use /health endpoint for all services
+                health_url = f"{service_url}/health"
+                async with session.get(health_url, timeout=timeout) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         return {
                             "service": service_name,
-                            "events_per_second": data.get("events_per_second", 0.0),
                             "events_per_hour": data.get("events_per_hour", 0.0),
                             "uptime_seconds": data.get("uptime_seconds", 0.0),
                             "status": "active",
@@ -877,7 +901,6 @@ class StatsEndpoints:
         """Create a fallback metric when service is unavailable"""
         return {
             "service": service_name,
-            "events_per_second": 0.0,
             "events_per_hour": 0.0,
             "uptime_seconds": 0.0,
             "status": status,
