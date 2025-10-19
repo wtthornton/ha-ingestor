@@ -134,7 +134,7 @@ Success Rate: 100.0%
 ```
 ✅ InfluxDB bucket: home_assistant_events
 ✅ Retention: infinite
-✅ Organization: ha-ingestor
+✅ Organization: homeiq
 ✅ Status: Operational
 ```
 
@@ -293,21 +293,21 @@ URL: http://localhost:3000
 ### Check Logs
 ```bash
 # See HA events being processed
-docker logs ha-ingestor-websocket --tail 50
+docker logs homeiq-websocket --tail 50
 
 # See event validation/normalization
-docker logs ha-ingestor-enrichment --tail 50
+docker logs homeiq-enrichment --tail 50
 
 # See WebSocket broadcast loop
-docker logs ha-ingestor-admin --tail 50
+docker logs homeiq-admin --tail 50
 ```
 
 ### Query Data
 ```bash
 # See stored events in InfluxDB
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") |> range(start: -1h) |> limit(n:10)' \
-  --org ha-ingestor --token ha-ingestor-token
+  --org homeiq --token homeiq-token
 ```
 
 ### Restart Services

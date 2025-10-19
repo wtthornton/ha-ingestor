@@ -266,7 +266,7 @@
 ```bash
 # Quick Start
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 cp infrastructure/env.example .env
 # Edit .env with your configuration
 docker-compose up -d

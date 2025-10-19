@@ -9,7 +9,7 @@
 ```bash
 # 1. Clone
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # 2. Run wizard
 ./scripts/deploy-wizard.sh

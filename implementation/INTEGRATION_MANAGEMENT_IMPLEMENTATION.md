@@ -224,7 +224,7 @@ grep -A5 "websocket-ingestion:" docker-compose.yml
 docker ps
 
 # Check admin-api logs
-docker logs ha-ingestor-admin-dev
+docker logs homeiq-admin-dev
 ```
 
 ### UI not working?
@@ -233,7 +233,7 @@ docker logs ha-ingestor-admin-dev
 curl http://localhost:8003/api/v1/integrations
 
 # Check CORS settings
-docker logs ha-ingestor-admin-dev | grep CORS
+docker logs homeiq-admin-dev | grep CORS
 ```
 
 ---

@@ -183,7 +183,7 @@ These Python scripts should be archived or deleted:
 
 ### websocket-ingestion
 ```bash
-DATA_API_URL=http://ha-ingestor-data-api:8006  # NEW
+DATA_API_URL=http://homeiq-data-api:8006  # NEW
 STORE_DEVICE_HISTORY_IN_INFLUXDB=false         # NEW (optional)
 ```
 
@@ -234,11 +234,11 @@ curl http://localhost:8006/api/devices | jq '.count'
 # Should show: 99 (matches docs ✅)
 
 # 2. Verify discovery logs match documented flow
-docker logs ha-ingestor-websocket | grep "Starting device and entity discovery"
+docker logs homeiq-websocket | grep "Starting device and entity discovery"
 # Should see log entry ✅
 
 # 3. Verify data-api logs show bulk upsert
-docker logs ha-ingestor-data-api | grep "bulk_upsert"
+docker logs homeiq-data-api | grep "bulk_upsert"
 # Should show POST requests ✅
 ```
 

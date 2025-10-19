@@ -103,27 +103,27 @@ healthcheck:
 ```
 ✅ HEALTHY (19 services):
 - automation-miner               ✅
-- ha-ingestor-weather-api        ✅
+- homeiq-weather-api        ✅
 - ai-automation-ui               ✅
-- ha-ingestor-admin              ✅
-- ha-ingestor-dashboard          ✅
-- ha-ingestor-websocket          ✅
-- ha-ingestor-enrichment         ✅
+- homeiq-admin              ✅
+- homeiq-dashboard          ✅
+- homeiq-websocket          ✅
+- homeiq-enrichment         ✅
 - ai-automation-service          ✅
-- ha-ingestor-energy-correlator  ✅
-- ha-ingestor-data-retention     ✅
-- ha-ingestor-data-api           ✅
-- ha-ingestor-smart-meter        ✅
-- ha-ingestor-calendar           ✅
-- ha-ingestor-air-quality        ✅
-- ha-ingestor-carbon-intensity   ✅
-- ha-ingestor-electricity-pricing ✅
-- ha-ingestor-log-aggregator     ✅
-- ha-ingestor-sports-data        ✅
-- ha-ingestor-influxdb           ✅
+- homeiq-energy-correlator  ✅
+- homeiq-data-retention     ✅
+- homeiq-data-api           ✅
+- homeiq-smart-meter        ✅
+- homeiq-calendar           ✅
+- homeiq-air-quality        ✅
+- homeiq-carbon-intensity   ✅
+- homeiq-electricity-pricing ✅
+- homeiq-log-aggregator     ✅
+- homeiq-sports-data        ✅
+- homeiq-influxdb           ✅
 
 ❌ UNHEALTHY (1 service):
-- ha-ingestor-setup-service      ❌ (not in main docker-compose.yml)
+- homeiq-setup-service      ❌ (not in main docker-compose.yml)
 ```
 
 ---
@@ -156,7 +156,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}" | Select-String "healthy"
 
 # Verify specific service
 docker exec automation-miner curl -f http://localhost:8019/health
-docker exec ha-ingestor-weather-api curl -f http://localhost:8001/health
+docker exec homeiq-weather-api curl -f http://localhost:8001/health
 
 # Check curl installation
 docker exec automation-miner which curl

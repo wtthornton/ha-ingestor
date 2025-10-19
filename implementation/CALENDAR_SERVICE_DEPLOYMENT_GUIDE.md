@@ -127,7 +127,7 @@ Query InfluxDB to confirm data is being written:
 
 ```bash
 curl -H "Authorization: Token ${INFLUXDB_TOKEN}" \
-     "http://localhost:8086/api/v2/query?org=ha-ingestor" \
+     "http://localhost:8086/api/v2/query?org=homeiq" \
      --data-urlencode 'query=from(bucket:"events") |> range(start:-1h) |> filter(fn:(r) => r._measurement == "occupancy_prediction") |> limit(n:5)'
 ```
 
@@ -159,7 +159,7 @@ Or use InfluxDB UI: http://localhost:8086
 
 ### Performance
 - [ ] Event fetch time < 2 seconds (check logs)
-- [ ] Memory usage < 150MB: `docker stats ha-ingestor-calendar`
+- [ ] Memory usage < 150MB: `docker stats homeiq-calendar`
 - [ ] CPU usage < 5% average
 - [ ] No memory leaks over 1 hour
 
@@ -195,7 +195,7 @@ docker-compose up -d calendar
 **Solution:**
 ```bash
 # Test HA connectivity from within container
-docker exec -it ha-ingestor-calendar curl -H "Authorization: Bearer ${HOME_ASSISTANT_TOKEN}" http://homeassistant.local:8123/api/
+docker exec -it homeiq-calendar curl -H "Authorization: Bearer ${HOME_ASSISTANT_TOKEN}" http://homeassistant.local:8123/api/
 
 # If connection fails, verify:
 # 1. HA is running
@@ -268,7 +268,7 @@ If your events use different terminology, you can customize patterns by editing 
 **Solution:**
 ```bash
 # Check current memory usage
-docker stats ha-ingestor-calendar
+docker stats homeiq-calendar
 
 # If consistently high:
 # 1. Reduce fetch interval (less frequent = less memory)
@@ -384,7 +384,7 @@ Establish performance baseline:
 
 ```bash
 # CPU and Memory
-docker stats ha-ingestor-calendar --no-stream
+docker stats homeiq-calendar --no-stream
 
 # Response Time
 time curl http://localhost:8013/health

@@ -189,12 +189,13 @@ async def store_suggestion(db: AsyncSession, suggestion_data: Dict) -> Suggestio
         Stored Suggestion object
     """
     try:
+        # Story AI1.24: automation_yaml can be NULL for draft suggestions
         suggestion = Suggestion(
             pattern_id=suggestion_data.get('pattern_id'),
             title=suggestion_data['title'],
             description_only=suggestion_data.get('description', suggestion_data.get('description_only', '')),
-            automation_yaml=suggestion_data.get('automation_yaml'),
-            status='draft',  # Changed from 'pending' to 'draft' to match new schema
+            automation_yaml=suggestion_data.get('automation_yaml'),  # Can be None for drafts
+            status='draft',  # Conversational flow status
             confidence=suggestion_data['confidence'],
             category=suggestion_data.get('category'),
             priority=suggestion_data.get('priority'),

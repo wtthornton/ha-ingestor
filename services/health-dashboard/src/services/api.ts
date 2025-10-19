@@ -46,7 +46,7 @@ export interface APIKeyTestResponse {
 }
 
 // Epic 13 Story 13.2: Separated API clients for admin vs data APIs
-const ADMIN_API_BASE_URL = import.meta.env.VITE_ADMIN_API_URL || '/api';
+const ADMIN_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8003';
 const DATA_API_BASE_URL = import.meta.env.VITE_DATA_API_URL || '/api';  // Will use nginx routing
 
 /**
@@ -79,19 +79,19 @@ class AdminApiClient extends BaseApiClient {
   }
 
   async getHealth(): Promise<HealthStatus> {
-    return this.fetchWithErrorHandling<HealthStatus>(`${this.baseUrl}/v1/health`);
+    return this.fetchWithErrorHandling<HealthStatus>(`${this.baseUrl}/api/health`);
   }
 
   async getEnhancedHealth(): Promise<ServiceHealthResponse> {
-    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${this.baseUrl}/v1/health`);
+    return this.fetchWithErrorHandling<ServiceHealthResponse>(`${this.baseUrl}/api/v1/health`);
   }
 
   async getStatistics(period: string = '1h'): Promise<Statistics> {
-    return this.fetchWithErrorHandling<Statistics>(`${this.baseUrl}/v1/stats?period=${period}`);
+    return this.fetchWithErrorHandling<Statistics>(`${this.baseUrl}/api/v1/stats?period=${period}`);
   }
 
   async getServicesHealth(): Promise<{ [key: string]: any }> {
-    return this.fetchWithErrorHandling<{ [key: string]: any }>(`${this.baseUrl}/health/services`);
+    return this.fetchWithErrorHandling<{ [key: string]: any }>(`${this.baseUrl}/api/v1/stats`);
   }
 
   // New data source health endpoints

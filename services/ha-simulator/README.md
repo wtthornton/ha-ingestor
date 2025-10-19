@@ -1,6 +1,6 @@
 # Home Assistant Simulator
 
-A WebSocket server that simulates Home Assistant's WebSocket API for development and testing of the ha-ingestor project.
+A WebSocket server that simulates Home Assistant's WebSocket API for development and testing of the homeiq project.
 
 ## Overview
 
@@ -162,9 +162,9 @@ Events are generated based on:
 3. **Realistic Values**: Base values with configurable variance
 4. **State Transitions**: Proper old_state/new_state handling
 
-## Integration with ha-ingestor
+## Integration with homeiq
 
-The simulator integrates seamlessly with existing ha-ingestor services:
+The simulator integrates seamlessly with existing homeiq services:
 
 1. **WebSocket Ingestion**: Connects to simulator instead of real HA
 2. **Enrichment Pipeline**: Processes simulated events
@@ -274,5 +274,5 @@ docker-compose up ha-simulator
 
 ## License
 
-Part of the ha-ingestor project. See main project license.
+Part of the homeiq project. See main project license.
 

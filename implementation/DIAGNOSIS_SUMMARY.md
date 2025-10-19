@@ -136,18 +136,18 @@ Even without the WebSocket connection, data is being written by:
 docker-compose restart websocket-ingestion
 
 # 3. Verify connection
-docker logs -f ha-ingestor-websocket | Select-String "authenticated|Connected"
+docker logs -f homeiq-websocket | Select-String "authenticated|Connected"
 ```
 
 ### Priority 2: Verify Live Events
 ```powershell
 # Watch for real-time events
-docker logs -f ha-ingestor-enrichment | Select-String "process_event"
+docker logs -f homeiq-enrichment | Select-String "process_event"
 
 # Check recent InfluxDB writes
-docker exec ha-ingestor-influxdb influx query `
+docker exec homeiq-influxdb influx query `
   'from(bucket:"home_assistant_events") |> range(start: -5m) |> count()' `
-  --token ha-ingestor-token --org ha-ingestor
+  --token homeiq-token --org homeiq
 ```
 
 ## Documentation Created

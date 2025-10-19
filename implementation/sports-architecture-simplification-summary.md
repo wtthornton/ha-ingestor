@@ -61,7 +61,7 @@ Two separate sports services were implemented from different epics:
 
 ```nginx
 location /api/sports/ {
-    proxy_pass http://ha-ingestor-sports-data:8005/api/v1/;
+    proxy_pass http://homeiq-sports-data:8005/api/v1/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

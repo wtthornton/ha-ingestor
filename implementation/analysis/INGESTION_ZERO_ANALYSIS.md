@@ -29,15 +29,15 @@ INFLUXDB_ORG=home-assistant
 ### 2. Docker Container Status
 
 **All Containers Healthy Except:**
-- ✅ `ha-ingestor-dashboard` - Up 33 minutes (healthy)
-- ✅ `ha-ingestor-data-api` - Up 33 minutes (healthy)
-- ⚠️ `ha-ingestor-websocket` - Up 33 minutes (healthy) but **connection manager not running**
-- ✅ `ha-ingestor-admin` - Up 33 minutes (healthy)
-- ✅ `ha-ingestor-enrichment` - Up 33 minutes (healthy)
-- ✅ `ha-ingestor-influxdb` - Up 33 minutes (healthy)
-- 🔴 `ha-ingestor-calendar` - **Restarting** (API key issues)
-- 🔴 `ha-ingestor-carbon-intensity` - **Restarting** (API key issues)
-- 🔴 `ha-ingestor-air-quality` - **Restarting** (API key issues)
+- ✅ `homeiq-dashboard` - Up 33 minutes (healthy)
+- ✅ `homeiq-data-api` - Up 33 minutes (healthy)
+- ⚠️ `homeiq-websocket` - Up 33 minutes (healthy) but **connection manager not running**
+- ✅ `homeiq-admin` - Up 33 minutes (healthy)
+- ✅ `homeiq-enrichment` - Up 33 minutes (healthy)
+- ✅ `homeiq-influxdb` - Up 33 minutes (healthy)
+- 🔴 `homeiq-calendar` - **Restarting** (API key issues)
+- 🔴 `homeiq-carbon-intensity` - **Restarting** (API key issues)
+- 🔴 `homeiq-air-quality` - **Restarting** (API key issues)
 
 ### 3. WebSocket Service Logs Analysis
 
@@ -210,7 +210,7 @@ After implementing a solution:
 
 1. **Check WebSocket Service Logs:**
    ```bash
-   docker logs ha-ingestor-websocket --tail 50
+   docker logs homeiq-websocket --tail 50
    ```
    Look for: "WebSocket connection established" and "Successfully authenticated"
 
@@ -228,7 +228,7 @@ After implementing a solution:
 
 4. **Check InfluxDB Data:**
    ```bash
-   docker exec ha-ingestor-influxdb influx query 'from(bucket:"ha_events") |> range(start: -1h) |> count()'
+   docker exec homeiq-influxdb influx query 'from(bucket:"ha_events") |> range(start: -1h) |> count()'
    ```
 
 ## Additional Issues Found
@@ -236,9 +236,9 @@ After implementing a solution:
 ### Secondary Issues: API Service Containers Restarting
 
 The following services are restarting due to missing API keys:
-- `ha-ingestor-calendar` (Google Calendar API)
-- `ha-ingestor-carbon-intensity` (WattTime API)
-- `ha-ingestor-air-quality` (AirNow API)
+- `homeiq-calendar` (Google Calendar API)
+- `homeiq-carbon-intensity` (WattTime API)
+- `homeiq-air-quality` (AirNow API)
 
 **Recommendation:** These are non-critical for core event ingestion. They can be disabled or configured later:
 ```yaml
@@ -285,5 +285,5 @@ The following services are restarting due to missing API keys:
 
 - Docker Documentation: [Networking in Compose](https://docs.docker.com/compose/networking/)
 - Home Assistant: [HTTP Integration](https://www.home-assistant.io/integrations/http/)
-- WebSocket Logs: See `docker logs ha-ingestor-websocket`
+- WebSocket Logs: See `docker logs homeiq-websocket`
 

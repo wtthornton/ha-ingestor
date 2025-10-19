@@ -1500,7 +1500,7 @@ async def get_electricity_pricing() -> dict:
   "flow": [
     {
       "type": "http request",
-      "url": "https://ha-ingestor/api/v2/devices",
+      "url": "https://homeiq/api/v2/devices",
       "method": "GET",
       "headers": {"Authorization": "Bearer TOKEN"}
     },
@@ -1510,7 +1510,7 @@ async def get_electricity_pricing() -> dict:
     },
     {
       "type": "http request",
-      "url": "https://ha-ingestor/api/v2/automation/rules",
+      "url": "https://homeiq/api/v2/automation/rules",
       "method": "POST",
       "payload": "automation_rule"
     }
@@ -1523,7 +1523,7 @@ async def get_electricity_pricing() -> dict:
 # configuration.yaml
 sensor:
   - platform: rest
-    resource: https://ha-ingestor/api/v2/energy/consumption
+    resource: https://homeiq/api/v2/energy/consumption
     name: "Total Energy Today"
     value_template: "{{ value_json.total_kwh }}"
     unit_of_measurement: "kWh"
@@ -1532,7 +1532,7 @@ automation:
   - alias: "Low Carbon Automation"
     trigger:
       - platform: rest
-        resource: https://ha-ingestor/api/v2/external/carbon-intensity
+        resource: https://homeiq/api/v2/external/carbon-intensity
     condition:
       - condition: template
         value_template: "{{ states('sensor.carbon_intensity') | int < 200 }}"

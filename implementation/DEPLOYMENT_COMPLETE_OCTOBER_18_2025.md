@@ -39,7 +39,7 @@
    ```
    - Build time: 67.7 seconds
    - Status: Successfully rebuilt
-   - Container: ha-ingestor-enrichment
+   - Container: homeiq-enrichment
 
 3. **Service Restarted** ✅
    - Started: 10:46 AM

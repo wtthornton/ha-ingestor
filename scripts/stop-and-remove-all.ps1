@@ -28,16 +28,16 @@ Write-Host ""
 
 # Check if services are running
 try {
-    $containers = docker ps -a --filter "name=ha-ingestor" --format "{{.Names}}" 2>$null
+    $containers = docker ps -a --filter "name=homeiq" --format "{{.Names}}" 2>$null
     $containerCount = ($containers | Measure-Object).Count
-    Write-Info "Found $containerCount ha-ingestor containers"
+    Write-Info "Found $containerCount homeiq containers"
 } catch {
     Write-Warning "Error checking containers. Is Docker running?"
     $containerCount = 0
 }
 
 if ($containerCount -eq 0) {
-    Write-Warning "No ha-ingestor containers found!"
+    Write-Warning "No homeiq containers found!"
     Write-Host ""
     $continue = Read-Host "Continue anyway? (y/N)"
     if ($continue -ne "y" -and $continue -ne "Y") {
@@ -50,7 +50,7 @@ if ($containerCount -eq 0) {
 Write-Host ""
 Write-Info "Current container status:"
 try {
-    docker ps -a --filter "name=ha-ingestor" --format "table {{.Names}}`t{{.Status}}`t{{.Ports}}" 2>$null
+    docker ps -a --filter "name=homeiq" --format "table {{.Names}}`t{{.Status}}`t{{.Ports}}" 2>$null
 } catch {
     Write-Warning "Could not display container status"
 }
@@ -60,8 +60,8 @@ Write-Host ""
 Write-Warning "⚠️  IMPORTANT: Have you created backups?"
 Write-Host ""
 Write-Host "  Required backups:"
-Write-Host "    ✓ InfluxDB data: docker exec ha-ingestor-influxdb influx backup /tmp/backup"
-Write-Host "    ✓ SQLite data: docker cp ha-ingestor-data-api:/app/data/metadata.db `$HOME/backup-metadata.db"
+Write-Host "    ✓ InfluxDB data: docker exec homeiq-influxdb influx backup /tmp/backup"
+Write-Host "    ✓ SQLite data: docker cp homeiq-data-api:/app/data/metadata.db `$HOME/backup-metadata.db"
 Write-Host "    ✓ Environment: Copy-Item .env `$HOME/backup-env"
 Write-Host ""
 $backupConfirm = Read-Host "Have you completed backups? (yes/NO)"
@@ -101,7 +101,7 @@ Write-Host ""
 # Step 2: Force stop any remaining containers
 Write-Info "Step 2/7: Force stopping any remaining containers..."
 try {
-    $running = docker ps --filter "name=ha-ingestor" -q 2>$null
+    $running = docker ps --filter "name=homeiq" -q 2>$null
     if ($running) {
         $running | ForEach-Object { docker stop $_ 2>$null }
         $stoppedCount = ($running | Measure-Object).Count
@@ -115,9 +115,9 @@ try {
 Write-Host ""
 
 # Step 3: Remove all containers
-Write-Info "Step 3/7: Removing all ha-ingestor containers..."
+Write-Info "Step 3/7: Removing all homeiq containers..."
 try {
-    $allContainers = docker ps -a --filter "name=ha-ingestor" -q 2>$null
+    $allContainers = docker ps -a --filter "name=homeiq" -q 2>$null
     if ($allContainers) {
         $allContainers | ForEach-Object { docker rm -f $_ 2>$null }
         $removedCount = ($allContainers | Measure-Object).Count
@@ -131,9 +131,9 @@ try {
 Write-Host ""
 
 # Step 4: Remove all images
-Write-Info "Step 4/7: Removing all ha-ingestor images..."
+Write-Info "Step 4/7: Removing all homeiq images..."
 try {
-    $allImages = docker images --filter=reference='*ha-ingestor*' -q 2>$null
+    $allImages = docker images --filter=reference='*homeiq*' -q 2>$null
     if ($allImages) {
         $allImages | ForEach-Object { docker rmi -f $_ 2>$null }
         $removedCount = ($allImages | Measure-Object).Count
@@ -149,13 +149,13 @@ Write-Host ""
 # Step 5: Remove networks
 Write-Info "Step 5/7: Removing Docker networks..."
 try {
-    docker network rm ha-ingestor-network 2>$null | Out-Null
+    docker network rm homeiq-network 2>$null | Out-Null
     Write-Success "Network removed"
 } catch {
     Write-Info "Network not found or already removed"
 }
 try {
-    docker network rm ha-ingestor-network-dev 2>$null | Out-Null
+    docker network rm homeiq-network-dev 2>$null | Out-Null
 } catch {}
 Write-Host ""
 
@@ -174,9 +174,9 @@ Write-Info "Step 7/7: Verifying cleanup..."
 Write-Host ""
 
 try {
-    $remainingContainers = (docker ps -a --filter "name=ha-ingestor" -q 2>$null | Measure-Object).Count
-    $remainingImages = (docker images --filter=reference='*ha-ingestor*' -q 2>$null | Measure-Object).Count
-    $remainingNetworks = (docker network ls 2>$null | Select-String "ha-ingestor" | Measure-Object).Count
+    $remainingContainers = (docker ps -a --filter "name=homeiq" -q 2>$null | Measure-Object).Count
+    $remainingImages = (docker images --filter=reference='*homeiq*' -q 2>$null | Measure-Object).Count
+    $remainingNetworks = (docker network ls 2>$null | Select-String "homeiq" | Measure-Object).Count
 
     Write-Info "Cleanup verification:"
     Write-Host "  Containers: $remainingContainers (should be 0)"
@@ -197,11 +197,11 @@ try {
 Write-Host ""
 Write-Info "Volume status (preserved):"
 try {
-    $volumes = docker volume ls 2>$null | Select-String "ha-ingestor"
+    $volumes = docker volume ls 2>$null | Select-String "homeiq"
     if ($volumes) {
         $volumes | ForEach-Object { Write-Host "  $_" }
     } else {
-        Write-Info "No ha-ingestor volumes found"
+        Write-Info "No homeiq volumes found"
     }
 } catch {
     Write-Warning "Could not check volume status"

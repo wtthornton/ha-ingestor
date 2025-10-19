@@ -18,7 +18,7 @@ docker-compose up -d data-api
 
 # 3. Verify it's running
 docker ps --filter "name=data-api"
-# Expected: ha-ingestor-data-api ... Up ... 0.0.0.0:8006->8006/tcp
+# Expected: homeiq-data-api ... Up ... 0.0.0.0:8006->8006/tcp
 
 # 4. Test health
 curl http://localhost:8006/health

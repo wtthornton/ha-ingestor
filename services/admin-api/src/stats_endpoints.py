@@ -378,16 +378,8 @@ class StatsEndpoints:
         
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                # Use different endpoints based on service
-                if service_name == "enrichment-pipeline":
-                    # enrichment-pipeline has /api/v1/stats
-                    stats_url = f"{service_url}/api/v1/stats"
-                elif service_name == "websocket-ingestion":
-                    # websocket-ingestion only has /health, extract stats from it
-                    stats_url = f"{service_url}/health"
-                else:
-                    # Default to /stats
-                    stats_url = f"{service_url}/stats"
+                # Use /health endpoint for all services (most reliable)
+                stats_url = f"{service_url}/health"
                 
                 async with session.get(stats_url) as response:
                     if response.status == 200:
@@ -398,8 +390,9 @@ class StatsEndpoints:
                             return self._transform_websocket_health_to_stats(data, period)
                         elif service_name == "enrichment-pipeline":
                             return self._transform_enrichment_stats_to_stats(data, period)
-                        
-                        return data
+                        else:
+                            # For other services, create basic stats from health data
+                            return self._transform_health_to_stats(data, service_name, period)
                     else:
                         raise Exception(f"HTTP {response.status}")
         except Exception as e:
@@ -1023,6 +1016,52 @@ class StatsEndpoints:
         except Exception as e:
             logger.error(f"Error getting metrics from {service_name}: {e}")
             return self._create_fallback_metric(service_name, "error", str(e))
+    
+    def _transform_health_to_stats(self, health_data: Dict[str, Any], service_name: str, period: str) -> Dict[str, Any]:
+        """Transform health data to stats format for services without dedicated stats endpoints"""
+        try:
+            # Extract basic metrics from health data
+            status = health_data.get("status", "unknown")
+            uptime_seconds = 0.0
+            
+            if "uptime_seconds" in health_data:
+                uptime_seconds = health_data["uptime_seconds"]
+            elif "uptime" in health_data:
+                # Parse uptime string like "1:25:24.575842" to seconds
+                uptime_str = health_data["uptime"]
+                try:
+                    parts = uptime_str.split(":")
+                    if len(parts) == 3:
+                        hours, minutes, seconds = parts
+                        uptime_seconds = float(hours) * 3600 + float(minutes) * 60 + float(seconds)
+                except (ValueError, AttributeError):
+                    pass
+            
+            # Create basic stats structure
+            return {
+                "metrics": {
+                    "status": status,
+                    "uptime_seconds": uptime_seconds,
+                    "healthy": status == "healthy"
+                },
+                "trends": {},
+                "alerts": [] if status == "healthy" else [{
+                    "service": service_name,
+                    "level": "error" if status == "unhealthy" else "warning",
+                    "message": f"Service status: {status}"
+                }]
+            }
+        except Exception as e:
+            logger.error(f"Error transforming health data for {service_name}: {e}")
+            return {
+                "metrics": {"error": str(e)},
+                "trends": {},
+                "alerts": [{
+                    "service": service_name,
+                    "level": "error",
+                    "message": f"Failed to transform health data: {str(e)}"
+                }]
+            }
     
     def _create_fallback_metric(self, service_name: str, status: str, error_message: str = None) -> Dict[str, Any]:
         """Create a fallback metric when service is unavailable"""

@@ -21,16 +21,16 @@ echo "Setting up organization and bucket..."
 
 # Use influx CLI to create organization and bucket
 influx org create \
-  --name "${INFLUXDB_ORG:-ha-ingestor}" \
+  --name "${INFLUXDB_ORG:-homeiq}" \
   --description "Home Assistant Data Ingestion Organization" \
-  --token "${INFLUXDB_TOKEN:-ha-ingestor-token}" \
+  --token "${INFLUXDB_TOKEN:-homeiq-token}" \
   --host http://localhost:8086
 
 influx bucket create \
   --name "${INFLUXDB_BUCKET:-home_assistant_events}" \
-  --org "${INFLUXDB_ORG:-ha-ingestor}" \
+  --org "${INFLUXDB_ORG:-homeiq}" \
   --retention 30d \
-  --token "${INFLUXDB_TOKEN:-ha-ingestor-token}" \
+  --token "${INFLUXDB_TOKEN:-homeiq-token}" \
   --host http://localhost:8086
 
 echo "InfluxDB initialization complete!"

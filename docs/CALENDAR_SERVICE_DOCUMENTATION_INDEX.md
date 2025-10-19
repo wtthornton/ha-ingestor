@@ -311,7 +311,7 @@ Start here → **[Architecture Documentation](architecture/calendar-service.md)*
 ## 📁 File Organization
 
 ```
-ha-ingestor/
+homeiq/
 │
 ├── README.md                          ✅ Updated (calendar section)
 │

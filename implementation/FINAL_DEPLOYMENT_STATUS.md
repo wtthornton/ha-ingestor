@@ -49,7 +49,7 @@ Health Dashboard ✅
 ✅ InfluxDB running (port 8086)
 ✅ Bucket created: home_assistant_events
 ✅ Retention: infinite
-✅ Organization: ha-ingestor
+✅ Organization: homeiq
 ✅ Events being stored
 ```
 
@@ -199,14 +199,14 @@ docker-compose ps
 
 ### 2. Check Event Processing
 ```bash
-docker logs ha-ingestor-websocket --tail 20
-docker logs ha-ingestor-enrichment --tail 20
+docker logs homeiq-websocket --tail 20
+docker logs homeiq-enrichment --tail 20
 ```
 **Expected**: See events being validated and processed
 
 ### 3. Check Data Storage
 ```bash
-docker exec ha-ingestor-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start: -1h) |> limit(n:10)' --org ha-ingestor --token ha-ingestor-token
+docker exec homeiq-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start: -1h) |> limit(n:10)' --org homeiq --token homeiq-token
 ```
 **Expected**: See stored HA events
 

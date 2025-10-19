@@ -143,9 +143,9 @@ node tests/visual/test-quick-check.js patterns
 **Total Deployment Time**: ~77 seconds
 
 **Docker Images:**
-- `ha-ingestor-ai-automation-ui:latest` - ✅ Built successfully
-- `ha-ingestor-ai-automation-service:latest` - ✅ Built successfully
-- `ha-ingestor-data-api:latest` - ✅ Built successfully
+- `homeiq-ai-automation-ui:latest` - ✅ Built successfully
+- `homeiq-ai-automation-service:latest` - ✅ Built successfully
+- `homeiq-data-api:latest` - ✅ Built successfully
 
 ---
 

@@ -38,17 +38,17 @@ The enrichment pipeline validator expected `entity_id` inside state objects, but
 
 2. **Check Validation Success Rate**
    ```bash
-   docker logs ha-ingestor-enrichment --tail 50 | grep "Validation passed"
+   docker logs homeiq-enrichment --tail 50 | grep "Validation passed"
    ```
 
 3. **Check for Validation Errors**
    ```bash
-   docker logs ha-ingestor-enrichment | grep "validation failed"
+   docker logs homeiq-enrichment | grep "validation failed"
    ```
 
 4. **Verify InfluxDB Writes**
    ```bash
-   docker logs ha-ingestor-enrichment | grep "points_written"
+   docker logs homeiq-enrichment | grep "points_written"
    ```
 
 #### Circuit Breaker Open
@@ -59,7 +59,7 @@ The enrichment pipeline validator expected `entity_id` inside state objects, but
 
 2. **Check recent errors**
    ```bash
-   docker logs ha-ingestor-enrichment --tail 100 | grep "ERROR"
+   docker logs homeiq-enrichment --tail 100 | grep "ERROR"
    ```
 
 3. **Restart WebSocket service** to reset circuit breaker
@@ -69,13 +69,13 @@ The enrichment pipeline validator expected `entity_id` inside state objects, but
 
 4. **Monitor for successful sends**
    ```bash
-   docker logs ha-ingestor-websocket --tail 50 | grep "Event sent successfully"
+   docker logs homeiq-websocket --tail 50 | grep "Event sent successfully"
    ```
 
 #### HTTP 500 Errors from Enrichment Service
 1. **Check service logs for exceptions**
    ```bash
-   docker logs ha-ingestor-enrichment | grep -A 10 "ERROR"
+   docker logs homeiq-enrichment | grep -A 10 "ERROR"
    ```
 
 2. **Verify event structure**
@@ -105,7 +105,7 @@ The enrichment pipeline validator expected `entity_id` inside state objects, but
 
 3. **Query InfluxDB directly**
    ```bash
-   docker exec ha-ingestor-influxdb influx query \
+   docker exec homeiq-influxdb influx query \
      'from(bucket:"home_assistant_events") |> range(start: -1h) |> limit(n: 10)'
    ```
 

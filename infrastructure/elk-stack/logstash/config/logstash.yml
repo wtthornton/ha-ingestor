@@ -1,7 +1,7 @@
 # Logstash configuration for HA Ingestor
 
 # Node settings
-node.name: ha-ingestor-logstash
+node.name: homeiq-logstash
 path.data: /usr/share/logstash/data
 path.logs: /usr/share/logstash/logs
 

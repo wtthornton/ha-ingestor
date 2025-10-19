@@ -129,7 +129,7 @@ git --version
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Install dependencies
 npm install

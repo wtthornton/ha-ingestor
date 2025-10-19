@@ -16,7 +16,7 @@ The enhanced HA Ingestor Dashboard has been successfully deployed to production 
 
 ### Container Status
 ```
-Container: ha-ingestor-dashboard
+Container: homeiq-dashboard
 Status: Up and healthy ✅
 Port: 0.0.0.0:3000->80/tcp
 Health Check: Passing

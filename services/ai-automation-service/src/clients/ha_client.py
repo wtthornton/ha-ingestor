@@ -6,7 +6,7 @@ Story AI1.11: Home Assistant Integration
 
 import aiohttp
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -300,4 +300,221 @@ class HomeAssistantClient:
         """
         # For MVP, just disable the automation
         return await self.disable_automation(automation_id)
+
+    async def conversation_process(self, text: str) -> Dict[str, Any]:
+        """
+        Process natural language using Home Assistant Conversation API.
+
+        This is used by the Ask AI tab to extract entities and understand user intent.
+
+        Args:
+            text: Natural language input from user
+
+        Returns:
+            Dict containing entities, intent, and response from HA
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.ha_url}/api/conversation/process",
+                    headers=self.headers,
+                    json={"text": text},
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
+                    if response.status in [200, 201]:
+                        result = await response.json()
+                        logger.info(f"HA Conversation API processed: '{text}' -> {len(result.get('entities', []))} entities")
+                        return result
+                    else:
+                        logger.error(f"HA Conversation API failed: {response.status}")
+                        return {"entities": [], "intent": None, "response": None}
+
+        except Exception as e:
+            logger.error(f"Failed to process conversation with HA: {e}")
+            # Return empty result instead of raising to allow fallback
+            return {"entities": [], "intent": None, "response": None}
+    
+    async def validate_automation(self, automation_yaml: str) -> Dict[str, Any]:
+        """
+        Validate automation YAML without creating it.
+        
+        Checks:
+        - YAML syntax is valid
+        - Required fields are present
+        - Referenced entities exist in HA
+        
+        Args:
+            automation_yaml: YAML string for automation
+        
+        Returns:
+            Dict with validation results
+        """
+        try:
+            # Parse YAML
+            automation_data = yaml.safe_load(automation_yaml)
+            
+            if not isinstance(automation_data, dict):
+                return {
+                    "valid": False,
+                    "error": "Invalid YAML: must be a dictionary",
+                    "details": []
+                }
+            
+            errors = []
+            warnings = []
+            
+            # Check required fields
+            if 'trigger' not in automation_data and 'triggers' not in automation_data:
+                errors.append("Missing required field: 'trigger' or 'triggers'")
+            
+            if 'action' not in automation_data and 'actions' not in automation_data:
+                errors.append("Missing required field: 'action' or 'actions'")
+            
+            # Extract and validate entity IDs
+            entity_ids = self._extract_entity_ids(automation_data)
+            logger.info(f"Validating {len(entity_ids)} entities from automation")
+            
+            # Check if entities exist in HA
+            async with aiohttp.ClientSession() as session:
+                for entity_id in entity_ids:
+                    async with session.get(
+                        f"{self.ha_url}/api/states/{entity_id}",
+                        headers=self.headers,
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
+                        if response.status == 404:
+                            warnings.append(f"Entity not found: {entity_id}")
+            
+            if errors:
+                return {
+                    "valid": False,
+                    "error": "; ".join(errors),
+                    "details": warnings
+                }
+            
+            return {
+                "valid": True,
+                "warnings": warnings,
+                "entity_count": len(entity_ids),
+                "automation_id": automation_data.get('id', automation_data.get('alias', 'unknown'))
+            }
+            
+        except yaml.YAMLError as e:
+            return {
+                "valid": False,
+                "error": f"YAML syntax error: {str(e)}",
+                "details": []
+            }
+        except Exception as e:
+            logger.error(f"Error validating automation: {e}", exc_info=True)
+            return {
+                "valid": False,
+                "error": f"Validation error: {str(e)}",
+                "details": []
+            }
+    
+    def _extract_entity_ids(self, automation_data: Dict) -> List[str]:
+        """
+        Extract all entity IDs from automation config.
+        
+        Args:
+            automation_data: Parsed automation dictionary
+        
+        Returns:
+            List of entity IDs found in the automation
+        """
+        entity_ids = set()
+        
+        def extract_from_dict(d: Dict):
+            for key, value in d.items():
+                if key in ['entity_id', 'target']:
+                    if isinstance(value, str) and '.' in value:
+                        entity_ids.add(value)
+                    elif isinstance(value, dict) and 'entity_id' in value:
+                        if isinstance(value['entity_id'], str):
+                            entity_ids.add(value['entity_id'])
+                        elif isinstance(value['entity_id'], list):
+                            entity_ids.update(value['entity_id'])
+                    elif isinstance(value, list):
+                        for item in value:
+                            if isinstance(item, str) and '.' in item:
+                                entity_ids.add(item)
+                elif isinstance(value, dict):
+                    extract_from_dict(value)
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            extract_from_dict(item)
+        
+        extract_from_dict(automation_data)
+        return list(entity_ids)
+    
+    async def create_automation(self, automation_yaml: str) -> Dict[str, Any]:
+        """
+        Create a new automation in Home Assistant.
+        
+        This writes the automation config directly to Home Assistant's configuration.
+        
+        Args:
+            automation_yaml: YAML string for the automation
+        
+        Returns:
+            Dict with creation result including automation_id and status
+        """
+        try:
+            # First validate the automation
+            validation = await self.validate_automation(automation_yaml)
+            if not validation.get('valid', False):
+                return {
+                    "success": False,
+                    "error": f"Validation failed: {validation.get('error', 'Unknown error')}",
+                    "details": validation.get('details', [])
+                }
+            
+            # Parse YAML
+            automation_data = yaml.safe_load(automation_yaml)
+            
+            # Generate automation ID if not present
+            if 'id' not in automation_data:
+                alias = automation_data.get('alias', 'ai_automation')
+                automation_data['id'] = alias.lower().replace(' ', '_').replace('-', '_')
+            
+            automation_id = f"automation.{automation_data['id']}"
+            
+            # Create automation via HA REST API
+            # Note: HA doesn't have a direct REST endpoint to create automations
+            # We need to use the config/automation/config endpoint (requires HA config write access)
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.ha_url}/api/config/automation/config/{automation_data['id']}",
+                    headers=self.headers,
+                    json=automation_data,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status in [200, 201]:
+                        result = await response.json()
+                        logger.info(f"✅ Automation created: {automation_id}")
+                        
+                        # Enable the automation
+                        await self.enable_automation(automation_id)
+                        
+                        return {
+                            "success": True,
+                            "automation_id": automation_id,
+                            "message": "Automation created and enabled successfully",
+                            "warnings": validation.get('warnings', [])
+                        }
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"❌ Failed to create automation ({response.status}): {error_text}")
+                        return {
+                            "success": False,
+                            "error": f"HTTP {response.status}: {error_text}"
+                        }
+        except Exception as e:
+            logger.error(f"❌ Error creating automation: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e)
+            }
 

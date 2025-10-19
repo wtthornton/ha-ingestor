@@ -57,10 +57,10 @@ start http://localhost:3000
 
 ```bash
 # Check logs periodically
-docker logs ha-ingestor-sports-data --tail 50
+docker logs homeiq-sports-data --tail 50
 
 # Check resource usage
-docker stats ha-ingestor-sports-data
+docker stats homeiq-sports-data
 ```
 
 **What to Watch**:
@@ -136,8 +136,8 @@ After tests pass:
 ### Task 2: Start Monitoring (PASSIVE)
 ```bash
 # Set a reminder to check these in 4, 8, and 24 hours:
-docker logs ha-ingestor-sports-data --tail 50
-docker stats ha-ingestor-sports-data
+docker logs homeiq-sports-data --tail 50
+docker stats homeiq-sports-data
 ```
 
 **Time**: 5 min every 4-8 hours  
@@ -218,7 +218,7 @@ start http://localhost:3000
 
 ### Check Logs
 ```bash
-docker logs ha-ingestor-sports-data --tail 50
+docker logs homeiq-sports-data --tail 50
 ```
 
 ### Check Health

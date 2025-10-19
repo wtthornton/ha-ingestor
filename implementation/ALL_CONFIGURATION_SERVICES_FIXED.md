@@ -144,7 +144,7 @@ admin-api:
 ### Test Configuration Save:
 ```bash
 # Test any configuration service
-docker exec ha-ingestor-admin python -c "
+docker exec homeiq-admin python -c "
 import sys
 sys.path.append('/app/src')
 from config_manager import config_manager
@@ -207,12 +207,12 @@ Get-Content infrastructure/.env.influxdb
 
 1. **Check Container Logs**:
    ```bash
-   docker logs ha-ingestor-admin --tail 20
+   docker logs homeiq-admin --tail 20
    ```
 
 2. **Test Specific Service**:
    ```bash
-   docker exec ha-ingestor-admin python -c "
+   docker exec homeiq-admin python -c "
    from config_manager import config_manager
    config_manager.write_config('service_name', {'KEY': 'value'})
    "
@@ -224,7 +224,7 @@ Get-Content infrastructure/.env.influxdb
    ls -la infrastructure/.env.*
    
    # Check container permissions
-   docker exec ha-ingestor-admin ls -la /app/infrastructure/.env.*
+   docker exec homeiq-admin ls -la /app/infrastructure/.env.*
    ```
 
 4. **Restart Admin API**:

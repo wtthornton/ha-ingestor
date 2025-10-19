@@ -390,7 +390,7 @@ Primary use case (flash lights on score) fully operational!
 
 ## 📦 Deployment Package
 
-**Container:** ha-ingestor-sports-data  
+**Container:** homeiq-sports-data  
 **Image:** Built and tested ✅  
 **Port:** 8005  
 **Health:** http://localhost:8005/health  

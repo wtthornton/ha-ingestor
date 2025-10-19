@@ -16,7 +16,7 @@
 ```nginx
 # Proxy sports API calls to sports-data service
 location /api/sports/ {
-    proxy_pass http://ha-ingestor-sports-data:8005/api/v1/;
+    proxy_pass http://homeiq-sports-data:8005/api/v1/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -61,7 +61,7 @@ location /api/sports/ {
 ### Pre-Deployment Checks
 
 - [x] nginx.conf has `/api/sports/` location block
-- [x] nginx.conf routes to `http://ha-ingestor-sports-data:8005/api/v1/`
+- [x] nginx.conf routes to `http://homeiq-sports-data:8005/api/v1/`
 - [x] sports-api service commented out in docker-compose.yml
 - [x] sports-data service still active in docker-compose.yml
 - [x] Documentation updated with architecture decision
@@ -86,9 +86,9 @@ docker-compose ps
 **Expected Output:**
 ```
 NAME                          STATUS
-ha-ingestor-sports-data       Up (healthy)
-ha-ingestor-dashboard         Up (healthy)
-ha-ingestor-admin             Up (healthy)
+homeiq-sports-data       Up (healthy)
+homeiq-dashboard         Up (healthy)
+homeiq-admin             Up (healthy)
 # Note: ha-sports-api should NOT be in the list
 ```
 
@@ -106,7 +106,7 @@ curl http://localhost:8005/health
 ```
 
 **Status:** PASS if returns healthy status  
-**Troubleshoot:** Check container logs if failing: `docker logs ha-ingestor-sports-data`
+**Troubleshoot:** Check container logs if failing: `docker logs homeiq-sports-data`
 
 ---
 
@@ -164,11 +164,11 @@ open http://localhost:3000
 ### Test 5: Nginx Routing Verification
 ```bash
 # Check nginx configuration is loaded
-docker exec ha-ingestor-dashboard cat /etc/nginx/conf.d/default.conf | grep -A 5 "api/sports"
+docker exec homeiq-dashboard cat /etc/nginx/conf.d/default.conf | grep -A 5 "api/sports"
 
 # Expected output:
 # location /api/sports/ {
-#     proxy_pass http://ha-ingestor-sports-data:8005/api/v1/;
+#     proxy_pass http://homeiq-sports-data:8005/api/v1/;
 #     ...
 # }
 ```
@@ -203,7 +203,7 @@ Nginx (dashboard container:80)
     ↓
 Location match: /api/sports/
     ↓
-Proxy to: http://ha-ingestor-sports-data:8005/api/v1/teams?league=NHL
+Proxy to: http://homeiq-sports-data:8005/api/v1/teams?league=NHL
     ↓
 FastAPI (sports-data service)
     ↓
@@ -242,8 +242,8 @@ docker-compose build health-dashboard
 docker-compose up -d health-dashboard
 
 # Verify nginx config loaded
-docker exec ha-ingestor-dashboard nginx -t
-docker exec ha-ingestor-dashboard nginx -s reload
+docker exec homeiq-dashboard nginx -t
+docker exec homeiq-dashboard nginx -s reload
 ```
 
 ---
@@ -277,7 +277,7 @@ docker-compose up -d
 **Solution:**
 ```bash
 # Check service status
-docker logs ha-ingestor-sports-data --tail 50
+docker logs homeiq-sports-data --tail 50
 
 # Common issues:
 # - Port 8005 already in use: Stop conflicting service
@@ -315,7 +315,7 @@ curl http://localhost:8005/api/v1/cache/stats
 
 ```bash
 # Container resource usage
-docker stats ha-ingestor-sports-data
+docker stats homeiq-sports-data
 
 # Expected:
 # CPU: <5% average

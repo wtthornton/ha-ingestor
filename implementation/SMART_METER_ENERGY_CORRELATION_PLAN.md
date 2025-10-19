@@ -1133,7 +1133,7 @@ services:
     build:
       context: ./services/energy-correlator
       dockerfile: Dockerfile
-    container_name: ha-ingestor-energy-correlator
+    container_name: homeiq-energy-correlator
     ports:
       - "8015:8015"
     environment:
@@ -1147,7 +1147,7 @@ services:
       - influxdb
       - smart-meter-service
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8015/health"]

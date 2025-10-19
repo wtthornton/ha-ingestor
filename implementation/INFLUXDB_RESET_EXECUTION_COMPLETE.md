@@ -42,7 +42,7 @@ The InfluxDB reset and schema validation has been **successfully executed**! The
 ## 📊 **Current System Status**
 
 ### **InfluxDB Status**
-- **Organization**: `ha-ingestor` ✅
+- **Organization**: `homeiq` ✅
 - **Main Bucket**: `home_assistant_events` (365 days retention) ✅
 - **Additional Buckets**: `sports_data`, `weather_data`, `system_metrics` ✅
 - **Schema**: Epic 23 enhanced with all required tags/fields ✅
@@ -125,15 +125,15 @@ All success criteria from the original plan have been achieved:
 ### **Commands Executed**
 ```bash
 # Updated retention policy
-docker exec ha-ingestor-influxdb influx bucket update --id 2d06f5dd7eb8dc88 --retention 365d
+docker exec homeiq-influxdb influx bucket update --id 2d06f5dd7eb8dc88 --retention 365d
 
 # Created additional buckets
-docker exec ha-ingestor-influxdb influx bucket create --name sports_data --retention 90d
-docker exec ha-ingestor-influxdb influx bucket create --name weather_data --retention 180d
-docker exec ha-ingestor-influxdb influx bucket create --name system_metrics --retention 30d
+docker exec homeiq-influxdb influx bucket create --name sports_data --retention 90d
+docker exec homeiq-influxdb influx bucket create --name weather_data --retention 180d
+docker exec homeiq-influxdb influx bucket create --name system_metrics --retention 30d
 
 # Verified data flow
-Invoke-RestMethod -Uri "http://localhost:8086/api/v2/query?org=ha-ingestor" -Method POST -Headers @{"Authorization" = "Token ha-ingestor-token"; "Content-Type" = "application/vnd.flux"} -Body "from(bucket: `"home_assistant_events`") |> range(start: -1h) |> limit(n:1)"
+Invoke-RestMethod -Uri "http://localhost:8086/api/v2/query?org=homeiq" -Method POST -Headers @{"Authorization" = "Token homeiq-token"; "Content-Type" = "application/vnd.flux"} -Body "from(bucket: `"home_assistant_events`") |> range(start: -1h) |> limit(n:1)"
 ```
 
 ### **Schema Validation Results**

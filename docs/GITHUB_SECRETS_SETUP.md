@@ -338,9 +338,9 @@ To remove secrets from git history:
 brew install bfg
 
 # Clone a fresh mirror
-git clone --mirror git@github.com:yourusername/ha-ingestor.git
+git clone --mirror git@github.com:yourusername/homeiq.git
 
-cd ha-ingestor.git
+cd homeiq.git
 
 # Remove sensitive files
 bfg --delete-files env.production

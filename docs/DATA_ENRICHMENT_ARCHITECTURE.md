@@ -555,7 +555,7 @@ graph TB
 ### Existing Project Structure (Relevant Parts)
 
 ```
-ha-ingestor/
+homeiq/
 ├── services/
 │   ├── websocket-ingestion/          # Existing - unchanged
 │   ├── enrichment-pipeline/          # Existing - unchanged
@@ -573,7 +573,7 @@ ha-ingestor/
 ### New File Organization
 
 ```
-ha-ingestor/
+homeiq/
 ├── services/
 │   ├── carbon-intensity-service/    # NEW
 │   │   ├── src/

@@ -14,7 +14,7 @@
 SERVICE: ai-automation-service
 STATUS: Up 2 minutes (healthy)
 PORT: 0.0.0.0:8018->8018/tcp
-IMAGE: ha-ingestor-ai-automation-service (latest)
+IMAGE: homeiq-ai-automation-service (latest)
 ```
 
 ---

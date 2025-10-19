@@ -70,7 +70,7 @@ Line 414: {haIntegration?.totalDevices || 0}  // Shows 0 when haIntegration is n
 **File: `services/health-dashboard/nginx.conf`**
 ```nginx
 Line 44-51: location /api/devices {
-    proxy_pass http://ha-ingestor-data-api:8006/api/devices;
+    proxy_pass http://homeiq-data-api:8006/api/devices;
     ...
 }
 ```
@@ -142,7 +142,7 @@ The frontend may be receiving data but failing to parse it correctly.
 4. **Check Frontend Environment Variables:**
    ```bash
    # In health-dashboard container
-   docker exec ha-ingestor-dashboard env | grep VITE
+   docker exec homeiq-dashboard env | grep VITE
    ```
 
 5. **Add Debug Logging:**
@@ -162,7 +162,7 @@ curl -v http://localhost:3000/api/devices
 curl -v http://localhost:8006/api/devices
 
 # 3. Check from within dashboard container
-docker exec ha-ingestor-dashboard wget -O- http://ha-ingestor-data-api:8006/api/devices
+docker exec homeiq-dashboard wget -O- http://homeiq-data-api:8006/api/devices
 ```
 
 ## ROOT CAUSE IDENTIFIED ✅
@@ -170,7 +170,7 @@ docker exec ha-ingestor-dashboard wget -O- http://ha-ingestor-data-api:8006/api/
 **Problem:** nginx DNS cache with stale IP address
 
 ### What Happened:
-1. nginx cached DNS resolution: `ha-ingestor-data-api` → `172.18.0.9`
+1. nginx cached DNS resolution: `homeiq-data-api` → `172.18.0.9`
 2. data-api container was recreated/restarted and got new IP: `172.18.0.8`
 3. nginx kept using the old cached IP `172.18.0.9`, causing "Connection refused" (502 errors)
 4. Frontend received 502 errors, resulting in empty device/entity/integration arrays
@@ -182,7 +182,7 @@ nginx error log:
 connect() failed (111: Connection refused) while connecting to upstream, 
 upstream: "http://172.18.0.9:8006/api/v1/alerts?severity=critical"
 
-docker inspect ha-ingestor-data-api:
+docker inspect homeiq-data-api:
 "IPAddress": "172.18.0.8"  ← actual IP is different!
 ```
 
@@ -191,7 +191,7 @@ docker inspect ha-ingestor-data-api:
 **Fix:** Restart nginx container to force DNS re-resolution
 
 ```bash
-docker restart ha-ingestor-dashboard
+docker restart homeiq-dashboard
 ```
 
 ### Verification:
@@ -232,7 +232,7 @@ This issue can occur when:
 ```nginx
 # Add to nginx.conf:
 resolver 127.0.0.11 valid=10s;  # Docker's internal DNS
-set $data_api http://ha-ingestor-data-api:8006;
+set $data_api http://homeiq-data-api:8006;
 proxy_pass $data_api/api/devices;
 ```
 
@@ -248,7 +248,7 @@ health-dashboard:
 3. **Quick manual fix (current approach):**
 ```bash
 # When services get recreated:
-docker restart ha-ingestor-dashboard
+docker restart homeiq-dashboard
 ```
 
 ## Related Files

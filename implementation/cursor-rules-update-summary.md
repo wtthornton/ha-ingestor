@@ -2,7 +2,7 @@
 
 **Date:** October 12, 2025  
 **Performed by:** BMad Master Agent  
-**Project:** ha-ingestor
+**Project:** homeiq
 
 ## Overview
 

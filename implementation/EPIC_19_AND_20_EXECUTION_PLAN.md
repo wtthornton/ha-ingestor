@@ -46,7 +46,7 @@
 
 **Step 1: Rebuild Images**
 ```bash
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 
 # Rebuild websocket service
 docker-compose build websocket-ingestion
@@ -99,8 +99,8 @@ def __init__(self, base_url: str, token: str, influxdb_manager=None):
 
 **3. Create InfluxDB Buckets** (optional - auto-created):
 ```bash
-docker exec -it influxdb influx bucket create -n devices -o ha-ingestor -r 90d
-docker exec -it influxdb influx bucket create -n entities -o ha-ingestor -r 90d
+docker exec -it influxdb influx bucket create -n devices -o homeiq -r 90d
+docker exec -it influxdb influx bucket create -n entities -o homeiq -r 90d
 ```
 
 **4. Verify Storage Working**:
@@ -359,7 +359,7 @@ DeviceTopology.tsx (reuse ServiceDependencyGraph pattern)
 
 **Deploy Epic 19**:
 ```bash
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 
 # Build and restart
 docker-compose build websocket-ingestion admin-api
@@ -461,7 +461,7 @@ Dashboard Tabs:
 
 ```bash
 # Navigate to project
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 
 # Build services
 docker-compose build websocket-ingestion admin-api

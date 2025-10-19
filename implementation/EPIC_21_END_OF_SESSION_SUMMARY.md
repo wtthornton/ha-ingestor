@@ -158,7 +158,7 @@ curl http://localhost:8006/docs  # View OpenAPI docs
 # Look for /api/v1/ws endpoint
 
 # Check data-api logs for WebSocket errors
-docker logs ha-ingestor-data-api | grep -i websocket
+docker logs homeiq-data-api | grep -i websocket
 
 # Verify WebSocketEndpoints router is included
 # File: services/data-api/src/main.py
@@ -167,14 +167,14 @@ docker logs ha-ingestor-data-api | grep -i websocket
 **Fix Devices/Entities Endpoints:**
 ```bash
 # Check logs for 500 error details
-docker logs ha-ingestor-data-api | grep -i "500\|error"
+docker logs homeiq-data-api | grep -i "500\|error"
 
 # Test endpoints directly
 curl http://localhost:8006/api/devices?limit=1
 curl http://localhost:8006/api/entities?limit=1
 
 # Check InfluxDB has device/entity data
-docker exec ha-ingestor-influxdb influx query 'from(bucket: "home_assistant_events") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "devices")'
+docker exec homeiq-influxdb influx query 'from(bucket: "home_assistant_events") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "devices")'
 ```
 
 **Expected Fixes Needed:**
@@ -325,7 +325,7 @@ docker exec ha-ingestor-influxdb influx query 'from(bucket: "home_assistant_even
 ### How to Continue
 ```bash
 # 1. Check data-api logs
-docker logs ha-ingestor-data-api --tail 100
+docker logs homeiq-data-api --tail 100
 
 # 2. Test endpoints individually
 curl http://localhost:8006/api/devices?limit=1  # Should fix 500 error

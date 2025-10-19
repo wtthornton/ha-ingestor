@@ -122,7 +122,7 @@ The following files are excluded from version control via `.gitignore`:
              INFLUXDB_USERNAME=${{ secrets.INFLUXDB_USERNAME }}
              INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}
              INFLUXDB_TOKEN=${{ secrets.INFLUXDB_TOKEN }}
-             INFLUXDB_ORG=ha-ingestor
+             INFLUXDB_ORG=homeiq
              INFLUXDB_BUCKET=home_assistant_events
              INFLUXDB_URL=http://influxdb:8086
              JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
@@ -168,13 +168,13 @@ For cloud providers (AWS, Azure, GCP), use their secret management services:
 **AWS Systems Manager Parameter Store:**
 ```bash
 aws ssm put-parameter \
-  --name /ha-ingestor/weather-api-key \
+  --name /homeiq/weather-api-key \
   --value "your_key" \
   --type SecureString
 
 # Retrieve in deployment
 WEATHER_API_KEY=$(aws ssm get-parameter \
-  --name /ha-ingestor/weather-api-key \
+  --name /homeiq/weather-api-key \
   --with-decryption \
   --query Parameter.Value \
   --output text)
@@ -183,7 +183,7 @@ WEATHER_API_KEY=$(aws ssm get-parameter \
 **Azure Key Vault:**
 ```bash
 az keyvault secret set \
-  --vault-name ha-ingestor-vault \
+  --vault-name homeiq-vault \
   --name weather-api-key \
   --value "your_key"
 ```
@@ -339,13 +339,13 @@ If you previously committed secrets:
 brew install bfg  # or download from https://rtyley.github.io/bfg-repo-cleaner/
 
 # Clone a fresh copy
-git clone --mirror git@github.com:yourusername/ha-ingestor.git
+git clone --mirror git@github.com:yourusername/homeiq.git
 
 # Remove sensitive files
-bfg --delete-files env.production ha-ingestor.git
+bfg --delete-files env.production homeiq.git
 
 # Clean up
-cd ha-ingestor.git
+cd homeiq.git
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
 

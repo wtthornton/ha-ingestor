@@ -46,17 +46,17 @@ docker-compose up -d ha-setup-service
 
 ```bash
 # Build the image
-docker build -t ha-ingestor-setup-service ./services/ha-setup-service
+docker build -t homeiq-setup-service ./services/ha-setup-service
 
 # Run the container (HA_TOKEN from .env.websocket)
 docker run -d -p 8010:8010 \
-  --name ha-ingestor-setup-service \
+  --name homeiq-setup-service \
   --env-file infrastructure/.env.websocket \
   -e DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db \
-  -e DATA_API_URL=http://ha-ingestor-data-api:8006 \
-  -e ADMIN_API_URL=http://ha-ingestor-admin-api:8003 \
+  -e DATA_API_URL=http://homeiq-data-api:8006 \
+  -e ADMIN_API_URL=http://homeiq-admin-api:8003 \
   -v ha_setup_data:/app/data \
-  ha-ingestor-setup-service
+  homeiq-setup-service
 ```
 
 ### Verify Deployment
@@ -83,8 +83,8 @@ curl http://localhost:8010/api/health/integrations
 | `HA_URL` | `http://192.168.1.86:8123` | Home Assistant URL |
 | `HA_TOKEN` | (from `.env.websocket`) | HA long-lived access token |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./data/ha-setup.db` | SQLite database URL |
-| `DATA_API_URL` | `http://ha-ingestor-data-api:8006` | Data API URL |
-| `ADMIN_API_URL` | `http://ha-ingestor-admin-api:8003` | Admin API URL |
+| `DATA_API_URL` | `http://homeiq-data-api:8006` | Data API URL |
+| `ADMIN_API_URL` | `http://homeiq-admin-api:8003` | Admin API URL |
 | `HEALTH_CHECK_INTERVAL` | `60` | Health check interval (seconds) |
 | `INTEGRATION_CHECK_INTERVAL` | `300` | Integration check interval (seconds) |
 
@@ -251,10 +251,10 @@ CREATE TABLE integration_health (
 ### Service Won't Start
 ```bash
 # Check if HA_TOKEN is set
-docker exec ha-ingestor-setup-service env | grep HA_TOKEN
+docker exec homeiq-setup-service env | grep HA_TOKEN
 
 # Check logs
-docker logs ha-ingestor-setup-service
+docker logs homeiq-setup-service
 
 # Verify HA connectivity
 curl http://192.168.1.86:8123/api/
@@ -269,7 +269,7 @@ docker ps | grep setup-service
 curl http://localhost:8010/health
 
 # Check database
-docker exec ha-ingestor-setup-service ls -la /app/data/
+docker exec homeiq-setup-service ls -la /app/data/
 ```
 
 ### Integration Checks Return Errors
@@ -333,7 +333,7 @@ pytest --cov=src tests/
 ## Support
 
 For issues or questions:
-1. Check service logs: `docker logs ha-ingestor-setup-service`
+1. Check service logs: `docker logs homeiq-setup-service`
 2. Verify HA connectivity
 3. Check integration status via API
 4. Review documentation in `/docs`

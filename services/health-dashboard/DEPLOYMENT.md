@@ -91,7 +91,7 @@ health-dashboard:
   build:
     context: ./services/health-dashboard
     dockerfile: Dockerfile
-  container_name: ha-ingestor-dashboard
+  container_name: homeiq-dashboard
   restart: unless-stopped
   ports:
     - "3000:80"
@@ -103,7 +103,7 @@ health-dashboard:
     admin-api:
       condition: service_healthy
   networks:
-    - ha-ingestor-network
+    - homeiq-network
 ```
 
 ### Nginx Proxy Configuration
@@ -329,7 +329,7 @@ VITE_ENVIRONMENT=development npm run build
 
 - **Build Logs**: Check console output during build
 - **Runtime Logs**: Monitor browser console and network tab
-- **Docker Logs**: `docker logs ha-ingestor-dashboard`
+- **Docker Logs**: `docker logs homeiq-dashboard`
 
 ## Deployment Checklist
 

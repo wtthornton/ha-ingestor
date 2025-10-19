@@ -57,17 +57,17 @@ Successfully executed Phase 1 (Update Weather Location) and Phase 2 (Architectur
 - **Services Removed:**
   ```yaml
   weather-api:
-    container_name: ha-ingestor-weather
+    container_name: homeiq-weather
     # ... (entire service block removed)
   ```
 
 #### 2.2 Stopped and Removed Container
 - **Commands:**
   ```bash
-  docker stop ha-ingestor-weather
-  docker rm ha-ingestor-weather
+  docker stop homeiq-weather
+  docker rm homeiq-weather
   ```
-- **Result:** Broken `ha-ingestor-weather` container successfully removed
+- **Result:** Broken `homeiq-weather` container successfully removed
 - **Benefit:** No more crash-loop errors from broken service
 
 ---
@@ -77,17 +77,17 @@ Successfully executed Phase 1 (Update Weather Location) and Phase 2 (Architectur
 ### System Status After Changes
 
 #### Healthy Services ✅
-1. **ha-ingestor-influxdb** - Up 39 minutes (healthy)
-2. **ha-ingestor-enrichment** - Up 38 minutes (healthy)
-3. **ha-ingestor-websocket** - Up 31 seconds (healthy) ← **RECREATED**
-4. **ha-ingestor-admin** - Up 21 minutes (healthy)
-5. **ha-ingestor-dashboard** - Up 18 minutes (healthy)
+1. **homeiq-influxdb** - Up 39 minutes (healthy)
+2. **homeiq-enrichment** - Up 38 minutes (healthy)
+3. **homeiq-websocket** - Up 31 seconds (healthy) ← **RECREATED**
+4. **homeiq-admin** - Up 21 minutes (healthy)
+5. **homeiq-dashboard** - Up 18 minutes (healthy)
 
 #### Known Issue (Separate)
-- **ha-ingestor-data-retention** - Restarting (1) - Requires separate investigation (Phase 3)
+- **homeiq-data-retention** - Restarting (1) - Requires separate investigation (Phase 3)
 
 #### Removed Services ✅
-- **ha-ingestor-weather** - REMOVED (was crash-looping with ModuleNotFoundError)
+- **homeiq-weather** - REMOVED (was crash-looping with ModuleNotFoundError)
 
 ---
 
@@ -125,7 +125,7 @@ last_request_time: 2025-10-10T22:36:39.367676
 ```
 ┌─────────────────────────────────────────┐
 │  Standalone Weather API Service         │
-│  (ha-ingestor-weather)                  │
+│  (homeiq-weather)                  │
 │  Status: CRASH LOOP ❌                  │
 │  Error: ModuleNotFoundError              │
 │  Integration: NONE                       │
@@ -276,7 +276,7 @@ All changes were low-risk:
 |----------|--------|-------|
 | Weather location set to Las Vegas | ✅ | Verified via environment variables |
 | Weather enrichment still working | ✅ | 100% success rate, 8 events processed |
-| Broken service removed | ✅ | ha-ingestor-weather container removed |
+| Broken service removed | ✅ | homeiq-weather container removed |
 | No new errors introduced | ✅ | All services healthy (except pre-existing data-retention issue) |
 | Environment templates updated | ✅ | Both env.example and env.production updated |
 | Service recreated successfully | ✅ | websocket-ingestion healthy |

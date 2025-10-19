@@ -7,9 +7,9 @@ param(
 
 # Configuration
 $InfluxDBUrl = "http://localhost:8086"
-$OrgName = if ($env:INFLUXDB_ORG) { $env:INFLUXDB_ORG } else { "ha-ingestor" }
+$OrgName = if ($env:INFLUXDB_ORG) { $env:INFLUXDB_ORG } else { "homeiq" }
 $BucketName = if ($env:INFLUXDB_BUCKET) { $env:INFLUXDB_BUCKET } else { "home_assistant_events" }
-$AdminToken = if ($env:INFLUXDB_TOKEN) { $env:INFLUXDB_TOKEN } else { "ha-ingestor-token" }
+$AdminToken = if ($env:INFLUXDB_TOKEN) { $env:INFLUXDB_TOKEN } else { "homeiq-token" }
 $Username = if ($env:INFLUXDB_USERNAME) { $env:INFLUXDB_USERNAME } else { "admin" }
 $Password = if ($env:INFLUXDB_PASSWORD) { $env:INFLUXDB_PASSWORD } else { "admin123" }
 
@@ -80,13 +80,13 @@ function Create-Organization {
     
     try {
         # Check if organization already exists
-        $orgs = docker exec ha-ingestor-influxdb influx org list --host $InfluxDBUrl --token $AdminToken --json
+        $orgs = docker exec homeiq-influxdb influx org list --host $InfluxDBUrl --token $AdminToken --json
         $orgExists = $orgs | ConvertFrom-Json | Where-Object { $_.name -eq $OrgName }
         
         if ($orgExists) {
             Write-Warning "Organization '$OrgName' already exists"
         } else {
-            docker exec ha-ingestor-influxdb influx org create --name $OrgName --description "Home Assistant Data Ingestion Organization" --token $AdminToken --host $InfluxDBUrl
+            docker exec homeiq-influxdb influx org create --name $OrgName --description "Home Assistant Data Ingestion Organization" --token $AdminToken --host $InfluxDBUrl
             Write-Success "Organization '$OrgName' created"
         }
     }
@@ -107,16 +107,16 @@ function Create-Bucket {
     
     try {
         # Check if bucket already exists
-        $buckets = docker exec ha-ingestor-influxdb influx bucket list --org $OrgName --host $InfluxDBUrl --token $AdminToken --json
+        $buckets = docker exec homeiq-influxdb influx bucket list --org $OrgName --host $InfluxDBUrl --token $AdminToken --json
         $bucketExists = $buckets | ConvertFrom-Json | Where-Object { $_.name -eq $Name }
         
         if ($bucketExists) {
             Write-Warning "Bucket '$Name' already exists - removing and recreating"
-            docker exec ha-ingestor-influxdb influx bucket delete --name $Name --org $OrgName --token $AdminToken --host $InfluxDBUrl
+            docker exec homeiq-influxdb influx bucket delete --name $Name --org $OrgName --token $AdminToken --host $InfluxDBUrl
         }
         
         # Create bucket with specified retention
-        docker exec ha-ingestor-influxdb influx bucket create --name $Name --org $OrgName --retention $Retention --token $AdminToken --host $InfluxDBUrl
+        docker exec homeiq-influxdb influx bucket create --name $Name --org $OrgName --retention $Retention --token $AdminToken --host $InfluxDBUrl
         Write-Success "Bucket '$Name' created with $Retention retention"
     }
     catch {
@@ -153,7 +153,7 @@ function Validate-Schema {
         $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
         $testData = "home_assistant_events,entity_id=sensor.living_room_temperature,domain=sensor,device_class=temperature,area=living_room,device_name=`"Living Room Temperature Sensor`",device_id=zwave_001,area_id=room_001,entity_category=null,integration=zwave,weather_condition=clear,time_of_day=afternoon state_value=`"22.5`",previous_state=`"22.3`",normalized_value=22.5,unit_of_measurement=`"°C`",confidence=0.95,context_id=`"ctx_001`",context_parent_id=`"automation_001`",context_user_id=`"user_001`",duration_seconds=3600,energy_consumption=0.0,weather_temp=22.5,weather_humidity=45.0,weather_pressure=1013.25,manufacturer=`"Z-Wave Alliance`",model=`"ZW100`",sw_version=`"1.0.0`" $timestamp"
         
-        $testData | docker exec -i ha-ingestor-influxdb influx write --bucket $BucketName --org $OrgName --token $AdminToken --host $InfluxDBUrl --precision ns
+        $testData | docker exec -i homeiq-influxdb influx write --bucket $BucketName --org $OrgName --token $AdminToken --host $InfluxDBUrl --precision ns
         
         Write-Success "Test data point created"
         return $true
@@ -170,7 +170,7 @@ function Verify-Schema {
     try {
         # Query the test data and check schema
         $query = 'from(bucket: "' + $BucketName + '") |> range(start: -1h) |> limit(n:1) |> schema.fieldsAsCols()'
-        $schemaResult = docker exec ha-ingestor-influxdb influx query --org $OrgName --token $AdminToken --host $InfluxDBUrl $query
+        $schemaResult = docker exec homeiq-influxdb influx query --org $OrgName --token $AdminToken --host $InfluxDBUrl $query
         
         Write-Success "Schema verification completed"
         Write-Host $schemaResult
@@ -191,7 +191,7 @@ function Cleanup-TestData {
         $endTime = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
         
         $predicate = 'entity_id="sensor.living_room_temperature"'
-        docker exec ha-ingestor-influxdb influx delete --bucket $BucketName --org $OrgName --token $AdminToken --host $InfluxDBUrl --start $startTime --stop $endTime --predicate $predicate
+        docker exec homeiq-influxdb influx delete --bucket $BucketName --org $OrgName --token $AdminToken --host $InfluxDBUrl --start $startTime --stop $endTime --predicate $predicate
         
         Write-Success "Test data cleaned up"
     }
@@ -207,7 +207,7 @@ function Show-FinalStatus {
     Write-Host "📦 Buckets:"
     
     try {
-        $buckets = docker exec ha-ingestor-influxdb influx bucket list --org $OrgName --host $InfluxDBUrl --token $AdminToken --json
+        $buckets = docker exec homeiq-influxdb influx bucket list --org $OrgName --host $InfluxDBUrl --token $AdminToken --json
         $bucketList = $buckets | ConvertFrom-Json
         foreach ($bucket in $bucketList) {
             $retentionDays = [math]::Round($bucket.retentionRules[0].everySeconds / 86400)

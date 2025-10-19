@@ -83,7 +83,7 @@ except Exception as e:
 ### Test Results:
 ```bash
 # Direct API test
-docker exec ha-ingestor-admin python -c "
+docker exec homeiq-admin python -c "
 from config_manager import config_manager
 result = config_manager.write_config('weather', {
     'WEATHER_API_KEY': 'test123', 
@@ -135,7 +135,7 @@ docker-compose build admin-api
 docker-compose up -d admin-api
 
 # Test configuration save
-docker exec ha-ingestor-admin python -c "from config_manager import config_manager; print(config_manager.write_config('weather', {'WEATHER_API_KEY': 'test'}))"
+docker exec homeiq-admin python -c "from config_manager import config_manager; print(config_manager.write_config('weather', {'WEATHER_API_KEY': 'test'}))"
 
 # Verify dashboard functionality
 # Navigate to http://localhost:3000 → Configuration → Weather API → Save Changes
@@ -161,7 +161,7 @@ docker exec ha-ingestor-admin python -c "from config_manager import config_manag
 
 1. **Check Container Logs**:
    ```bash
-   docker logs ha-ingestor-admin --tail 20
+   docker logs homeiq-admin --tail 20
    ```
 
 2. **Verify File Permissions**:
@@ -170,12 +170,12 @@ docker exec ha-ingestor-admin python -c "from config_manager import config_manag
    ls -la infrastructure/.env.weather
    
    # Check container permissions
-   docker exec ha-ingestor-admin ls -la /app/infrastructure/.env.weather
+   docker exec homeiq-admin ls -la /app/infrastructure/.env.weather
    ```
 
 3. **Test Direct API**:
    ```bash
-   docker exec ha-ingestor-admin python -c "
+   docker exec homeiq-admin python -c "
    import sys
    sys.path.append('/app/src')
    from config_manager import config_manager
@@ -189,7 +189,7 @@ docker exec ha-ingestor-admin python -c "from config_manager import config_manag
 
 4. **Check Volume Mount**:
    ```bash
-   docker inspect ha-ingestor-admin | grep -A 10 "Mounts"
+   docker inspect homeiq-admin | grep -A 10 "Mounts"
    ```
 
 ### Common Issues:

@@ -376,7 +376,7 @@ class MQTTBridge:
         async with Client("mosquitto") as client:
             # Subscribe to InfluxDB changes (using task queue)
             async for event in self.event_stream:
-                topic = f"ha-ingestor/{event.domain}/{event.entity_id}"
+                topic = f"homeiq/{event.domain}/{event.entity_id}"
                 payload = json.dumps({
                     'entity_id': event.entity_id,
                     'state': event.state_value,
@@ -389,7 +389,7 @@ class MQTTBridge:
 
 **MQTT Topics Structure:**
 ```
-ha-ingestor/
+homeiq/
   ├── sensor/
   │   ├── living_room_temperature
   │   └── outdoor_humidity
@@ -1181,7 +1181,7 @@ jobs:
       - name: Deploy to staging
         run: |
           # Deploy to staging environment
-          ssh ${{ secrets.STAGING_HOST }} "cd /opt/ha-ingestor && ./scripts/deploy.sh staging ${{ github.sha }}"
+          ssh ${{ secrets.STAGING_HOST }} "cd /opt/homeiq && ./scripts/deploy.sh staging ${{ github.sha }}"
       
       - name: Run smoke tests
         run: |
@@ -1200,12 +1200,12 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://ha-ingestor.example.com
+      url: https://homeiq.example.com
     
     steps:
       - name: Deploy to production
         run: |
-          ssh ${{ secrets.PROD_HOST }} "cd /opt/ha-ingestor && ./scripts/deploy.sh production ${{ github.sha }}"
+          ssh ${{ secrets.PROD_HOST }} "cd /opt/homeiq && ./scripts/deploy.sh production ${{ github.sha }}"
       
       - name: Run smoke tests
         run: |
@@ -1214,7 +1214,7 @@ jobs:
       - name: Rollback on failure
         if: failure()
         run: |
-          ssh ${{ secrets.PROD_HOST }} "cd /opt/ha-ingestor && ./scripts/rollback.sh"
+          ssh ${{ secrets.PROD_HOST }} "cd /opt/homeiq && ./scripts/rollback.sh"
       
       - name: Notify Slack
         uses: 8398a7/action-slack@v3

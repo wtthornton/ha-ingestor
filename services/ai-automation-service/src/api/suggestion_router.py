@@ -14,6 +14,7 @@ from ..llm.openai_client import OpenAIClient
 from ..database import get_db, get_patterns, store_suggestion, get_suggestions
 from ..config import settings
 from ..clients.data_api_client import DataAPIClient
+from ..validation.device_validator import DeviceValidator, ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,9 @@ openai_client = OpenAIClient(api_key=settings.openai_api_key, model="gpt-4o-mini
 
 # Initialize Data API client for fetching device metadata
 data_api_client = DataAPIClient(base_url="http://data-api:8006")
+
+# Initialize Device Validator for validating suggestions
+device_validator = DeviceValidator(data_api_client)
 
 
 @router.post("/generate")
@@ -75,22 +79,38 @@ async def generate_suggestions(
         
         for pattern in patterns:
             try:
+                logger.info(f"Processing pattern #{pattern.id}: type={pattern.pattern_type}, device_id={pattern.device_id}")
+                logger.info(f"Pattern metadata type: {type(pattern.pattern_metadata)}, value: {pattern.pattern_metadata}")
+                
                 # Convert SQLAlchemy model to dict
+                # Handle pattern_metadata safely - it might be string, dict, or None
+                metadata = pattern.pattern_metadata
+                if isinstance(metadata, str):
+                    try:
+                        import json
+                        metadata = json.loads(metadata)
+                    except (json.JSONDecodeError, TypeError):
+                        metadata = {}
+                elif not isinstance(metadata, dict):
+                    metadata = {}
+                
                 pattern_dict = {
                     'device_id': pattern.device_id,
                     'pattern_type': pattern.pattern_type,
                     'confidence': pattern.confidence,
                     'occurrences': pattern.occurrences,
-                    'metadata': pattern.pattern_metadata or {}
+                    'metadata': metadata
                 }
                 
+                logger.info(f"Created pattern_dict: {pattern_dict}")
+                
                 # Extract hour/minute for time_of_day patterns
-                if pattern.pattern_type == 'time_of_day' and pattern.pattern_metadata:
-                    pattern_dict['hour'] = int(pattern.pattern_metadata.get('avg_time_decimal', 0))
-                    pattern_dict['minute'] = int((pattern.pattern_metadata.get('avg_time_decimal', 0) % 1) * 60)
+                if pattern.pattern_type == 'time_of_day' and metadata:
+                    pattern_dict['hour'] = int(metadata.get('avg_time_decimal', 0))
+                    pattern_dict['minute'] = int((metadata.get('avg_time_decimal', 0) % 1) * 60)
                 
                 # Extract device1/device2 for co_occurrence patterns
-                if pattern.pattern_type == 'co_occurrence' and pattern.pattern_metadata:
+                if pattern.pattern_type == 'co_occurrence' and metadata:
                     # Device ID is stored as "device1+device2"
                     if '+' in pattern.device_id:
                         device1, device2 = pattern.device_id.split('+', 1)
@@ -102,32 +122,52 @@ async def generate_suggestions(
                 
                 logger.info(f"Generating suggestion for pattern #{pattern.id}: {pattern.device_id}")
                 
-                # Call OpenAI to generate suggestion WITH device context
-                ai_suggestion = await openai_client.generate_automation_suggestion(
-                    pattern_dict,
-                    device_context=device_context
-                )
+                # ==== VALIDATION ENABLED: Validate suggestion feasibility before generating ====
+                validation_result = await _validate_pattern_feasibility(pattern_dict, device_context)
+                
+                if not validation_result.is_valid:
+                    logger.warning(f"Pattern #{pattern.id} validation failed: {validation_result.error_message}")
+                    # Skip this pattern or generate alternative suggestion
+                    if validation_result.available_alternatives:
+                        logger.info(f"Found alternatives for pattern #{pattern.id}: {validation_result.available_alternatives}")
+                        # Generate alternative suggestion using available devices
+                        description_data = await _generate_alternative_suggestion(
+                            pattern_dict, 
+                            device_context, 
+                            validation_result
+                        )
+                    else:
+                        logger.info(f"No alternatives found for pattern #{pattern.id}, skipping")
+                        continue
+                else:
+                    # Original pattern is valid, proceed normally
+                    description_data = await openai_client.generate_description_only(
+                        pattern_dict,
+                        device_context=device_context
+                    )
                 
                 # Store in database
                 suggestion_data = {
                     'pattern_id': pattern.id,
-                    'title': ai_suggestion.alias,
-                    'description': ai_suggestion.description,
-                    'automation_yaml': ai_suggestion.automation_yaml,
+                    'title': description_data['title'],
+                    'description': description_data['description'],
+                    'automation_yaml': None,  # Story AI1.24: No YAML until approved
                     'confidence': pattern.confidence,
-                    'category': ai_suggestion.category,
-                    'priority': ai_suggestion.priority
+                    'category': description_data['category'],
+                    'priority': description_data['priority']
                 }
                 
                 stored_suggestion = await store_suggestion(db, suggestion_data)
                 suggestions_stored.append(stored_suggestion)
                 suggestions_generated += 1
                 
-                logger.info(f"✅ Generated and stored suggestion: {ai_suggestion.alias}")
+                logger.info(f"✅ Generated and stored suggestion: {description_data['title']}")
                 
             except Exception as e:
+                import traceback
                 error_msg = f"Failed to generate suggestion for pattern #{pattern.id}: {str(e)}"
                 logger.error(error_msg)
+                logger.error(f"Full traceback: {traceback.format_exc()}")
                 errors.append(error_msg)
                 # Continue with next pattern
         
@@ -289,24 +329,39 @@ async def _build_device_context(pattern_dict: Dict[str, Any]) -> Dict[str, Any]:
     context = {}
     
     try:
+        logger.info(f"Building device context for pattern: {pattern_dict}")
         pattern_type = pattern_dict.get('pattern_type')
         
         # For time_of_day patterns: single device
         if pattern_type == 'time_of_day':
             device_id = pattern_dict.get('device_id')
             if device_id:
+                logger.info(f"Processing time_of_day pattern with device_id: {device_id}")
                 # Check if device_id looks like a device ID (long hex string) or entity ID (domain.entity_name)
                 if '.' not in device_id and len(device_id) > 20:
                     # This is a device ID, get device metadata directly
-                    device_metadata = await data_api_client.get_device_metadata(device_id)
-                    if device_metadata:
-                        metadata = {
-                            'friendly_name': device_metadata.get('name', ''),
-                            'area_name': device_metadata.get('area_id', '')
-                        }
-                        friendly_name = device_metadata.get('name', device_id)
-                        domain = 'device'  # Generic domain for device-level patterns
-                    else:
+                    logger.info(f"Treating {device_id} as device ID")
+                    try:
+                        device_metadata = await data_api_client.get_device_metadata(device_id)
+                        if device_metadata:
+                            logger.info(f"Got device metadata: {device_metadata}")
+                            # Safely access device_metadata
+                            if isinstance(device_metadata, dict):
+                                metadata = {
+                                    'friendly_name': device_metadata.get('name', ''),
+                                    'area_name': device_metadata.get('area_id', '')
+                                }
+                                friendly_name = device_metadata.get('name', device_id)
+                            else:
+                                logger.warning(f"Device metadata is not a dict: {type(device_metadata)}")
+                                friendly_name = device_id
+                                metadata = None
+                            domain = 'device'  # Generic domain for device-level patterns
+                        else:
+                            friendly_name = device_id
+                            metadata = None
+                    except Exception as e:
+                        logger.error(f"Error getting device metadata for {device_id}: {e}")
                         friendly_name = device_id
                         metadata = None
                         domain = 'unknown'
@@ -433,4 +488,124 @@ async def _build_device_context(pattern_dict: Dict[str, Any]) -> Dict[str, Any]:
         logger.warning(f"Failed to build device context: {e}")
         # Return empty context on error - OpenAI will use entity IDs as fallback
         return {}
+
+
+async def _validate_pattern_feasibility(pattern_dict: Dict[str, Any], device_context: Dict[str, Any]) -> 'ValidationResult':
+    """
+    Validate that a pattern can be implemented with available devices.
+    
+    Args:
+        pattern_dict: Pattern data with device IDs and metadata
+        device_context: Device metadata with friendly names
+    
+    Returns:
+        ValidationResult indicating if pattern is feasible
+    """
+    try:
+        # Extract entities and trigger conditions from pattern
+        suggested_entities = []
+        trigger_conditions = []
+        
+        pattern_type = pattern_dict.get('pattern_type')
+        
+        if pattern_type == 'time_of_day':
+            # Time-based patterns don't need sensor validation
+            device_id = pattern_dict.get('device_id')
+            if device_id:
+                suggested_entities.append(device_id)
+            return ValidationResult(
+                is_valid=True,
+                missing_devices=[],
+                missing_entities=[],
+                missing_sensors=[],
+                available_alternatives={}
+            )
+        
+        elif pattern_type == 'co_occurrence':
+            # Co-occurrence patterns need both devices to exist
+            device1 = pattern_dict.get('device1')
+            device2 = pattern_dict.get('device2')
+            if device1:
+                suggested_entities.append(device1)
+            if device2:
+                suggested_entities.append(device2)
+        
+        # For now, assume time-based and co-occurrence patterns are valid
+        # Future: Add more sophisticated validation for complex trigger conditions
+        return ValidationResult(
+            is_valid=True,
+            missing_devices=[],
+            missing_entities=[],
+            missing_sensors=[],
+            available_alternatives={}
+        )
+        
+    except Exception as e:
+        logger.error(f"Pattern validation failed: {e}")
+        return ValidationResult(
+            is_valid=False,
+            missing_devices=[],
+            missing_entities=[],
+            missing_sensors=[],
+            available_alternatives={},
+            error_message=f"Validation error: {str(e)}"
+        )
+
+
+async def _generate_alternative_suggestion(
+    pattern_dict: Dict[str, Any], 
+    device_context: Dict[str, Any], 
+    validation_result: 'ValidationResult'
+) -> Dict[str, Any]:
+    """
+    Generate an alternative suggestion using available devices.
+    
+    Args:
+        pattern_dict: Original pattern data
+        device_context: Device metadata
+        validation_result: Validation result with alternatives
+    
+    Returns:
+        Alternative suggestion data
+    """
+    try:
+        # For now, generate a simple fallback suggestion
+        # Future: Use alternatives to create more sophisticated suggestions
+        
+        pattern_type = pattern_dict.get('pattern_type', 'unknown')
+        device_id = pattern_dict.get('device_id', 'unknown')
+        device_name = device_context.get('name', device_id) if device_context else device_id
+        
+        if pattern_type == 'time_of_day':
+            hour = pattern_dict.get('hour', 0)
+            minute = pattern_dict.get('minute', 0)
+            
+            return {
+                'title': f"Alternative: {device_name} at {hour:02d}:{minute:02d}",
+                'description': f"Automatically control {device_name} at {hour:02d}:{minute:02d} based on your usage pattern. This uses only devices that are confirmed to exist in your system.",
+                'category': 'convenience',
+                'priority': 'medium',
+                'confidence': pattern_dict.get('confidence', 0.5)
+            }
+        
+        else:
+            # Generic fallback
+            return {
+                'title': f"Alternative: {device_name} automation",
+                'description': f"An automation for {device_name} using only available devices in your system.",
+                'category': 'convenience',
+                'priority': 'low',
+                'confidence': pattern_dict.get('confidence', 0.3)
+            }
+            
+    except Exception as e:
+        logger.error(f"Failed to generate alternative suggestion: {e}")
+        # Return minimal fallback
+        return {
+            'title': "Alternative automation suggestion",
+            'description': "An automation using only available devices in your system.",
+            'category': 'convenience',
+            'priority': 'low',
+            'confidence': 0.1
+        }
 

@@ -181,7 +181,7 @@ docker-compose restart websocket-ingestion
 ```bash
 # Check Docker network
 docker network ls
-docker network inspect ha-ingestor_default
+docker network inspect homeiq_default
 
 # Test connectivity from service container
 docker-compose exec websocket-ingestion nslookup YOUR_HA_HOST
@@ -283,7 +283,7 @@ cp infrastructure/env.example .env
 ```bash
 # Clear InfluxDB data (CAUTION: This deletes all data!)
 docker-compose down
-docker volume rm ha-ingestor_influxdb_data
+docker volume rm homeiq_influxdb_data
 docker-compose up -d
 ```
 

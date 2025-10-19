@@ -80,7 +80,7 @@
 - [ ] **Backup InfluxDB data** (if exists)
   ```powershell
   docker-compose exec influxdb influx backup /var/lib/influxdb2/backup
-  docker cp ha-ingestor-influxdb:/var/lib/influxdb2/backup ./backups/influxdb-backup-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')
+  docker cp homeiq-influxdb:/var/lib/influxdb2/backup ./backups/influxdb-backup-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')
   ```
 
 - [ ] **Backup any existing SQLite databases** (if redeploying)
@@ -89,10 +89,10 @@
   mkdir -p backups/sqlite-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')
   
   # Backup data-api database
-  docker cp ha-ingestor-data-api:/app/data/metadata.db ./backups/sqlite-backup/
+  docker cp homeiq-data-api:/app/data/metadata.db ./backups/sqlite-backup/
   
   # Backup sports-data webhooks
-  docker cp ha-ingestor-sports-data:/app/data/webhooks.db ./backups/sqlite-backup/
+  docker cp homeiq-sports-data:/app/data/webhooks.db ./backups/sqlite-backup/
   ```
 
 - [ ] **Export current git state**
@@ -127,13 +127,13 @@
 
 **1.1 Stop all running services**
 ```powershell
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 docker-compose down
 ```
 
 **1.2 Verify all containers stopped**
 ```powershell
-docker ps -a | Select-String "ha-ingestor"
+docker ps -a | Select-String "homeiq"
 ```
 
 **1.3 Clean old images (optional - fresh start)**
@@ -177,14 +177,14 @@ abc123...              home_assistant_events   infinite        168h0m0s
 **2.4 Create Docker volumes for SQLite databases**
 ```powershell
 # These are automatically created, but verify they exist
-docker volume ls | Select-String "ha-ingestor"
+docker volume ls | Select-String "homeiq"
 ```
 
 **Expected volumes:**
-- `ha-ingestor_influxdb_data`
-- `ha-ingestor_influxdb_config`
-- `ha-ingestor_data_api_sqlite` (for data-api metadata)
-- `ha-ingestor_sports_data_sqlite` (for webhooks)
+- `homeiq_influxdb_data`
+- `homeiq_influxdb_config`
+- `homeiq_data_api_sqlite` (for data-api metadata)
+- `homeiq_sports_data_sqlite` (for webhooks)
 
 ### Phase 3: Build Services (10 minutes)
 
@@ -195,17 +195,17 @@ docker-compose build
 
 **3.2 Verify builds completed**
 ```powershell
-docker images | Select-String "ha-ingestor"
+docker images | Select-String "homeiq"
 ```
 
 **Expected images:**
-- `ha-ingestor-websocket-ingestion`
-- `ha-ingestor-enrichment-pipeline`
-- `ha-ingestor-data-api`
-- `ha-ingestor-admin-api`
-- `ha-ingestor-data-retention`
-- `ha-ingestor-sports-data`
-- `ha-ingestor-health-dashboard`
+- `homeiq-websocket-ingestion`
+- `homeiq-enrichment-pipeline`
+- `homeiq-data-api`
+- `homeiq-admin-api`
+- `homeiq-data-retention`
+- `homeiq-sports-data`
+- `homeiq-health-dashboard`
 
 ### Phase 4: Run Database Migrations (5 minutes)
 
@@ -794,13 +794,13 @@ git checkout HEAD -- services/websocket-ingestion/src/discovery_service.py
 **Step 3: Restore database backups**
 ```powershell
 # Restore InfluxDB
-docker volume rm ha-ingestor_influxdb_data
-docker volume create ha-ingestor_influxdb_data
-docker run --rm -v ha-ingestor_influxdb_data:/restore -v ./backups/influxdb-backup:/backup influxdb:2.7 influx restore /backup
+docker volume rm homeiq_influxdb_data
+docker volume create homeiq_influxdb_data
+docker run --rm -v homeiq_influxdb_data:/restore -v ./backups/influxdb-backup:/backup influxdb:2.7 influx restore /backup
 
 # Remove SQLite databases (start fresh)
-docker volume rm ha-ingestor_data_api_sqlite
-docker volume rm ha-ingestor_sports_data_sqlite
+docker volume rm homeiq_data_api_sqlite
+docker volume rm homeiq_sports_data_sqlite
 ```
 
 **Step 4: Rebuild and restart**

@@ -307,13 +307,13 @@ Internal Ports (container communication):
 #### Storage Layout
 ```
 /var/lib/docker/volumes/
-├── ha-ingestor_influxdb_data/     # Database data
-├── ha-ingestor_influxdb_config/   # Database configuration
-├── ha-ingestor_websocket_logs/    # WebSocket service logs
-├── ha-ingestor_enrichment_logs/   # Enrichment service logs
-├── ha-ingestor_admin_logs/        # Admin API logs
-├── ha-ingestor_retention_logs/    # Data retention logs
-└── ha-ingestor_backups/           # Backup storage
+├── homeiq_influxdb_data/     # Database data
+├── homeiq_influxdb_config/   # Database configuration
+├── homeiq_websocket_logs/    # WebSocket service logs
+├── homeiq_enrichment_logs/   # Enrichment service logs
+├── homeiq_admin_logs/        # Admin API logs
+├── homeiq_retention_logs/    # Data retention logs
+└── homeiq_backups/           # Backup storage
 ```
 
 ### Storage Performance

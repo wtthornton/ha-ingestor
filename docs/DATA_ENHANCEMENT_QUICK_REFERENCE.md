@@ -381,7 +381,7 @@ GET /api/v2/devices?domain=light&state=on
 ```yaml
 sensor:
   - platform: rest
-    resource: https://ha-ingestor/api/v2/energy/consumption
+    resource: https://homeiq/api/v2/energy/consumption
     value_template: "{{ value_json.total_kwh }}"
 ```
 

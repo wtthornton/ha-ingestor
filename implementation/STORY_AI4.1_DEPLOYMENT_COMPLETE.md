@@ -207,7 +207,7 @@ automation-miner:
   volumes:
     - ./services/automation-miner/data:/app/data
   networks:
-    - ha-ingestor-network
+    - homeiq-network
 ```
 
 ---

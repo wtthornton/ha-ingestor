@@ -7,9 +7,9 @@ set -e
 
 # Configuration
 INFLUXDB_URL="http://localhost:8086"
-ORG_NAME="${INFLUXDB_ORG:-ha-ingestor}"
+ORG_NAME="${INFLUXDB_ORG:-homeiq}"
 BUCKET_NAME="${INFLUXDB_BUCKET:-home_assistant_events}"
-ADMIN_TOKEN="${INFLUXDB_TOKEN:-ha-ingestor-token}"
+ADMIN_TOKEN="${INFLUXDB_TOKEN:-homeiq-token}"
 
 # Colors for output
 RED='\033[0;31m'

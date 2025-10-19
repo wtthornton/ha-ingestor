@@ -1687,7 +1687,7 @@ npm run test:e2e
 docker-compose up -d --build health-dashboard
 
 # View logs
-docker logs -f ha-ingestor-dashboard
+docker logs -f homeiq-dashboard
 
 # Verify health
 curl http://localhost:3000/

@@ -218,25 +218,26 @@ async def _run_analysis_pipeline(request: AnalysisRequest):
             try:
                 logger.info(f"  → [{i}/{len(top_patterns)}] Generating suggestion for {pattern['device_id']}")
                 
-                suggestion = await openai_client.generate_automation_suggestion(pattern)
+                # Story AI1.24: Generate description-only (no YAML until user approves)
+                description_data = await openai_client.generate_description_only(pattern)
                 
                 # Store suggestion in database
                 async with get_db_session() as db:
                     stored_suggestion = await store_suggestion(db, {
                         'pattern_id': pattern.get('id'),
-                        'title': suggestion.alias,
-                        'description': suggestion.description,  # This will be mapped to description_only in store_suggestion
-                        'automation_yaml': suggestion.automation_yaml,
+                        'title': description_data['title'],
+                        'description': description_data['description'],
+                        'automation_yaml': None,  # Story AI1.24: No YAML until approved
                         'confidence': pattern['confidence'],
-                        'category': suggestion.category,
-                        'priority': suggestion.priority
+                        'category': description_data['category'],
+                        'priority': description_data['priority']
                     })
                 
                 suggestions_generated.append({
                     'id': stored_suggestion.id,
-                    'title': suggestion.alias,
-                    'category': suggestion.category,
-                    'priority': suggestion.priority,
+                    'title': description_data['title'],
+                    'category': description_data['category'],
+                    'priority': description_data['priority'],
                     'confidence': pattern['confidence'],
                     'pattern_type': pattern['pattern_type']
                 })

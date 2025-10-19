@@ -207,7 +207,7 @@ curl http://localhost:8003/api/v1/services
 
 3. **Check Admin API Logs**:
    ```bash
-   docker logs ha-ingestor-admin --tail 50
+   docker logs homeiq-admin --tail 50
    ```
 
 4. **Rebuild Admin API**:
@@ -221,7 +221,7 @@ curl http://localhost:8003/api/v1/services
 1. **Check Network Connectivity**:
    ```bash
    docker network ls
-   docker network inspect ha-ingestor_ha-ingestor-network
+   docker network inspect homeiq_homeiq-network
    ```
 
 2. **Verify Container Names**:

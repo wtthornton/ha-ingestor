@@ -31,7 +31,7 @@
 ### Backend Services Status
 ```
 CONTAINER               STATUS                  PORTS
-ha-ingestor-admin       Up 2 hours (healthy)    0.0.0.0:8003->8004/tcp
+homeiq-admin       Up 2 hours (healthy)    0.0.0.0:8003->8004/tcp
 ```
 
 ### Dashboard Observations
@@ -98,7 +98,7 @@ Check if the WebSocket broadcast loop is started in admin API:
 
 ```bash
 # Check admin API logs
-docker logs ha-ingestor-admin --tail 50
+docker logs homeiq-admin --tail 50
 
 # Look for:
 # - "WebSocket client X connected"
@@ -145,7 +145,7 @@ The admin API's `WebSocketEndpoints` class has a `start_broadcast_loop()` method
 
 2. **Check Admin API WebSocket Startup**
    ```bash
-   docker logs ha-ingestor-admin --tail 100 | grep -i websocket
+   docker logs homeiq-admin --tail 100 | grep -i websocket
    ```
    Verify the broadcast loop is running.
 

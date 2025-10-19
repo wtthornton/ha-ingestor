@@ -280,7 +280,7 @@ if timestamp:
 
 ```bash
 # Navigate to project root
-cd /path/to/ha-ingestor
+cd /path/to/homeiq
 
 # Restart enrichment-pipeline to apply new tag logic
 docker-compose restart enrichment-pipeline
@@ -298,13 +298,13 @@ Wait ~1 minute for new events, then verify tags:
 
 ```bash
 # Check recent events for new tags
-docker exec ha-ingestor-influxdb influx query '
+docker exec homeiq-influxdb influx query '
 from(bucket: "home_assistant_events")
   |> range(start: -5m)
   |> filter(fn: (r) => r._measurement == "home_assistant_events")
   |> limit(n: 1)
   |> yield()
-' --org ha-ingestor --token ha-ingestor-token
+' --org homeiq --token homeiq-token
 ```
 
 **Expected**: Should see `integration` and `time_of_day` in tag columns.

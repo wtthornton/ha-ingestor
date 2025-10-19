@@ -66,7 +66,7 @@ The `docs/` folder contains:
 Per `docs/architecture/source-tree.md`, the project follows BMAD framework standards:
 
 ```
-ha-ingestor/
+homeiq/
 ├── docs/                          # Project documentation
 │   ├── architecture/              # Architecture documentation
 │   ├── prd/                       # Product Requirements (sharded)
@@ -264,7 +264,7 @@ docs/kb/context7-cache/login-page-analysis-findings.md
 ### Step 1: Analysis & Preparation
 ```bash
 # Create a backup first!
-tar -czf ha-ingestor-docs-backup-$(date +%Y%m%d).tar.gz docs/ implementation/ *.md
+tar -czf homeiq-docs-backup-$(date +%Y%m%d).tar.gz docs/ implementation/ *.md
 ```
 
 ### Step 2: Create New Directory Structure

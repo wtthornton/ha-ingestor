@@ -319,20 +319,20 @@ admin-api and data-api share many modules. Consider creating a shared library pa
 
 **All Services:**
 ```
-✅ ha-ingestor-data-api          Up (port 8006) - NEWLY DEPLOYED
-✅ ha-ingestor-admin             Up (port 8003/8004)
-✅ ha-ingestor-dashboard         Up (port 3000)
-✅ ha-ingestor-websocket         Up (port 8001)
-✅ ha-ingestor-enrichment        Up (port 8002)
-✅ ha-ingestor-influxdb          Up (port 8086)
-✅ ha-ingestor-sports-data       Up (port 8005)
-✅ ha-ingestor-data-retention    Up (port 8080)
-✅ ha-ingestor-log-aggregator    Up (port 8015)
-✅ ha-ingestor-smart-meter       Up (port 8014)
-✅ ha-ingestor-electricity       Up (port 8011)
-⚠️ ha-ingestor-calendar          Restarting (separate issue)
-⚠️ ha-ingestor-carbon-intensity  Restarting (separate issue)
-⚠️ ha-ingestor-air-quality       Restarting (separate issue)
+✅ homeiq-data-api          Up (port 8006) - NEWLY DEPLOYED
+✅ homeiq-admin             Up (port 8003/8004)
+✅ homeiq-dashboard         Up (port 3000)
+✅ homeiq-websocket         Up (port 8001)
+✅ homeiq-enrichment        Up (port 8002)
+✅ homeiq-influxdb          Up (port 8086)
+✅ homeiq-sports-data       Up (port 8005)
+✅ homeiq-data-retention    Up (port 8080)
+✅ homeiq-log-aggregator    Up (port 8015)
+✅ homeiq-smart-meter       Up (port 8014)
+✅ homeiq-electricity       Up (port 8011)
+⚠️ homeiq-calendar          Restarting (separate issue)
+⚠️ homeiq-carbon-intensity  Restarting (separate issue)
+⚠️ homeiq-air-quality       Restarting (separate issue)
 ```
 
 **System Health:** 80% services healthy (12/15)

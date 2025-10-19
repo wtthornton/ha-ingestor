@@ -7,8 +7,8 @@ set -e
 
 # Configuration
 INFLUXDB_URL="http://localhost:8086"
-ORG_NAME="${INFLUXDB_ORG:-ha-ingestor}"
-ADMIN_TOKEN="${INFLUXDB_TOKEN:-ha-ingestor-token}"
+ORG_NAME="${INFLUXDB_ORG:-homeiq}"
+ADMIN_TOKEN="${INFLUXDB_TOKEN:-homeiq-token}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -87,26 +87,26 @@ restore_docker_volumes() {
     print_status "Restoring Docker volumes..."
     
     # Remove existing volumes if they exist
-    if docker volume ls | grep -q "ha-ingestor_influxdb_data"; then
+    if docker volume ls | grep -q "homeiq_influxdb_data"; then
         print_status "Removing existing InfluxDB data volume..."
-        docker volume rm ha-ingestor_influxdb_data
+        docker volume rm homeiq_influxdb_data
     fi
     
-    if docker volume ls | grep -q "ha-ingestor_influxdb_config"; then
+    if docker volume ls | grep -q "homeiq_influxdb_config"; then
         print_status "Removing existing InfluxDB config volume..."
-        docker volume rm ha-ingestor_influxdb_config
+        docker volume rm homeiq_influxdb_config
     fi
     
     # Create new volumes
     print_status "Creating new InfluxDB volumes..."
-    docker volume create ha-ingestor_influxdb_data
-    docker volume create ha-ingestor_influxdb_config
+    docker volume create homeiq_influxdb_data
+    docker volume create homeiq_influxdb_config
     
     # Restore data volume
     if [ -f "$backup_dir/influxdb_data_volume.tar.gz" ]; then
         print_status "Restoring InfluxDB data volume..."
         docker run --rm \
-            -v ha-ingestor_influxdb_data:/target \
+            -v homeiq_influxdb_data:/target \
             -v "$(pwd)/$backup_dir":/backup \
             alpine tar xzf /backup/influxdb_data_volume.tar.gz -C /target
         print_success "InfluxDB data volume restored"
@@ -118,7 +118,7 @@ restore_docker_volumes() {
     if [ -f "$backup_dir/influxdb_config_volume.tar.gz" ]; then
         print_status "Restoring InfluxDB config volume..."
         docker run --rm \
-            -v ha-ingestor_influxdb_config:/target \
+            -v homeiq_influxdb_config:/target \
             -v "$(pwd)/$backup_dir":/backup \
             alpine tar xzf /backup/influxdb_config_volume.tar.gz -C /target
         print_success "InfluxDB config volume restored"

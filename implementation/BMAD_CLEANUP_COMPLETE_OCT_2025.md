@@ -236,7 +236,7 @@ Fixed all references to moved files to maintain documentation integrity:
 - CHANGELOG.md (version history)
 - LICENSE (license file)
 - package.json, package-lock.json (Node dependencies)
-- ha-ingestor.code-workspace (VS Code workspace)
+- homeiq.code-workspace (VS Code workspace)
 
 ### Docker Files ✅
 - docker-compose.yml (main)

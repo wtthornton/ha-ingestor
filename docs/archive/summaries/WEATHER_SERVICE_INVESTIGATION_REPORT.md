@@ -53,7 +53,7 @@ WEATHER_REQUEST_TIMEOUT=10
 
 #### Weather Integration Approach #2: Standalone Service (BROKEN)
 - **Location:** `services/weather-api/` (separate Docker container)
-- **Container Name:** `ha-ingestor-weather`
+- **Container Name:** `homeiq-weather`
 - **Status:** ✗ **Crash Loop - Module Import Error**
 - **Error:** `ModuleNotFoundError: No module named 'src'`
 
@@ -63,7 +63,7 @@ weather-api:
   build:
     context: .
     dockerfile: services/weather-api/Dockerfile
-  container_name: ha-ingestor-weather
+  container_name: homeiq-weather
   restart: unless-stopped
   environment:
     - WEATHER_API_KEY=${WEATHER_API_KEY:-}
@@ -255,15 +255,15 @@ This will result in a **cleaner, more maintainable architecture** with no impact
 ## Appendix: Service Status
 
 ### Working Services ✓
-- `ha-ingestor-influxdb` - Up 30 minutes (healthy)
-- `ha-ingestor-enrichment` - Up 30 minutes (healthy)
-- `ha-ingestor-websocket` - Up 19 minutes (healthy)
-- `ha-ingestor-admin` - Up 12 minutes (healthy)
-- `ha-ingestor-dashboard` - Up 9 minutes (healthy)
+- `homeiq-influxdb` - Up 30 minutes (healthy)
+- `homeiq-enrichment` - Up 30 minutes (healthy)
+- `homeiq-websocket` - Up 19 minutes (healthy)
+- `homeiq-admin` - Up 12 minutes (healthy)
+- `homeiq-dashboard` - Up 9 minutes (healthy)
 
 ### Broken Services ✗
-- `ha-ingestor-weather` - **Restarting (1) 44 seconds ago** - ModuleNotFoundError
-- `ha-ingestor-data-retention` - **Restarting (1) 37 seconds ago** - Separate issue
+- `homeiq-weather` - **Restarting (1) 44 seconds ago** - ModuleNotFoundError
+- `homeiq-data-retention` - **Restarting (1) 37 seconds ago** - Separate issue
 
 ### Weather Metrics (from working embedded service)
 - Total Events Processed: 335

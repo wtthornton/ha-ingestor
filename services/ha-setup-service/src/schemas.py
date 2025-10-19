@@ -178,3 +178,40 @@ class HealthCheckResponse(BaseModel):
     timestamp: datetime
     version: str = "1.0.0"
 
+
+# Bridge Management Schemas
+
+class RecoveryAttemptResponse(BaseModel):
+    """Recovery attempt response"""
+    timestamp: datetime
+    action: str
+    success: bool
+    error_message: Optional[str] = None
+    duration_seconds: Optional[float] = None
+
+
+class BridgeHealthResponse(BaseModel):
+    """Bridge health status response"""
+    bridge_state: str
+    is_connected: bool
+    health_score: float = Field(ge=0, le=100)
+    device_count: int
+    response_time_ms: float
+    signal_strength_avg: Optional[float] = None
+    network_health_score: Optional[float] = None
+    consecutive_failures: int
+    recommendations: List[str] = Field(default_factory=list)
+    last_check: datetime
+    recovery_attempts: List[RecoveryAttemptResponse] = Field(default_factory=list)
+
+
+class RecoveryRequest(BaseModel):
+    """Recovery request"""
+    force: bool = Field(False, description="Force recovery even if cooldown active")
+
+
+class RecoveryResponse(BaseModel):
+    """Recovery response"""
+    success: bool
+    message: str
+    timestamp: datetime

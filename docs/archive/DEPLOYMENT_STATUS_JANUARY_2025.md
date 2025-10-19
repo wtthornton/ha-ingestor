@@ -21,7 +21,7 @@
 ## 🔧 Issues Fixed
 
 ### 1. Container Naming & Memory Limits
-- ✅ Added proper project name (`ha-ingestor`) to docker-compose.yml
+- ✅ Added proper project name (`homeiq`) to docker-compose.yml
 - ✅ Configured memory limits and reservations for all services
 - ✅ Fixed container naming to use proper prefixes
 
@@ -104,8 +104,8 @@
 ## 🛠️ Technical Configuration
 
 ### Docker Compose Configuration
-- **Project Name**: `ha-ingestor`
-- **Network**: `ha-ingestor_ha-ingestor-network`
+- **Project Name**: `homeiq`
+- **Network**: `homeiq_homeiq-network`
 - **Volumes**: Persistent data storage for InfluxDB and logs
 - **Health Checks**: 30s interval, 10s timeout, 3 retries
 

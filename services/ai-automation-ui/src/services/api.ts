@@ -361,7 +361,44 @@ export const api = {
   async getSynergy(synergyId: string): Promise<{ data: { synergy: SynergyOpportunity } }> {
     return fetchJSON(`${API_BASE_URL}/synergies/${synergyId}`);
   },
-};
+
+  // Ask AI - Natural Language Query Interface
+  async askAIQuery(query: string, userId = 'anonymous'): Promise<any> {
+    return fetchJSON(`${API_BASE_URL}/v1/ask-ai/query`, {
+      method: 'POST',
+      body: JSON.stringify({
+        query,
+        user_id: userId
+      }),
+    });
+  },
+
+  async refineAskAIQuery(queryId: string, refinement: string): Promise<any> {
+    return fetchJSON(`${API_BASE_URL}/v1/ask-ai/query/${queryId}/refine`, {
+      method: 'POST',
+      body: JSON.stringify({
+        refinement,
+        include_context: true
+      }),
+    });
+  },
+
+  async getAskAIQuerySuggestions(queryId: string): Promise<any> {
+    return fetchJSON(`${API_BASE_URL}/v1/ask-ai/query/${queryId}/suggestions`);
+  },
+
+  async testAskAISuggestion(queryId: string, suggestionId: string): Promise<any> {
+    return fetchJSON(`${API_BASE_URL}/v1/ask-ai/query/${queryId}/suggestions/${suggestionId}/test`, {
+      method: 'POST',
+    });
+  },
+
+  async approveAskAISuggestion(queryId: string, suggestionId: string): Promise<any> {
+    return fetchJSON(`${API_BASE_URL}/v1/ask-ai/query/${queryId}/suggestions/${suggestionId}/approve`, {
+      method: 'POST',
+    });
+  },
+  };
 
 export default api;
 

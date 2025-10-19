@@ -21,7 +21,7 @@ The Events tab has **missing functionality** in the real-time stream viewer and 
    - Data is flowing from InfluxDB
 
 2. **nginx Routing** - Correctly configured
-   - `/api/v1/events` → proxies to `ha-ingestor-data-api:8006`
+   - `/api/v1/events` → proxies to `homeiq-data-api:8006`
    - Timeout set to 30s
    - Proper headers configured
 

@@ -114,10 +114,10 @@ Write-Host "1. Restart the WebSocket service:" -ForegroundColor White
 Write-Host "    docker-compose restart websocket-ingestion" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "2. Monitor the connection:" -ForegroundColor White
-Write-Host "    docker logs -f ha-ingestor-websocket | Select-String 'Connected|authentication'" -ForegroundColor Cyan
+Write-Host "    docker logs -f homeiq-websocket | Select-String 'Connected|authentication'" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "3. Verify events are flowing:" -ForegroundColor White
-Write-Host "    docker exec ha-ingestor-influxdb influx query 'from(bucket:\`"home_assistant_events\`") |> range(start: -5m) |> count()' --token ha-ingestor-token --org ha-ingestor" -ForegroundColor Cyan
+Write-Host "    docker exec homeiq-influxdb influx query 'from(bucket:\`"home_assistant_events\`") |> range(start: -5m) |> count()' --token homeiq-token --org homeiq" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "=====================================================================" -ForegroundColor Green
 Write-Host " Token Update Complete!" -ForegroundColor Green

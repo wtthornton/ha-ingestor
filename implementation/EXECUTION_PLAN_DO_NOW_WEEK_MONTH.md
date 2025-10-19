@@ -242,7 +242,7 @@ HA_TOKEN=your_long_lived_access_token_here
 # InfluxDB
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your_influxdb_token_here
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # SQLite

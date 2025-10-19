@@ -133,7 +133,7 @@ Dashboard → Configuration Tab → Select Service → Edit Config → Save → 
 
 ### Can't restart services?
 - Check Docker is running
-- Check admin-api logs: `docker logs ha-ingestor-admin-dev`
+- Check admin-api logs: `docker logs homeiq-admin-dev`
 
 ---
 

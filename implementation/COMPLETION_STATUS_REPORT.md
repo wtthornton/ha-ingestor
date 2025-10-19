@@ -104,7 +104,7 @@
    Result: 200 OK - Games array returned
 
 ✅ Test 5: Nginx Configuration
-   docker exec ha-ingestor-dashboard cat /etc/nginx/conf.d/default.conf
+   docker exec homeiq-dashboard cat /etc/nginx/conf.d/default.conf
    Result: /api/sports/ routing present
 
 ✅ Test 6: sports-api Not Running

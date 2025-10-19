@@ -40,7 +40,7 @@ $services = @("websocket-ingestion", "admin-api", "enrichment-pipeline", "weathe
 foreach ($service in $services) {
     Write-Info "Building $service..."
     try {
-        docker build -t "ha-ingestor-$service`:optimized" -f "services/$service/Dockerfile" .
+        docker build -t "homeiq-$service`:optimized" -f "services/$service/Dockerfile" .
         Write-Status $true "Built $service successfully"
     } catch {
         Write-Status $false "Failed to build $service"
@@ -53,7 +53,7 @@ Write-Info "Checking image sizes..."
 Write-Host ""
 Write-Host "Image Size Comparison:" -ForegroundColor Cyan
 Write-Host "=====================" -ForegroundColor Cyan
-docker images --format "table {{.Repository}}`t{{.Tag}}`t{{.Size}}" | Select-String "ha-ingestor"
+docker images --format "table {{.Repository}}`t{{.Tag}}`t{{.Size}}" | Select-String "homeiq"
 
 # Test basic functionality
 Write-Info "Testing basic functionality..."
@@ -61,7 +61,7 @@ Write-Info "Testing basic functionality..."
 # Test websocket-ingestion
 Write-Info "Testing websocket-ingestion health endpoint..."
 try {
-    docker run --rm -d --name test-websocket ha-ingestor-websocket-ingestion:optimized | Out-Null
+    docker run --rm -d --name test-websocket homeiq-websocket-ingestion:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-websocket curl -f http://localhost:8001/health | Out-Null
     Write-Status $true "WebSocket ingestion service is healthy"
@@ -74,7 +74,7 @@ try {
 # Test admin-api
 Write-Info "Testing admin-api health endpoint..."
 try {
-    docker run --rm -d --name test-admin ha-ingestor-admin-api:optimized | Out-Null
+    docker run --rm -d --name test-admin homeiq-admin-api:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-admin curl -f http://localhost:8004/health | Out-Null
     Write-Status $true "Admin API service is healthy"
@@ -87,7 +87,7 @@ try {
 # Test enrichment-pipeline
 Write-Info "Testing enrichment-pipeline health endpoint..."
 try {
-    docker run --rm -d --name test-enrichment ha-ingestor-enrichment-pipeline:optimized | Out-Null
+    docker run --rm -d --name test-enrichment homeiq-enrichment-pipeline:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-enrichment curl -f http://localhost:8002/health | Out-Null
     Write-Status $true "Enrichment pipeline service is healthy"
@@ -100,7 +100,7 @@ try {
 # Test weather-api
 Write-Info "Testing weather-api health endpoint..."
 try {
-    docker run --rm -d --name test-weather ha-ingestor-weather-api:optimized | Out-Null
+    docker run --rm -d --name test-weather homeiq-weather-api:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-weather curl -f http://localhost:8001/health | Out-Null
     Write-Status $true "Weather API service is healthy"
@@ -113,7 +113,7 @@ try {
 # Test data-retention
 Write-Info "Testing data-retention health endpoint..."
 try {
-    docker run --rm -d --name test-retention ha-ingestor-data-retention:optimized | Out-Null
+    docker run --rm -d --name test-retention homeiq-data-retention:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-retention curl -f http://localhost:8080/health | Out-Null
     Write-Status $true "Data retention service is healthy"
@@ -126,7 +126,7 @@ try {
 # Test health-dashboard
 Write-Info "Testing health-dashboard..."
 try {
-    docker run --rm -d --name test-dashboard ha-ingestor-health-dashboard:optimized | Out-Null
+    docker run --rm -d --name test-dashboard homeiq-health-dashboard:optimized | Out-Null
     Start-Sleep -Seconds 5
     docker exec test-dashboard curl -f http://localhost:80 | Out-Null
     Write-Status $true "Health dashboard is accessible"
@@ -142,7 +142,7 @@ Write-Info "Checking security configurations..."
 foreach ($service in $services) {
     Write-Info "Checking $service runs as non-root user..."
     try {
-        $output = docker run --rm ha-ingestor-$service`:optimized id
+        $output = docker run --rm homeiq-$service`:optimized id
         if ($output -match "uid=1001") {
             Write-Status $true "$service runs as non-root user (uid=1001)"
         } else {

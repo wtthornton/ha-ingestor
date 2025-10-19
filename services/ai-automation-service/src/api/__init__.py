@@ -9,6 +9,7 @@ from .suggestion_management_router import router as suggestion_management_router
 from .deployment_router import router as deployment_router
 from .nl_generation_router import router as nl_generation_router
 from .conversational_router import router as conversational_router  # Story AI1.23
+from .ask_ai_router import router as ask_ai_router  # Ask AI Tab
 
 __all__ = [
     'health_router',
@@ -19,6 +20,7 @@ __all__ = [
     'suggestion_management_router',
     'deployment_router',
     'nl_generation_router',
-    'conversational_router'  # Story AI1.23: Conversational Refinement
+    'conversational_router',  # Story AI1.23: Conversational Refinement
+    'ask_ai_router'  # Ask AI Tab: Natural Language Query Interface
 ]
 

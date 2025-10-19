@@ -35,7 +35,7 @@ I've created a comprehensive plan to reset InfluxDB and ensure the data structur
 
 ### **Database Configuration**
 ```yaml
-Organization: "ha-ingestor"
+Organization: "homeiq"
 Buckets:
   - home_assistant_events (365 days retention) ✅ CORRECTED
   - sports_data (90 days retention)
@@ -130,7 +130,7 @@ docker compose up -d
 ### **2. InfluxDB Reset**
 - ✅ Remove old container and volumes
 - ✅ Recreate InfluxDB with clean state
-- ✅ Create organization `ha-ingestor`
+- ✅ Create organization `homeiq`
 - ✅ Create buckets with correct retention policies
 
 ### **3. Schema Initialization**

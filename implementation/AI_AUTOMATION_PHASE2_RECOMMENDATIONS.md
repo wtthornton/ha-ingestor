@@ -1,7 +1,7 @@
 # AI Automation Phase 2: Value-Add Recommendations
 ## Local-First Enhancements for Single-House Home Assistant
 
-**Project:** ha-ingestor AI Automation  
+**Project:** homeiq AI Automation  
 **Current Phase:** Phase 1 MVP Complete (OpenAI GPT-4o-mini, ~$0.50/year)  
 **Target:** Single house, local installation, simple HA application  
 **Created:** October 18, 2025  

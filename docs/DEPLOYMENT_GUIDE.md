@@ -40,7 +40,7 @@ The easiest and fastest way to deploy:
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Run interactive deployment wizard
 ./scripts/deploy-wizard.sh
@@ -115,7 +115,7 @@ If you prefer manual configuration:
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Copy and configure environment
 cp infrastructure/env.example .env
@@ -315,7 +315,7 @@ S3_REGION=us-east-1
 - **Health checks** configured for all services
 
 ### **Networking**
-- **ha-ingestor-network** - Internal service communication
+- **homeiq-network** - Internal service communication
 - **Port 3000** - Health dashboard frontend
 - **Port 8000/8003** - Admin API (dev/prod)
 - **Port 8080** - Data retention API

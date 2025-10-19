@@ -156,7 +156,7 @@ RUN --mount=type=cache,target=/app/.vite \
     context: .
     file: services/websocket-ingestion/Dockerfile
     push: true
-    tags: user/ha-ingestor-websocket:latest
+    tags: user/homeiq-websocket:latest
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
@@ -166,9 +166,9 @@ RUN --mount=type=cache,target=/app/.vite \
 # Export cache to registry
 docker buildx build \
   --push \
-  --cache-to type=registry,ref=user/ha-ingestor-cache:websocket,mode=max \
-  --cache-from type=registry,ref=user/ha-ingestor-cache:websocket \
-  -t user/ha-ingestor-websocket:latest \
+  --cache-to type=registry,ref=user/homeiq-cache:websocket,mode=max \
+  --cache-from type=registry,ref=user/homeiq-cache:websocket \
+  -t user/homeiq-websocket:latest \
   -f services/websocket-ingestion/Dockerfile .
 ```
 
@@ -380,13 +380,13 @@ jobs:
       
       - name: Build image
         run: |
-          docker build -t ha-ingestor:test \
+          docker build -t homeiq:test \
             -f services/websocket-ingestion/Dockerfile .
       
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ha-ingestor:test'
+          image-ref: 'homeiq:test'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -534,7 +534,7 @@ group "default" {
 target "websocket" {
   context = "."
   dockerfile = "services/websocket-ingestion/Dockerfile"
-  tags = ["ha-ingestor/websocket:latest"]
+  tags = ["homeiq/websocket:latest"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
 }
@@ -542,7 +542,7 @@ target "websocket" {
 target "enrichment" {
   context = "."
   dockerfile = "services/enrichment-pipeline/Dockerfile"
-  tags = ["ha-ingestor/enrichment:latest"]
+  tags = ["homeiq/enrichment:latest"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
 }
@@ -550,7 +550,7 @@ target "enrichment" {
 target "admin-api" {
   context = "."
   dockerfile = "services/admin-api/Dockerfile"
-  tags = ["ha-ingestor/admin-api:latest"]
+  tags = ["homeiq/admin-api:latest"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
 }
@@ -558,7 +558,7 @@ target "admin-api" {
 target "dashboard" {
   context = "services/health-dashboard"
   dockerfile = "Dockerfile"
-  tags = ["ha-ingestor/dashboard:latest"]
+  tags = ["homeiq/dashboard:latest"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
 }

@@ -256,7 +256,7 @@ Track these metrics weekly:
 time docker build -t test .
 
 # Image size
-docker images | grep ha-ingestor
+docker images | grep homeiq
 
 # Cache hit rate (look for CACHED in output)
 docker build --progress=plain . 2>&1 | grep -c CACHED

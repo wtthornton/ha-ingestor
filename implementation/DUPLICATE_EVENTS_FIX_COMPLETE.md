@@ -309,8 +309,8 @@ from(bucket: "home_assistant_events")
 ## Deployment Notes
 
 **Services Rebuilt:**
-- ✅ `ha-ingestor-data-api` - Rebuilt with deduplication fix
-- ✅ `ha-ingestor-dashboard` - Rebuilt with EventStreamViewer polling
+- ✅ `homeiq-data-api` - Rebuilt with deduplication fix
+- ✅ `homeiq-dashboard` - Rebuilt with EventStreamViewer polling
 
 **Testing:**
 - ✅ Manual API testing complete

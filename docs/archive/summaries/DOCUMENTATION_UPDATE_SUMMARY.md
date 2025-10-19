@@ -190,7 +190,7 @@ The architecture index now serves as a comprehensive entry point for developers:
 ## 📚 **Documentation Structure**
 
 ```
-ha-ingestor/
+homeiq/
 ├── README.md                          # ✅ Complete
 ├── LICENSE                            # ✅ Complete (NEW)
 ├── docs/

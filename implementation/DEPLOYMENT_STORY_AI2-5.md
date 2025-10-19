@@ -40,14 +40,14 @@
 
 ```bash
 # Navigate to project root
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 
 # Build the image
 docker-compose build ai-automation-service
 
 # Expected output:
 # ✓ Successfully built
-# ✓ Successfully tagged ha-ingestor-ai-automation-service:latest
+# ✓ Successfully tagged homeiq-ai-automation-service:latest
 ```
 
 **Estimated Time:** 2-3 minutes
@@ -61,7 +61,7 @@ docker-compose build ai-automation-service
 docker images | Select-String "ai-automation-service"
 
 # Expected output:
-# ha-ingestor-ai-automation-service   latest   [image-id]   [size]
+# homeiq-ai-automation-service   latest   [image-id]   [size]
 ```
 
 ---
@@ -89,7 +89,7 @@ docker-compose ps ai-automation-service
 
 # Expected output:
 # NAME                              STATUS
-# ha-ingestor-ai-automation-service Up (healthy)
+# homeiq-ai-automation-service Up (healthy)
 ```
 
 **Estimated Time:** 30 seconds
@@ -310,7 +310,7 @@ If issues occur, here's how to rollback:
 docker-compose stop ai-automation-service
 
 # Pull previous image (if tagged)
-docker pull ha-ingestor-ai-automation-service:[previous-tag]
+docker pull homeiq-ai-automation-service:[previous-tag]
 
 # Start with previous image
 docker-compose up -d ai-automation-service

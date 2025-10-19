@@ -41,10 +41,10 @@
   - Total: ~616 KB (gzip: ~173 KB)
 
 ### Container Status
-- **Container:** ha-ingestor-dashboard
+- **Container:** homeiq-dashboard
 - **Status:** ✅ Up 12 seconds (healthy)
 - **Ports:** 0.0.0.0:3000->80/tcp
-- **Image:** ha-ingestor-health-dashboard:latest
+- **Image:** homeiq-health-dashboard:latest
 - **Workers:** 48 nginx workers
 - **Health Check:** ✅ PASSING
 

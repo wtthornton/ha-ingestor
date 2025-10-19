@@ -8,11 +8,11 @@ The Home Assistant Integration section on the Overview tab showed **0 for all 4 
 ## Root Cause ✅
 **nginx DNS cache with stale IP address**
 
-nginx in the health-dashboard container had cached an old IP address (`172.18.0.9`) for the `ha-ingestor-data-api` service, but the service was actually running on a different IP (`172.18.0.8`). This caused all API requests to fail with 502 Bad Gateway errors.
+nginx in the health-dashboard container had cached an old IP address (`172.18.0.9`) for the `homeiq-data-api` service, but the service was actually running on a different IP (`172.18.0.8`). This caused all API requests to fail with 502 Bad Gateway errors.
 
 ## Solution Applied ✅
 ```bash
-docker restart ha-ingestor-dashboard
+docker restart homeiq-dashboard
 ```
 
 This forced nginx to re-resolve DNS names and get the correct IP addresses.
@@ -72,7 +72,7 @@ Then modify proxy_pass directives to use variables (forces DNS re-resolution):
 
 ```nginx
 location /api/devices {
-    set $data_api ha-ingestor-data-api:8006;
+    set $data_api homeiq-data-api:8006;
     proxy_pass http://$data_api/api/devices;
     # ... rest of proxy headers
 }
@@ -98,7 +98,7 @@ If you recreate services or see 0 values again:
 
 ```bash
 # Restart the dashboard to refresh nginx DNS cache
-docker restart ha-ingestor-dashboard
+docker restart homeiq-dashboard
 
 # Wait 5 seconds, then refresh browser
 ```

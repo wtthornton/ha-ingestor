@@ -17,7 +17,7 @@ Your HA-Ingestor system has been **completely rebuilt from scratch** and is now 
 ## 📊 Rebuild Summary
 
 ### Phase 1: Backups ✅ (5 minutes)
-- ✅ Created backup directory: `C:\Users\tappt\ha-ingestor-backup-20251014-163350`
+- ✅ Created backup directory: `C:\Users\tappt\homeiq-backup-20251014-163350`
 - ✅ InfluxDB data backed up (~830KB, 8 shards)
 - ✅ SQLite database backed up (319KB)
 - ✅ docker-compose.yml backed up
@@ -27,7 +27,7 @@ Your HA-Ingestor system has been **completely rebuilt from scratch** and is now 
 - ✅ Stopped all 14 services gracefully (30s timeout)
 - ✅ Removed all containers (14 containers)
 - ✅ Removed all images (28 images)
-- ✅ Removed network (ha-ingestor-network)
+- ✅ Removed network (homeiq-network)
 - ✅ Cleaned build cache (14.47GB reclaimed)
 - ✅ Verified complete cleanup
 - ✅ Preserved 18 data volumes
@@ -39,19 +39,19 @@ Your HA-Ingestor system has been **completely rebuilt from scratch** and is now 
 - ✅ No build errors
 
 **Services built:**
-1. ✅ ha-ingestor-health-dashboard
-2. ✅ ha-ingestor-calendar
-3. ✅ ha-ingestor-sports-data
-4. ✅ ha-ingestor-data-retention
-5. ✅ ha-ingestor-electricity-pricing
-6. ✅ ha-ingestor-enrichment-pipeline
-7. ✅ ha-ingestor-log-aggregator
-8. ✅ ha-ingestor-admin-api
-9. ✅ ha-ingestor-carbon-intensity
-10. ✅ ha-ingestor-smart-meter
-11. ✅ ha-ingestor-websocket-ingestion
-12. ✅ ha-ingestor-air-quality
-13. ✅ ha-ingestor-data-api
+1. ✅ homeiq-health-dashboard
+2. ✅ homeiq-calendar
+3. ✅ homeiq-sports-data
+4. ✅ homeiq-data-retention
+5. ✅ homeiq-electricity-pricing
+6. ✅ homeiq-enrichment-pipeline
+7. ✅ homeiq-log-aggregator
+8. ✅ homeiq-admin-api
+9. ✅ homeiq-carbon-intensity
+10. ✅ homeiq-smart-meter
+11. ✅ homeiq-websocket-ingestion
+12. ✅ homeiq-air-quality
+13. ✅ homeiq-data-api
 
 Plus:
 14. ✅ influxdb:2.7 (official image)
@@ -159,7 +159,7 @@ Plus:
 
 **All backups saved to:**
 ```
-C:\Users\tappt\ha-ingestor-backup-20251014-163350\
+C:\Users\tappt\homeiq-backup-20251014-163350\
 ├── influxdb-backup\           # InfluxDB shards and metadata
 │   ├── 20251014T233359Z.3.tar.gz
 │   ├── 20251014T233359Z.4.tar.gz

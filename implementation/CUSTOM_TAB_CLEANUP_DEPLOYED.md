@@ -13,14 +13,14 @@
 ✅ Docker build completed successfully
    - Multi-stage build: node:18-alpine → nginx:alpine
    - Build time: 18.2 seconds
-   - Image: ha-ingestor-health-dashboard:latest
+   - Image: homeiq-health-dashboard:latest
    - Bundle optimized with Vite
 ```
 
 ### Container Status
 ```
 NAMES                   STATUS                   PORTS
-ha-ingestor-dashboard   Up and running (healthy) 0.0.0.0:3000->80/tcp
+homeiq-dashboard   Up and running (healthy) 0.0.0.0:3000->80/tcp
 ```
 
 ### Dependencies Verified
@@ -182,7 +182,7 @@ docker-compose up -d health-dashboard
 ## 📞 Troubleshooting
 
 ### If Dashboard Doesn't Load
-1. Check container logs: `docker logs ha-ingestor-dashboard`
+1. Check container logs: `docker logs homeiq-dashboard`
 2. Check container status: `docker ps --filter "name=dashboard"`
 3. Restart container: `docker-compose restart health-dashboard`
 

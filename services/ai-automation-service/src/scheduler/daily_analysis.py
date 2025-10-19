@@ -15,6 +15,7 @@ import asyncio
 
 # Epic AI-1 imports (Pattern Detection)
 from ..clients.data_api_client import DataAPIClient
+from ..api.suggestion_router import _build_device_context
 from ..clients.mqtt_client import MQTTNotificationClient
 from ..pattern_analyzer.time_of_day import TimeOfDayPatternDetector
 from ..pattern_analyzer.co_occurrence import CoOccurrencePatternDetector
@@ -311,23 +312,28 @@ class DailyAnalysisScheduler:
             # Phase 3c: Synergy Detection (NEW - Epic AI-3)
             # ================================================================
             logger.info("🔗 Phase 3c/7: Synergy Detection (Epic AI-3)...")
+            logger.info("   → Starting synergy detection with relaxed parameters...")
             
             try:
                 from ..synergy_detection import DeviceSynergyDetector
                 from ..database.crud import store_synergy_opportunities
+                logger.info("   → Imported synergy detection modules successfully")
                 
                 synergy_detector = DeviceSynergyDetector(
                     data_api_client=data_client,
                     ha_client=None,  # TODO: Add HA client for automation checking (Story AI3.3)
                     influxdb_client=data_client.influxdb_client,  # Enable advanced scoring (Story AI3.2)
-                    min_confidence=0.7,
-                    same_area_required=True
+                    min_confidence=0.5,  # Lowered from 0.7 to be less restrictive
+                    same_area_required=False  # Relaxed requirement to find more opportunities
                 )
                 
+                logger.info("   → Calling detect_synergies() method...")
                 synergies = await synergy_detector.detect_synergies()
                 
                 logger.info(f"✅ Device synergy detection complete:")
                 logger.info(f"   - Device synergies detected: {len(synergies)}")
+                if synergies:
+                    logger.info(f"   - Sample synergies: {[s.get('relationship', 'unknown') for s in synergies[:3]]}")
                 
                 # ----------------------------------------------------------------
                 # Part B: Weather Opportunities (Epic AI-3, Story AI3.5)
@@ -353,9 +359,12 @@ class DailyAnalysisScheduler:
                     
                 except Exception as e:
                     logger.warning(f"     ⚠️ Weather opportunity detection failed: {e}")
-                    # Continue without weather opportunities
+                    logger.warning(f"     → Continuing with empty weather opportunities list")
+                    # Continue without weather opportunities but don't skip the phase
                 
                 logger.info(f"✅ Total synergies (device + weather): {len(synergies)}")
+                logger.info(f"   → Device synergies: {len(synergies) - len(weather_opportunities) if 'weather_opportunities' in locals() else len(synergies)}")
+                logger.info(f"   → Weather synergies: {len(weather_opportunities) if 'weather_opportunities' in locals() else 0}")
                 
                 # Store synergies in database
                 if synergies:
@@ -430,9 +439,13 @@ class DailyAnalysisScheduler:
                 
                 for i, pattern in enumerate(top_patterns, 1):
                     try:
-                        # NEW: Pass community enhancements if available (Epic AI-4, Story AI4.2)
-                        suggestion = await openai_client.generate_automation_suggestion(
+                        # Build device context for friendly names
+                        device_context = await _build_device_context(pattern)
+                        
+                        # Story AI1.24: Generate DESCRIPTION ONLY (no YAML until user approves)
+                        description_data = await openai_client.generate_description_only(
                             pattern,
+                            device_context=device_context,
                             community_enhancements=community_enhancements if community_enhancements else None
                         )
                         
@@ -441,16 +454,16 @@ class DailyAnalysisScheduler:
                             'source': 'Epic-AI-1',
                             'pattern_id': pattern.get('id'),
                             'pattern_type': pattern.get('pattern_type'),
-                            'title': suggestion.alias,
-                            'description': suggestion.description,
-                            'automation_yaml': suggestion.automation_yaml,
+                            'title': description_data['title'],
+                            'description': description_data['description'],
+                            'automation_yaml': None,  # Story AI1.24: No YAML until approved
                             'confidence': pattern['confidence'],
-                            'category': suggestion.category,
-                            'priority': suggestion.priority,
-                            'rationale': suggestion.rationale
+                            'category': description_data['category'],
+                            'priority': description_data['priority'],
+                            'rationale': description_data['rationale']
                         })
                         
-                        logger.debug(f"     [{i}/{len(top_patterns)}] ✅ {suggestion.alias}")
+                        logger.debug(f"     [{i}/{len(top_patterns)}] ✅ {description_data['title']}")
                         
                     except Exception as e:
                         logger.error(f"     [{i}/{len(top_patterns)}] ❌ Failed: {e}")

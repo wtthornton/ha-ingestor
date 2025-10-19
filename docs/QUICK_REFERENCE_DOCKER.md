@@ -37,11 +37,11 @@ location /api/ {
 docker compose ps
 
 # Check WebSocket logs
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 # Should show: "Successfully connected to Home Assistant"
 
 # Check Admin API logs
-docker logs ha-ingestor-admin --tail 20
+docker logs homeiq-admin --tail 20
 # Should show: "Uvicorn running on http://0.0.0.0:8004"
 
 # Test API endpoint
@@ -108,7 +108,7 @@ docker compose build <service-name>
 docker compose up -d <service-name>
 
 # 4. Verify
-docker logs ha-ingestor-<service-name> --tail 20
+docker logs homeiq-<service-name> --tail 20
 ```
 
 ---

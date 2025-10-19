@@ -8,7 +8,7 @@ This document defines the complete source tree structure for the Home Assistant 
 ## Root Directory Structure
 
 ```
-ha-ingestor/
+homeiq/
 ├── .bmad-core/                    # BMAD framework core files
 │   ├── agents/                    # AI agent definitions
 │   ├── tasks/                     # Task definitions

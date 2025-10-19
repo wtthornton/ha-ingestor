@@ -44,7 +44,7 @@ I've created a PowerShell script that will:
 
 **Run this script:**
 ```powershell
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 .\scripts\update-ha-token.ps1
 ```
 
@@ -111,7 +111,7 @@ docker-compose restart websocket-ingestion
 
 ```powershell
 # Watch logs for successful connection
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 
 # Look for these messages:
 # ✓ "Successfully authenticated with Home Assistant"
@@ -124,7 +124,7 @@ After updating the token and restarting:
 
 ### 1. Check WebSocket Connection
 ```powershell
-docker logs --tail 50 ha-ingestor-websocket | Select-String "Connected|authenticated"
+docker logs --tail 50 homeiq-websocket | Select-String "Connected|authenticated"
 ```
 
 **Success indicators:**
@@ -140,16 +140,16 @@ docker logs --tail 50 ha-ingestor-websocket | Select-String "Connected|authentic
 ### 2. Verify Events Are Flowing
 ```powershell
 # Check InfluxDB for recent events
-docker exec ha-ingestor-influxdb influx query `
+docker exec homeiq-influxdb influx query `
   'from(bucket:"home_assistant_events") |> range(start: -5m) |> count()' `
-  --token ha-ingestor-token --org ha-ingestor
+  --token homeiq-token --org homeiq
 ```
 
 You should see counts increasing over time as events are ingested.
 
 ### 3. Check Enrichment Pipeline
 ```powershell
-docker logs --tail 50 ha-ingestor-enrichment | Select-String "process_event"
+docker logs --tail 50 homeiq-enrichment | Select-String "process_event"
 ```
 
 Should show events being processed in real-time.
@@ -186,7 +186,7 @@ Invoke-WebRequest -Uri "http://192.168.1.86:8123/api/" -Headers $headers
 **Solutions:**
 1. Restart the service: `docker-compose restart websocket-ingestion`
 2. Check HA is accessible: `Test-NetConnection 192.168.1.86 -Port 8123`
-3. Verify .env file was loaded: `docker exec ha-ingestor-websocket printenv | Select-String HOME_ASSISTANT`
+3. Verify .env file was loaded: `docker exec homeiq-websocket printenv | Select-String HOME_ASSISTANT`
 
 ### Issue: "Lost my backup"
 
@@ -252,6 +252,6 @@ Once the WebSocket connection is established:
 
 If the automated script doesn't work or you encounter issues:
 1. Check the backup file was created: `ls .env.backup.*`
-2. Review Home Assistant logs: `docker logs ha-ingestor-websocket`
+2. Review Home Assistant logs: `docker logs homeiq-websocket`
 3. Verify Home Assistant is accessible: `curl http://192.168.1.86:8123`
 

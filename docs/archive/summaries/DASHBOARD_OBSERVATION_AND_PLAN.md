@@ -158,7 +158,7 @@ The HA Ingestor Dashboard has been successfully deployed and is now fully operat
    - Set `HA_TOKEN` environment variable
    - Validate token has necessary permissions
 3. ⬜ Test WebSocket connection
-   - Check logs: `docker logs ha-ingestor-websocket`
+   - Check logs: `docker logs homeiq-websocket`
    - Verify connection status in dashboard
 4. ⬜ Validate event ingestion
    - Trigger test events in Home Assistant

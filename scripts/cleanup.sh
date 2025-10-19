@@ -40,7 +40,7 @@ cleanup_docker() {
 # Function to remove all project images
 cleanup_images() {
     echo "Removing project images..."
-    docker images | grep ha-ingestor | awk '{print $3}' | xargs -r docker rmi -f
+    docker images | grep homeiq | awk '{print $3}' | xargs -r docker rmi -f
     echo "✅ Project images removed"
 }
 

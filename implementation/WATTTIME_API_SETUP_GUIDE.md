@@ -331,8 +331,8 @@ curl http://localhost:8010/health
 ### **2. Check InfluxDB Data**
 ```bash
 # Query InfluxDB for carbon intensity
-curl -X POST "http://localhost:8086/api/v2/query?org=ha-ingestor" \
-  -H "Authorization: Token ha-ingestor-token" \
+curl -X POST "http://localhost:8086/api/v2/query?org=homeiq" \
+  -H "Authorization: Token homeiq-token" \
   -H "Content-Type: application/vnd.flux" \
   -d 'from(bucket:"home_assistant_events")
   |> range(start: -1h)
@@ -342,7 +342,7 @@ curl -X POST "http://localhost:8086/api/v2/query?org=ha-ingestor" \
 
 ### **3. Check Service Logs**
 ```bash
-docker logs ha-ingestor-carbon-intensity --tail 50
+docker logs homeiq-carbon-intensity --tail 50
 ```
 
 **Expected:**

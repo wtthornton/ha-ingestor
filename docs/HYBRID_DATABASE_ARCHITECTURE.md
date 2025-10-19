@@ -152,12 +152,12 @@ curl http://localhost:8006/health
 mkdir -p backups/sqlite
 
 # Backup SQLite databases (safe with WAL mode)
-docker cp ha-ingestor-data-api:/app/data/metadata.db backups/sqlite/
-docker cp ha-ingestor-sports-data:/app/data/webhooks.db backups/sqlite/
+docker cp homeiq-data-api:/app/data/metadata.db backups/sqlite/
+docker cp homeiq-sports-data:/app/data/webhooks.db backups/sqlite/
 
 # Optional: Add timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-docker cp ha-ingestor-data-api:/app/data/metadata.db backups/sqlite/metadata_$TIMESTAMP.db
+docker cp homeiq-data-api:/app/data/metadata.db backups/sqlite/metadata_$TIMESTAMP.db
 ```
 
 ### Restore
@@ -167,8 +167,8 @@ docker cp ha-ingestor-data-api:/app/data/metadata.db backups/sqlite/metadata_$TI
 docker-compose stop data-api sports-data
 
 # Restore databases
-docker cp backups/sqlite/metadata.db ha-ingestor-data-api:/app/data/
-docker cp backups/sqlite/webhooks.db ha-ingestor-sports-data:/app/data/
+docker cp backups/sqlite/metadata.db homeiq-data-api:/app/data/
+docker cp backups/sqlite/webhooks.db homeiq-sports-data:/app/data/
 
 # Restart services
 docker-compose start data-api sports-data

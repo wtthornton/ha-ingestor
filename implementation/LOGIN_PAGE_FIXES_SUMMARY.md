@@ -32,7 +32,7 @@ Comprehensive Playwright-based analysis of `http://localhost:3000/login` reveale
 proxy: {
   // Added WebSocket proxy
   '/ws': {
-    target: 'ws://ha-ingestor-admin-dev:8004',
+    target: 'ws://homeiq-admin-dev:8004',
     ws: true,
     changeOrigin: true,
     secure: false,

@@ -14,7 +14,7 @@ Successfully deployed the data-api service that was created in Epic 13 but never
 ### Service Status
 ```
 CONTAINER NAME           STATUS                              PORTS
-ha-ingestor-data-api     Up (health: starting)              0.0.0.0:8006->8006/tcp
+homeiq-data-api     Up (health: starting)              0.0.0.0:8006->8006/tcp
 ```
 
 ---
@@ -108,14 +108,14 @@ requests==2.31.0
 ### Docker Compose
 ```yaml
 data-api:
-  container_name: ha-ingestor-data-api
+  container_name: homeiq-data-api
   ports:
     - "8006:8006"
   environment:
     - DATA_API_PORT=8006
     - INFLUXDB_URL=http://influxdb:8086
     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-    - INFLUXDB_ORG=ha-ingestor
+    - INFLUXDB_ORG=homeiq
     - INFLUXDB_BUCKET=home_assistant_events
   depends_on:
     - influxdb
@@ -125,17 +125,17 @@ data-api:
 ```nginx
 # Events → data-api
 location /api/v1/events {
-    proxy_pass http://ha-ingestor-data-api:8006/api/v1/events;
+    proxy_pass http://homeiq-data-api:8006/api/v1/events;
 }
 
 # Devices → data-api
 location /api/devices {
-    proxy_pass http://ha-ingestor-data-api:8006/api/devices;
+    proxy_pass http://homeiq-data-api:8006/api/devices;
 }
 
 # Sports → data-api
 location /api/v1/sports {
-    proxy_pass http://ha-ingestor-data-api:8006/api/v1/sports;
+    proxy_pass http://homeiq-data-api:8006/api/v1/sports;
 }
 ```
 
@@ -254,5 +254,5 @@ location /api/v1/sports {
 **Deployed By:** BMad Master Agent  
 **Deployment Date:** 2025-10-13  
 **Service Version:** 1.0.0  
-**Docker Image:** ha-ingestor-data-api:latest
+**Docker Image:** homeiq-data-api:latest
 

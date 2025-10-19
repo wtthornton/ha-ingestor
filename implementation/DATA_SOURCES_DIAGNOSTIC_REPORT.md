@@ -19,11 +19,11 @@ All data source containers are running and healthy:
 
 ```
 CONTAINER NAME                    STATUS                     PORTS
-ha-ingestor-carbon-intensity      Up 2 hours (healthy)       0.0.0.0:8010->8010/tcp
-ha-ingestor-electricity-pricing   Up 4 hours (healthy)       0.0.0.0:8011->8011/tcp
-ha-ingestor-air-quality           Up 43 minutes (healthy)    0.0.0.0:8012->8012/tcp
-ha-ingestor-calendar              Restarting                 
-ha-ingestor-smart-meter           Up 3 hours (healthy)       0.0.0.0:8014->8014/tcp
+homeiq-carbon-intensity      Up 2 hours (healthy)       0.0.0.0:8010->8010/tcp
+homeiq-electricity-pricing   Up 4 hours (healthy)       0.0.0.0:8011->8011/tcp
+homeiq-air-quality           Up 43 minutes (healthy)    0.0.0.0:8012->8012/tcp
+homeiq-calendar              Restarting                 
+homeiq-smart-meter           Up 3 hours (healthy)       0.0.0.0:8014->8014/tcp
 ```
 
 **Note**: Calendar service is restarting (separate issue to investigate).
@@ -69,7 +69,7 @@ self.service_urls = {
 - It's trying to connect to `localhost:8010-8014`
 - Inside the container, `localhost` refers to the container itself, not the host
 - The services are running in **other containers** on the Docker network
-- Solution: Use Docker container names (e.g., `http://ha-ingestor-carbon-intensity:8010`)
+- Solution: Use Docker container names (e.g., `http://homeiq-carbon-intensity:8010`)
 
 ### 4. Secondary Issues
 
@@ -130,16 +130,16 @@ This will cause a runtime error when the Retry button is clicked.
 
 ```python
 self.service_urls = {
-    "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://ha-ingestor-websocket:8001"),
-    "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://ha-ingestor-enrichment:8002"),
-    "influxdb": os.getenv("INFLUXDB_URL", "http://ha-ingestor-influxdb:8086"),
+    "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://homeiq-websocket:8001"),
+    "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://homeiq-enrichment:8002"),
+    "influxdb": os.getenv("INFLUXDB_URL", "http://homeiq-influxdb:8086"),
     "weather-api": "https://api.openweathermap.org/data/2.5",
     # Data source services - FIX: Use Docker container names
-    "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010"),
-    "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://ha-ingestor-electricity-pricing:8011"),
-    "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://ha-ingestor-air-quality:8012"),
-    "calendar-service": os.getenv("CALENDAR_URL", "http://ha-ingestor-calendar:8013"),
-    "smart-meter-service": os.getenv("SMART_METER_URL", "http://ha-ingestor-smart-meter:8014")
+    "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://homeiq-carbon-intensity:8010"),
+    "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://homeiq-electricity-pricing:8011"),
+    "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://homeiq-air-quality:8012"),
+    "calendar-service": os.getenv("CALENDAR_URL", "http://homeiq-calendar:8013"),
+    "smart-meter-service": os.getenv("SMART_METER_URL", "http://homeiq-smart-meter:8014")
 }
 ```
 
@@ -207,7 +207,7 @@ const { dataSources, loading, error, refetch } = useDataSources(30000);
 ### Priority 5: Investigate Calendar Service (MEDIUM)
 
 The calendar service is in a restart loop. Check:
-1. Container logs: `docker logs ha-ingestor-calendar`
+1. Container logs: `docker logs homeiq-calendar`
 2. Environment variables
 3. Dependencies (API keys, credentials)
 4. Port conflicts
@@ -219,7 +219,7 @@ The calendar service is in a restart loop. Check:
 ### 1. Verify Docker Network Connectivity
 ```bash
 # Test from admin-api container
-docker exec ha-ingestor-admin curl http://ha-ingestor-carbon-intensity:8010/health
+docker exec homeiq-admin curl http://homeiq-carbon-intensity:8010/health
 ```
 
 ### 2. Verify API Response
@@ -236,9 +236,9 @@ curl http://localhost:8003/health/services | jq
 5. Test Retry button functionality
 
 ### 4. End-to-End Test
-1. Stop a service: `docker stop ha-ingestor-carbon-intensity`
+1. Stop a service: `docker stop homeiq-carbon-intensity`
 2. Verify dashboard shows service as unhealthy
-3. Start service: `docker start ha-ingestor-carbon-intensity`
+3. Start service: `docker start homeiq-carbon-intensity`
 4. Wait 30 seconds (refresh interval)
 5. Verify dashboard shows service as healthy
 

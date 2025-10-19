@@ -546,7 +546,7 @@ cd services/ai-automation-service
 python scripts/alpha_reset_database.py
 
 # 2. Restart service with new code
-cd ~/ha-ingestor
+cd ~/homeiq
 docker-compose build ai-automation-service
 docker-compose up -d ai-automation-service
 
@@ -567,7 +567,7 @@ cd services/ai-automation-ui
 # 2. Add new route to App.tsx (or use ConversationalDashboard as default)
 
 # 3. Rebuild and restart
-cd ~/ha-ingestor
+cd ~/homeiq
 docker-compose build ai-automation-ui
 docker-compose up -d ai-automation-ui
 

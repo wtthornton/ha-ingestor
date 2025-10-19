@@ -245,7 +245,7 @@ EVERY DAY 3 AM:
 
 ```bash
 # Deploy
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 docker-compose up -d automation-miner
 
 # Watch initialization
@@ -281,6 +281,6 @@ http://localhost:3001/discovery
 
 ---
 
-**This file location:** `C:\cursor\ha-ingestor\EPIC_AI4_COMPLETE.md`  
+**This file location:** `C:\cursor\homeiq\EPIC_AI4_COMPLETE.md`  
 **For detailed docs, see:** `implementation/EPIC_AI4_*.md`
 

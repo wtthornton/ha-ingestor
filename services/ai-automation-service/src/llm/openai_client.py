@@ -142,6 +142,99 @@ class OpenAIClient:
             logger.error(f"❌ OpenAI API error for pattern {pattern.get('pattern_type')}: {e}")
             raise
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((Exception,)),
+        reraise=True
+    )
+    async def generate_description_only(
+        self,
+        pattern: Dict,
+        device_context: Optional[Dict] = None,
+        community_enhancements: Optional[list] = None
+    ) -> Dict:
+        """
+        Generate DESCRIPTION-ONLY automation suggestion (Story AI1.23 - Conversational Flow).
+        
+        NO YAML CODE IS GENERATED. Only human-readable description of what automation
+        could be helpful. YAML will be generated later after user approves via
+        /api/v1/suggestions/{id}/approve endpoint.
+        
+        Args:
+            pattern: Detected pattern dict with type, device_id, metadata
+            device_context: Optional device metadata (name, manufacturer, area)
+            community_enhancements: Optional community pattern data
+        
+        Returns:
+            Dict with:
+                - title: Short automation name
+                - description: 2-3 sentence human-readable description
+                - rationale: Why this automation makes sense
+                - category: energy/comfort/security/convenience
+                - priority: high/medium/low
+                - confidence: Pattern confidence score
+        
+        Raises:
+            Exception: If OpenAI API call fails after retries
+        """
+        try:
+            # Build description-only prompt
+            prompt = self._build_description_prompt(pattern, device_context)
+            
+            # Add community enhancements if available
+            if community_enhancements:
+                community_context = self._build_community_context(community_enhancements)
+                prompt = f"{prompt}\n\n{community_context}"
+                logger.info(f"Added {len(community_enhancements)} community enhancements to description prompt")
+            
+            logger.info(f"Generating DESCRIPTION ONLY for {pattern['pattern_type']} pattern: {pattern.get('device_id', 'N/A')}")
+            
+            # Call OpenAI API
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a home automation expert helping users understand automation opportunities. "
+                            "Describe automation ideas in plain, friendly language. "
+                            "DO NOT write YAML code or technical details - just explain WHAT the automation would do, "
+                            "WHEN it would run, and WHY it would be helpful. "
+                            "Keep descriptions concise (2-3 sentences) and user-friendly."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.7,
+                max_tokens=300  # Shorter than full YAML generation
+            )
+            
+            # Track token usage
+            usage = response.usage
+            self.total_input_tokens += usage.prompt_tokens
+            self.total_output_tokens += usage.completion_tokens
+            self.total_tokens_used += usage.total_tokens
+            
+            logger.info(
+                f"✅ OpenAI description generation successful: {usage.total_tokens} tokens "
+                f"(input: {usage.prompt_tokens}, output: {usage.completion_tokens})"
+            )
+            
+            # Parse response into description format (no YAML)
+            content = response.choices[0].message.content
+            description_data = self._parse_description_response(content, pattern)
+            
+            logger.info(f"✅ Generated description: {description_data['title']}")
+            return description_data
+            
+        except Exception as e:
+            logger.error(f"❌ OpenAI description generation error for pattern {pattern.get('pattern_type')}: {e}")
+            raise
+    
     def _build_prompt(self, pattern: Dict, device_context: Optional[Dict] = None) -> str:
         """
         Build prompt from pattern - KEEP IT SIMPLE.
@@ -521,303 +614,215 @@ action:
         self.total_output_tokens = 0
         logger.info("Usage statistics reset")
     
-    # ========================================================================
-    # Phase 2: Conversational Automation (Story AI1.23)
-    # ========================================================================
-    
-    async def generate_description_only(
-        self,
-        pattern: Dict,
-        device_context: Optional[Dict] = None
-    ) -> str:
+    def _build_description_prompt(self, pattern: Dict, device_context: Optional[Dict] = None) -> str:
         """
-        Generate human-readable description WITHOUT YAML.
-        
-        Phase 2 of conversational flow: Show users plain English first,
-        generate YAML only after approval.
+        Build description-only prompt (NO YAML).
+        Story AI1.23 - Conversational Refinement Flow.
         
         Args:
-            pattern: Detected pattern dict
+            pattern: Pattern dictionary
             device_context: Optional device metadata
         
         Returns:
-            Plain English description (1-2 sentences)
+            Prompt string for description-only generation
         """
-        try:
-            # Build simplified prompt (description only)
-            prompt = self._build_description_prompt(pattern, device_context)
-            
-            logger.info(f"Generating description for {pattern['pattern_type']} pattern")
-            
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a home automation expert creating simple, friendly descriptions. "
-                            "Write clear 1-2 sentence descriptions of what the automation will do. "
-                            "Use device friendly names, not entity IDs. "
-                            "DO NOT generate YAML - only describe in plain English."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.7,
-                max_tokens=150  # Shorter for description only
-            )
-            
-            # Track usage
-            usage = response.usage
-            self.total_input_tokens += usage.prompt_tokens
-            self.total_output_tokens += usage.completion_tokens
-            self.total_tokens_used += usage.total_tokens
-            
-            description = response.choices[0].message.content.strip()
-            logger.info(f"✅ Description generated ({usage.total_tokens} tokens)")
-            
-            return description
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to generate description: {e}")
-            # Fallback to simple description
-            return self._generate_fallback_description(pattern, device_context)
-    
-    def _build_description_prompt(self, pattern: Dict, device_context: Optional[Dict]) -> str:
-        """Build prompt for description-only generation"""
         pattern_type = pattern.get('pattern_type', 'unknown')
-        device_id = pattern.get('device_id', 'unknown')
-        device_name = device_context.get('name', device_id) if device_context else device_id
         
         if pattern_type == 'time_of_day':
-            hour = pattern.get('hour', 0)
-            minute = pattern.get('minute', 0)
-            return (
-                f"Describe this automation pattern in 1-2 simple sentences:\n"
-                f"- Device: {device_name}\n"
-                f"- Activates at: {hour:02d}:{minute:02d} daily\n"
-                f"- Happens consistently {pattern.get('occurrences', 0)} times/month\n\n"
-                f"Write like you're explaining to a friend. Use the device name '{device_name}'."
-            )
-        
+            return self._build_time_of_day_description_prompt(pattern, device_context)
         elif pattern_type == 'co_occurrence':
-            device1 = pattern.get('device1', 'unknown')
-            device2 = pattern.get('device2', 'unknown')
-            device1_name = device_context.get('device1', {}).get('name', device1) if device_context else device1
-            device2_name = device_context.get('device2', {}).get('name', device2) if device_context else device2
-            
-            return (
-                f"Describe this automation pattern in 1-2 simple sentences:\n"
-                f"- When '{device1_name}' turns on\n"
-                f"- '{device2_name}' also turns on (within seconds)\n"
-                f"- Happens consistently {pattern.get('occurrences', 0)} times/month\n\n"
-                f"Write like you're explaining to a friend."
-            )
-        
+            return self._build_co_occurrence_description_prompt(pattern, device_context)
+        elif pattern_type == 'anomaly':
+            return self._build_anomaly_description_prompt(pattern, device_context)
         else:
-            return f"Describe a simple automation for {device_name} in 1-2 sentences."
+            raise ValueError(f"Unknown pattern type: {pattern_type}")
     
-    def _generate_fallback_description(self, pattern: Dict, device_context: Optional[Dict]) -> str:
-        """Generate simple fallback description if API fails"""
-        pattern_type = pattern.get('pattern_type', 'unknown')
+    def _build_time_of_day_description_prompt(self, pattern: Dict, device_context: Optional[Dict] = None) -> str:
+        """Build description-only prompt for time-of-day pattern"""
+        hour = pattern.get('hour', 0)
+        minute = pattern.get('minute', 0)
+        device_id = pattern.get('device_id', 'unknown')
+        occurrences = pattern.get('occurrences', 0)
+        confidence = pattern.get('confidence', 0.0)
+        
+        # Extract friendly name
+        device_name = device_context.get('name', device_id) if device_context else device_id
+        domain = device_context.get('domain', 'unknown') if device_context else 'unknown'
+        area = device_context.get('area', '') if device_context else ''
+        
+        device_desc = f"{device_name}"
+        if area:
+            device_desc += f" in {area}"
+        
+        return f"""Describe this automation opportunity in plain, friendly language:
+
+PATTERN DETECTED:
+- Device: {device_desc}
+- Type: {domain}
+- Pattern: Activates at {hour:02d}:{minute:02d} consistently
+- Occurrences: {occurrences} times in last 30 days
+- Confidence: {confidence:.0%}
+
+INSTRUCTIONS:
+1. Write a short, friendly title (e.g., "Turn on {device_name} at {hour:02d}:{minute:02d}")
+2. Write 2-3 sentences describing WHAT the automation would do, WHEN it would run, and WHY it's helpful
+3. DO NOT write YAML code or technical details
+4. Use the device's friendly name ("{device_name}"), not the entity ID
+5. Explain rationale in simple terms
+6. Categorize: energy, comfort, security, or convenience
+7. Assign priority: high, medium, or low
+
+OUTPUT FORMAT:
+TITLE: Turn on {device_name} at {hour:02d}:{minute:02d}
+
+DESCRIPTION: This automation would automatically turn on {device_name} at {hour:02d}:{minute:02d} every day. [Explain why this is helpful based on the consistent usage pattern].
+
+RATIONALE: [1-2 sentences explaining why this makes sense]
+CATEGORY: [energy|comfort|security|convenience]
+PRIORITY: [high|medium|low]
+"""
+    
+    def _build_co_occurrence_description_prompt(self, pattern: Dict, device_context: Optional[Dict] = None) -> str:
+        """Build description-only prompt for co-occurrence pattern"""
+        device1 = pattern.get('device1', 'unknown')
+        device2 = pattern.get('device2', 'unknown')
+        occurrences = pattern.get('occurrences', 0)
+        confidence = pattern.get('confidence', 0.0)
+        avg_delta = pattern.get('metadata', {}).get('avg_time_delta_seconds', 0)
+        
+        # Extract friendly names
+        if device_context and 'device1' in device_context:
+            device1_name = device_context['device1'].get('name', device1)
+        else:
+            device1_name = device1
+        
+        if device_context and 'device2' in device_context:
+            device2_name = device_context['device2'].get('name', device2)
+        else:
+            device2_name = device2
+        
+        return f"""Describe this automation opportunity in plain, friendly language:
+
+PATTERN DETECTED:
+- Trigger Device: {device1_name}
+- Response Device: {device2_name}
+- Pattern: You typically activate {device2_name} about {int(avg_delta)} seconds after {device1_name}
+- Occurrences: {occurrences} times in last 30 days
+- Confidence: {confidence:.0%}
+
+INSTRUCTIONS:
+1. Write a short, friendly title describing the automation
+2. Write 2-3 sentences explaining the pattern and why automation would help
+3. DO NOT write YAML code or technical details
+4. Use friendly device names
+5. Explain rationale simply
+6. Categorize and prioritize
+
+OUTPUT FORMAT:
+TITLE: Turn on {device2_name} when {device1_name} activates
+
+DESCRIPTION: This automation would automatically turn on {device2_name} when you turn on {device1_name}. [Explain the pattern and benefit].
+
+RATIONALE: [1-2 sentences]
+CATEGORY: [energy|comfort|security|convenience]
+PRIORITY: [high|medium|low]
+"""
+    
+    def _build_anomaly_description_prompt(self, pattern: Dict, device_context: Optional[Dict] = None) -> str:
+        """Build description-only prompt for anomaly pattern"""
         device_id = pattern.get('device_id', 'unknown')
         device_name = device_context.get('name', device_id) if device_context else device_id
         
-        if pattern_type == 'time_of_day':
-            hour = pattern.get('hour', 0)
-            minute = pattern.get('minute', 0)
-            return f"Turn on {device_name} automatically at {hour:02d}:{minute:02d} every day"
-        
-        elif pattern_type == 'co_occurrence':
-            device1_name = device_context.get('device1', {}).get('name', pattern.get('device1', 'Device 1')) if device_context else 'Device 1'
-            device2_name = device_context.get('device2', {}).get('name', pattern.get('device2', 'Device 2')) if device_context else 'Device 2'
-            return f"When {device1_name} turns on, automatically turn on {device2_name}"
-        
-        return f"Automate {device_name} based on usage patterns"
+        return f"""Describe this alert opportunity in plain, friendly language:
+
+ANOMALY DETECTED:
+- Device: {device_name}
+- Pattern: Unusual activity detected (outside normal usage patterns)
+
+INSTRUCTIONS:
+1. Describe an alert that would notify you of unusual behavior
+2. Explain when and why the alert would be useful
+3. Keep it simple and non-technical
+
+OUTPUT FORMAT:
+TITLE: Alert for unusual {device_name} activity
+
+DESCRIPTION: [2-3 sentences explaining the alert]
+
+RATIONALE: [Why unusual activity alerts are helpful]
+CATEGORY: security
+PRIORITY: medium
+"""
     
-    async def refine_description(
-        self,
-        current_description: str,
-        user_input: str,
-        device_capabilities: Optional[Dict] = None
-    ) -> Dict:
+    def _parse_description_response(self, content: str, pattern: Dict) -> Dict:
         """
-        Refine automation description based on user's natural language input.
-        
-        Phase 3: User says "Make it blue" or "Only on weekdays"
+        Parse OpenAI description-only response (NO YAML).
+        Story AI1.23 - Conversational Refinement Flow.
         
         Args:
-            current_description: Current description text
-            user_input: User's requested changes
-            device_capabilities: Optional device capabilities for validation
+            content: Raw OpenAI response
+            pattern: Original pattern data
         
         Returns:
-            Dict with updated_description, changes_made, validation
+            Dict with title, description, rationale, category, priority, confidence
         """
         try:
-            logger.info(f"Refining description with user input: '{user_input}'")
+            # Extract fields from response
+            title = ""
+            description = ""
+            rationale = ""
+            category = "convenience"
+            priority = "medium"
             
-            # Build refinement prompt
-            prompt = self._build_refinement_prompt(
-                current_description,
-                user_input,
-                device_capabilities
-            )
+            # Parse TITLE
+            title_match = re.search(r'TITLE:\s*(.+?)(?:\n|$)', content, re.IGNORECASE)
+            if title_match:
+                title = title_match.group(1).strip()
             
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are helping refine home automation descriptions. "
-                            "Update the description based on the user's request. "
-                            "Keep it simple and conversational. "
-                            "If the request is unclear or impossible, explain why."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.5,  # More consistent for refinement
-                max_tokens=200
-            )
+            # Parse DESCRIPTION
+            desc_match = re.search(r'DESCRIPTION:\s*(.+?)(?=RATIONALE:|CATEGORY:|$)', content, re.IGNORECASE | re.DOTALL)
+            if desc_match:
+                description = desc_match.group(1).strip()
             
-            # Track usage
-            usage = response.usage
-            self.total_input_tokens += usage.prompt_tokens
-            self.total_output_tokens += usage.completion_tokens
-            self.total_tokens_used += usage.total_tokens
+            # Parse RATIONALE
+            rat_match = re.search(r'RATIONALE:\s*(.+?)(?=CATEGORY:|PRIORITY:|$)', content, re.IGNORECASE | re.DOTALL)
+            if rat_match:
+                rationale = rat_match.group(1).strip()
             
-            result = response.choices[0].message.content.strip()
-            logger.info(f"✅ Refinement complete ({usage.total_tokens} tokens)")
+            # Parse CATEGORY
+            cat_match = re.search(r'CATEGORY:\s*(\w+)', content, re.IGNORECASE)
+            if cat_match:
+                category = cat_match.group(1).lower()
             
-            # Parse result (expecting simple format)
-            return self._parse_refinement_result(result, current_description)
+            # Parse PRIORITY
+            pri_match = re.search(r'PRIORITY:\s*(\w+)', content, re.IGNORECASE)
+            if pri_match:
+                priority = pri_match.group(1).lower()
+            
+            # Fallback: use entire content as description if parsing failed
+            if not description:
+                description = content.strip()
+                if not title:
+                    title = f"Automation for {pattern.get('device_id', 'device')}"
+            
+            return {
+                'title': title,
+                'description': description,
+                'rationale': rationale,
+                'category': category,
+                'priority': priority,
+                'confidence': pattern.get('confidence', 0.8)
+            }
             
         except Exception as e:
-            logger.error(f"❌ Refinement failed: {e}")
+            logger.error(f"Failed to parse description response: {e}")
+            # Return fallback
             return {
-                'updated_description': current_description,
-                'changes_made': [],
-                'validation': {
-                    'ok': False,
-                    'error': f"Could not process refinement: {str(e)}"
-                }
+                'title': f"Automation for {pattern.get('device_id', 'device')}",
+                'description': content.strip(),
+                'rationale': "Detected usage pattern suggests this automation",
+                'category': 'convenience',
+                'priority': 'medium',
+                'confidence': pattern.get('confidence', 0.8)
             }
     
-    def _build_refinement_prompt(
-        self,
-        current_description: str,
-        user_input: str,
-        device_capabilities: Optional[Dict]
-    ) -> str:
-        """Build prompt for refinement"""
-        prompt = f"""Current automation description:
-"{current_description}"
-
-User wants to change it:
-"{user_input}"
-"""
-        
-        if device_capabilities:
-            prompt += f"\nDevice capabilities: {', '.join(device_capabilities.get('features', []))}"
-        
-        prompt += """
-
-Update the description to incorporate the user's change.
-Keep it simple (1-2 sentences).
-If the change is impossible or unclear, explain why.
-
-Respond in this format:
-UPDATED: [new description here]
-CHANGES: [what changed]
-OK: [yes/no]
-"""
-        return prompt
-    
-    def _parse_refinement_result(self, result: str, fallback_description: str) -> Dict:
-        """Parse refinement result into structured format"""
-        lines = result.strip().split('\n')
-        
-        updated_description = fallback_description
-        changes_made = []
-        ok = True
-        error = None
-        
-        for line in lines:
-            line = line.strip()
-            
-            if line.startswith('UPDATED:'):
-                updated_description = line.replace('UPDATED:', '').strip()
-            elif line.startswith('CHANGES:'):
-                changes_text = line.replace('CHANGES:', '').strip()
-                if changes_text:
-                    changes_made.append(changes_text)
-            elif line.startswith('OK:'):
-                ok_text = line.replace('OK:', '').strip().lower()
-                ok = ok_text in ['yes', 'true', 'ok']
-                if not ok:
-                    error = "Request could not be applied"
-        
-        return {
-            'updated_description': updated_description,
-            'changes_made': changes_made,
-            'validation': {
-                'ok': ok,
-                'error': error
-            }
-        }
-    
-    def _build_community_context(self, enhancements: list) -> str:
-        """
-        Build community enhancement context for prompt augmentation
-        
-        Epic AI-4, Story AI4.2
-        
-        Args:
-            enhancements: List of Enhancement objects from EnhancementExtractor
-        
-        Returns:
-            Formatted community context string
-        """
-        if not enhancements:
-            return ""
-        
-        # Group by type
-        by_type = {
-            'condition': [],
-            'timing': [],
-            'action': []
-        }
-        
-        for enh in enhancements[:10]:  # Top 10 only to keep prompt concise
-            if hasattr(enh, 'type'):
-                by_type.get(enh.type, []).append(enh)
-        
-        context = "\n**COMMUNITY BEST PRACTICES** (80% weight YOUR patterns, 20% weight community insights):\n"
-        
-        if by_type['condition']:
-            context += "\n**Optional Conditions** (used in high-quality community automations):\n"
-            for enh in by_type['condition'][:3]:  # Top 3
-                context += f"- {enh.description} (used by {enh.frequency} automations, avg quality {enh.quality_score:.2f})\n"
-        
-        if by_type['timing']:
-            context += "\n**Optional Timing Improvements:**\n"
-            for enh in by_type['timing'][:3]:
-                context += f"- {enh.example}\n"
-        
-        if by_type['action']:
-            context += "\n**Optional Action Variations:**\n"
-            for enh in by_type['action'][:3]:
-                context += f"- {enh.description}\n"
-        
-        context += "\n**IMPORTANT:** These are optional enhancements. Prioritize the user's detected patterns (PRIMARY). Community insights should augment, not replace, personal patterns.\n"
-        
-        return context
-

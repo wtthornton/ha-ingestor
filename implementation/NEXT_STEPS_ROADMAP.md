@@ -22,7 +22,7 @@ You've built amazing features but haven't tested them with:
 
 ### Step 1: Start Services (5 mins)
 ```bash
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 
 # Rebuild with new code
 docker-compose up -d --build ai-automation-service health-dashboard
@@ -579,7 +579,7 @@ Success: It works! 🎉
 **1. Quick Verification Test:**
 ```bash
 # Start services
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 docker-compose up -d ai-automation-service health-dashboard
 
 # Wait 30 seconds for startup

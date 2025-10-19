@@ -122,7 +122,7 @@ When Story 19.1 is complete, create QA gate:
 ## Project Structure
 
 ```
-ha-ingestor/
+homeiq/
 ├── docs/
 │   ├── prd/
 │   │   ├── epic-19-device-entity-discovery.md ✅ NEW

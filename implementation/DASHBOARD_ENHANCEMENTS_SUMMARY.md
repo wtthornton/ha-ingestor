@@ -334,6 +334,6 @@ await page.evaluate(() => ({ /* checks */ }));
 **Enhancement Date**: October 11, 2025  
 **Version**: 1.1.0  
 **Status**: ✅ Completed & Deployed  
-**Build**: ha-ingestor-health-dashboard:latest
+**Build**: homeiq-health-dashboard:latest
 
 

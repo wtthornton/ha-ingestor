@@ -137,7 +137,7 @@ GET /api/v1/webhooks/list
 
 **Test 5:** Webhook File Persistence
 ```bash
-docker exec ha-ingestor-sports-data cat /app/data/webhooks.json
+docker exec homeiq-sports-data cat /app/data/webhooks.json
 ```
 **Result:** File exists with correct webhook data
 ✅ **PASS** - JSON file created and persisted
@@ -225,7 +225,7 @@ All issues resolved during deployment!
 
 ## 🚀 Deployment Status
 
-**Container:** ha-ingestor-sports-data  
+**Container:** homeiq-sports-data  
 **Image:** Built successfully with all Epic 12 code  
 **Status:** Running and healthy  
 **Port:** 8005  

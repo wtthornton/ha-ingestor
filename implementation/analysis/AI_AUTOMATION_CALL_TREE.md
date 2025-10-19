@@ -2461,8 +2461,8 @@ DATA_API_URL=http://data-api:8006
 
 # InfluxDB
 INFLUXDB_URL=http://influxdb:8086
-INFLUXDB_TOKEN=ha-ingestor-token
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_TOKEN=homeiq-token
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # Home Assistant

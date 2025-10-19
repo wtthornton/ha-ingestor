@@ -103,7 +103,7 @@ Create the `AdminAPIInfluxDBClient` class with:
 # InfluxDB Configuration (Add if missing)
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your-influxdb-token
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 ```
 

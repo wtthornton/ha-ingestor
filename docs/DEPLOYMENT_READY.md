@@ -168,7 +168,7 @@ docker-compose up
 ### Sports API Not Responding:
 ```bash
 # Check if service is running
-docker logs ha-ingestor-sports-data
+docker logs homeiq-sports-data
 
 # Test health endpoint
 curl http://localhost:8005/health
@@ -177,7 +177,7 @@ curl http://localhost:8005/health
 ### Dashboard Not Loading:
 ```bash
 # Check dashboard logs
-docker logs ha-ingestor-dashboard
+docker logs homeiq-dashboard
 
 # Verify build
 cd services/health-dashboard
@@ -200,7 +200,7 @@ npm run build
 [ ] 4. Verify: docker ps (all services running)
 [ ] 5. Open: http://localhost:3000
 [ ] 6. Test: Sports tab + Dependencies tab
-[ ] 7. Monitor: docker logs -f ha-ingestor-sports-data
+[ ] 7. Monitor: docker logs -f homeiq-sports-data
 [ ] 8. Success! 🎉
 ```
 

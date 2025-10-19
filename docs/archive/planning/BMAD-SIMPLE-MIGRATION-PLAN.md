@@ -184,7 +184,7 @@ async def query_events(limit: int = 100):
 docker-compose down
 
 # Backup current data (optional)
-docker exec ha-ingestor-influxdb influx backup /backup/$(date +%Y%m%d_%H%M%S)
+docker exec homeiq-influxdb influx backup /backup/$(date +%Y%m%d_%H%M%S)
 ```
 
 #### 3.2 Deploy New System
@@ -345,7 +345,7 @@ curl http://localhost:8001/health
 ### If Data Issues
 ```bash
 # Restore from backup
-docker exec ha-ingestor-influxdb influx restore /backup/backup_name
+docker exec homeiq-influxdb influx restore /backup/backup_name
 
 # Restart services
 docker-compose restart

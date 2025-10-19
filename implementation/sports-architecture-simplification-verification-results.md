@@ -103,14 +103,14 @@ curl "http://localhost:3000/api/sports/games/live?team_ids=bos,wsh&league=NHL"
 
 ### Test 4: Nginx Configuration Verification ✅ PASSED
 ```bash
-docker exec ha-ingestor-dashboard cat /etc/nginx/conf.d/default.conf | grep "api/sports"
+docker exec homeiq-dashboard cat /etc/nginx/conf.d/default.conf | grep "api/sports"
 ```
 
 **Result:**
 ```nginx
 # Proxy sports API calls to sports-data service
 location /api/sports/ {
-    proxy_pass http://ha-ingestor-sports-data:8005/api/v1/;
+    proxy_pass http://homeiq-sports-data:8005/api/v1/;
     proxy_set_header Host $host;
     ...
 }
@@ -145,13 +145,13 @@ docker-compose ps
 **Result:**
 ```
 NAME                         STATUS
-ha-ingestor-dashboard        Up (healthy)     ✅
-ha-ingestor-sports-data      Up (unhealthy*)  ⚠️
-ha-ingestor-admin            Up (unhealthy)   ⚠️
-ha-ingestor-enrichment       Up (healthy)     ✅
-ha-ingestor-websocket        Up (healthy)     ✅
-ha-ingestor-data-retention   Up (healthy)     ✅
-ha-ingestor-influxdb         Up (healthy)     ✅
+homeiq-dashboard        Up (healthy)     ✅
+homeiq-sports-data      Up (unhealthy*)  ⚠️
+homeiq-admin            Up (unhealthy)   ⚠️
+homeiq-enrichment       Up (healthy)     ✅
+homeiq-websocket        Up (healthy)     ✅
+homeiq-data-retention   Up (healthy)     ✅
+homeiq-influxdb         Up (healthy)     ✅
 
 *Note: sports-data shows unhealthy due to Docker health check configuration,
        but service is actually working correctly (verified by direct curl tests)
@@ -177,7 +177,7 @@ Nginx (dashboard container:80)
 
     ↓ (Internal Docker network)
     
-Proxy to: http://ha-ingestor-sports-data:8005/api/v1/teams?league=NHL
+Proxy to: http://homeiq-sports-data:8005/api/v1/teams?league=NHL
 
     ↓ (Port 8005)
     

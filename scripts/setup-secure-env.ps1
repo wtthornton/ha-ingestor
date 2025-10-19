@@ -173,7 +173,7 @@ if ($Environment -eq 'production') {
 }
 else {
     $influxPassword = "admin123"
-    $influxToken = "ha-ingestor-token"
+    $influxToken = "homeiq-token"
     Write-Success "Using default development credentials"
 }
 
@@ -187,7 +187,7 @@ $content += @"
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_USERNAME=$influxUsername
 INFLUXDB_PASSWORD=$influxPassword
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 INFLUXDB_TOKEN=$influxToken
 "@

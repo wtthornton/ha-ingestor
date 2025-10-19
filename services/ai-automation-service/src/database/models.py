@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from datetime import datetime
 from typing import Optional
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -276,6 +277,24 @@ async def get_db():
     """Dependency for FastAPI routes to get database session"""
     async with async_session() as session:
         yield session
+
+
+class AskAIQuery(Base):
+    """Ask AI natural language queries and their generated suggestions"""
+    __tablename__ = 'ask_ai_queries'
+    
+    query_id = Column(String, primary_key=True, default=lambda: f"query-{uuid.uuid4().hex[:8]}")
+    original_query = Column(Text, nullable=False)
+    user_id = Column(String, nullable=False, default="anonymous")
+    parsed_intent = Column(String, nullable=True)  # 'control', 'monitor', 'automate', etc.
+    extracted_entities = Column(JSON, nullable=True)  # Entities from HA Conversation API
+    suggestions = Column(JSON, nullable=True)  # Generated suggestions array
+    confidence = Column(Float, nullable=True)  # Overall confidence score
+    processing_time_ms = Column(Integer, nullable=True)  # Time taken to process
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<AskAIQuery(query_id={self.query_id}, query='{self.original_query[:50]}...', suggestions={len(self.suggestions or [])})>"
 
 
 def get_db_session():

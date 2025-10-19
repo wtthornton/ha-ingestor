@@ -128,18 +128,18 @@ To verify the fix is working:
 
 2. Check logs for successful validation:
    ```bash
-   docker logs ha-ingestor-enrichment --tail 50 | grep "Validation passed"
+   docker logs homeiq-enrichment --tail 50 | grep "Validation passed"
    ```
 
 3. Check for no HTTP 500 errors:
    ```bash
-   docker logs ha-ingestor-enrichment | grep "500"
+   docker logs homeiq-enrichment | grep "500"
    ```
    Should return nothing
 
 4. Verify circuit breaker status:
    ```bash
-   docker logs ha-ingestor-websocket | grep "circuit breaker"
+   docker logs homeiq-websocket | grep "circuit breaker"
    ```
    Should show circuit breaker closing after reset
 

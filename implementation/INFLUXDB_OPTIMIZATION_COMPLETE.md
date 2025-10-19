@@ -211,8 +211,8 @@ Status: ✅ PASS (exactly as requested, no duplicates)
 
 ## Services Rebuilt
 
-- ✅ ha-ingestor-admin-api (rebuilt with event query fix)
-- ✅ ha-ingestor-data-api (rebuilt with 4 query fixes)
+- ✅ homeiq-admin-api (rebuilt with event query fix)
+- ✅ homeiq-data-api (rebuilt with 4 query fixes)
 - ✅ Related services (websocket, enrichment) rebuilt as dependencies
 - ✅ All services healthy and running
 
@@ -546,7 +546,7 @@ docker-compose up -d --build admin-api data-api
 4. *Next* - InfluxDB optimization implementation
 
 **Branch:** master  
-**Repository:** https://github.com/wtthornton/ha-ingestor.git
+**Repository:** https://github.com/wtthornton/homeiq.git
 
 ---
 

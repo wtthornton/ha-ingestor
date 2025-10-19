@@ -225,10 +225,10 @@
 
 ```bash
 # Check logs periodically
-docker logs ha-ingestor-sports-data --tail 50
+docker logs homeiq-sports-data --tail 50
 
 # Monitor resource usage
-docker stats ha-ingestor-sports-data
+docker stats homeiq-sports-data
 
 # Check API usage
 curl http://localhost:8005/api/v1/metrics/api-usage
@@ -478,8 +478,8 @@ Then follow **Task 1: Manual Frontend Testing** step-by-step above.
 ### If Frontend Testing Fails
 1. Check browser console for errors
 2. Check network tab for failed API calls
-3. Review nginx logs: `docker logs ha-ingestor-dashboard`
-4. Review sports-data logs: `docker logs ha-ingestor-sports-data`
+3. Review nginx logs: `docker logs homeiq-dashboard`
+4. Review sports-data logs: `docker logs homeiq-sports-data`
 5. Try rollback procedure if critical
 
 ### If You Find Bugs

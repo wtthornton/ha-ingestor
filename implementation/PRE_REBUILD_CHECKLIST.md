@@ -67,10 +67,10 @@ Get-PSDrive  # Windows
 
 ```bash
 # Create backup inside container
-docker exec ha-ingestor-influxdb influx backup /tmp/backup
+docker exec homeiq-influxdb influx backup /tmp/backup
 
 # Copy backup to host
-docker cp ha-ingestor-influxdb:/tmp/backup ~/backup-$(date +%Y%m%d)-influxdb
+docker cp homeiq-influxdb:/tmp/backup ~/backup-$(date +%Y%m%d)-influxdb
 
 # Verify backup
 ls -lh ~/backup-$(date +%Y%m%d)-influxdb
@@ -79,11 +79,11 @@ ls -lh ~/backup-$(date +%Y%m%d)-influxdb
 **Windows PowerShell:**
 ```powershell
 # Create backup inside container
-docker exec ha-ingestor-influxdb influx backup /tmp/backup
+docker exec homeiq-influxdb influx backup /tmp/backup
 
 # Copy backup to host
 $date = Get-Date -Format "yyyyMMdd"
-docker cp ha-ingestor-influxdb:/tmp/backup $HOME/backup-$date-influxdb
+docker cp homeiq-influxdb:/tmp/backup $HOME/backup-$date-influxdb
 
 # Verify backup
 Get-ChildItem $HOME/backup-$date-influxdb
@@ -99,7 +99,7 @@ Get-ChildItem $HOME/backup-$date-influxdb
 
 ```bash
 # Backup metadata database
-docker cp ha-ingestor-data-api:/app/data/metadata.db ~/backup-$(date +%Y%m%d)-metadata.db
+docker cp homeiq-data-api:/app/data/metadata.db ~/backup-$(date +%Y%m%d)-metadata.db
 
 # Verify backup
 ls -lh ~/backup-*-metadata.db
@@ -109,7 +109,7 @@ ls -lh ~/backup-*-metadata.db
 ```powershell
 # Backup metadata database
 $date = Get-Date -Format "yyyyMMdd"
-docker cp ha-ingestor-data-api:/app/data/metadata.db $HOME/backup-$date-metadata.db
+docker cp homeiq-data-api:/app/data/metadata.db $HOME/backup-$date-metadata.db
 
 # Verify backup
 Get-ChildItem $HOME/backup-*-metadata.db
@@ -231,17 +231,17 @@ Get-ChildItem $HOME/backup-*-docker-compose.yml
 docker-compose down --timeout 30
 
 # Step 2: Force stop any remaining containers
-docker ps --filter "name=ha-ingestor" -q | xargs -r docker stop
+docker ps --filter "name=homeiq" -q | xargs -r docker stop
 
 # Step 3: Remove all containers
-docker ps -a --filter "name=ha-ingestor" -q | xargs -r docker rm -f
+docker ps -a --filter "name=homeiq" -q | xargs -r docker rm -f
 
 # Step 4: Remove all images
-docker images --filter=reference='*ha-ingestor*' -q | xargs -r docker rmi -f
+docker images --filter=reference='*homeiq*' -q | xargs -r docker rmi -f
 
 # Step 5: Remove networks
-docker network rm ha-ingestor-network 2>/dev/null || true
-docker network rm ha-ingestor-network-dev 2>/dev/null || true
+docker network rm homeiq-network 2>/dev/null || true
+docker network rm homeiq-network-dev 2>/dev/null || true
 
 # Step 6: Clean build cache
 docker builder prune -a -f
@@ -253,17 +253,17 @@ docker builder prune -a -f
 docker-compose down --timeout 30
 
 # Step 2: Force stop any remaining containers
-docker ps --filter "name=ha-ingestor" -q | ForEach-Object { docker stop $_ }
+docker ps --filter "name=homeiq" -q | ForEach-Object { docker stop $_ }
 
 # Step 3: Remove all containers
-docker ps -a --filter "name=ha-ingestor" -q | ForEach-Object { docker rm -f $_ }
+docker ps -a --filter "name=homeiq" -q | ForEach-Object { docker rm -f $_ }
 
 # Step 4: Remove all images
-docker images --filter=reference='*ha-ingestor*' -q | ForEach-Object { docker rmi -f $_ }
+docker images --filter=reference='*homeiq*' -q | ForEach-Object { docker rmi -f $_ }
 
 # Step 5: Remove networks
-docker network rm ha-ingestor-network 2>$null
-docker network rm ha-ingestor-network-dev 2>$null
+docker network rm homeiq-network 2>$null
+docker network rm homeiq-network-dev 2>$null
 
 # Step 6: Clean build cache
 docker builder prune -a -f
@@ -284,7 +284,7 @@ docker builder prune -a -f
 
 ```bash
 # Check for remaining containers
-docker ps -a | grep ha-ingestor
+docker ps -a | grep homeiq
 
 # Should show NO results
 ```
@@ -292,14 +292,14 @@ docker ps -a | grep ha-ingestor
 **Expected:** Command should return nothing or "no rows"
 
 **Checklist:**
-- [ ] No ha-ingestor containers found
+- [ ] No homeiq containers found
 - [ ] `docker ps -a` shows clean state
 
 ### 4.2 Verify No Images Remain
 
 ```bash
 # Check for remaining images
-docker images | grep ha-ingestor
+docker images | grep homeiq
 
 # Should show NO results
 ```
@@ -307,14 +307,14 @@ docker images | grep ha-ingestor
 **Expected:** Command should return nothing or "no rows"
 
 **Checklist:**
-- [ ] No ha-ingestor images found
+- [ ] No homeiq images found
 - [ ] `docker images` shows clean state
 
 ### 4.3 Verify No Networks Remain
 
 ```bash
 # Check for remaining networks
-docker network ls | grep ha-ingestor
+docker network ls | grep homeiq
 
 # Should show NO results
 ```
@@ -322,20 +322,20 @@ docker network ls | grep ha-ingestor
 **Expected:** Command should return nothing or "no rows"
 
 **Checklist:**
-- [ ] No ha-ingestor networks found
+- [ ] No homeiq networks found
 - [ ] Only default Docker networks remain
 
 ### 4.4 Verify Volumes Preserved (IMPORTANT)
 
 ```bash
 # Check volumes are still there
-docker volume ls | grep ha-ingestor
+docker volume ls | grep homeiq
 
 # Should show volumes like:
-# - ha-ingestor_influxdb_data
-# - ha-ingestor_influxdb_config
-# - ha-ingestor_sqlite-data
-# - ha-ingestor_data_retention_backups
+# - homeiq_influxdb_data
+# - homeiq_influxdb_config
+# - homeiq_sqlite-data
+# - homeiq_data_retention_backups
 ```
 
 **Expected:** Volumes should still exist (containing your data)
@@ -491,12 +491,12 @@ docker-compose down
 
 # 2. Restore InfluxDB
 docker-compose up -d influxdb
-docker cp ~/backup-YYYYMMDD-influxdb ha-ingestor-influxdb:/tmp/backup
-docker exec ha-ingestor-influxdb influx restore /tmp/backup
+docker cp ~/backup-YYYYMMDD-influxdb homeiq-influxdb:/tmp/backup
+docker exec homeiq-influxdb influx restore /tmp/backup
 
 # 3. Restore SQLite
 docker-compose up -d data-api
-docker cp ~/backup-YYYYMMDD-metadata.db ha-ingestor-data-api:/app/data/metadata.db
+docker cp ~/backup-YYYYMMDD-metadata.db homeiq-data-api:/app/data/metadata.db
 
 # 4. Restore environment
 cp ~/backup-YYYYMMDD-env .env

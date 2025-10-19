@@ -21,7 +21,7 @@
 
 ### Container Status
 ```
-ha-ingestor-influxdb              Up 9 hours (healthy)           0.0.0.0:8086->8086/tcp
+homeiq-influxdb              Up 9 hours (healthy)           0.0.0.0:8086->8086/tcp
 ```
 
 ### Bucket Verification
@@ -81,8 +81,8 @@ Query result shows **extensive data** written in last 24 hours, including:
 **Configuration:**
 ```yaml
 INFLUXDB_URL: http://influxdb:8086
-INFLUXDB_TOKEN: ha-ingestor-token (default)
-INFLUXDB_ORG: ha-ingestor
+INFLUXDB_TOKEN: homeiq-token (default)
+INFLUXDB_ORG: homeiq
 INFLUXDB_BUCKET: home_assistant_events
 ```
 
@@ -315,16 +315,16 @@ websocket-ingestion:
 
 5. **Monitor Connection:**
    ```bash
-   docker logs -f ha-ingestor-websocket | grep "Connected\|connection"
+   docker logs -f homeiq-websocket | grep "Connected\|connection"
    ```
 
 ### To Fix Restarting Services:
 
 1. **Check logs for air-quality, calendar, carbon-intensity:**
    ```bash
-   docker logs ha-ingestor-air-quality
-   docker logs ha-ingestor-calendar
-   docker logs ha-ingestor-carbon-intensity
+   docker logs homeiq-air-quality
+   docker logs homeiq-calendar
+   docker logs homeiq-carbon-intensity
    ```
 
 2. **Verify API keys are configured** for external services
@@ -334,10 +334,10 @@ websocket-ingestion:
 ### Verify InfluxDB Write Capability:
 ```bash
 # Test direct write to InfluxDB
-docker exec ha-ingestor-influxdb influx write \
+docker exec homeiq-influxdb influx write \
   --bucket home_assistant_events \
-  --org ha-ingestor \
-  --token ha-ingestor-token \
+  --org homeiq \
+  --token homeiq-token \
   --precision s \
   "test_measurement,tag=test value=1"
 ```
@@ -358,10 +358,10 @@ curl -X POST http://localhost:8002/events \
 ### Monitor Real-Time Writes:
 ```bash
 # Watch InfluxDB query results
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") |> range(start: -5m) |> count()' \
-  --token ha-ingestor-token \
-  --org ha-ingestor
+  --token homeiq-token \
+  --org homeiq
 ```
 
 ## Appendix: File Locations
@@ -377,9 +377,9 @@ docker exec ha-ingestor-influxdb influx query \
 - InfluxDB Client: `services/enrichment-pipeline/src/influxdb_wrapper.py`
 
 ### Logs:
-- Enrichment: `docker logs ha-ingestor-enrichment`
-- WebSocket: `docker logs ha-ingestor-websocket`
-- InfluxDB: `docker logs ha-ingestor-influxdb`
+- Enrichment: `docker logs homeiq-enrichment`
+- WebSocket: `docker logs homeiq-websocket`
+- InfluxDB: `docker logs homeiq-influxdb`
 
 ---
 

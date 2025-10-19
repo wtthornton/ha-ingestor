@@ -22,7 +22,7 @@
 
 ### 📊 Current Status
 ```
-✅ Container: ha-ingestor-setup-service (Running)
+✅ Container: homeiq-setup-service (Running)
 ✅ Port: 8020 (Accessible)
 ✅ Health Score: 94/100 (Healthy)
 ✅ Background Monitoring: Active (60s/300s)
@@ -197,8 +197,8 @@ Invoke-RestMethod -Uri "http://localhost:8020/api/health/trends?hours=24" | Conv
 - **HA_URL**: http://192.168.1.86:8123
 - **SERVICE_PORT**: 8020
 - **DATABASE_URL**: sqlite+aiosqlite:////app/data/ha-setup.db
-- **DATA_API_URL**: http://ha-ingestor-data-api:8006
-- **ADMIN_API_URL**: http://ha-ingestor-admin-api:8003
+- **DATA_API_URL**: http://homeiq-data-api:8006
+- **ADMIN_API_URL**: http://homeiq-admin-api:8003
 - **HEALTH_CHECK_INTERVAL**: 60 seconds
 - **INTEGRATION_CHECK_INTERVAL**: 300 seconds
 
@@ -215,22 +215,22 @@ docker ps --filter "name=setup-service"
 
 ### View Logs
 ```bash
-docker logs -f ha-ingestor-setup-service
+docker logs -f homeiq-setup-service
 ```
 
 ### Restart Service
 ```bash
-docker restart ha-ingestor-setup-service
+docker restart homeiq-setup-service
 ```
 
 ### Stop Service
 ```bash
-docker stop ha-ingestor-setup-service
+docker stop homeiq-setup-service
 ```
 
 ### Remove Service
 ```bash
-docker rm -f ha-ingestor-setup-service
+docker rm -f homeiq-setup-service
 ```
 
 ---
@@ -368,7 +368,7 @@ This service transforms the HA Ingestor from a data ingestion tool into a **comp
 **Deployed By**: Dev Agent (James) 💻  
 **Deployment Date**: January 18, 2025  
 **Service Port**: 8020  
-**Container**: ha-ingestor-setup-service  
+**Container**: homeiq-setup-service  
 **Health Score**: 94/100  
 **Dashboard**: http://localhost:3000 → Setup tab  
 **API Docs**: http://localhost:8020/docs  

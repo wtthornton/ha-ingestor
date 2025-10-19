@@ -318,7 +318,7 @@ HOME_ASSISTANT_TOKEN=$ha_token
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_USERNAME=admin
 INFLUXDB_PASSWORD=$(generate_secure_password)
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 INFLUXDB_TOKEN=$(generate_secure_password)
 

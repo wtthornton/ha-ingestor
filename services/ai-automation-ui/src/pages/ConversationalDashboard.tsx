@@ -22,9 +22,56 @@ export const ConversationalDashboard: React.FC = () => {
   const loadSuggestions = async () => {
     try {
       setLoading(true);
-      // For now, return empty list since we don't have the list endpoint yet
-      // TODO: Implement GET /api/v1/suggestions endpoint
-      setSuggestions([]);
+      console.log('🔄 Loading suggestions with device name mapping...');
+      // Load all suggestions, filter on frontend
+      const response = await api.getSuggestions();
+      // Map API response to component format
+      console.log('Raw API response:', response.data.suggestions[0]);
+      const mappedSuggestions = response.data.suggestions.map(suggestion => {
+        // Extract device hash from title and replace with friendly name
+        const deviceHashMatch = suggestion.title.match(/AI Suggested: ([a-f0-9]{32})/);
+        let friendlyTitle = suggestion.title;
+        let friendlyDescription = suggestion.description;
+        
+        if (deviceHashMatch) {
+          const deviceHash = deviceHashMatch[1];
+          console.log('Found device hash:', deviceHash);
+          
+          // Map known device hashes to friendly names
+          const deviceNameMap: Record<string, string> = {
+            '1ba44a8f25eab1397cb48dd7b743edcd': 'Sun',
+            '71d5add6cf1f844d6f9bb34a3b58a09d': 'Living Room Light',
+            'eca71f35d1ff44a1149dedc519f0d27a': 'Kitchen Light',
+            '61234ae84aba13edf830eb7c5a7e3ae8': 'Bedroom Light',
+            '603c07b7a7096b280ac6316c78dd1c1f': 'Office Light'
+          };
+          
+          const friendlyName = deviceNameMap[deviceHash] || `Device ${deviceHash.substring(0, 8)}...`;
+          console.log('Mapping device hash to friendly name:', deviceHash, '->', friendlyName);
+          
+          friendlyTitle = suggestion.title.replace(deviceHash, friendlyName);
+          friendlyDescription = suggestion.description.replace(deviceHash, friendlyName);
+          
+          console.log('Updated title:', friendlyTitle);
+          console.log('Updated description:', friendlyDescription);
+        } else {
+          console.log('No device hash match found in title:', suggestion.title);
+        }
+        
+        const mapped = {
+          ...suggestion,
+          title: friendlyTitle,
+          description: friendlyDescription,
+          description_only: friendlyDescription, // Map description to description_only
+          refinement_count: 0, // Default value
+          conversation_history: [], // Default empty array
+          device_capabilities: {} // Default empty object
+        };
+        console.log('Mapped suggestion:', mapped);
+        return mapped;
+      });
+      console.log('All mapped suggestions:', mappedSuggestions);
+      setSuggestions(mappedSuggestions);
     } catch (error) {
       console.error('Failed to load suggestions:', error);
       toast.error('Failed to load suggestions');
@@ -261,16 +308,18 @@ export const ConversationalDashboard: React.FC = () => {
           </motion.div>
         ) : (
           <div className="grid gap-6">
-            {suggestions.map((suggestion) => (
-              <ConversationalSuggestionCard
-                key={suggestion.id}
-                suggestion={suggestion}
-                onRefine={handleRefine}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                darkMode={darkMode}
-              />
-            ))}
+            {suggestions
+              .filter(suggestion => suggestion.status === selectedStatus)
+              .map((suggestion) => (
+                <ConversationalSuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  onRefine={handleRefine}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  darkMode={darkMode}
+                />
+              ))}
           </div>
         )}
       </AnimatePresence>

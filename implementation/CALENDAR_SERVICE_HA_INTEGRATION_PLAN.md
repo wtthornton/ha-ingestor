@@ -462,7 +462,7 @@ calendar-service:
   depends_on:
     - influxdb
   networks:
-    - ha-ingestor-network
+    - homeiq-network
   restart: unless-stopped
 ```
 

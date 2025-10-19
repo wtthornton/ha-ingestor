@@ -360,7 +360,7 @@ Get system configuration.
     "services": {
       "influxdb": {
         "url": "http://influxdb:8086",
-        "org": "ha-ingestor",
+        "org": "homeiq",
         "bucket": "home_assistant_events"
       },
       "websocket_ingestion": {
@@ -816,7 +816,7 @@ Get enrichment pipeline service health status.
   "influxdb": {
     "connected": true,
     "url": "http://influxdb:8086",
-    "org": "ha-ingestor",
+    "org": "homeiq",
     "bucket": "home_assistant_events"
   }
 }

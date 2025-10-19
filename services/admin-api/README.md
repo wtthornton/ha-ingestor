@@ -6,7 +6,7 @@ The Admin API Service is a FastAPI-based REST API that provides comprehensive ad
 
 **Port:** 8003  
 **Technology:** Python 3.11, FastAPI, Pydantic  
-**Container:** `ha-ingestor-admin-api`
+**Container:** `homeiq-admin-api`
 
 ## Features
 
@@ -227,7 +227,7 @@ API_HOST=0.0.0.0
 # InfluxDB Connection
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your-token
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # Configuration Management

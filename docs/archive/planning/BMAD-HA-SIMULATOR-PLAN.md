@@ -2,21 +2,21 @@
 
 ## Executive Summary
 
-This document outlines the BMAD (Business Model and Architecture Design) methodology approach to developing a Home Assistant simulator for the ha-ingestor project. The simulator will enable development and testing without requiring a local Home Assistant instance, using real data patterns from the existing system.
+This document outlines the BMAD (Business Model and Architecture Design) methodology approach to developing a Home Assistant simulator for the homeiq project. The simulator will enable development and testing without requiring a local Home Assistant instance, using real data patterns from the existing system.
 
 ## 1. Business Context & Requirements
 
 ### 1.1 Problem Statement
 - **Current Challenge**: Development and testing requires a running Home Assistant instance
 - **Impact**: Slows development cycle, requires HA setup/maintenance, limits testing scenarios
-- **Business Need**: Independent development environment for ha-ingestor services
+- **Business Need**: Independent development environment for homeiq services
 
 ### 1.2 Success Criteria
 - ✅ Simulate realistic HA WebSocket API behavior
 - ✅ Generate authentic event patterns based on real data
 - ✅ Support all current entity types and domains
 - ✅ Enable configurable event rates and scenarios
-- ✅ Integrate seamlessly with existing ha-ingestor services
+- ✅ Integrate seamlessly with existing homeiq services
 
 ### 1.3 Stakeholders
 - **Primary**: Development team
@@ -316,7 +316,7 @@ scenarios:
 
 #### Story 3.1: Service Integration
 - **Acceptance Criteria**:
-  - Integrates with existing ha-ingestor services
+  - Integrates with existing homeiq services
   - Maintains compatibility with current code
   - Supports health monitoring
 - **Tasks**:
@@ -441,7 +441,7 @@ scenarios:
 
 ## 9. Conclusion
 
-The HA Simulator will significantly improve the development experience for the ha-ingestor project by providing a reliable, configurable, and realistic Home Assistant environment. The phased approach ensures manageable implementation while maintaining high quality standards.
+The HA Simulator will significantly improve the development experience for the homeiq project by providing a reliable, configurable, and realistic Home Assistant environment. The phased approach ensures manageable implementation while maintaining high quality standards.
 
 The simulator will enable:
 - Faster development cycles
@@ -450,5 +450,5 @@ The simulator will enable:
 - Easy scenario configuration
 - Seamless integration with existing services
 
-This BMAD plan provides a comprehensive roadmap for successful implementation while maintaining the high standards expected in the ha-ingestor project.
+This BMAD plan provides a comprehensive roadmap for successful implementation while maintaining the high standards expected in the homeiq project.
 

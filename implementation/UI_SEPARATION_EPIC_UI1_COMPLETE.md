@@ -96,8 +96,8 @@ allow_origins=[
     "http://localhost:3001",      # AI Automation UI (localhost)
     "http://ai-automation-ui",    # AI Automation UI (container)
     "http://ai-automation-ui:80",
-    "http://ha-ingestor-dashboard",  # Health dashboard (container)
-    "http://ha-ingestor-dashboard:80"
+    "http://homeiq-dashboard",  # Health dashboard (container)
+    "http://homeiq-dashboard:80"
 ]
 ```
 
@@ -218,7 +218,7 @@ docker-compose ps
 open http://localhost:3000
 
 # Check logs
-docker logs ha-ingestor-dashboard --tail 50
+docker logs homeiq-dashboard --tail 50
 ```
 
 **Verify:**

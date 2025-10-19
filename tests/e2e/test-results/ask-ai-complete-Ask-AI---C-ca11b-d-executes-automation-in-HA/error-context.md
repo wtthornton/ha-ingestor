@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "🤖 HA AutomateAI" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8] [cursor=pointer]: 🤖
+        - generic [ref=e9] [cursor=pointer]: HA AutomateAI
+      - generic [ref=e10]:
+        - link "🤖 Suggestions" [ref=e11] [cursor=pointer]:
+          - /url: /
+        - link "💬 Ask AI" [ref=e12] [cursor=pointer]:
+          - /url: /ask-ai
+        - link "📊 Patterns" [ref=e13] [cursor=pointer]:
+          - /url: /patterns
+        - link "🔮 Synergies" [ref=e14] [cursor=pointer]:
+          - /url: /synergies
+        - link "🚀 Deployed" [ref=e15] [cursor=pointer]:
+          - /url: /deployed
+        - link "🔍 Discovery" [ref=e16] [cursor=pointer]:
+          - /url: /discovery
+        - link "⚙️ Settings" [ref=e17] [cursor=pointer]:
+          - /url: /settings
+        - button "Toggle dark mode" [ref=e18] [cursor=pointer]: 🌙
+        - link "🔧 Admin" [ref=e19] [cursor=pointer]:
+          - /url: http://localhost:3000
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - generic:
+          - heading "Quick Examples" [level=3] [ref=e24]
+          - button [ref=e25] [cursor=pointer]:
+            - img [ref=e26] [cursor=pointer]
+        - generic:
+          - button "Turn on the living room lights when I get home" [ref=e28] [cursor=pointer]
+          - button "Flash the office lights when VGK scores" [ref=e29] [cursor=pointer]
+          - button "Alert me when the garage door is left open" [ref=e30] [cursor=pointer]
+          - button "Turn off all lights when I leave the house" [ref=e31] [cursor=pointer]
+          - button "Dim the bedroom lights at sunset" [ref=e32] [cursor=pointer]
+          - button "Turn on the coffee maker at 7 AM on weekdays" [ref=e33] [cursor=pointer]
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - heading "Ask AI" [level=1] [ref=e37]
+            - generic [ref=e38]: Home Assistant Automation Assistant
+          - generic [ref=e39]:
+            - button "Toggle Examples" [ref=e40] [cursor=pointer]:
+              - img [ref=e41] [cursor=pointer]
+            - button "Clear" [ref=e43] [cursor=pointer]
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: "Hi! I'm your Home Assistant AI assistant. I can help you create automations by understanding your natural language requests. Here are some examples:"
+            - generic [ref=e49]: 1:23:50 AM
+          - generic [ref=e51]:
+            - generic [ref=e52]: Turn on the office lights
+            - generic [ref=e53]: 1:23:51 AM
+          - generic [ref=e55]:
+            - generic [ref=e56]: Sorry, I encountered an error processing your request. Please try again.
+            - generic [ref=e57]: 1:24:51 AM
+        - generic [ref=e59]:
+          - textbox "Ask me about your devices or automations..." [ref=e60]
+          - button "Send" [disabled] [ref=e61]
+  - contentinfo [ref=e62]:
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - strong [ref=e66]: HA AutomateAI
+        - text: "- AI-Powered Smart Home Automation"
+      - generic [ref=e67]: "Powered by OpenAI GPT-4o-mini • Machine Learning Pattern Detection • Cost: ~$0.075/month"
+      - generic [ref=e68]:
+        - link "🔧 Admin Dashboard" [ref=e69] [cursor=pointer]:
+          - /url: http://localhost:3000
+        - link "📚 API Docs" [ref=e70] [cursor=pointer]:
+          - /url: http://localhost:8018/docs
+```

@@ -12,12 +12,12 @@
 1. ✅ **data-api** - Rebuilt with new endpoints
    - Status: Healthy
    - Port: 8006
-   - Container: ha-ingestor-data-api
+   - Container: homeiq-data-api
 
 2. ✅ **health-dashboard** - Rebuilt with new UI components
    - Status: Healthy
    - Port: 3000
-   - Container: ha-ingestor-dashboard
+   - Container: homeiq-dashboard
 
 ### Build Time
 - **data-api:** ~5 seconds
@@ -71,15 +71,15 @@ GET http://localhost:8006/api/integrations/mqtt/analytics
 
 ### Docker Images Built
 ```
-ha-ingestor-data-api:latest          (dfb8a1b921d6)
-ha-ingestor-health-dashboard:latest  (895ab4e28d79)
+homeiq-data-api:latest          (dfb8a1b921d6)
+homeiq-health-dashboard:latest  (895ab4e28d79)
 ```
 
 ### Container Status
 ```
 NAME                      STATUS
-ha-ingestor-data-api      Up 35 seconds (healthy)
-ha-ingestor-dashboard     Up 11 seconds (healthy)
+homeiq-data-api      Up 35 seconds (healthy)
+homeiq-dashboard     Up 11 seconds (healthy)
 ```
 
 ### Health Checks

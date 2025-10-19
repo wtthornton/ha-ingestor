@@ -310,7 +310,7 @@ async def write_game_score(game_data: dict):
 INFLUXDB_ENABLED=true                                    # Enable/disable InfluxDB writes
 INFLUXDB_URL=http://influxdb:8086                        # InfluxDB server URL
 INFLUXDB_TOKEN=${INFLUXDB_TOKEN}                         # InfluxDB authentication token
-INFLUXDB_ORG=ha-ingestor                                 # InfluxDB organization
+INFLUXDB_ORG=homeiq                                 # InfluxDB organization
 INFLUXDB_BUCKET=sports_data                              # Bucket for sports data (or reuse 'events')
 INFLUXDB_RETENTION_DAYS=730                              # 2 years retention
 

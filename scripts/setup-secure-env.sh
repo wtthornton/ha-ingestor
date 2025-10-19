@@ -169,7 +169,7 @@ if [ "$ENV_TYPE" = "production" ]; then
     echo -e "${GREEN}Generated secure InfluxDB credentials${NC}"
 else
     INFLUXDB_PASSWORD="admin123"
-    INFLUXDB_TOKEN="ha-ingestor-token"
+    INFLUXDB_TOKEN="homeiq-token"
     echo -e "${GREEN}Using default development credentials${NC}"
 fi
 
@@ -182,7 +182,7 @@ echo "# InfluxDB Configuration" >> "$ENV_FILE"
 echo "INFLUXDB_URL=http://influxdb:8086" >> "$ENV_FILE"
 echo "INFLUXDB_USERNAME=$INFLUXDB_USERNAME" >> "$ENV_FILE"
 echo "INFLUXDB_PASSWORD=$INFLUXDB_PASSWORD" >> "$ENV_FILE"
-echo "INFLUXDB_ORG=ha-ingestor" >> "$ENV_FILE"
+echo "INFLUXDB_ORG=homeiq" >> "$ENV_FILE"
 echo "INFLUXDB_BUCKET=home_assistant_events" >> "$ENV_FILE"
 echo "INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >> "$ENV_FILE"
 

@@ -102,10 +102,10 @@ volumes:
 **Backup Strategy:**
 ```bash
 # InfluxDB backup
-docker exec ha-ingestor-data-api influx backup /backup/
+docker exec homeiq-data-api influx backup /backup/
 
 # SQLite backup (simple file copy - safe with WAL mode)
-docker cp ha-ingestor-data-api:/app/data/metadata.db ./backups/sqlite/
-docker cp ha-ingestor-sports-data:/app/data/webhooks.db ./backups/sqlite/
+docker cp homeiq-data-api:/app/data/metadata.db ./backups/sqlite/
+docker cp homeiq-sports-data:/app/data/webhooks.db ./backups/sqlite/
 ```
 

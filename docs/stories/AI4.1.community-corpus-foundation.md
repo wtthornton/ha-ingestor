@@ -366,7 +366,7 @@ async with AsyncClient(
     transport=transport,
     timeout=timeout,
     limits=limits,
-    headers={"User-Agent": "ha-ingestor/1.0"}
+    headers={"User-Agent": "homeiq/1.0"}
 ) as client:
     response = await client.get("https://community.home-assistant.io/...")
     response.raise_for_status()

@@ -405,7 +405,7 @@ curl -X POST http://localhost:8002/events \
   }'
 
 # 4. Verify event in InfluxDB
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") 
    |> range(start: -1h) 
    |> filter(fn: (r) => r.entity_id == "sensor.test")'

@@ -540,7 +540,7 @@ carbon-intensity:
   build:
     context: .
     dockerfile: services/carbon-intensity-service/Dockerfile
-  container_name: ha-ingestor-carbon-intensity
+  container_name: homeiq-carbon-intensity
   restart: unless-stopped
   ports:
     - "8010:8010"
@@ -554,8 +554,8 @@ carbon-intensity:
     - GRID_REGION=${GRID_REGION:-CAISO_NORTH}
     # InfluxDB configuration
     - INFLUXDB_URL=http://influxdb:8086
-    - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
-    - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+    - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
+    - INFLUXDB_ORG=${INFLUXDB_ORG:-homeiq}
     - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
     - SERVICE_PORT=8010
     - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -563,7 +563,7 @@ carbon-intensity:
     influxdb:
       condition: service_healthy
   networks:
-    - ha-ingestor-network
+    - homeiq-network
   deploy:
     resources:
       limits:
@@ -741,8 +741,8 @@ asyncio.run(test())
 curl http://localhost:8010/health
 
 # Check InfluxDB data
-curl -X POST "http://localhost:8086/api/v2/query?org=ha-ingestor" \
-  -H "Authorization: Token ha-ingestor-token" \
+curl -X POST "http://localhost:8086/api/v2/query?org=homeiq" \
+  -H "Authorization: Token homeiq-token" \
   -H "Content-Type: application/vnd.flux" \
   -d 'from(bucket:"home_assistant_events")
   |> range(start: -1h)
@@ -782,7 +782,7 @@ docker-compose build carbon-intensity
 docker-compose up -d carbon-intensity
 
 # Watch logs
-docker logs -f ha-ingestor-carbon-intensity
+docker logs -f homeiq-carbon-intensity
 ```
 
 ### Step 5: Verify

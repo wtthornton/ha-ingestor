@@ -232,7 +232,7 @@ docker-compose restart automation-miner
 
 ```bash
 # 1. Build and start with startup initialization
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 docker-compose build automation-miner
 docker-compose up -d automation-miner
 

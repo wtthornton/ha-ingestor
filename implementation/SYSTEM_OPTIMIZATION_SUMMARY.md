@@ -201,8 +201,8 @@ LOG_LEVEL=INFO                         # Debugging level
 ```
 ai-automation-service    Up 2 hours (healthy)    0.0.0.0:8018->8018/tcp
 ai-automation-ui         Up 2 hours (healthy)    0.0.0.0:3001->80/tcp
-ha-ingestor-data-api     Up 2 hours (healthy)    0.0.0.0:8006->8006/tcp
-ha-ingestor-influxdb     Up 2 hours (healthy)    0.0.0.0:8086->8086/tcp
+homeiq-data-api     Up 2 hours (healthy)    0.0.0.0:8006->8006/tcp
+homeiq-influxdb     Up 2 hours (healthy)    0.0.0.0:8086->8086/tcp
 ```
 
 ## Next Steps

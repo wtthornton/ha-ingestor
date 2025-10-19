@@ -242,7 +242,7 @@ Open browser: http://localhost:3000/
 ### 4. Test Different States
 
 #### Test Degraded State
-- Stop one service: `docker stop ha-ingestor-enrichment-pipeline-1`
+- Stop one service: `docker stop homeiq-enrichment-pipeline-1`
 - Verify hero shows 🟡 DEGRADED PERFORMANCE
 - Verify Processing card shows ❌ Unhealthy or ⏸️ Paused
 

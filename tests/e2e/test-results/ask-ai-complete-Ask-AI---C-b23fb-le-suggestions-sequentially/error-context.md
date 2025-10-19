@@ -1,0 +1,189 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "🤖 HA AutomateAI" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8] [cursor=pointer]: 🤖
+        - generic [ref=e9] [cursor=pointer]: HA AutomateAI
+      - generic [ref=e10]:
+        - link "🤖 Suggestions" [ref=e11] [cursor=pointer]:
+          - /url: /
+        - link "💬 Ask AI" [ref=e12] [cursor=pointer]:
+          - /url: /ask-ai
+        - link "📊 Patterns" [ref=e13] [cursor=pointer]:
+          - /url: /patterns
+        - link "🔮 Synergies" [ref=e14] [cursor=pointer]:
+          - /url: /synergies
+        - link "🚀 Deployed" [ref=e15] [cursor=pointer]:
+          - /url: /deployed
+        - link "🔍 Discovery" [ref=e16] [cursor=pointer]:
+          - /url: /discovery
+        - link "⚙️ Settings" [ref=e17] [cursor=pointer]:
+          - /url: /settings
+        - button "Toggle dark mode" [ref=e18] [cursor=pointer]: 🌙
+        - link "🔧 Admin" [ref=e19] [cursor=pointer]:
+          - /url: http://localhost:3000
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - generic:
+          - heading "Quick Examples" [level=3] [ref=e24]
+          - button [ref=e25] [cursor=pointer]:
+            - img [ref=e26] [cursor=pointer]
+        - generic:
+          - button "Turn on the living room lights when I get home" [ref=e28] [cursor=pointer]
+          - button "Flash the office lights when VGK scores" [ref=e29] [cursor=pointer]
+          - button "Alert me when the garage door is left open" [ref=e30] [cursor=pointer]
+          - button "Turn off all lights when I leave the house" [ref=e31] [cursor=pointer]
+          - button "Dim the bedroom lights at sunset" [ref=e32] [cursor=pointer]
+          - button "Turn on the coffee maker at 7 AM on weekdays" [ref=e33] [cursor=pointer]
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - heading "Ask AI" [level=1] [ref=e37]
+            - generic [ref=e38]: Home Assistant Automation Assistant
+          - generic [ref=e39]:
+            - button "Toggle Examples" [ref=e40] [cursor=pointer]:
+              - img [ref=e41] [cursor=pointer]
+            - button "Clear" [ref=e43] [cursor=pointer]
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: "Hi! I'm your Home Assistant AI assistant. I can help you create automations by understanding your natural language requests. Here are some examples:"
+            - generic [ref=e49]: 1:27:07 AM
+          - generic [ref=e51]:
+            - generic [ref=e52]: Flash the office lights when door opens
+            - generic [ref=e53]: 1:27:08 AM
+          - generic [ref=e55]:
+            - generic [ref=e56]: "I found 4 automation suggestions for your request. I detected these devices: office."
+            - generic [ref=e57]:
+              - generic [ref=e59]:
+                - generic [ref=e60]:
+                  - generic [ref=e62]:
+                    - generic [ref=e63]:
+                      - generic [ref=e64]: 💡
+                      - 'heading "Triggered by the opening of the office front door. → Flash lights in a wave pattern: left (red), right (green), center (blue) every second for five seconds." [level=3] [ref=e65]'
+                    - generic [ref=e66]:
+                      - generic [ref=e67]: ✨ automation
+                      - generic [ref=e68]: 📝 New
+                      - generic [ref=e69]: 85% confident
+                  - generic [ref=e70]: When the front door opens, the office lights will flash in a captivating wave pattern, illuminating the room in vibrant hues. The leftmost light flashes red, followed by the right, then back to the center, creating a rhythmic flow of color every second for five seconds.
+                - generic [ref=e71]:
+                  - generic [ref=e73]:
+                    - button "Test" [ref=e74] [cursor=pointer]:
+                      - img [ref=e75] [cursor=pointer]
+                      - generic [ref=e77] [cursor=pointer]: Test
+                    - button "Approve & Create" [ref=e78] [cursor=pointer]:
+                      - img [ref=e79] [cursor=pointer]
+                      - generic [ref=e81] [cursor=pointer]: Approve & Create
+                    - button "Edit" [ref=e82] [cursor=pointer]:
+                      - img [ref=e83] [cursor=pointer]
+                      - generic [ref=e85] [cursor=pointer]: Edit
+                    - button "Not Interested" [ref=e86] [cursor=pointer]:
+                      - img [ref=e87] [cursor=pointer]
+                      - generic [ref=e89] [cursor=pointer]: Not Interested
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: "Created: 10/19/2025, 8:27:15 AM"
+                    - generic [ref=e93]: "ID: #1"
+              - generic [ref=e95]:
+                - generic [ref=e96]:
+                  - generic [ref=e98]:
+                    - generic [ref=e99]:
+                      - generic [ref=e100]: 💡
+                      - heading "Activated by the opening of the office door at any time. → Start with a strobe effect (red and blue) for three seconds, transitioning to a steady soft white light for ten seconds." [level=3] [ref=e101]
+                    - generic [ref=e102]:
+                      - generic [ref=e103]: ✨ automation
+                      - generic [ref=e104]: 📝 New
+                      - generic [ref=e105]: 80% confident
+                  - generic [ref=e106]: As soon as the office door swings open, the lights will perform an energetic strobe effect with alternating colors—red and blue. This will last for three seconds to grab attention, followed by a soft white glow for an additional ten seconds to welcome guests in a cozy atmosphere.
+                - generic [ref=e107]:
+                  - generic [ref=e109]:
+                    - button "Test" [ref=e110] [cursor=pointer]:
+                      - img [ref=e111] [cursor=pointer]
+                      - generic [ref=e113] [cursor=pointer]: Test
+                    - button "Approve & Create" [ref=e114] [cursor=pointer]:
+                      - img [ref=e115] [cursor=pointer]
+                      - generic [ref=e117] [cursor=pointer]: Approve & Create
+                    - button "Edit" [ref=e118] [cursor=pointer]:
+                      - img [ref=e119] [cursor=pointer]
+                      - generic [ref=e121] [cursor=pointer]: Edit
+                    - button "Not Interested" [ref=e122] [cursor=pointer]:
+                      - img [ref=e123] [cursor=pointer]
+                      - generic [ref=e125] [cursor=pointer]: Not Interested
+                  - generic [ref=e127]:
+                    - generic [ref=e128]: "Created: 10/19/2025, 8:27:15 AM"
+                    - generic [ref=e129]: "ID: #2"
+              - generic [ref=e131]:
+                - generic [ref=e132]:
+                  - generic [ref=e134]:
+                    - generic [ref=e135]:
+                      - generic [ref=e136]: 💡
+                      - heading "Triggered by the opening of the office door during the day. → Perform a rainbow light show for six seconds, followed by a slow pulsing white light for five seconds." [level=3] [ref=e137]
+                    - generic [ref=e138]:
+                      - generic [ref=e139]: ✨ automation
+                      - generic [ref=e140]: 📝 New
+                      - generic [ref=e141]: 75% confident
+                  - generic [ref=e142]: Upon activation with the office door opening, all lights will create a dazzling rainbow sequence. The lights will shift through colors in a smooth gradient that lasts for six seconds, ending in a slow pulse of bright white light that fills the entire room for an additional five seconds, creating an inviting glow.
+                - generic [ref=e143]:
+                  - generic [ref=e145]:
+                    - button "Test" [ref=e146] [cursor=pointer]:
+                      - img [ref=e147] [cursor=pointer]
+                      - generic [ref=e149] [cursor=pointer]: Test
+                    - button "Approve & Create" [ref=e150] [cursor=pointer]:
+                      - img [ref=e151] [cursor=pointer]
+                      - generic [ref=e153] [cursor=pointer]: Approve & Create
+                    - button "Edit" [ref=e154] [cursor=pointer]:
+                      - img [ref=e155] [cursor=pointer]
+                      - generic [ref=e157] [cursor=pointer]: Edit
+                    - button "Not Interested" [ref=e158] [cursor=pointer]:
+                      - img [ref=e159] [cursor=pointer]
+                      - generic [ref=e161] [cursor=pointer]: Not Interested
+                  - generic [ref=e163]:
+                    - generic [ref=e164]: "Created: 10/19/2025, 8:27:15 AM"
+                    - generic [ref=e165]: "ID: #3"
+              - generic [ref=e167]:
+                - generic [ref=e168]:
+                  - generic [ref=e170]:
+                    - generic [ref=e171]:
+                      - generic [ref=e172]: 💡
+                      - heading "Triggered by the opening of the office door after sunset. → Flash lights three times in yellow quickly, then transition to a soft purple glow for ten seconds." [level=3] [ref=e173]
+                    - generic [ref=e174]:
+                      - generic [ref=e175]: ✨ automation
+                      - generic [ref=e176]: 📝 New
+                      - generic [ref=e177]: 70% confident
+                  - generic [ref=e178]: If the office door is opened after sunset, the lights will flash in a unique pattern—three quick flashes in yellow followed by a brief pause before a soft purple light bathes the room for ten seconds, providing a delightful and enchanting ambiance.
+                - generic [ref=e179]:
+                  - generic [ref=e181]:
+                    - button "Test" [ref=e182] [cursor=pointer]:
+                      - img [ref=e183] [cursor=pointer]
+                      - generic [ref=e185] [cursor=pointer]: Test
+                    - button "Approve & Create" [ref=e186] [cursor=pointer]:
+                      - img [ref=e187] [cursor=pointer]
+                      - generic [ref=e189] [cursor=pointer]: Approve & Create
+                    - button "Edit" [ref=e190] [cursor=pointer]:
+                      - img [ref=e191] [cursor=pointer]
+                      - generic [ref=e193] [cursor=pointer]: Edit
+                    - button "Not Interested" [ref=e194] [cursor=pointer]:
+                      - img [ref=e195] [cursor=pointer]
+                      - generic [ref=e197] [cursor=pointer]: Not Interested
+                  - generic [ref=e199]:
+                    - generic [ref=e200]: "Created: 10/19/2025, 8:27:15 AM"
+                    - generic [ref=e201]: "ID: #4"
+            - generic [ref=e202]: 1:27:16 AM
+        - generic [ref=e204]:
+          - textbox "Ask me about your devices or automations..." [ref=e205]
+          - button "Send" [disabled] [ref=e206]
+  - contentinfo [ref=e207]:
+    - generic [ref=e209]:
+      - generic [ref=e210]:
+        - strong [ref=e211]: HA AutomateAI
+        - text: "- AI-Powered Smart Home Automation"
+      - generic [ref=e212]: "Powered by OpenAI GPT-4o-mini • Machine Learning Pattern Detection • Cost: ~$0.075/month"
+      - generic [ref=e213]:
+        - link "🔧 Admin Dashboard" [ref=e214] [cursor=pointer]:
+          - /url: http://localhost:3000
+        - link "📚 API Docs" [ref=e215] [cursor=pointer]:
+          - /url: http://localhost:8018/docs
+```

@@ -48,7 +48,7 @@
 ### Service Status: RUNNING ✅
 
 ```
-Container: ha-ingestor-sports-data
+Container: homeiq-sports-data
 Status: Up and healthy  
 Port: 8005
 Health: http://localhost:8005/health ✅

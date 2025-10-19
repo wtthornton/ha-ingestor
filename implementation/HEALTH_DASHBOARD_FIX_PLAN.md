@@ -93,8 +93,8 @@ else:
 **Option C: Schema Migration (Nuclear Option)**
 ```bash
 # Drop and recreate bucket (ONLY if data is disposable)
-docker exec -it ha-ingestor-influxdb influx bucket delete --name events
-docker exec -it ha-ingestor-influxdb influx bucket create --name events
+docker exec -it homeiq-influxdb influx bucket delete --name events
+docker exec -it homeiq-influxdb influx bucket create --name events
 ```
 
 ---
@@ -234,10 +234,10 @@ async def logs_websocket(
 **Validation:**
 ```bash
 # Watch for type conflict errors (should be 0)
-docker logs ha-ingestor-enrichment --follow | grep "field type conflict"
+docker logs homeiq-enrichment --follow | grep "field type conflict"
 
 # Should see events flowing
-docker logs ha-ingestor-enrichment --follow | grep "Successfully written"
+docker logs homeiq-enrichment --follow | grep "Successfully written"
 ```
 
 ---
@@ -260,7 +260,7 @@ docker logs ha-ingestor-enrichment --follow | grep "Successfully written"
 curl http://localhost:8003/api/health
 
 # Check dashboard logs
-docker logs ha-ingestor-dashboard --follow
+docker logs homeiq-dashboard --follow
 ```
 
 ---
@@ -299,7 +299,7 @@ docker logs ha-ingestor-dashboard --follow
 **Validation:**
 ```bash
 # Should see WebSocket accepted
-docker logs ha-ingestor-admin --follow | grep "WebSocket /ws/logs"
+docker logs homeiq-admin --follow | grep "WebSocket /ws/logs"
 
 # Check browser console for connection
 # Should see: "WebSocket connected to ws://localhost:8003/ws/logs"
@@ -328,9 +328,9 @@ docker logs ha-ingestor-admin --follow | grep "WebSocket /ws/logs"
 docker ps --format "table {{.Names}}\t{{.Status}}"
 
 # Verify no errors
-docker logs ha-ingestor-enrichment --tail 50 | grep -i error
-docker logs ha-ingestor-websocket --tail 50 | grep -i error
-docker logs ha-ingestor-admin --tail 50 | grep -i error
+docker logs homeiq-enrichment --tail 50 | grep -i error
+docker logs homeiq-websocket --tail 50 | grep -i error
+docker logs homeiq-admin --tail 50 | grep -i error
 
 # Check event flow
 curl http://localhost:8003/api/v1/stats?period=1h | jq

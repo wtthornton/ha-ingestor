@@ -20,7 +20,7 @@
 2. **Clone & Configure**
    ```bash
    git clone <repo>
-   cd ha-ingestor
+   cd homeiq
    ./scripts/setup-secure-env.sh  # Interactive setup
    ```
 

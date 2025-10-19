@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This analysis identified **15 critical areas** where mock data is being used instead of real API calls or actual functionality across the ha-ingestor codebase. These mock implementations span frontend components, backend endpoints, and service implementations.
+This analysis identified **15 critical areas** where mock data is being used instead of real API calls or actual functionality across the homeiq codebase. These mock implementations span frontend components, backend endpoints, and service implementations.
 
 ### Priority Classification
 

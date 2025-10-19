@@ -25,9 +25,9 @@ All changes have been successfully implemented, built, deployed, and tested. Bot
 NAME                              STATUS                    PORTS
 ai-automation-service             Up (healthy)              0.0.0.0:8018->8018/tcp
 ai-automation-ui                  Up (healthy)              0.0.0.0:3001->80/tcp
-ha-ingestor-dashboard             Up (healthy)              0.0.0.0:3000->80/tcp
-ha-ingestor-admin                 Up (healthy)              0.0.0.0:8003->8004/tcp
-ha-ingestor-data-api              Up (healthy)              0.0.0.0:8006->8006/tcp
+homeiq-dashboard             Up (healthy)              0.0.0.0:3000->80/tcp
+homeiq-admin                 Up (healthy)              0.0.0.0:8003->8004/tcp
+homeiq-data-api              Up (healthy)              0.0.0.0:8006->8006/tcp
 ```
 
 ### Build Information
@@ -90,7 +90,7 @@ proxy_pass http://ai-automation-service:8018/api;
 
 #### Test 2.2: AI Automations Button in Build
 ```bash
-$ docker exec ha-ingestor-dashboard sh -c "grep -r 'AI Automations' /usr/share/nginx/html/assets/js/"
+$ docker exec homeiq-dashboard sh -c "grep -r 'AI Automations' /usr/share/nginx/html/assets/js/"
 ```
 **Result:** ✅ PASS
 - Found: `"AI Automations"` in compiled JavaScript
@@ -100,7 +100,7 @@ $ docker exec ha-ingestor-dashboard sh -c "grep -r 'AI Automations' /usr/share/n
 
 #### Test 2.3: Old AI Automation Tab Removed
 ```bash
-$ docker exec ha-ingestor-dashboard sh -c "grep -r 'ai-automation.*Tab' /usr/share/nginx/html/assets/js/"
+$ docker exec homeiq-dashboard sh -c "grep -r 'ai-automation.*Tab' /usr/share/nginx/html/assets/js/"
 ```
 **Result:** ✅ PASS
 - No references to AIAutomationTab found
@@ -147,7 +147,7 @@ $ curl http://localhost:8018/api/suggestions/list
 - Allows: `http://localhost:3000` ✅
 - Allows: `http://localhost:3001` ✅
 - Allows: `http://ai-automation-ui` ✅ (container network)
-- Allows: `http://ha-ingestor-dashboard` ✅ (container network)
+- Allows: `http://homeiq-dashboard` ✅ (container network)
 
 ---
 
@@ -452,7 +452,7 @@ docker exec ai-automation-ui cat /etc/nginx/conf.d/default.conf | grep proxy_pas
 # Result: proxy_pass http://ai-automation-service:8018/api;
 
 # Button in Compiled Code
-docker exec ha-ingestor-dashboard sh -c "grep -r 'AI Automations' /usr/share/nginx/html/assets/js/"
+docker exec homeiq-dashboard sh -c "grep -r 'AI Automations' /usr/share/nginx/html/assets/js/"
 # Result: Found in compiled JavaScript ✅
 ```
 

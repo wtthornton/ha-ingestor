@@ -162,7 +162,7 @@ docker-compose stop ai-automation-ui
 ### Check Service Logs
 ```bash
 # Health Dashboard
-docker logs ha-ingestor-dashboard --tail 50 -f
+docker logs homeiq-dashboard --tail 50 -f
 
 # AI Automation UI
 docker logs ai-automation-ui --tail 50 -f

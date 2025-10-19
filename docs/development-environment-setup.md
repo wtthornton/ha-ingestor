@@ -18,7 +18,7 @@
 ### **Step 1: Clone Repository**
 ```bash
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 ```
 
 ### **Step 2: Install Dependencies**

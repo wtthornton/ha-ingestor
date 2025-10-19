@@ -140,7 +140,7 @@ sequenceDiagram
 ### Container Status
 ```bash
 $ docker ps | grep carbon
-ha-ingestor-carbon-intensity   Up 55 minutes (healthy)
+homeiq-carbon-intensity   Up 55 minutes (healthy)
 ```
 
 ✅ **Running and healthy** despite missing credentials
@@ -371,10 +371,10 @@ docker ps | grep carbon
 curl http://localhost:8010/health | jq
 
 # View logs
-docker logs ha-ingestor-carbon-intensity --tail 50
+docker logs homeiq-carbon-intensity --tail 50
 
 # Follow logs
-docker logs -f ha-ingestor-carbon-intensity
+docker logs -f homeiq-carbon-intensity
 ```
 
 ### Configuration

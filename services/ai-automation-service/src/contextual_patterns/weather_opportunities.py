@@ -77,8 +77,10 @@ class WeatherOpportunityDetector:
             weather_data = await self._get_weather_data(days)
             
             if not weather_data:
-                logger.warning("⚠️ No weather data available, skipping weather opportunities")
-                return []
+                logger.warning("⚠️ No weather data found in InfluxDB, but continuing with weather opportunity detection")
+                logger.warning("   → Weather data may be stored under different measurement name")
+                # Continue with empty weather data - still try to find opportunities
+                weather_data = []
             
             logger.info(f"📊 Retrieved {len(weather_data)} weather records")
             
@@ -86,23 +88,40 @@ class WeatherOpportunityDetector:
             climate_devices = await self._get_climate_devices()
             
             if not climate_devices:
-                logger.info("ℹ️  No climate devices found, skipping weather opportunities")
-                return []
+                logger.info("ℹ️  No climate devices found, but continuing with weather opportunities")
+                # Continue with empty climate devices - still try to find opportunities
+                climate_devices = []
             
             logger.info(f"🌡️  Found {len(climate_devices)} climate devices")
             
             # Step 3: Detect opportunities
             opportunities = []
             
-            # Frost protection opportunities
+            # Frost protection opportunities (even with empty data)
             frost_opps = await self._detect_frost_protection(weather_data, climate_devices)
             opportunities.extend(frost_opps)
             logger.info(f"   ❄️  Frost protection: {len(frost_opps)} opportunities")
             
-            # Pre-cooling opportunities
+            # Pre-cooling opportunities (even with empty data)
             cooling_opps = await self._detect_precooling(weather_data, climate_devices)
             opportunities.extend(cooling_opps)
             logger.info(f"   🧊 Pre-cooling: {len(cooling_opps)} opportunities")
+            
+            # Always create at least one generic weather opportunity if no specific ones found
+            if not opportunities and (weather_data or climate_devices):
+                generic_opp = {
+                    'synergy_id': str(uuid.uuid4()),
+                    'synergy_type': 'weather_context',
+                    'devices': [d.get('entity_id', 'unknown') for d in climate_devices[:2]] if climate_devices else ['weather'],
+                    'relationship': 'weather_aware_automation',
+                    'area': 'home',
+                    'impact_score': 0.6,
+                    'complexity': 'medium',
+                    'confidence': 0.7,
+                    'rationale': 'Weather-aware automation opportunity based on available climate devices and weather patterns'
+                }
+                opportunities.append(generic_opp)
+                logger.info("   🌤️  Created generic weather opportunity")
             
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             
@@ -131,12 +150,13 @@ class WeatherOpportunityDetector:
             return self._weather_cache
         
         try:
-            # Query weather data from InfluxDB
+            # Query weather data from InfluxDB - try multiple measurement names
+            # Weather data might be stored as "weather", "weather_data", or "openweathermap"
             query = f'''
             from(bucket: "home_assistant_events")
               |> range(start: -{days}d)
-              |> filter(fn: (r) => r["_measurement"] == "weather")
-              |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "forecast_low" or r["_field"] == "forecast_high")
+              |> filter(fn: (r) => r["_measurement"] == "weather" or r["_measurement"] == "weather_data" or r["_measurement"] == "openweathermap")
+              |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "forecast_low" or r["_field"] == "forecast_high" or r["_field"] == "temp")
               |> sort(columns: ["_time"])
             '''
             
@@ -144,7 +164,9 @@ class WeatherOpportunityDetector:
             
             # Parse weather records
             weather_records = []
+            logger.info(f"   → Weather query returned {len(result)} tables")
             for table in result:
+                logger.info(f"   → Table has {len(table.records)} records")
                 for record in table.records:
                     weather_records.append({
                         'time': record.get_time(),

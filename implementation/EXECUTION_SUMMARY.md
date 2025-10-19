@@ -227,9 +227,9 @@ See: `implementation/DOCKER_COMPOSE_PROD_ISSUE.md`
 cat implementation/PRE_REBUILD_CHECKLIST.md
 
 # 2. Create backups (see checklist Phase 2)
-docker exec ha-ingestor-influxdb influx backup /tmp/backup
-docker cp ha-ingestor-influxdb:/tmp/backup ~/backup-$(date +%Y%m%d)-influxdb
-docker cp ha-ingestor-data-api:/app/data/metadata.db ~/backup-$(date +%Y%m%d)-metadata.db
+docker exec homeiq-influxdb influx backup /tmp/backup
+docker cp homeiq-influxdb:/tmp/backup ~/backup-$(date +%Y%m%d)-influxdb
+docker cp homeiq-data-api:/app/data/metadata.db ~/backup-$(date +%Y%m%d)-metadata.db
 cp .env ~/backup-$(date +%Y%m%d)-env
 
 # 3. 🔥 STOP AND DELETE EVERYTHING

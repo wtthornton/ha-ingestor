@@ -215,7 +215,7 @@ WEBSOCKET_MAX_RETRY_DELAY=300   # Max 5 minutes between retries
 **Monitoring:**
 ```bash
 # Check retry status
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 
 # Look for messages like:
 # "Reconnection attempt 15/∞ in 300.0s"
@@ -501,7 +501,7 @@ docker-compose logs sports-data | grep "Historical queries:"
 2. **Verify InfluxDB Has Data:**
 ```bash
 # Check if InfluxDB has sports data
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'SELECT * FROM sports_data.nfl_scores LIMIT 1'
 
 # If empty: No historical data yet (normal for new installation)
@@ -581,7 +581,7 @@ docker-compose logs sports-data | grep "Webhook"
 1. **Verify URL is Accessible:**
 ```bash
 # Test webhook URL from sports-data container
-docker exec ha-ingestor-sports-data \
+docker exec homeiq-sports-data \
   wget -O- http://homeassistant.local:8123/api/webhook/test
 
 # If fails: Check network connectivity, HA URL
@@ -649,7 +649,7 @@ curl 'http://localhost:8005/api/v1/ha/game-status/ne?sport=nfl' | jq
 docker-compose logs --tail=50 sports-data
 
 # 7. Check webhook file
-docker exec ha-ingestor-sports-data cat /app/data/webhooks.json | jq
+docker exec homeiq-sports-data cat /app/data/webhooks.json | jq
 ```
 
 ---

@@ -34,7 +34,7 @@ The HA-Ingestor Deployment Wizard and Connection Validator are interactive comma
 ### Step 1: Run the Deployment Wizard
 
 ```bash
-cd ha-ingestor
+cd homeiq
 ./scripts/deploy-wizard.sh
 ```
 

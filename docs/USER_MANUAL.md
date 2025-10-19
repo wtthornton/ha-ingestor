@@ -24,7 +24,7 @@ The fastest way to get started:
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # 2. Run the deployment wizard
 ./scripts/deploy-wizard.sh

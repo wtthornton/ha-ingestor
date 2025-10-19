@@ -161,7 +161,7 @@ data-api:
   build:
     context: .
     dockerfile: services/data-api/Dockerfile
-  container_name: ha-ingestor-data-api
+  container_name: homeiq-data-api
   restart: unless-stopped
   ports:
     - "8006:8006"
@@ -174,7 +174,7 @@ data-api:
   depends_on:
     - influxdb
   networks:
-    - ha-ingestor-network
+    - homeiq-network
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
     interval: 30s
@@ -253,7 +253,7 @@ curl http://localhost:8006/
 curl http://localhost:8006/api/info
 
 # 6. Check logs
-docker logs ha-ingestor-data-api
+docker logs homeiq-data-api
 
 # 7. Verify admin-api still works
 curl http://localhost:8003/api/v1/health

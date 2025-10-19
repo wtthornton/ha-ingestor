@@ -171,9 +171,9 @@ ha-setup-service:
   environment:
     - HA_URL=${HA_URL}
     - HA_TOKEN=${HA_TOKEN}
-    - DATA_API_URL=http://ha-ingestor-data-api:8006
+    - DATA_API_URL=http://homeiq-data-api:8006
   depends_on:
-    - ha-ingestor-data-api
+    - homeiq-data-api
     - influxdb
 ```
 

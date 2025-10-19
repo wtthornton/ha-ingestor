@@ -59,7 +59,7 @@ Features:
 
 **Monitoring Commands Added:**
 ```bash
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 curl http://localhost:8001/health
 ```
 
@@ -137,7 +137,7 @@ WEBSOCKET_MAX_RETRY_DELAY=300
 - Smart exponential backoff (up to 5 minutes)
 
 ### Monitoring Retry Status
-docker logs ha-ingestor-websocket --tail 50
+docker logs homeiq-websocket --tail 50
 curl http://localhost:8001/health
 ```
 
@@ -146,7 +146,7 @@ curl http://localhost:8001/health
 ## Documentation Structure
 
 ```
-ha-ingestor/
+homeiq/
 ├── README.md                                    ✅ Updated
 ├── docs/
 │   ├── DEPLOYMENT_GUIDE.md                      ✅ Updated
@@ -189,7 +189,7 @@ WEBSOCKET_MAX_RETRY_DELAY=300   # Max 5 minutes
 
 **Monitoring:**
 ```bash
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 curl http://localhost:8001/health
 ```
 

@@ -335,7 +335,7 @@ curl http://localhost:8010/health
 ### Test 2: Monitor Token Refresh
 ```bash
 # Watch logs for token refresh every 25 minutes
-docker logs -f ha-ingestor-carbon-intensity
+docker logs -f homeiq-carbon-intensity
 ```
 
 **Expected Log Pattern:**
@@ -354,8 +354,8 @@ INFO: Token refreshed successfully, expires at 2025-01-15T21:20:00
 ### Test 3: Verify InfluxDB Data
 ```bash
 # Query for carbon intensity data
-curl -X POST "http://localhost:8086/api/v2/query?org=ha-ingestor" \
-  -H "Authorization: Token ha-ingestor-token" \
+curl -X POST "http://localhost:8086/api/v2/query?org=homeiq" \
+  -H "Authorization: Token homeiq-token" \
   -H "Content-Type: application/vnd.flux" \
   -d 'from(bucket:"home_assistant_events")
   |> range(start: -1h)

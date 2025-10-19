@@ -21,10 +21,12 @@ AI-powered Home Assistant automation discovery and recommendation system with de
 - 💎 Feature suggestions (LED notifications, power monitoring, etc.)
 - 🎯 Smart recommendations based on manufacturer specs
 
-**Combined System:**
+**Conversational Automation System (Story AI1.23-24):**
 - 🤖 Unified daily batch job (3 AM)
 - 💡 8-10 suggestions per day (mixed pattern + feature)
-- ✅ User approval workflow
+- 💬 **Description-first flow** - See automation ideas in plain language
+- ✏️ **Conversational refinement** - Say "make it 6:30am instead" to edit
+- ✅ **Approve to generate YAML** - Code only created after you approve
 - 🚀 One-click deploy to Home Assistant
 
 ## Quick Start
@@ -65,8 +67,10 @@ docker-compose up -d ai-automation-service
 
 ## API Endpoints
 
-### Suggestions & Deployment
-- `GET /api/suggestions` - List all suggestions (pattern + feature)
+### Conversational Automation (Story AI1.23-24)
+- `GET /api/suggestions/list` - List suggestions by status (draft, refining, yaml_generated, deployed)
+- `POST /api/v1/suggestions/{id}/refine` - Refine description with natural language
+- `POST /api/v1/suggestions/{id}/approve` - Approve and generate YAML
 - `POST /api/deploy/{id}` - Deploy automation to Home Assistant
 - `GET /api/suggestions/{id}` - Get specific suggestion
 
@@ -91,7 +95,10 @@ docker-compose up -d ai-automation-service
 2. Phase 2: Fetch Events from InfluxDB (Shared)
 3. Phase 3: Pattern Detection (Epic AI-1)
 4. Phase 4: Feature Analysis (Epic AI-2)
-5. Phase 5: Combined Suggestion Generation (OpenAI GPT-4o-mini)
+5. Phase 5: **Description-Only Generation** (OpenAI GPT-4o-mini) - Story AI1.24
+   - Generates human-readable descriptions (NO YAML yet)
+   - Saves as status='draft' with automation_yaml=NULL
+   - YAML only generated after user approval via UI
 6. Phase 6: Publish MQTT Notification
 
 ### 📖 Complete System Documentation

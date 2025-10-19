@@ -42,7 +42,7 @@ services=("websocket-ingestion" "admin-api" "enrichment-pipeline" "weather-api" 
 
 for service in "${services[@]}"; do
     print_info "Building $service..."
-    if docker build -t "ha-ingestor-$service:optimized" -f "services/$service/Dockerfile" .; then
+    if docker build -t "homeiq-$service:optimized" -f "services/$service/Dockerfile" .; then
         print_status 0 "Built $service successfully"
     else
         print_status 1 "Failed to build $service"
@@ -55,14 +55,14 @@ print_info "Checking image sizes..."
 echo ""
 echo "Image Size Comparison:"
 echo "====================="
-docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep ha-ingestor
+docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep homeiq
 
 # Test basic functionality
 print_info "Testing basic functionality..."
 
 # Test websocket-ingestion
 print_info "Testing websocket-ingestion health endpoint..."
-if docker run --rm -d --name test-websocket ha-ingestor-websocket-ingestion:optimized && \
+if docker run --rm -d --name test-websocket homeiq-websocket-ingestion:optimized && \
    sleep 5 && \
    docker exec test-websocket curl -f http://localhost:8001/health > /dev/null 2>&1; then
     print_status 0 "WebSocket ingestion service is healthy"
@@ -74,7 +74,7 @@ fi
 
 # Test admin-api
 print_info "Testing admin-api health endpoint..."
-if docker run --rm -d --name test-admin ha-ingestor-admin-api:optimized && \
+if docker run --rm -d --name test-admin homeiq-admin-api:optimized && \
    sleep 5 && \
    docker exec test-admin curl -f http://localhost:8004/health > /dev/null 2>&1; then
     print_status 0 "Admin API service is healthy"
@@ -86,7 +86,7 @@ fi
 
 # Test enrichment-pipeline
 print_info "Testing enrichment-pipeline health endpoint..."
-if docker run --rm -d --name test-enrichment ha-ingestor-enrichment-pipeline:optimized && \
+if docker run --rm -d --name test-enrichment homeiq-enrichment-pipeline:optimized && \
    sleep 5 && \
    docker exec test-enrichment curl -f http://localhost:8002/health > /dev/null 2>&1; then
     print_status 0 "Enrichment pipeline service is healthy"
@@ -98,7 +98,7 @@ fi
 
 # Test weather-api
 print_info "Testing weather-api health endpoint..."
-if docker run --rm -d --name test-weather ha-ingestor-weather-api:optimized && \
+if docker run --rm -d --name test-weather homeiq-weather-api:optimized && \
    sleep 5 && \
    docker exec test-weather curl -f http://localhost:8001/health > /dev/null 2>&1; then
     print_status 0 "Weather API service is healthy"
@@ -110,7 +110,7 @@ fi
 
 # Test data-retention
 print_info "Testing data-retention health endpoint..."
-if docker run --rm -d --name test-retention ha-ingestor-data-retention:optimized && \
+if docker run --rm -d --name test-retention homeiq-data-retention:optimized && \
    sleep 5 && \
    docker exec test-retention curl -f http://localhost:8080/health > /dev/null 2>&1; then
     print_status 0 "Data retention service is healthy"
@@ -122,7 +122,7 @@ fi
 
 # Test health-dashboard
 print_info "Testing health-dashboard..."
-if docker run --rm -d --name test-dashboard ha-ingestor-health-dashboard:optimized && \
+if docker run --rm -d --name test-dashboard homeiq-health-dashboard:optimized && \
    sleep 5 && \
    docker exec test-dashboard curl -f http://localhost:80 > /dev/null 2>&1; then
     print_status 0 "Health dashboard is accessible"
@@ -137,7 +137,7 @@ print_info "Checking security configurations..."
 
 for service in "${services[@]}"; do
     print_info "Checking $service runs as non-root user..."
-    if docker run --rm ha-ingestor-$service:optimized id | grep -q "uid=1001"; then
+    if docker run --rm homeiq-$service:optimized id | grep -q "uid=1001"; then
         print_status 0 "$service runs as non-root user (uid=1001)"
     else
         print_status 1 "$service does not run as non-root user"

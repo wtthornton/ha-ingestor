@@ -289,7 +289,7 @@ docker-compose up -d
 Total Containers: 17
 Total Memory: ~4GB allocated
 Total CPU: Minimal (idle state)
-Network: ha-ingestor_ha-ingestor-network
+Network: homeiq_homeiq-network
 ```
 
 ---
@@ -491,7 +491,7 @@ docker logs ai-automation-service --tail 100
 ### If Statistics Return Empty
 ```bash
 # Verify InfluxDB connection
-docker logs ha-ingestor-admin | grep -i influx
+docker logs homeiq-admin | grep -i influx
 
 # Test fallback mode
 curl http://localhost:8003/api/v1/stats?period=1h

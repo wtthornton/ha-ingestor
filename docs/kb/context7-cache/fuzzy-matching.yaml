@@ -1,163 +1,386 @@
-# Context7 KB Fuzzy Matching Configuration
-# Generated: 2025-10-07T16:40:00Z
+version: 2.0
+last_updated: 2025-10-19T00:00:00Z
 
-fuzzy_matching:
-  version: "1.0"
-  last_updated: "2025-10-07T16:40:00Z"
+# Fuzzy matching patterns for Context7 KB queries
+# Helps match user queries to cached documentation
+
+fuzzy_patterns:
   
-  library_variants:
-    react:
-      variants: ["react", "reactjs", "react.js", "react-js", "facebook-react"]
-      confidence: 1.0
-      context7_id: "/websites/react_dev"
+  # Backend terms
+  backend_api:
+    canonical: fastapi
+    aliases:
+      - "fast api"
+      - "api framework"
+      - "rest api"
+      - "async api"
+      - "python api"
+    threshold: 0.6
     
-    express:
-      variants: ["express", "expressjs", "express.js", "express-js", "node-express"]
-      confidence: 1.0
-      context7_id: "/expressjs/express"
+  websocket:
+    canonical: aiohttp
+    aliases:
+      - "web socket"
+      - "ws"
+      - "async websocket"
+      - "real-time"
+      - "live data"
+    threshold: 0.5
     
-    mongodb:
-      variants: ["mongodb", "mongo", "mongo-db", "mongoose", "mongodb-driver"]
-      confidence: 0.9
-      context7_id: "/mongodb/docs"
+  # Database terms
+  timeseries:
+    canonical: influxdb
+    aliases:
+      - "time series"
+      - "time-series"
+      - "influx"
+      - "tsdb"
+      - "flux query"
+      - "flux queries"
+    threshold: 0.6
     
-    vue:
-      variants: ["vue", "vuejs", "vue.js", "vue-js", "vuejs3"]
-      confidence: 1.0
-      context7_id: "/vuejs/vue"
+  database_migrations:
+    canonical: alembic
+    aliases:
+      - "db migrations"
+      - "schema migrations"
+      - "database migration"
+      - "migration tool"
+      - "sqlalchemy migrations"
+      - "alembic migrations"
+    threshold: 0.5
     
-    angular:
-      variants: ["angular", "angularjs", "angular.js", "angular-js", "ng"]
-      confidence: 0.8
-      context7_id: "/angular/angular"
+  relational_database:
+    canonical: sqlite
+    aliases:
+      - "sql lite"
+      - "sqlite3"
+      - "embedded database"
+      - "file database"
+    threshold: 0.7
     
-    node:
-      variants: ["node", "nodejs", "node.js", "node-js", "nodejs"]
-      confidence: 1.0
-      context7_id: "/nodejs/node"
+  # Frontend terms
+  react_framework:
+    canonical: react
+    aliases:
+      - "reactjs"
+      - "react.js"
+      - "frontend framework"
+      - "ui framework"
+    threshold: 0.6
+    
+  typescript_lang:
+    canonical: typescript
+    aliases:
+      - "ts"
+      - "type script"
+      - "typed javascript"
+    threshold: 0.6
+    
+  build_tool:
+    canonical: vite
+    aliases:
+      - "bundler"
+      - "build system"
+      - "dev server"
+      - "hmr"
+      - "hot reload"
+    threshold: 0.5
+    
+  css_framework:
+    canonical: tailwindcss
+    aliases:
+      - "tailwind"
+      - "tailwind css"
+      - "utility css"
+      - "css utilities"
+    threshold: 0.6
+    
+  # Testing terms
+  unit_testing:
+    canonical: vitest
+    aliases:
+      - "unit tests"
+      - "component testing"
+      - "test framework"
+      - "jest alternative"
+    threshold: 0.5
+    
+  e2e_testing:
+    canonical: playwright
+    aliases:
+      - "e2e tests"
+      - "end to end"
+      - "integration testing"
+      - "browser automation"
+    threshold: 0.5
+    
+  visual_testing:
+    canonical: puppeteer
+    aliases:
+      - "screenshot testing"
+      - "visual regression"
+      - "ui testing"
+      - "chrome automation"
+    threshold: 0.5
+    
+  python_testing:
+    canonical: pytest
+    aliases:
+      - "py test"
+      - "python tests"
+      - "backend testing"
+    threshold: 0.6
+    
+  # AI/ML terms
+  transformers:
+    canonical: huggingface-transformers
+    aliases:
+      - "hf transformers"
+      - "huggingface"
+      - "hugging face"
+      - "transformer models"
+      - "llm"
+      - "language model"
+      - "bert"
+      - "gpt"
+      - "t5"
+      - "flan"
+    threshold: 0.5
+    
+  embeddings:
+    canonical: sentence-transformers
+    aliases:
+      - "sentence embeddings"
+      - "text embeddings"
+      - "semantic search"
+      - "similarity search"
+      - "sbert"
+      - "all-minilm"
+      - "minilm"
+    threshold: 0.5
+    
+  model_optimization:
+    canonical: huggingface-transformers
+    related: [sentence-transformers]
+    aliases:
+      - "quantization"
+      - "int8"
+      - "int4"
+      - "model compression"
+      - "openvino"
+      - "onnx"
+      - "edge deployment"
+    threshold: 0.5
+    
+  # Infrastructure terms
+  containerization:
+    canonical: docker
+    aliases:
+      - "containers"
+      - "docker compose"
+      - "compose"
+      - "dockerfile"
+      - "multi-stage build"
+    threshold: 0.6
+    
+  home_automation:
+    canonical: homeassistant
+    aliases:
+      - "home assistant"
+      - "ha"
+      - "hass"
+      - "home automation"
+      - "smart home"
+    threshold: 0.5
+
+# Topic-based matching
+topic_patterns:
   
-  topic_variants:
-    hooks:
-      variants: ["hooks", "react-hooks", "vue-hooks", "angular-hooks", "state-hooks"]
-      confidence: 1.0
-      category: "state-management"
+  async_programming:
+    primary_library: fastapi
+    related_libraries: [aiohttp, python-logging]
+    keywords:
+      - "async"
+      - "await"
+      - "asyncio"
+      - "asynchronous"
+      - "concurrent"
+    threshold: 0.5
     
-    routing:
-      variants: ["routing", "router", "navigation", "routes", "url-routing"]
-      confidence: 0.9
-      category: "navigation"
+  database_operations:
+    primary_library: sqlite
+    related_libraries: [influxdb, alembic]
+    keywords:
+      - "database"
+      - "db"
+      - "queries"
+      - "orm"
+      - "sql"
+      - "migrations"
+    threshold: 0.5
     
-    authentication:
-      variants: ["auth", "authentication", "login", "signin", "security"]
-      confidence: 0.8
-      category: "security"
+  frontend_development:
+    primary_library: react
+    related_libraries: [typescript, vite, tailwindcss]
+    keywords:
+      - "ui"
+      - "frontend"
+      - "components"
+      - "hooks"
+      - "state"
+      - "render"
+    threshold: 0.5
     
-    testing:
-      variants: ["test", "testing", "unit-test", "integration-test", "e2e-test"]
-      confidence: 0.9
-      category: "testing"
+  testing_strategies:
+    primary_library: vitest
+    related_libraries: [playwright, puppeteer, pytest]
+    keywords:
+      - "test"
+      - "testing"
+      - "qa"
+      - "quality"
+      - "coverage"
+      - "assertions"
+    threshold: 0.5
     
-    performance:
-      variants: ["perf", "performance", "optimization", "speed", "efficiency"]
-      confidence: 0.8
-      category: "performance"
-    
-    security:
-      variants: ["security", "auth", "authentication", "authorization", "jwt"]
-      confidence: 0.9
-      category: "security"
-    
-    components:
-      variants: ["components", "component", "ui-components", "react-components"]
-      confidence: 0.9
-      category: "ui"
-    
-    middleware:
-      variants: ["middleware", "middlewares", "express-middleware", "node-middleware"]
-      confidence: 0.9
-      category: "backend"
+  ai_ml_inference:
+    primary_library: huggingface-transformers
+    related_libraries: [sentence-transformers]
+    keywords:
+      - "inference"
+      - "prediction"
+      - "model"
+      - "machine learning"
+      - "ml"
+      - "ai"
+      - "neural network"
+    threshold: 0.5
+
+# Use case matching
+use_case_patterns:
   
-  matching_algorithm:
-    exact_match:
-      priority: 1
-      confidence: 1.0
-      description: "Exact library/topic name match"
+  pattern_detection:
+    description: "AI pattern detection for Home Assistant automation"
+    primary_libraries: [huggingface-transformers, sentence-transformers]
+    keywords:
+      - "pattern"
+      - "automation"
+      - "smart home"
+      - "routine"
+      - "behavior"
+    doc_reference: "AI_PATTERN_DETECTION_IMPLEMENTATION_PLAN.md"
     
-    variant_match:
-      priority: 2
-      confidence: 0.9
-      description: "Known variant match"
+  real_time_events:
+    description: "Real-time event streaming and processing"
+    primary_libraries: [react, influxdb, aiohttp]
+    keywords:
+      - "real-time"
+      - "streaming"
+      - "events"
+      - "live"
+      - "websocket"
+    doc_reference: "lessons-learned-events-tab-implementation.md"
     
-    partial_match:
-      priority: 3
-      confidence: 0.7
-      description: "Partial string match"
+  database_schema_management:
+    description: "Database migrations and schema evolution"
+    primary_libraries: [alembic, sqlite]
+    keywords:
+      - "schema"
+      - "migration"
+      - "evolve"
+      - "versioning"
+      - "upgrade"
+      - "downgrade"
+    doc_reference: "libraries/alembic/docs.md"
     
-    semantic_match:
-      priority: 4
-      confidence: 0.6
-      description: "Semantic similarity match"
+  api_development:
+    description: "RESTful API development with FastAPI"
+    primary_libraries: [fastapi, sqlite, influxdb]
+    keywords:
+      - "api"
+      - "endpoint"
+      - "rest"
+      - "route"
+      - "service"
+    doc_reference: "libraries/fastapi/docs.md"
     
-    fuzzy_match:
-      priority: 5
-      confidence: 0.5
-      description: "Fuzzy string match"
+  visual_validation:
+    description: "Visual regression testing and screenshot validation"
+    primary_libraries: [puppeteer, playwright]
+    keywords:
+      - "screenshot"
+      - "visual"
+      - "regression"
+      - "ui validation"
+      - "pixel perfect"
+    doc_reference: "libraries/puppeteer/docs.md"
+
+# Model-specific matching (AI/ML)
+model_patterns:
   
-  confidence_scoring:
-    scoring_rules:
-      exact_match: 1.0
-      variant_match: 0.9
-      partial_match: 0.7
-      semantic_match: 0.6
-      fuzzy_match: 0.5
+  all_minilm:
+    canonical: sentence-transformers
+    model_name: "all-MiniLM-L6-v2"
+    aliases:
+      - "minilm"
+      - "all-minilm-l6"
+      - "mini lm"
+    use_case: "Pattern embeddings (20MB INT8)"
+    doc_section: "libraries/sentence-transformers/docs.md"
     
-    threshold_settings:
-      high_confidence: 0.8
-      medium_confidence: 0.6
-      low_confidence: 0.4
-      minimum_confidence: 0.3
+  flan_t5:
+    canonical: huggingface-transformers
+    model_name: "flan-t5-small"
+    aliases:
+      - "t5"
+      - "flan"
+      - "text-to-text"
+    use_case: "Pattern classification (80MB INT8)"
+    doc_section: "libraries/huggingface-transformers/docs.md"
     
-    scoring_factors:
-      - name: "match_type"
-        weight: 0.4
-      - name: "string_similarity"
-        weight: 0.3
-      - name: "semantic_similarity"
-        weight: 0.2
-      - name: "usage_frequency"
-        weight: 0.1
+  bge_reranker:
+    canonical: huggingface-transformers
+    model_name: "bge-reranker-base-int8-ov"
+    aliases:
+      - "bge"
+      - "reranker"
+      - "re-ranking"
+    use_case: "Pattern re-ranking (280MB INT8)"
+    doc_section: "libraries/huggingface-transformers/docs.md"
+
+# Common query patterns
+query_shortcuts:
   
-  fallback_hierarchy:
-    lookup_sequence:
-      - name: "exact_match"
-        action: "check_exact_match"
-        success_action: "return_cached_docs"
-        failure_action: "variant_match"
-      
-      - name: "variant_match"
-        action: "check_variant_match"
-        success_action: "return_cached_docs"
-        failure_action: "semantic_match"
-      
-      - name: "semantic_match"
-        action: "check_semantic_match"
-        success_action: "return_cached_docs"
-        failure_action: "fuzzy_match"
-      
-      - name: "fuzzy_match"
-        action: "check_fuzzy_match"
-        success_action: "return_cached_docs"
-        failure_action: "fetch_from_context7"
-      
-      - name: "fetch_from_context7"
-        action: "call_context7_api"
-        success_action: "cache_and_return"
-        failure_action: "return_error"
-  
-  performance_metrics:
-    total_fuzzy_matches: 0
-    successful_fuzzy_matches: 0
-    fuzzy_match_rate: 0.0
-    avg_confidence_score: 0.0
-    avg_response_time: "0.00s"
-    last_updated: "2025-10-07T16:40:00Z"
+  "how to migrate database":
+    redirect_to: alembic
+    doc_section: "libraries/alembic/docs.md"
+    
+  "semantic search":
+    redirect_to: sentence-transformers
+    doc_section: "libraries/sentence-transformers/docs.md"
+    
+  "quantize model":
+    redirect_to: huggingface-transformers
+    doc_section: "libraries/huggingface-transformers/docs.md#openvino-integration"
+    
+  "real-time data":
+    redirect_to: react
+    doc_section: "lessons-learned-events-tab-implementation.md"
+    
+  "async fastapi":
+    redirect_to: fastapi
+    doc_section: "libraries/fastapi/docs.md"
+    
+  "visual testing":
+    redirect_to: puppeteer
+    doc_section: "libraries/puppeteer/docs.md"
+
+metadata:
+  total_fuzzy_patterns: 20
+  total_topic_patterns: 5
+  total_use_case_patterns: 5
+  total_model_patterns: 3
+  total_query_shortcuts: 6
+  default_threshold: 0.5
+  last_validated: 2025-10-19T00:00:00Z

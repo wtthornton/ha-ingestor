@@ -88,13 +88,13 @@ Successfully migrated events and devices endpoints from admin-api to data-api, u
 **Updated** (`nginx.conf`):
 ```nginx
 # Data API routes
-location /api/v1/events { proxy_pass http://ha-ingestor-data-api:8006; }
-location /api/devices { proxy_pass http://ha-ingestor-data-api:8006; }
-location /api/entities { proxy_pass http://ha-ingestor-data-api:8006; }
-location /api/integrations { proxy_pass http://ha-ingestor-data-api:8006; }
+location /api/v1/events { proxy_pass http://homeiq-data-api:8006; }
+location /api/devices { proxy_pass http://homeiq-data-api:8006; }
+location /api/entities { proxy_pass http://homeiq-data-api:8006; }
+location /api/integrations { proxy_pass http://homeiq-data-api:8006; }
 
 # Admin API routes (fallback for other endpoints)
-location /api/v1/ { proxy_pass http://ha-ingestor-admin:8004; }
+location /api/v1/ { proxy_pass http://homeiq-admin:8004; }
 ```
 
 ---

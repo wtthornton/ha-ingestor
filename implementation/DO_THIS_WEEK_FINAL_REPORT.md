@@ -115,11 +115,11 @@ class ResponseTimeTracker:
 ```
 ✅ HEALTHY: 19 services
   - automation-miner (FIXED)
-  - ha-ingestor-weather-api (FIXED)
+  - homeiq-weather-api (FIXED)
   - [17 other services]
 
 ❌ UNHEALTHY: 1 service
-  - ha-ingestor-setup-service (separate compose file)
+  - homeiq-setup-service (separate compose file)
 ```
 
 ---

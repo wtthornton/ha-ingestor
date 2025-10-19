@@ -198,7 +198,7 @@ const getStatusIcon = (status: string, statusDetail?: string, credentialsConfigu
 
 ```bash
 $ docker ps | grep carbon
-ha-ingestor-carbon-intensity   Up 55 minutes (healthy)
+homeiq-carbon-intensity   Up 55 minutes (healthy)
 ```
 
 **Result:** Container is RUNNING and HEALTHY despite no credentials!
@@ -221,7 +221,7 @@ $ curl http://localhost:8010/health
 ### Test 3: Service Logs Show Standby Mode ✅
 
 ```bash
-$ docker logs ha-ingestor-carbon-intensity
+$ docker logs homeiq-carbon-intensity
 WARNING: ⚠️  No WattTime credentials configured! Service will run in standby mode.
 WARNING: No WattTime credentials - service running in standby mode
 INFO: Carbon Intensity Service initialized successfully

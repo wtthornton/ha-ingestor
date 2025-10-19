@@ -452,10 +452,10 @@ curl http://localhost:8003/api/v1/stats
 docker ps | grep influxdb
 
 # Check admin-api logs
-docker logs ha-ingestor-admin --tail 50
+docker logs homeiq-admin --tail 50
 
 # Verify service URLs
-docker exec ha-ingestor-admin env | grep URL
+docker exec homeiq-admin env | grep URL
 ```
 
 ### Slow Response Times
@@ -467,7 +467,7 @@ docker exec ha-ingestor-admin env | grep URL
 **Solution:**
 ```bash
 # Check admin-api logs for timeout warnings
-docker logs ha-ingestor-admin | grep -i timeout
+docker logs homeiq-admin | grep -i timeout
 
 # Test individual service health
 curl http://localhost:8001/health  # websocket

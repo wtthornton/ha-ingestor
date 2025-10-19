@@ -27,7 +27,7 @@ The Devices API returns 0 devices because there's a **bucket/measurement mismatc
 
 **Command:**
 ```bash
-docker exec -it ha-ingestor-influxdb influx bucket list
+docker exec -it homeiq-influxdb influx bucket list
 ```
 
 #### Task 1.2: Check WebSocket Ingestion Logs
@@ -38,7 +38,7 @@ docker exec -it ha-ingestor-influxdb influx bucket list
 
 **Command:**
 ```bash
-docker logs ha-ingestor-websocket --tail 200 | grep -E "(DISCOVERY|device|entity|InfluxDB)"
+docker logs homeiq-websocket --tail 200 | grep -E "(DISCOVERY|device|entity|InfluxDB)"
 ```
 
 #### Task 1.3: Query InfluxDB Directly
@@ -49,10 +49,10 @@ docker logs ha-ingestor-websocket --tail 200 | grep -E "(DISCOVERY|device|entity
 **Command:**
 ```bash
 # Check home_assistant_events bucket
-docker exec -it ha-ingestor-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start:-7d) |> filter(fn: (r) => r._measurement == "devices") |> limit(n:1)'
+docker exec -it homeiq-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start:-7d) |> filter(fn: (r) => r._measurement == "devices") |> limit(n:1)'
 
 # Check devices bucket if it exists
-docker exec -it ha-ingestor-influxdb influx query 'from(bucket:"devices") |> range(start:-7d) |> limit(n:1)'
+docker exec -it homeiq-influxdb influx query 'from(bucket:"devices") |> range(start:-7d) |> limit(n:1)'
 ```
 
 ---
@@ -151,7 +151,7 @@ docker-compose up -d websocket-ingestion
 - [ ] Verify device/entity counts
 - [ ] Check storage success messages
 ```bash
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 ```
 
 #### Task 4.4: Verify Data in InfluxDB
@@ -161,7 +161,7 @@ docker logs -f ha-ingestor-websocket
 - [ ] Confirm data is present
 
 ```bash
-docker exec -it ha-ingestor-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start:-1h) |> filter(fn: (r) => r._measurement == "devices") |> count()'
+docker exec -it homeiq-influxdb influx query 'from(bucket:"home_assistant_events") |> range(start:-1h) |> filter(fn: (r) => r._measurement == "devices") |> count()'
 ```
 
 ---
@@ -228,8 +228,8 @@ If `devices` and `entities` buckets were created and have old/wrong data:
 - [ ] Backup any useful data (if needed)
 - [ ] Delete old buckets
 ```bash
-docker exec -it ha-ingestor-influxdb influx bucket delete --name devices
-docker exec -it ha-ingestor-influxdb influx bucket delete --name entities
+docker exec -it homeiq-influxdb influx bucket delete --name devices
+docker exec -it homeiq-influxdb influx bucket delete --name entities
 ```
 
 ---

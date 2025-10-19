@@ -79,7 +79,7 @@
 
 **To complete Phase 2, run:**
 ```powershell
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 .\scripts\bmad-restructure-phase2.ps1
 ```
 

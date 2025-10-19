@@ -148,7 +148,7 @@ If you have an existing installation with committed secrets:
 1. **Clone Repository:**
    ```bash
    git clone <repository-url>
-   cd ha-ingestor
+   cd homeiq
    ```
 
 2. **Run Secure Setup:**

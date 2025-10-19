@@ -23,7 +23,8 @@ except ImportError:
 
 from .config import settings
 from .database.models import init_db
-from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router, conversational_router
+from .api import health_router, data_router, pattern_router, suggestion_router, analysis_router, suggestion_management_router, deployment_router, nl_generation_router, conversational_router, ask_ai_router
+from .clients.data_api_client import DataAPIClient
 from .api.synergy_router import router as synergy_router  # Epic AI-3, Story AI3.8
 from .api.analysis_router import set_scheduler
 from .api.health import set_capability_listener
@@ -73,6 +74,27 @@ app.include_router(suggestion_management_router)
 app.include_router(deployment_router)
 app.include_router(nl_generation_router)  # Story AI1.21: Natural Language
 app.include_router(conversational_router)  # Story AI1.23: Conversational Refinement (Phase 1: Stubs)
+app.include_router(ask_ai_router)  # Ask AI Tab: Natural Language Query Interface
+
+# Add direct devices endpoint for frontend compatibility
+@app.get("/api/devices")
+async def get_devices():
+    """Get devices from Home Assistant via Data API"""
+    try:
+        devices = await data_api_client.fetch_devices(limit=1000)
+        return {
+            "success": True,
+            "devices": devices,
+            "count": len(devices)
+        }
+    except Exception as e:
+        logger.error(f"Failed to fetch devices: {e}")
+        return {
+            "success": False,
+            "devices": [],
+            "count": 0,
+            "error": str(e)
+        }
 
 # Initialize scheduler
 scheduler = DailyAnalysisScheduler()
@@ -82,6 +104,9 @@ set_scheduler(scheduler)  # Connect scheduler to analysis router
 mqtt_client = None
 capability_parser = None
 capability_listener = None
+
+# Initialize Data API client for devices endpoint
+data_api_client = DataAPIClient(base_url=settings.data_api_url)
 
 
 @app.on_event("startup")

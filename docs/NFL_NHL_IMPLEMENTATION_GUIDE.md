@@ -627,14 +627,14 @@ export const useSportsData = (league: 'all' | 'NFL' | 'NHL' = 'all') => {
     build:
       context: ./services/sports-data
       dockerfile: Dockerfile
-    container_name: ha-ingestor-sports
+    container_name: homeiq-sports
     ports:
       - "8005:8005"
     environment:
       - SPORTS_API_KEY=${SPORTS_API_KEY}
       - SPORTS_API_PROVIDER=${SPORTS_API_PROVIDER:-espn}
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 30s
@@ -768,7 +768,7 @@ After Phase 1 MVP is complete:
 
 **No Data Showing:**
 - Verify backend service is running: `docker ps | grep sports`
-- Check logs: `docker logs ha-ingestor-sports`
+- Check logs: `docker logs homeiq-sports`
 - Test API manually: `curl http://localhost:8005/health`
 
 **Slow Updates:**

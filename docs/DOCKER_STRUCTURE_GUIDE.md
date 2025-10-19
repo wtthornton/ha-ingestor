@@ -85,7 +85,7 @@ CMD ["python", "-m", "src.main"]
 
 **Verification Command:**
 ```bash
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 # Should show: "Successfully connected to Home Assistant"
 # Should NOT show: "ModuleNotFoundError: No module named 'src'"
 ```
@@ -133,7 +133,7 @@ from shared.logging_config import (
 
 **Verification Command:**
 ```bash
-docker logs ha-ingestor-admin --tail 20
+docker logs homeiq-admin --tail 20
 # Should show: "Started server process [1]"
 # Should NOT show: "ModuleNotFoundError: No module named 'shared'"
 ```
@@ -385,7 +385,7 @@ docker compose build <service-name>
 docker compose up -d <service-name>
 
 # 5. Check logs immediately
-docker logs ha-ingestor-<service-name> --tail 50
+docker logs homeiq-<service-name> --tail 50
 
 # 6. Verify health
 docker compose ps | grep <service-name>
@@ -409,9 +409,9 @@ docker compose ps
 watch -n 2 'docker compose ps'
 
 # 5. Check logs for each service
-docker logs ha-ingestor-websocket --tail 20
-docker logs ha-ingestor-admin --tail 20
-docker logs ha-ingestor-dashboard --tail 20
+docker logs homeiq-websocket --tail 20
+docker logs homeiq-admin --tail 20
+docker logs homeiq-dashboard --tail 20
 ```
 
 ---
@@ -428,14 +428,14 @@ docker compose ps
 
 ### ✅ WebSocket Service
 ```bash
-docker logs ha-ingestor-websocket --tail 20
+docker logs homeiq-websocket --tail 20
 # Should show: "Successfully connected to Home Assistant"
 # Should NOT show: ModuleNotFoundError
 ```
 
 ### ✅ Admin API Service
 ```bash
-docker logs ha-ingestor-admin --tail 20
+docker logs homeiq-admin --tail 20
 # Should show: "Uvicorn running on http://0.0.0.0:8004"
 # Should NOT show: ModuleNotFoundError
 
@@ -502,8 +502,8 @@ docker compose up -d
 
 # 4. Verify everything works
 docker compose ps
-docker logs ha-ingestor-websocket --tail 20
-docker logs ha-ingestor-admin --tail 20
+docker logs homeiq-websocket --tail 20
+docker logs homeiq-admin --tail 20
 
 # 5. Test dashboard
 curl http://localhost:3000/api/health
@@ -533,7 +533,7 @@ sleep 10
 docker compose ps | grep <service-name>
 
 # 6. Check logs for errors
-docker logs ha-ingestor-<service-name> --tail 50 | grep -i error
+docker logs homeiq-<service-name> --tail 50 | grep -i error
 
 # 7. Test API endpoint
 curl http://localhost:<port>/health

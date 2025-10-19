@@ -101,7 +101,7 @@ Update `_calculate_delay()` to use it (it already does on line 233).
 docker-compose up websocket-ingestion
 
 # 3. Watch logs - should keep retrying
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 
 # 4. Make HA available
 # 5. Service should connect within max_delay (60s currently)

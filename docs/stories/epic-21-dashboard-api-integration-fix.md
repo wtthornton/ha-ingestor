@@ -143,7 +143,7 @@ grep -A 20 "data-api:" docker-compose.yml
 #     build:
 #       context: .
 #       dockerfile: services/data-api/Dockerfile
-#     container_name: ha-ingestor-data-api
+#     container_name: homeiq-data-api
 #     ports:
 #       - "8006:8006"
 ```
@@ -186,7 +186,7 @@ docker-compose up -d data-api
 docker ps --filter "name=data-api"
 
 # Expected output:
-# ha-ingestor-data-api   Up X seconds   0.0.0.0:8006->8006/tcp
+# homeiq-data-api   Up X seconds   0.0.0.0:8006->8006/tcp
 ```
 
 **Task 3: Verify Health Endpoint**
@@ -235,7 +235,7 @@ data-api:
 **Task 6: Verify nginx Routing**
 ```bash
 # From dashboard container, verify nginx can reach data-api
-docker exec ha-ingestor-health-dashboard curl http://ha-ingestor-data-api:8006/health
+docker exec homeiq-health-dashboard curl http://homeiq-data-api:8006/health
 
 # Expected: Should return health status (not connection refused)
 ```
@@ -261,7 +261,7 @@ ENABLE_AUTH=false  # Optional for data-api
 # InfluxDB Connection (required for data queries)
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # CORS (for dashboard access)

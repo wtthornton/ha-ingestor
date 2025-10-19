@@ -180,7 +180,7 @@ Next refresh: Sunday 2025-10-27 02:00:00
 ### 1. Build Docker Image
 
 ```bash
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 
 # Build automation-miner service
 docker-compose build automation-miner

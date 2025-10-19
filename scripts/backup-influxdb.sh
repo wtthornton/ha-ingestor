@@ -7,8 +7,8 @@ set -e
 
 # Configuration
 INFLUXDB_URL="http://localhost:8086"
-ORG_NAME="${INFLUXDB_ORG:-ha-ingestor}"
-ADMIN_TOKEN="${INFLUXDB_TOKEN:-ha-ingestor-token}"
+ORG_NAME="${INFLUXDB_ORG:-homeiq}"
+ADMIN_TOKEN="${INFLUXDB_TOKEN:-homeiq-token}"
 BACKUP_DIR="./backups/influxdb/$(date +%Y%m%d_%H%M%S)"
 
 # Colors for output
@@ -133,10 +133,10 @@ backup_docker_volumes() {
     print_status "Backing up Docker volumes..."
     
     # Check if volumes exist
-    if docker volume ls | grep -q "ha-ingestor_influxdb_data"; then
+    if docker volume ls | grep -q "homeiq_influxdb_data"; then
         print_status "Backing up InfluxDB data volume..."
         docker run --rm \
-            -v ha-ingestor_influxdb_data:/source:ro \
+            -v homeiq_influxdb_data:/source:ro \
             -v "$(pwd)/$BACKUP_DIR":/backup \
             alpine tar czf /backup/influxdb_data_volume.tar.gz -C /source .
         print_success "InfluxDB data volume backed up"
@@ -144,10 +144,10 @@ backup_docker_volumes() {
         print_warning "InfluxDB data volume not found"
     fi
     
-    if docker volume ls | grep -q "ha-ingestor_influxdb_config"; then
+    if docker volume ls | grep -q "homeiq_influxdb_config"; then
         print_status "Backing up InfluxDB config volume..."
         docker run --rm \
-            -v ha-ingestor_influxdb_config:/source:ro \
+            -v homeiq_influxdb_config:/source:ro \
             -v "$(pwd)/$BACKUP_DIR":/backup \
             alpine tar czf /backup/influxdb_config_volume.tar.gz -C /source .
         print_success "InfluxDB config volume backed up"
@@ -178,8 +178,8 @@ Backup Contents:
 
 Restore Instructions:
 1. Stop InfluxDB: docker compose stop influxdb
-2. Restore volumes: docker run --rm -v ha-ingestor_influxdb_data:/target -v \$(pwd)/$BACKUP_DIR:/backup alpine tar xzf /backup/influxdb_data_volume.tar.gz -C /target
-3. Restore config: docker run --rm -v ha-ingestor_influxdb_config:/target -v \$(pwd)/$BACKUP_DIR:/backup alpine tar xzf /backup/influxdb_config_volume.tar.gz -C /target
+2. Restore volumes: docker run --rm -v homeiq_influxdb_data:/target -v \$(pwd)/$BACKUP_DIR:/backup alpine tar xzf /backup/influxdb_data_volume.tar.gz -C /target
+3. Restore config: docker run --rm -v homeiq_influxdb_config:/target -v \$(pwd)/$BACKUP_DIR:/backup alpine tar xzf /backup/influxdb_config_volume.tar.gz -C /target
 4. Start InfluxDB: docker compose up -d influxdb
 5. Restore data: Use influx write commands with the CSV files
 

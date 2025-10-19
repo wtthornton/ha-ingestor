@@ -11,8 +11,8 @@
 
 ### ✅ Service Status
 
-**Container:** ha-ingestor-sports-data  
-**Image:** ha-ingestor-sports-data (Epic 12 v2.0)  
+**Container:** homeiq-sports-data  
+**Image:** homeiq-sports-data (Epic 12 v2.0)  
 **Status:** Up 29 minutes (healthy) ✅  
 **Port:** 8005  
 **Health:** All checks passing ✅

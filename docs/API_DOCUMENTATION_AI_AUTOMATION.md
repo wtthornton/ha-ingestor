@@ -355,7 +355,7 @@ LOG_LEVEL=INFO
 ```yaml
 services:
   ai-automation-service:
-    image: ha-ingestor-ai-automation-service:latest
+    image: homeiq-ai-automation-service:latest
     ports:
       - "8018:8018"
     environment:

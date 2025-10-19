@@ -84,19 +84,19 @@ Dashboard
 
 ### Check Connection Status:
 ```powershell
-docker logs --tail 20 ha-ingestor-websocket | Select-String "Connected|authenticated"
+docker logs --tail 20 homeiq-websocket | Select-String "Connected|authenticated"
 ```
 
 ### Watch Live Events:
 ```powershell
-docker logs -f ha-ingestor-enrichment | Select-String "process_event"
+docker logs -f homeiq-enrichment | Select-String "process_event"
 ```
 
 ### Check InfluxDB Data:
 ```powershell
-docker exec ha-ingestor-influxdb influx query `
+docker exec homeiq-influxdb influx query `
   'from(bucket:"home_assistant_events") |> range(start: -5m) |> count()' `
-  --token ha-ingestor-token --org ha-ingestor
+  --token homeiq-token --org homeiq
 ```
 
 ### View Dashboard:

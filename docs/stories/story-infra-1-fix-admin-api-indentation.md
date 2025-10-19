@@ -33,7 +33,7 @@ class StatsEndpoints:
 
 ### Service Impact
 ```
-Container: ha-ingestor-admin (unhealthy)
+Container: homeiq-admin (unhealthy)
 Error: NameError: name 'self' is not defined
 Location: /app/src/stats_endpoints.py:628
 Impact: Admin API unavailable, statistics endpoints inaccessible
@@ -166,7 +166,7 @@ curl http://localhost:8007/real-time-metrics
 ```bash
 # Verify container health
 docker ps | grep admin-api  # Should show "healthy"
-docker logs ha-ingestor-admin --tail 50  # No errors
+docker logs homeiq-admin --tail 50  # No errors
 ```
 
 ## Dependencies

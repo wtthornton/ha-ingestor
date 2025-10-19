@@ -45,10 +45,10 @@ python -m uvicorn src.main:app --reload --port 8006
 
 ```bash
 # Build
-docker build -t ha-ingestor-data-api -f services/data-api/Dockerfile .
+docker build -t homeiq-data-api -f services/data-api/Dockerfile .
 
 # Run
-docker run -p 8006:8006 --env-file .env ha-ingestor-data-api
+docker run -p 8006:8006 --env-file .env homeiq-data-api
 ```
 
 ### Docker Compose
@@ -122,7 +122,7 @@ POST /api/v1/ha/webhooks/register   # Register webhook
 | `DATA_API_PORT` | Service port | `8006` |
 | `INFLUXDB_URL` | InfluxDB URL | `http://influxdb:8086` |
 | `INFLUXDB_TOKEN` | InfluxDB auth token | Required |
-| `INFLUXDB_ORG` | InfluxDB organization | `ha-ingestor` |
+| `INFLUXDB_ORG` | InfluxDB organization | `homeiq` |
 | `INFLUXDB_BUCKET` | InfluxDB bucket | `home_assistant_events` |
 | `DATABASE_URL` | SQLite database URL | `sqlite+aiosqlite:///./data/metadata.db` |
 | `SQLITE_TIMEOUT` | Connection timeout (seconds) | `30` |
@@ -142,7 +142,7 @@ ENABLE_AUTH=false
 # InfluxDB Configuration
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_TOKEN=your-token-here
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # SQLite Configuration (Story 22.1)
@@ -343,7 +343,7 @@ curl http://localhost:8086/health
 
 **Check logs**:
 ```bash
-docker logs ha-ingestor-data-api
+docker logs homeiq-data-api
 ```
 
 ### Queries are slow
@@ -363,7 +363,7 @@ LOG_LEVEL=DEBUG
 
 **Verify nginx routing**:
 ```bash
-docker logs ha-ingestor-dashboard
+docker logs homeiq-dashboard
 ```
 
 **Test endpoint directly**:

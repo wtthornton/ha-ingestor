@@ -248,10 +248,10 @@ $ curl http://localhost:3000/health
 
 ```bash
 $ docker ps
-✅ ha-ingestor-smart-meter (Port 8014)
-✅ ha-ingestor-energy-correlator (Port 8017)
-✅ ha-ingestor-data-api (Port 8006)
-✅ ha-ingestor-dashboard (Port 3000)
+✅ homeiq-smart-meter (Port 8014)
+✅ homeiq-energy-correlator (Port 8017)
+✅ homeiq-data-api (Port 8006)
+✅ homeiq-dashboard (Port 3000)
 ```
 
 ---

@@ -1,7 +1,7 @@
 {
   "config": {
-    "configFile": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\playwright.config.ts",
-    "rootDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+    "configFile": "C:\\cursor\\homeiq\\services\\health-dashboard\\playwright.config.ts",
+    "rootDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
     "forbidOnly": false,
     "fullyParallel": true,
     "globalSetup": null,
@@ -39,7 +39,7 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -47,7 +47,7 @@
         },
         "id": "chromium",
         "name": "chromium",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -55,7 +55,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -63,7 +63,7 @@
         },
         "id": "firefox",
         "name": "firefox",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -71,7 +71,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -79,7 +79,7 @@
         },
         "id": "webkit",
         "name": "webkit",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -87,7 +87,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -95,7 +95,7 @@
         },
         "id": "Mobile Chrome",
         "name": "Mobile Chrome",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -103,7 +103,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -111,7 +111,7 @@
         },
         "id": "Mobile Safari",
         "name": "Mobile Safari",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -119,7 +119,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -127,7 +127,7 @@
         },
         "id": "Microsoft Edge",
         "name": "Microsoft Edge",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -135,7 +135,7 @@
         "timeout": 30000
       },
       {
-        "outputDir": "C:/cursor/ha-ingestor/services/health-dashboard/test-results",
+        "outputDir": "C:/cursor/homeiq/services/health-dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -143,7 +143,7 @@
         },
         "id": "Google Chrome",
         "name": "Google Chrome",
-        "testDir": "C:/cursor/ha-ingestor/services/health-dashboard/tests/e2e",
+        "testDir": "C:/cursor/homeiq/services/health-dashboard/tests/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -196,9 +196,9 @@
                       "duration": 5935,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m15\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n    at C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:31:19",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n    at C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:31:19",
                         "location": {
-                          "file": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
+                          "file": "C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
                           "column": 19,
                           "line": 31
                         },
@@ -207,11 +207,11 @@
                       "errors": [
                         {
                           "location": {
-                            "file": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
+                            "file": "C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
                             "column": 19,
                             "line": 31
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n\n\u001b[0m \u001b[90m 29 |\u001b[39m     \n \u001b[90m 30 |\u001b[39m     \u001b[90m// Should have exactly 11 tabs (was 12 with Custom tab)\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 31 |\u001b[39m     expect(count)\u001b[33m.\u001b[39mtoBe(\u001b[35m11\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 32 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 33 |\u001b[39m\n \u001b[90m 34 |\u001b[39m   test(\u001b[32m'should NOT display Custom tab'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:31:19\u001b[22m"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n\n\u001b[0m \u001b[90m 29 |\u001b[39m     \n \u001b[90m 30 |\u001b[39m     \u001b[90m// Should have exactly 11 tabs (was 12 with Custom tab)\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 31 |\u001b[39m     expect(count)\u001b[33m.\u001b[39mtoBe(\u001b[35m11\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 32 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 33 |\u001b[39m\n \u001b[90m 34 |\u001b[39m   test(\u001b[32m'should NOT display Custom tab'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:31:19\u001b[22m"
                         }
                       ],
                       "stdout": [],
@@ -223,21 +223,21 @@
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\test-failed-1.png"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\video.webm"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\video.webm"
                         },
                         {
                           "name": "error-context",
                           "contentType": "text/markdown",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\error-context.md"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--3d358-lay-exactly-11-tabs-not-12--chromium\\error-context.md"
                         }
                       ],
                       "errorLocation": {
-                        "file": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
+                        "file": "C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
                         "column": 19,
                         "line": 31
                       }
@@ -550,11 +550,11 @@
                         },
                         {
                           "location": {
-                            "file": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
+                            "file": "C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts",
                             "column": 16,
                             "line": 179
                           },
-                          "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n\u001b[0m \u001b[90m 177 |\u001b[39m     \n \u001b[90m 178 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m     \n \u001b[90m 181 |\u001b[39m     \u001b[90m// Get all script sources\u001b[39m\n \u001b[90m 182 |\u001b[39m     \u001b[36mconst\u001b[39m scriptSources \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\cursor\\ha-ingestor\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:179:16\u001b[22m"
+                          "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n\u001b[0m \u001b[90m 177 |\u001b[39m     \n \u001b[90m 178 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m     \n \u001b[90m 181 |\u001b[39m     \u001b[90m// Get all script sources\u001b[39m\n \u001b[90m 182 |\u001b[39m     \u001b[36mconst\u001b[39m scriptSources \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\cursor\\homeiq\\services\\health-dashboard\\tests\\e2e\\custom-tab-removal.spec.ts:179:16\u001b[22m"
                         }
                       ],
                       "stdout": [],
@@ -566,17 +566,17 @@
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\test-failed-1.png"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\video.webm"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\video.webm"
                         },
                         {
                           "name": "error-context",
                           "contentType": "text/markdown",
-                          "path": "C:\\cursor\\ha-ingestor\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\error-context.md"
+                          "path": "C:\\cursor\\homeiq\\services\\health-dashboard\\test-results\\custom-tab-removal-Custom--a8010-id-layout-in-page-resources-chromium\\error-context.md"
                         }
                       ]
                     }

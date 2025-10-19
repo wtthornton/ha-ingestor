@@ -99,7 +99,7 @@ Someone ran `simple_populate_sqlite.py` to test the SQLite database:
 # This was run at some point (probably October 14, 2025 at 20:39:40 UTC):
 python simple_populate_sqlite.py
 # or
-docker exec ha-ingestor-data-api python /app/simple_populate_sqlite.py
+docker exec homeiq-data-api python /app/simple_populate_sqlite.py
 ```
 
 This populated the database with 5 test devices to verify the API works.
@@ -113,7 +113,7 @@ This populated the database with 5 test devices to verify the API works.
 python scripts/discover-and-store-devices.py
 
 # Step 2: Check InfluxDB has devices
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   -o homeassistant \
   'from(bucket:"home_assistant_events") |> range(start:-1h) |> filter(fn:(r) => r._measurement == "devices")'
 
@@ -122,21 +122,21 @@ python sync_devices.py
 # This creates populate_sqlite.py
 
 # Step 4: Run populate script in data-api container
-docker cp populate_sqlite.py ha-ingestor-data-api:/app/
-docker exec ha-ingestor-data-api python /app/populate_sqlite.py
+docker cp populate_sqlite.py homeiq-data-api:/app/
+docker exec homeiq-data-api python /app/populate_sqlite.py
 ```
 
 ### Option 2: Verify WebSocket Discovery is Running
 
 ```bash
 # Check if websocket is connected and running discovery
-docker logs ha-ingestor-websocket | grep -i "discovery\|devices"
+docker logs homeiq-websocket | grep -i "discovery\|devices"
 
 # If discovery isn't running, restart websocket service
-docker restart ha-ingestor-websocket
+docker restart homeiq-websocket
 
 # Watch logs for discovery
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 # Look for: "DISCOVERING DEVICES", "Discovered X devices", "Stored X devices in InfluxDB"
 ```
 
@@ -170,8 +170,8 @@ python discover-and-store-devices.py
 # 2. Then sync to SQLite
 cd ..
 python sync_devices.py
-docker cp populate_sqlite.py ha-ingestor-data-api:/app/
-docker exec ha-ingestor-data-api python /app/populate_sqlite.py
+docker cp populate_sqlite.py homeiq-data-api:/app/
+docker exec homeiq-data-api python /app/populate_sqlite.py
 
 # 3. Refresh browser - should see real devices
 ```

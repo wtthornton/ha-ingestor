@@ -9,8 +9,8 @@ echo "Setting up ELK Stack for HA Ingestor..."
 
 # Create log directory
 echo "Creating log directory..."
-sudo mkdir -p /var/log/ha-ingestor
-sudo chmod 755 /var/log/ha-ingestor
+sudo mkdir -p /var/log/homeiq
+sudo chmod 755 /var/log/homeiq
 
 # Create ELK stack directory structure
 echo "Creating ELK stack directory structure..."
@@ -18,22 +18,22 @@ mkdir -p infrastructure/elk-stack/{elasticsearch,logstash/{pipeline,config},kiba
 
 # Set up Elasticsearch index lifecycle management policy
 echo "Setting up Elasticsearch ILM policy..."
-curl -X PUT "localhost:9200/_ilm/policy/ha-ingestor-policy" \
+curl -X PUT "localhost:9200/_ilm/policy/homeiq-policy" \
   -H "Content-Type: application/json" \
   -d @infrastructure/elk-stack/elasticsearch/ilm-policy.json
 
 # Create index template
 echo "Creating index template..."
-curl -X PUT "localhost:9200/_index_template/ha-ingestor-logs" \
+curl -X PUT "localhost:9200/_index_template/homeiq-logs" \
   -H "Content-Type: application/json" \
   -d '{
-    "index_patterns": ["ha-ingestor-logs-*"],
+    "index_patterns": ["homeiq-logs-*"],
     "template": {
       "settings": {
         "number_of_shards": 1,
         "number_of_replicas": 0,
-        "index.lifecycle.name": "ha-ingestor-policy",
-        "index.lifecycle.rollover_alias": "ha-ingestor-logs"
+        "index.lifecycle.name": "homeiq-policy",
+        "index.lifecycle.rollover_alias": "homeiq-logs"
       },
       "mappings": {
         "properties": {
@@ -71,12 +71,12 @@ curl -f http://localhost:5601/api/status || echo "Kibana not ready"
 
 # Create Kibana index pattern
 echo "Creating Kibana index pattern..."
-curl -X POST "localhost:5601/api/saved_objects/index-pattern/ha-ingestor-logs" \
+curl -X POST "localhost:5601/api/saved_objects/index-pattern/homeiq-logs" \
   -H "Content-Type: application/json" \
   -H "kbn-xsrf: true" \
   -d '{
     "attributes": {
-      "title": "ha-ingestor-logs-*",
+      "title": "homeiq-logs-*",
       "timeFieldName": "@timestamp"
     }
   }'
@@ -84,4 +84,4 @@ curl -X POST "localhost:5601/api/saved_objects/index-pattern/ha-ingestor-logs" \
 echo "ELK Stack setup completed!"
 echo "Access Kibana at: http://localhost:5601"
 echo "Access Elasticsearch at: http://localhost:9200"
-echo "Logs are being collected from: /var/log/ha-ingestor/"
+echo "Logs are being collected from: /var/log/homeiq/"

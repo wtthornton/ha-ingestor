@@ -1,7 +1,7 @@
 # Elasticsearch configuration for HA Ingestor
 
-cluster.name: ha-ingestor-cluster
-node.name: ha-ingestor-node
+cluster.name: homeiq-cluster
+node.name: homeiq-node
 
 # Network settings
 network.host: 0.0.0.0

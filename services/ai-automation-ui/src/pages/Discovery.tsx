@@ -21,7 +21,7 @@ export const DiscoveryPage: React.FC<DiscoveryPageProps> = () => {
     // Fetch user's devices from ai-automation-service
     const fetchDevices = async () => {
       try {
-        const response = await fetch('http://localhost:8018/api/devices');
+        const response = await fetch('http://localhost:8018/api/data/devices');
         if (!response.ok) {
           throw new Error('Failed to fetch devices');
         }

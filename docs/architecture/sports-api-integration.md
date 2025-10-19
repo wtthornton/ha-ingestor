@@ -1119,7 +1119,7 @@ services:
       - INFLUXDB_ORG=home_assistant
       - INFLUXDB_BUCKET=sports_data
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     depends_on:
       - influxdb
     restart: unless-stopped

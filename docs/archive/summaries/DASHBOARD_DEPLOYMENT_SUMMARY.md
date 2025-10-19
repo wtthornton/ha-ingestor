@@ -128,11 +128,11 @@ location /api/ {
 ```
 Container                       Status      Health      Port
 ────────────────────────────────────────────────────────────
-ha-ingestor-influxdb           Running     Healthy     8086
-ha-ingestor-enrichment         Running     Healthy     -
-ha-ingestor-websocket          Running     Healthy     8001
-ha-ingestor-admin              Running     Healthy     8003
-ha-ingestor-dashboard          Running     Healthy     3000
+homeiq-influxdb           Running     Healthy     8086
+homeiq-enrichment         Running     Healthy     -
+homeiq-websocket          Running     Healthy     8001
+homeiq-admin              Running     Healthy     8003
+homeiq-dashboard          Running     Healthy     3000
 ```
 
 ### Dashboard Metrics
@@ -169,7 +169,7 @@ ha-ingestor-dashboard          Running     Healthy     3000
 
 3. **Verify Connection**
    - Check dashboard: WebSocket status should show ✅ Connected
-   - Check logs: `docker logs ha-ingestor-websocket`
+   - Check logs: `docker logs homeiq-websocket`
 
 ### Optional Enhancements
 

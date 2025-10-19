@@ -121,7 +121,7 @@ Duration: 11.9 seconds
 │ Service Information    │ Resource Usage             │
 │ Uptime: 2h 34m         │ CPU: ████░░░░ 25%          │
 │ Container: abc123...   │ Memory: ██████░░ 50%       │
-│ Image: ha-ingestor/... │                            │
+│ Image: homeiq/... │                            │
 │ Last Restart: 1h ago   │                            │
 └─────────────────────────────────────────────────────┘
 ```

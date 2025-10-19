@@ -128,7 +128,7 @@ Invoke-RestMethod -Uri "http://localhost:8005/api/v1/ha/game-context/VGK?sport=n
 **Verification**:
 ```powershell
 # Check event detector logs
-docker logs ha-ingestor-sports-data --tail 20 | Select-String -Pattern "Monitoring"
+docker logs homeiq-sports-data --tail 20 | Select-String -Pattern "Monitoring"
 # Output: "Monitoring 1 NFL teams and 1 NHL teams"
 
 # Event detector is now active and monitoring user-selected teams!
@@ -233,7 +233,7 @@ automation:
 ```yaml
 sensor:
   - platform: rest
-    resource: "http://ha-ingestor-sports-data:8005/api/v1/ha/game-status/VGK?sport=nhl"
+    resource: "http://homeiq-sports-data:8005/api/v1/ha/game-status/VGK?sport=nhl"
     name: "VGK Game Status"
     value_template: "{{ value_json.status }}"
     json_attributes:
@@ -272,7 +272,7 @@ curl http://localhost:8005/api/v1/user/teams
 ### Monitor Events
 ```bash
 # Watch event detector logs
-docker logs -f ha-ingestor-sports-data | grep "Monitoring\|event"
+docker logs -f homeiq-sports-data | grep "Monitoring\|event"
 ```
 
 ---

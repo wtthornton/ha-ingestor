@@ -105,7 +105,7 @@
 
 ### **Test Phase 1 (5 minutes)**
 ```bash
-cd ~/ha-ingestor/services/ai-automation-service
+cd ~/homeiq/services/ai-automation-service
 python scripts/alpha_reset_database.py
 curl http://localhost:8018/api/v1/suggestions/health
 open http://localhost:8018/docs

@@ -70,7 +70,7 @@ Result: Corpus populates automatically on first start! ✅
 ### Step 1: Deploy to Docker
 
 ```bash
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 
 # Build automation-miner service
 docker-compose build automation-miner
@@ -304,7 +304,7 @@ Complete (15-30 minutes)
 ### Deploy Full Stack
 
 ```bash
-cd C:\cursor\ha-ingestor
+cd C:\cursor\homeiq
 
 # 1. Build services
 docker-compose build automation-miner ai-automation-ui

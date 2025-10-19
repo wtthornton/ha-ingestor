@@ -80,7 +80,7 @@ async def _on_connect(self):
 ```yaml
 websocket-ingestion:
   environment:
-    - DATA_API_URL=http://ha-ingestor-data-api:8006  # NEW
+    - DATA_API_URL=http://homeiq-data-api:8006  # NEW
     - STORE_DEVICE_HISTORY_IN_INFLUXDB=false  # NEW (optional InfluxDB)
 ```
 

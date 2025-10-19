@@ -93,11 +93,11 @@ docker-compose restart ai-automation-service
 
 ```bash
 # Check volume
-docker volume inspect ha-ingestor_ai_automation_models
+docker volume inspect homeiq_ai_automation_models
 
 # Location on host (varies by OS):
-# Windows: \\wsl$\docker-desktop-data\data\docker\volumes\ha-ingestor_ai_automation_models
-# Linux: /var/lib/docker/volumes/ha-ingestor_ai_automation_models
+# Windows: \\wsl$\docker-desktop-data\data\docker\volumes\homeiq_ai_automation_models
+# Linux: /var/lib/docker/volumes/homeiq_ai_automation_models
 
 # Inside container: /app/models/
 ```

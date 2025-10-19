@@ -13,7 +13,7 @@ Add this to `docker-compose.yml` in the `services:` section:
     build:
       context: .
       dockerfile: services/ha-setup-service/Dockerfile
-    container_name: ha-ingestor-setup-service
+    container_name: homeiq-setup-service
     restart: unless-stopped
     ports:
       - "8010:8010"
@@ -25,20 +25,20 @@ Add this to `docker-compose.yml` in the `services:` section:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - HA_URL=${HA_HTTP_URL:-http://192.168.1.86:8123}
       - DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
-      - DATA_API_URL=http://ha-ingestor-data-api:8006
-      - ADMIN_API_URL=http://ha-ingestor-admin-api:8003
+      - DATA_API_URL=http://homeiq-data-api:8006
+      - ADMIN_API_URL=http://homeiq-admin-api:8003
       - HEALTH_CHECK_INTERVAL=60
       - INTEGRATION_CHECK_INTERVAL=300
     volumes:
       - ha_setup_data:/app/data
-      - ha_ingestor_logs:/var/log/ha-ingestor
+      - ha_ingestor_logs:/var/log/homeiq
     depends_on:
       data-api:
         condition: service_healthy
       admin-api:
         condition: service_healthy
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     deploy:
       resources:
         limits:
@@ -77,7 +77,7 @@ docker-compose up -d ha-setup-service
 docker ps | grep setup-service
 
 # Check logs
-docker logs ha-ingestor-setup-service
+docker logs homeiq-setup-service
 ```
 
 ### Step 3: Verify Deployment
@@ -171,8 +171,8 @@ Optional overrides:
 ```bash
 HA_URL=http://192.168.1.86:8123
 DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
-DATA_API_URL=http://ha-ingestor-data-api:8006
-ADMIN_API_URL=http://ha-ingestor-admin-api:8003
+DATA_API_URL=http://homeiq-data-api:8006
+ADMIN_API_URL=http://homeiq-admin-api:8003
 HEALTH_CHECK_INTERVAL=60          # Health check frequency (seconds)
 INTEGRATION_CHECK_INTERVAL=300    # Integration check frequency (seconds)
 LOG_LEVEL=INFO
@@ -189,7 +189,7 @@ curl http://localhost:8010/health
 curl http://localhost:8010/api/health/environment
 
 # Logs
-docker logs -f ha-ingestor-setup-service
+docker logs -f homeiq-setup-service
 ```
 
 ### Health Score Interpretation
@@ -215,13 +215,13 @@ docker logs -f ha-ingestor-setup-service
 
 ```bash
 # Check if HA_TOKEN is loaded
-docker exec ha-ingestor-setup-service env | grep HA_TOKEN
+docker exec homeiq-setup-service env | grep HA_TOKEN
 
 # Check dependencies
 docker ps | grep -E "data-api|admin-api"
 
 # View detailed logs
-docker logs ha-ingestor-setup-service
+docker logs homeiq-setup-service
 ```
 
 ### Health Check Returns Errors
@@ -231,10 +231,10 @@ docker logs ha-ingestor-setup-service
 curl http://192.168.1.86:8123/api/
 
 # Check network connectivity
-docker exec ha-ingestor-setup-service ping -c 3 192.168.1.86
+docker exec homeiq-setup-service ping -c 3 192.168.1.86
 
 # Restart service
-docker restart ha-ingestor-setup-service
+docker restart homeiq-setup-service
 ```
 
 ### Integration Checks Fail
@@ -287,7 +287,7 @@ deploy:
 
 ```bash
 # Access SQLite database
-docker exec -it ha-ingestor-setup-service sqlite3 /app/data/ha-setup.db
+docker exec -it homeiq-setup-service sqlite3 /app/data/ha-setup.db
 
 # Query health history
 SELECT timestamp, health_score, ha_status 
@@ -330,17 +330,17 @@ WHERE timestamp < datetime('now', '-7 days');
 
 ```bash
 # Copy SQLite database
-docker cp ha-ingestor-setup-service:/app/data/ha-setup.db ./backup/ha-setup-$(date +%Y%m%d).db
+docker cp homeiq-setup-service:/app/data/ha-setup.db ./backup/ha-setup-$(date +%Y%m%d).db
 ```
 
 ### Restore Database
 
 ```bash
 # Restore from backup
-docker cp ./backup/ha-setup-20250118.db ha-ingestor-setup-service:/app/data/ha-setup.db
+docker cp ./backup/ha-setup-20250118.db homeiq-setup-service:/app/data/ha-setup.db
 
 # Restart service
-docker restart ha-ingestor-setup-service
+docker restart homeiq-setup-service
 ```
 
 ## Upgrade Path

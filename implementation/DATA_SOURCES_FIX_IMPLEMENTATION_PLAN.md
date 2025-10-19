@@ -23,21 +23,21 @@ The Data Sources tab displays all external data sources as "unhealthy" with "Con
 
 ```python
 self.service_urls = {
-    "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://ha-ingestor-websocket:8001"),
-    "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://ha-ingestor-enrichment:8002"),
-    "influxdb": os.getenv("INFLUXDB_URL", "http://ha-ingestor-influxdb:8086"),
+    "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://homeiq-websocket:8001"),
+    "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://homeiq-enrichment:8002"),
+    "influxdb": os.getenv("INFLUXDB_URL", "http://homeiq-influxdb:8086"),
     "weather-api": "https://api.openweathermap.org/data/2.5",
-    "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010"),
-    "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://ha-ingestor-electricity-pricing:8011"),
-    "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://ha-ingestor-air-quality:8012"),
-    "calendar-service": os.getenv("CALENDAR_URL", "http://ha-ingestor-calendar:8013"),
-    "smart-meter-service": os.getenv("SMART_METER_URL", "http://ha-ingestor-smart-meter:8014")
+    "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://homeiq-carbon-intensity:8010"),
+    "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://homeiq-electricity-pricing:8011"),
+    "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://homeiq-air-quality:8012"),
+    "calendar-service": os.getenv("CALENDAR_URL", "http://homeiq-calendar:8013"),
+    "smart-meter-service": os.getenv("SMART_METER_URL", "http://homeiq-smart-meter:8014")
 }
 ```
 
 **Action**: Restart admin-api service after change
 ```bash
-docker restart ha-ingestor-admin
+docker restart homeiq-admin
 ```
 
 ---
@@ -60,7 +60,7 @@ const response = await fetch(`${this.baseUrl}/health/services`);
 ```bash
 cd services/health-dashboard
 npm run build
-docker restart ha-ingestor-dashboard
+docker restart homeiq-dashboard
 ```
 
 ---
@@ -102,12 +102,12 @@ Expected: Carbon Intensity, Electricity Pricing, Air Quality, Smart Meter show "
 #### C. Test Service Detection
 ```bash
 # Stop a service
-docker stop ha-ingestor-carbon-intensity
+docker stop homeiq-carbon-intensity
 
 # Wait 30 seconds, check dashboard shows it as unhealthy
 
 # Start service
-docker start ha-ingestor-carbon-intensity
+docker start homeiq-carbon-intensity
 
 # Wait 30 seconds, check dashboard shows it as healthy
 ```
@@ -168,7 +168,7 @@ If issues arise:
 1. **Revert admin-api changes**:
    ```bash
    git checkout services/admin-api/src/health_endpoints.py
-   docker restart ha-ingestor-admin
+   docker restart homeiq-admin
    ```
 
 2. **Revert frontend changes**:
@@ -176,7 +176,7 @@ If issues arise:
    git checkout services/health-dashboard/src/services/api.ts
    git checkout services/health-dashboard/src/components/DataSourcesPanel.tsx
    cd services/health-dashboard && npm run build
-   docker restart ha-ingestor-dashboard
+   docker restart homeiq-dashboard
    ```
 
 ---
@@ -216,7 +216,7 @@ If issues arise:
 
 ## Dependencies
 
-- Docker network `ha-ingestor-network` (already exists)
+- Docker network `homeiq-network` (already exists)
 - All services must be on the same Docker network
 - Container names must match docker-compose.yml
 - No external dependencies or schema changes

@@ -86,9 +86,9 @@ Clean system monitoring focus with **22 endpoints**:
 
 ### Start Services
 ```bash
-cd c:\cursor\ha-ingestor
-docker-compose up -d ha-ingestor-data-api
-docker-compose logs -f ha-ingestor-data-api
+cd c:\cursor\homeiq
+docker-compose up -d homeiq-data-api
+docker-compose logs -f homeiq-data-api
 ```
 
 ### Test Sports Endpoints (Epic 12)

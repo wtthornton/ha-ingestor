@@ -40,7 +40,9 @@ interface Props {
   onRefine: (id: number, userInput: string) => Promise<void>;
   onApprove: (id: number) => Promise<void>;
   onReject: (id: number) => Promise<void>;
+  onTest?: (id: number) => Promise<void>;
   darkMode?: boolean;
+  disabled?: boolean;
 }
 
 export const ConversationalSuggestionCard: React.FC<Props> = ({
@@ -48,8 +50,11 @@ export const ConversationalSuggestionCard: React.FC<Props> = ({
   onRefine,
   onApprove,
   onReject,
+  onTest,
   darkMode = false,
+  disabled = false
 }) => {
+  console.log('ConversationalSuggestionCard received suggestion:', suggestion);
   const [isEditing, setIsEditing] = useState(false);
   const [editInput, setEditInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -92,6 +97,17 @@ export const ConversationalSuggestionCard: React.FC<Props> = ({
       toast.error('❌ Failed to refine suggestion');
     } finally {
       setIsRefining(false);
+    }
+  };
+
+  const handleTest = async () => {
+    if (!onTest) return;
+    
+    try {
+      await onTest(suggestion.id);
+      toast.success('✅ Automation validated successfully!');
+    } catch (error) {
+      toast.error('❌ Validation failed');
     }
   };
 
@@ -158,7 +174,7 @@ export const ConversationalSuggestionCard: React.FC<Props> = ({
 
         {/* Main Description (NO YAML!) */}
         <div className={`text-base leading-relaxed ${darkMode ? 'text-gray-200' : 'text-gray-800'} bg-white/50 dark:bg-gray-900/50 p-4 rounded-lg border ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-          {suggestion.description_only}
+          {suggestion.description_only || 'No description available'}
         </div>
         
         {suggestion.conversation_history && suggestion.conversation_history.length > 0 && (
@@ -333,24 +349,64 @@ export const ConversationalSuggestionCard: React.FC<Props> = ({
               </div>
             ) : (
               <div className="flex gap-2">
+                {/* Test Button */}
+                {onTest && (
+                  <button
+                    onClick={handleTest}
+                    disabled={disabled}
+                    className={`px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md ${
+                      disabled
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : darkMode
+                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white hover:shadow-lg'
+                          : 'bg-yellow-500 hover:bg-yellow-600 text-white hover:shadow-lg'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Test</span>
+                  </button>
+                )}
+
                 {/* Approve Button */}
                 <button
                   onClick={handleApprove}
-                  className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  disabled={disabled}
+                  className={`flex-1 px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md ${
+                    disabled
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-lg'
+                  }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Approve & Create</span>
+                  {disabled ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Approve & Create</span>
+                    </>
+                  )}
                 </button>
 
                 {/* Edit Button */}
                 <button
                   onClick={() => setIsEditing(true)}
-                  className={`px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg ${
-                    darkMode
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  disabled={disabled}
+                  className={`px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md ${
+                    disabled
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : darkMode
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white hover:shadow-lg'
                   }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,7 +418,12 @@ export const ConversationalSuggestionCard: React.FC<Props> = ({
                 {/* Reject Button */}
                 <button
                   onClick={() => onReject(suggestion.id)}
-                  className="px-4 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  disabled={disabled}
+                  className={`px-4 py-3 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                    disabled
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200'
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

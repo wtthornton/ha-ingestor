@@ -19,7 +19,7 @@
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Run interactive deployment wizard
 ./scripts/deploy-wizard.sh
@@ -39,7 +39,7 @@ The wizard will:
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Copy environment template
 cp .env.example .env

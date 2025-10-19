@@ -411,7 +411,7 @@ class HAAutomationClient:
 
 ```
 ai-automation-service → MQTT Publish
-    Topic: ha-ingestor/automation/proposed
+    Topic: homeiq/automation/proposed
     Payload: {automation_id, yaml, description}
     ↓
 Home Assistant MQTT Automation (user creates)
@@ -419,7 +419,7 @@ Home Assistant MQTT Automation (user creates)
     Action: Display notification with approve/reject buttons
     ↓
 User clicks approve → HA publishes to MQTT
-    Topic: ha-ingestor/automation/approved
+    Topic: homeiq/automation/approved
     Payload: {automation_id, approved_by}
     ↓
 ai-automation-service → MQTT Subscribe

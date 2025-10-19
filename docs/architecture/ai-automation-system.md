@@ -386,7 +386,7 @@ CREATE INDEX idx_automation_versions_automation_id ON automation_versions(automa
 ### Docker Services
 ```yaml
 ai-automation-service:
-  image: ha-ingestor-ai-automation-service
+  image: homeiq-ai-automation-service
   ports: ["8018:8018"]
   depends_on: [data-api, influxdb]
   volumes:

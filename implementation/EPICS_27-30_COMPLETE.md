@@ -255,7 +255,7 @@ HA Setup Service (Port 8010)
 ### Docker Configuration
 ```yaml
 ha-setup-service:
-  image: ha-ingestor-setup-service
+  image: homeiq-setup-service
   ports:
     - "8010:8010"
   env_file:
@@ -274,8 +274,8 @@ ha-setup-service:
 HA_URL=http://192.168.1.86:8123
 # HA_TOKEN loaded from .env.websocket
 DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
-DATA_API_URL=http://ha-ingestor-data-api:8006
-ADMIN_API_URL=http://ha-ingestor-admin-api:8003
+DATA_API_URL=http://homeiq-data-api:8006
+ADMIN_API_URL=http://homeiq-admin-api:8003
 HEALTH_CHECK_INTERVAL=60
 INTEGRATION_CHECK_INTERVAL=300
 ```

@@ -185,11 +185,11 @@ Separate the monolithic admin-api into two focused services:
 
 ### Running Services (Port Mapping)
 ```
-ha-ingestor-admin:8003      → System monitoring
-ha-ingestor-data-api:8006   → Feature data hub
-ha-ingestor-sports-data:8005 → Sports cache (real-time)
-ha-ingestor-dashboard:3000   → Frontend (nginx)
-ha-ingestor-influxdb:8086    → Time-series database
+homeiq-admin:8003      → System monitoring
+homeiq-data-api:8006   → Feature data hub
+homeiq-sports-data:8005 → Sports cache (real-time)
+homeiq-dashboard:3000   → Frontend (nginx)
+homeiq-influxdb:8086    → Time-series database
 ```
 
 ### API Structure

@@ -33,8 +33,8 @@ ENABLE_HOME_ASSISTANT=true
 
 # InfluxDB Configuration
 INFLUXDB_URL=http://influxdb:8086
-INFLUXDB_TOKEN=ha-ingestor-token
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_TOKEN=homeiq-token
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 
 # API Configuration
@@ -68,12 +68,12 @@ services:
     environment:
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-admin123}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-homeiq}
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
     volumes:
       - influxdb_data:/var/lib/influxdb2
     networks:
-      - ha-ingestor-network
+      - homeiq-network
 
   admin-api:
     build: ./services/admin-api

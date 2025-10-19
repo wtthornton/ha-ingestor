@@ -125,9 +125,9 @@ GET /api/v1/docker/containers
   "containers": [
     {
       "id": "abc123",
-      "name": "ha-ingestor-admin",
+      "name": "homeiq-admin",
       "status": "running",
-      "image": "ha-ingestor-admin-api:latest"
+      "image": "homeiq-admin-api:latest"
     }
   ]
 }

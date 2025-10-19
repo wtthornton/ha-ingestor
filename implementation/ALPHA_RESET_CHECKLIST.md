@@ -37,7 +37,7 @@ Before you start, verify:
 
 ```bash
 # Optional: Backup existing suggestions for reference
-cd ~/ha-ingestor
+cd ~/homeiq
 pg_dump -h localhost -U postgres -d ai_automation -t automation_suggestions > backup/suggestions_pre_conversational_$(date +%Y%m%d).sql
 
 # Verify backup created
@@ -131,7 +131,7 @@ Foreign-key constraints:
 
 ```bash
 # Navigate back to root
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # Pull latest changes (if from git)
 git pull origin feature/conversational-suggestions

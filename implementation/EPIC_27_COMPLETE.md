@@ -282,11 +282,11 @@ const tabs = [
 ```bash
 # Build and start ha-setup-service
 cd services/ha-setup-service
-docker build -t ha-ingestor-setup-service .
+docker build -t homeiq-setup-service .
 docker run -d -p 8010:8010 \
   -e HA_URL=http://192.168.1.86:8123 \
   -e HA_TOKEN=your_token_here \
-  ha-ingestor-setup-service
+  homeiq-setup-service
 ```
 
 ### 2. Frontend Integration

@@ -45,11 +45,11 @@ log_info "Data volumes will be PRESERVED by default"
 echo ""
 
 # Check if services are running
-RUNNING_CONTAINERS=$(docker ps -a --filter "name=ha-ingestor" --format "{{.Names}}" | wc -l)
-log_info "Found $RUNNING_CONTAINERS ha-ingestor containers"
+RUNNING_CONTAINERS=$(docker ps -a --filter "name=homeiq" --format "{{.Names}}" | wc -l)
+log_info "Found $RUNNING_CONTAINERS homeiq containers"
 
 if [ "$RUNNING_CONTAINERS" -eq 0 ]; then
-    log_warning "No ha-ingestor containers found!"
+    log_warning "No homeiq containers found!"
     echo ""
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo
@@ -62,15 +62,15 @@ fi
 # Show current status
 echo ""
 log_info "Current container status:"
-docker ps -a --filter "name=ha-ingestor" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+docker ps -a --filter "name=homeiq" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
 echo ""
 
 # Confirmation prompt
 log_warning "⚠️  IMPORTANT: Have you created backups?"
 echo ""
 echo "  Required backups:"
-echo "    ✓ InfluxDB data: docker exec ha-ingestor-influxdb influx backup /tmp/backup"
-echo "    ✓ SQLite data: docker cp ha-ingestor-data-api:/app/data/metadata.db ~/backup-metadata.db"
+echo "    ✓ InfluxDB data: docker exec homeiq-influxdb influx backup /tmp/backup"
+echo "    ✓ SQLite data: docker cp homeiq-data-api:/app/data/metadata.db ~/backup-metadata.db"
 echo "    ✓ Environment: cp .env ~/backup-env"
 echo ""
 read -p "Have you completed backups? (yes/NO): " -r BACKUP_CONFIRM
@@ -105,7 +105,7 @@ echo ""
 
 # Step 2: Force stop any remaining containers
 log_info "Step 2/7: Force stopping any remaining containers..."
-RUNNING=$(docker ps --filter "name=ha-ingestor" -q)
+RUNNING=$(docker ps --filter "name=homeiq" -q)
 if [ -n "$RUNNING" ]; then
     echo "$RUNNING" | xargs docker stop 2>/dev/null || true
     log_success "Stopped $(echo "$RUNNING" | wc -w) running containers"
@@ -115,8 +115,8 @@ fi
 echo ""
 
 # Step 3: Remove all containers
-log_info "Step 3/7: Removing all ha-ingestor containers..."
-ALL_CONTAINERS=$(docker ps -a --filter "name=ha-ingestor" -q)
+log_info "Step 3/7: Removing all homeiq containers..."
+ALL_CONTAINERS=$(docker ps -a --filter "name=homeiq" -q)
 if [ -n "$ALL_CONTAINERS" ]; then
     echo "$ALL_CONTAINERS" | xargs docker rm -f 2>/dev/null || true
     log_success "Removed $(echo "$ALL_CONTAINERS" | wc -w) containers"
@@ -126,8 +126,8 @@ fi
 echo ""
 
 # Step 4: Remove all images
-log_info "Step 4/7: Removing all ha-ingestor images..."
-ALL_IMAGES=$(docker images --filter=reference='*ha-ingestor*' -q)
+log_info "Step 4/7: Removing all homeiq images..."
+ALL_IMAGES=$(docker images --filter=reference='*homeiq*' -q)
 if [ -n "$ALL_IMAGES" ]; then
     echo "$ALL_IMAGES" | xargs docker rmi -f 2>/dev/null || true
     log_success "Removed $(echo "$ALL_IMAGES" | wc -w) images"
@@ -138,8 +138,8 @@ echo ""
 
 # Step 5: Remove network
 log_info "Step 5/7: Removing Docker network..."
-docker network rm ha-ingestor-network 2>/dev/null && log_success "Network removed" || log_info "Network not found or already removed"
-docker network rm ha-ingestor-network-dev 2>/dev/null || true
+docker network rm homeiq-network 2>/dev/null && log_success "Network removed" || log_info "Network not found or already removed"
+docker network rm homeiq-network-dev 2>/dev/null || true
 echo ""
 
 # Step 6: Clean build cache
@@ -152,9 +152,9 @@ echo ""
 log_info "Step 7/7: Verifying cleanup..."
 echo ""
 
-REMAINING_CONTAINERS=$(docker ps -a --filter "name=ha-ingestor" -q | wc -l)
-REMAINING_IMAGES=$(docker images --filter=reference='*ha-ingestor*' -q | wc -l)
-REMAINING_NETWORKS=$(docker network ls | grep -c "ha-ingestor" || echo "0")
+REMAINING_CONTAINERS=$(docker ps -a --filter "name=homeiq" -q | wc -l)
+REMAINING_IMAGES=$(docker images --filter=reference='*homeiq*' -q | wc -l)
+REMAINING_NETWORKS=$(docker network ls | grep -c "homeiq" || echo "0")
 
 log_info "Cleanup verification:"
 echo "  Containers: $REMAINING_CONTAINERS (should be 0)"
@@ -171,7 +171,7 @@ fi
 # Show volume status
 echo ""
 log_info "Volume status (preserved):"
-docker volume ls | grep ha-ingestor || log_info "No ha-ingestor volumes found"
+docker volume ls | grep homeiq || log_info "No homeiq volumes found"
 echo ""
 
 # Next steps

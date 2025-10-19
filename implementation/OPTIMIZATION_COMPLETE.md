@@ -175,10 +175,10 @@ These 6 services have 990MB-1.2GB images (likely scipy bloat):
 **How to check:**
 ```bash
 # For each service
-docker exec -it ha-ingestor-calendar pip list | grep scipy
+docker exec -it homeiq-calendar pip list | grep scipy
 
 # If found, check if actually imported in code
-docker exec -it ha-ingestor-calendar find /app -name "*.py" -exec grep -l "import scipy" {} \;
+docker exec -it homeiq-calendar find /app -name "*.py" -exec grep -l "import scipy" {} \;
 
 # If no imports → Remove scipy from requirements
 ```

@@ -92,7 +92,7 @@ If you just want to get it running NOW:
 
 ```powershell
 # 1. Navigate to project
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 
 # 2. Deploy everything
 docker-compose down

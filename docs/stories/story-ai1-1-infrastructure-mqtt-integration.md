@@ -62,7 +62,7 @@ MQTT_PASSWORD=<your-mqtt-password>  # From HA MQTT integration
 HA_URL=http://<HA_SERVER_IP>:8123
 HA_TOKEN=<your-ha-long-lived-token>
 
-# Data API (from existing ha-ingestor project)
+# Data API (from existing homeiq project)
 DATA_API_URL=http://data-api:8006
 
 # OpenAI API

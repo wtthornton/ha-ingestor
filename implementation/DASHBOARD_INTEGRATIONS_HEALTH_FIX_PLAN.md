@@ -68,7 +68,7 @@ This enhanced plan addresses root causes and implements comprehensive improvemen
 **Implementation**:
 ```bash
 # Check WebSocket service logs
-docker logs ha-ingestor-websocket-ingestion-1
+docker logs homeiq-websocket-ingestion-1
 
 # Check InfluxDB for config_entries data
 curl -G "http://localhost:8086/api/v2/query" \

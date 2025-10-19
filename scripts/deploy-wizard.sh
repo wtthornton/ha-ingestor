@@ -695,7 +695,7 @@ HOME_ASSISTANT_TOKEN=${wizard_state[ha_token]}
 INFLUXDB_URL=http://influxdb:8086
 INFLUXDB_USERNAME=admin
 INFLUXDB_PASSWORD=$influx_password
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 INFLUXDB_TOKEN=$influx_token
 
@@ -780,7 +780,7 @@ Generated: $(date)
    Username: admin
    Password: $influx_password
    Token: $influx_token
-   Organization: ha-ingestor
+   Organization: homeiq
    Bucket: home_assistant_events
 
 ⚠️  IMPORTANT: Save these credentials securely and delete this file!

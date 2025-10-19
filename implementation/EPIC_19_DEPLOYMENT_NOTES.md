@@ -45,8 +45,8 @@ InfluxDB will auto-create buckets on first write, but you can pre-create them:
 docker exec -it influxdb influx
 
 # Create buckets
-influx bucket create -n devices -o ha-ingestor -r 90d
-influx bucket create -n entities -o ha-ingestor -r 90d
+influx bucket create -n devices -o homeiq -r 90d
+influx bucket create -n entities -o homeiq -r 90d
 ```
 
 **Or**: Let buckets auto-create (recommended - simpler)
@@ -58,11 +58,11 @@ influx bucket create -n entities -o ha-ingestor -r 90d
 ```bash
 # Rebuild websocket-ingestion service
 cd services/websocket-ingestion
-docker build -t ha-ingestor-websocket:latest .
+docker build -t homeiq-websocket:latest .
 
 # Rebuild admin-api service  
 cd ../admin-api
-docker build -t ha-ingestor-admin-api:latest .
+docker build -t homeiq-admin-api:latest .
 ```
 
 ---

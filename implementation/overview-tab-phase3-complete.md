@@ -213,7 +213,7 @@ Bundle sizes:
 
 ### Deployment Status
 ```
-Container: ha-ingestor-dashboard - Up and Healthy
+Container: homeiq-dashboard - Up and Healthy
 Access: http://localhost:3000/
 All services: Running
 ```
@@ -607,7 +607,7 @@ Solutions:
 
 ## 🚀 Deployment Status
 
-**Container**: ha-ingestor-dashboard  
+**Container**: homeiq-dashboard  
 **Status**: ✅ Up and Healthy  
 **Access**: http://localhost:3000/  
 **Version**: Phase 3 Complete  

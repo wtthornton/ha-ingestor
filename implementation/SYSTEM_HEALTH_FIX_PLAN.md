@@ -82,7 +82,7 @@ weather-api:
   build:
     context: ./services/weather-api
     dockerfile: Dockerfile
-  container_name: ha-ingestor-weather-api
+  container_name: homeiq-weather-api
   restart: unless-stopped
   ports:
     - "8007:8007"
@@ -97,7 +97,7 @@ weather-api:
     influxdb:
       condition: service_healthy
   networks:
-    - ha-ingestor-network
+    - homeiq-network
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
     interval: 30s

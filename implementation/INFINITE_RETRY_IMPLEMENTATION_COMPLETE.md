@@ -133,7 +133,7 @@ Invoke-WebRequest -Uri "http://localhost:8001/health"
    ```
 3. Watch logs:
    ```bash
-   docker logs -f ha-ingestor-websocket
+   docker logs -f homeiq-websocket
    ```
 4. **Expected:** Service keeps retrying with increasing delays up to 5 minutes
 5. **Expected:** Logs show "Reconnection attempt X/∞"

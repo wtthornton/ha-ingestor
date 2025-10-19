@@ -54,7 +54,7 @@ health-dashboard:
   build:
     context: ./services/health-dashboard
     dockerfile: Dockerfile
-  container_name: ha-ingestor-dashboard
+  container_name: homeiq-dashboard
   restart: unless-stopped
   ports:
     - "3000:80"
@@ -95,7 +95,7 @@ admin-api:
   build:
     context: ./services/admin-api
     dockerfile: Dockerfile
-  container_name: ha-ingestor-admin
+  container_name: homeiq-admin
   restart: unless-stopped
   ports:
     - "8003:8004"
@@ -140,7 +140,7 @@ websocket-ingestion:
   build:
     context: ./services/websocket-ingestion
     dockerfile: Dockerfile
-  container_name: ha-ingestor-websocket
+  container_name: homeiq-websocket
   restart: unless-stopped
   ports:
     - "8001:8001"
@@ -178,7 +178,7 @@ enrichment-pipeline:
   build:
     context: ./services/enrichment-pipeline
     dockerfile: Dockerfile
-  container_name: ha-ingestor-enrichment
+  container_name: homeiq-enrichment
   restart: unless-stopped
   ports:
     - "8002:8002"
@@ -213,7 +213,7 @@ data-retention:
   build:
     context: ./services/data-retention
     dockerfile: Dockerfile
-  container_name: ha-ingestor-data-retention-dev
+  container_name: homeiq-data-retention-dev
   restart: unless-stopped
   ports:
     - "8080:8080"
@@ -249,7 +249,7 @@ weather-api:
   build:
     context: ./services/weather-api
     dockerfile: Dockerfile
-  container_name: ha-ingestor-weather-dev
+  container_name: homeiq-weather-dev
   restart: unless-stopped
   ports:
     - "8001/tcp"
@@ -280,7 +280,7 @@ docker-compose exec weather-api curl http://localhost:8001/health
 ```yaml
 influxdb:
   image: influxdb:2.7
-  container_name: ha-ingestor-influxdb
+  container_name: homeiq-influxdb
   restart: unless-stopped
   ports:
     - "8086:8086"
@@ -423,7 +423,7 @@ curl http://localhost:8086/health    # InfluxDB
 docker stats
 
 # Check specific service resources
-docker stats ha-ingestor-websocket
+docker stats homeiq-websocket
 
 # Check disk usage
 docker system df
@@ -475,7 +475,7 @@ docker-compose up -d SERVICE_NAME
 ```bash
 # Check Docker networks
 docker network ls
-docker network inspect ha-ingestor_default
+docker network inspect homeiq_default
 
 # Test connectivity between services
 docker-compose exec SERVICE_NAME ping OTHER_SERVICE
@@ -555,7 +555,7 @@ docker-compose ps
 ```bash
 # Check volume usage
 docker volume ls
-docker volume inspect ha-ingestor_influxdb_data
+docker volume inspect homeiq_influxdb_data
 
 # Clean up unused volumes
 docker volume prune

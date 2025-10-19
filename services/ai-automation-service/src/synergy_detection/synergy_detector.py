@@ -121,25 +121,34 @@ class DeviceSynergyDetector:
         """
         start_time = datetime.now(timezone.utc)
         logger.info("🔗 Starting synergy detection...")
+        logger.info(f"   → Parameters: min_confidence={self.min_confidence}, same_area_required={self.same_area_required}")
         
         try:
             # Step 1: Load device data
+            logger.info("   → Step 1: Loading device data...")
             devices = await self._get_devices()
             entities = await self._get_entities()
             
             if not devices or not entities:
                 logger.warning("⚠️ No devices/entities found, skipping synergy detection")
+                logger.warning(f"   → Devices: {len(devices) if devices else 0}, Entities: {len(entities) if entities else 0}")
                 return []
             
             logger.info(f"📊 Loaded {len(devices)} devices, {len(entities)} entities")
             
             # Step 2: Detect device pairs by area
+            logger.info("   → Step 2: Finding device pairs...")
             device_pairs = self._find_device_pairs_by_area(devices, entities)
             logger.info(f"🔍 Found {len(device_pairs)} potential device pairs")
+            if device_pairs:
+                logger.info(f"   → Sample pairs: {[(p.get('domain1', '?'), p.get('domain2', '?'), p.get('area', '?')) for p in device_pairs[:3]]}")
             
             # Step 3: Filter for compatible relationships
+            logger.info("   → Step 3: Filtering for compatible relationships...")
             compatible_pairs = self._filter_compatible_pairs(device_pairs)
             logger.info(f"✅ Found {len(compatible_pairs)} compatible pairs")
+            if compatible_pairs:
+                logger.info(f"   → Sample compatible: {[p.get('relationship_type', '?') for p in compatible_pairs[:3]]}")
             
             # Step 4: Check for existing automations
             synergies = await self._filter_existing_automations(compatible_pairs)

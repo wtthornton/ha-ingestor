@@ -60,11 +60,11 @@ print_status "Docker Compose file found"
 # Check if required containers are running
 echo "Checking Docker containers..."
 REQUIRED_CONTAINERS=(
-    "ha-ingestor-influxdb"
-    "ha-ingestor-websocket"
-    "ha-ingestor-enrichment"
-    "ha-ingestor-admin"
-    "ha-ingestor-dashboard"
+    "homeiq-influxdb"
+    "homeiq-websocket"
+    "homeiq-enrichment"
+    "homeiq-admin"
+    "homeiq-dashboard"
 )
 
 for container in "${REQUIRED_CONTAINERS[@]}"; do

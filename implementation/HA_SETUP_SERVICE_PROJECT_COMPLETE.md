@@ -77,10 +77,10 @@ Successfully delivered a **complete, production-ready HA Setup & Recommendation 
 ## Deployment Details
 
 ### Container Information
-- **Name**: ha-ingestor-setup-service
-- **Image**: ha-ingestor-setup-service:latest
+- **Name**: homeiq-setup-service
+- **Image**: homeiq-setup-service:latest
 - **Port**: 8020 (external) → 8020 (internal)
-- **Network**: ha-ingestor_ha-ingestor-network
+- **Network**: homeiq_homeiq-network
 - **Volume**: ha-setup-data:/app/data
 - **Status**: ✅ Up and running (healthy)
 
@@ -88,8 +88,8 @@ Successfully delivered a **complete, production-ready HA Setup & Recommendation 
 - **HA_TOKEN**: ✅ Auto-loaded from `infrastructure/.env.websocket`
 - **HA_URL**: http://192.168.1.86:8123
 - **Database**: SQLite at /app/data/ha-setup.db
-- **Data API**: http://ha-ingestor-data-api:8006
-- **Admin API**: http://ha-ingestor-admin-api:8003
+- **Data API**: http://homeiq-data-api:8006
+- **Admin API**: http://homeiq-admin-api:8003
 
 ### Service Health
 - **Health Score**: 94/100 🟢 Healthy
@@ -381,10 +381,10 @@ open http://localhost:3000
 ### Container Management
 ```bash
 # View logs
-docker logs -f ha-ingestor-setup-service
+docker logs -f homeiq-setup-service
 
 # Restart service
-docker restart ha-ingestor-setup-service
+docker restart homeiq-setup-service
 
 # Check status
 docker ps | grep setup-service

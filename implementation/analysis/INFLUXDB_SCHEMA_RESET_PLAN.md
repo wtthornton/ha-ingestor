@@ -21,7 +21,7 @@ This document provides a comprehensive plan to reset InfluxDB and ensure the dat
 
 ### Database Configuration
 ```yaml
-Organization: "ha-ingestor"
+Organization: "homeiq"
 Buckets:
   - home_assistant_events (365 days retention)
   - sports_data (90 days retention)
@@ -148,7 +148,7 @@ docker compose ps --filter "status=exited"
 ```bash
 # Remove InfluxDB container and volumes
 docker compose down influxdb
-docker volume rm ha-ingestor_influxdb_data ha-ingestor_influxdb_config
+docker volume rm homeiq_influxdb_data homeiq_influxdb_config
 
 # Recreate InfluxDB with clean state
 docker compose up -d influxdb
@@ -174,16 +174,16 @@ docker compose exec influxdb influx bucket list --json | jq '.[] | {name: .name,
 # Test data writing
 docker compose exec influxdb influx write \
   --bucket "home_assistant_events" \
-  --org "ha-ingestor" \
-  --token "ha-ingestor-token" \
+  --org "homeiq" \
+  --token "homeiq-token" \
   --host "http://localhost:8086" \
   --precision ns \
   "home_assistant_events,entity_id=sensor.test_temperature,domain=sensor,device_class=temperature state_value=\"22.5\",normalized_value=22.5 $(date +%s%N)"
 
 # Verify data was written
 docker compose exec influxdb influx query \
-  --org "ha-ingestor" \
-  --token "ha-ingestor-token" \
+  --org "homeiq" \
+  --token "homeiq-token" \
   --host "http://localhost:8086" \
   "from(bucket: \"home_assistant_events\") |> range(start: -1h) |> limit(n:1)"
 ```
@@ -203,12 +203,12 @@ docker compose ps --filter "health=healthy"
 ## Validation Checklist
 
 ### ✅ InfluxDB Configuration
-- [ ] Organization `ha-ingestor` exists
+- [ ] Organization `homeiq` exists
 - [ ] Bucket `home_assistant_events` exists with 365-day retention
 - [ ] Bucket `sports_data` exists with 90-day retention
 - [ ] Bucket `weather_data` exists with 180-day retention
 - [ ] Bucket `system_metrics` exists with 30-day retention
-- [ ] Admin token `ha-ingestor-token` works
+- [ ] Admin token `homeiq-token` works
 
 ### ✅ Schema Structure
 - [ ] All Epic 23 tags are present in schema

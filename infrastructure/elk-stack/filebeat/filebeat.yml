@@ -22,10 +22,10 @@ filebeat.inputs:
   - type: log
     enabled: true
     paths:
-      - /var/log/ha-ingestor/*.log
+      - /var/log/homeiq/*.log
     fields:
       logtype: application
-      service: ha-ingestor
+      service: homeiq
     fields_under_root: true
     json.keys_under_root: true
     json.add_error_key: true
@@ -56,14 +56,14 @@ processors:
 # Output configuration
 output.elasticsearch:
   hosts: ["elasticsearch:9200"]
-  index: "ha-ingestor-filebeat-%{+yyyy.MM.dd}"
-  template.name: "ha-ingestor-filebeat"
-  template.pattern: "ha-ingestor-filebeat-*"
+  index: "homeiq-filebeat-%{+yyyy.MM.dd}"
+  template.name: "homeiq-filebeat"
+  template.pattern: "homeiq-filebeat-*"
   template.settings:
     index.number_of_shards: 1
     index.number_of_replicas: 0
-    index.lifecycle.name: "ha-ingestor-policy"
-    index.lifecycle.rollover_alias: "ha-ingestor-filebeat"
+    index.lifecycle.name: "homeiq-policy"
+    index.lifecycle.rollover_alias: "homeiq-filebeat"
 
 # Logging configuration
 logging.level: info
@@ -80,16 +80,16 @@ monitoring.elasticsearch:
   hosts: ["elasticsearch:9200"]
 
 # Setup configuration
-setup.template.name: "ha-ingestor-filebeat"
-setup.template.pattern: "ha-ingestor-filebeat-*"
+setup.template.name: "homeiq-filebeat"
+setup.template.pattern: "homeiq-filebeat-*"
 setup.template.settings:
   index.number_of_shards: 1
   index.number_of_replicas: 0
-  index.lifecycle.name: "ha-ingestor-policy"
-  index.lifecycle.rollover_alias: "ha-ingestor-filebeat"
+  index.lifecycle.name: "homeiq-policy"
+  index.lifecycle.rollover_alias: "homeiq-filebeat"
 
 setup.ilm.enabled: true
-setup.ilm.rollover_alias: "ha-ingestor-filebeat"
+setup.ilm.rollover_alias: "homeiq-filebeat"
 setup.ilm.pattern: "{now/d}-000001"
 
 # Kibana configuration
@@ -102,5 +102,5 @@ setup.dashboards.directory: /usr/share/filebeat/kibana
 
 # Index lifecycle management
 setup.ilm.enabled: true
-setup.ilm.rollover_alias: "ha-ingestor-filebeat"
+setup.ilm.rollover_alias: "homeiq-filebeat"
 setup.ilm.pattern: "{now/d}-000001"

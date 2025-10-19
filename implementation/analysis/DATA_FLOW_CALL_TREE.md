@@ -178,8 +178,8 @@ Home Assistant Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### **Verification Steps:**
 1. Test token: `curl -H "Authorization: Bearer {new_token}" http://192.168.1.86:8123/api/`
-2. Restart WebSocket service: `docker restart ha-ingestor-websocket`
-3. Monitor logs: `docker logs ha-ingestor-websocket --follow`
+2. Restart WebSocket service: `docker restart homeiq-websocket`
+3. Monitor logs: `docker logs homeiq-websocket --follow`
 4. Verify events: Check dashboard for incoming events
 
 ---

@@ -271,10 +271,10 @@ PROCESSING_INTERVAL=30
 curl http://localhost:8015/statistics
 
 # Check InfluxDB data
-docker exec ha-ingestor-influxdb \
+docker exec homeiq-influxdb \
   influx query 'SELECT COUNT(*) FROM home_assistant_events'
 
-docker exec ha-ingestor-influxdb \
+docker exec homeiq-influxdb \
   influx query 'SELECT COUNT(*) FROM smart_meter'
 ```
 
@@ -289,7 +289,7 @@ docker exec ha-ingestor-influxdb \
 **Debug:**
 ```bash
 # Check logs
-docker logs ha-ingestor-energy-correlator --tail 100
+docker logs homeiq-energy-correlator --tail 100
 
 # Verify InfluxDB health
 curl http://localhost:8086/health
@@ -318,7 +318,7 @@ docker-compose build energy-correlator
 docker-compose up -d energy-correlator
 
 # View logs
-docker logs -f ha-ingestor-energy-correlator
+docker logs -f homeiq-energy-correlator
 
 # Check statistics
 curl http://localhost:8015/statistics

@@ -1,8 +1,8 @@
 # 🏠 Home Assistant Ingestor
 
-[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green.svg)](https://github.com/your-repo/ha-ingestor)
-[![Data Flow](https://img.shields.io/badge/Data%20Flow-100%25%20Success-brightgreen.svg)](https://github.com/your-repo/ha-ingestor)
-[![Error Rate](https://img.shields.io/badge/Error%20Rate-0%25-brightgreen.svg)](https://github.com/your-repo/ha-ingestor)
+[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green.svg)](https://github.com/your-repo/homeiq)
+[![Data Flow](https://img.shields.io/badge/Data%20Flow-100%25%20Success-brightgreen.svg)](https://github.com/your-repo/homeiq)
+[![Error Rate](https://img.shields.io/badge/Error%20Rate-0%25-brightgreen.svg)](https://github.com/your-repo/homeiq)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -92,7 +92,7 @@ Home Assistant Ingestor is a complete data pipeline that:
 ```bash
 # Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Configure environment
 cp infrastructure/env.example .env

@@ -61,7 +61,7 @@ The system has been tested on:
 
 ```bash
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 ```
 
 ### 2. Configure Environment
@@ -115,7 +115,7 @@ HOME_ASSISTANT_TOKEN=your_long_lived_access_token_here
 ```bash
 INFLUXDB_USERNAME=admin
 INFLUXDB_PASSWORD=your_secure_password_here
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 INFLUXDB_BUCKET=home_assistant_events
 INFLUXDB_TOKEN=your_secure_token_here
 ```
@@ -147,7 +147,7 @@ Each service has configured resource limits:
 - **Health Dashboard**: 256MB memory, 0.25 CPU cores
 
 #### Network Configuration
-- **Network**: `ha-ingestor-network` (172.20.0.0/16)
+- **Network**: `homeiq-network` (172.20.0.0/16)
 - **Service Discovery**: Internal DNS resolution
 - **Port Mapping**: Only necessary ports exposed
 
@@ -419,7 +419,7 @@ docker inspect $(docker-compose -f docker-compose.prod.yml ps -q) --format='{{.S
 ```bash
 # Network connectivity
 docker network ls
-docker network inspect ha-ingestor-network
+docker network inspect homeiq-network
 
 # Port availability
 netstat -tulpn | grep :8086
@@ -460,7 +460,7 @@ curl -X POST http://localhost:8080/api/v1/backup/trigger
 #### Manual Backups
 ```bash
 # Backup InfluxDB data
-docker exec ha-ingestor-influxdb influx backup /backup/$(date +%Y%m%d_%H%M%S)
+docker exec homeiq-influxdb influx backup /backup/$(date +%Y%m%d_%H%M%S)
 
 # Backup configuration
 cp infrastructure/env.production backups/env.production.$(date +%Y%m%d)
@@ -554,7 +554,7 @@ docker-compose -f docker-compose.prod.yml logs --tail=0 --follow=false
 - [Troubleshooting Guide](TROUBLESHOOTING.md)
 
 ### Community
-- [GitHub Issues](https://github.com/your-org/ha-ingestor/issues)
+- [GitHub Issues](https://github.com/your-org/homeiq/issues)
 - [Discord Community](https://discord.gg/your-community)
 
 ### Professional Support

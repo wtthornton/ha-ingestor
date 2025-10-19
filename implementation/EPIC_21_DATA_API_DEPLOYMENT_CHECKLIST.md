@@ -53,7 +53,7 @@ grep -A 30 "data-api:" docker-compose.yml
 #   build:
 #     context: .
 #     dockerfile: services/data-api/Dockerfile
-#   container_name: ha-ingestor-data-api
+#   container_name: homeiq-data-api
 #   ports:
 #     - "8006:8006"
 #   environment:
@@ -69,7 +69,7 @@ grep -A 10 "data-api" services/health-dashboard/nginx.conf
 
 # Should show routes like:
 # location /api/v1/events {
-#     proxy_pass http://ha-ingestor-data-api:8006/api/v1/events;
+#     proxy_pass http://homeiq-data-api:8006/api/v1/events;
 # }
 ```
 
@@ -94,7 +94,7 @@ docker-compose build data-api
 **Verification:**
 ```bash
 docker images | grep data-api
-# Expected: ha-ingestor-data-api latest ... X hours ago XXX MB
+# Expected: homeiq-data-api latest ... X hours ago XXX MB
 ```
 
 ### Step 2: Start Service
@@ -104,7 +104,7 @@ docker-compose up -d data-api
 
 # Expected output:
 # [+] Running 1/1
-#  ✔ Container ha-ingestor-data-api  Started
+#  ✔ Container homeiq-data-api  Started
 ```
 
 **Verification:**
@@ -113,13 +113,13 @@ docker ps --filter "name=data-api"
 
 # Expected output:
 # CONTAINER ID   IMAGE                     STATUS         PORTS
-# xxxxx          ha-ingestor-data-api:latest   Up X seconds   0.0.0.0:8006->8006/tcp
+# xxxxx          homeiq-data-api:latest   Up X seconds   0.0.0.0:8006->8006/tcp
 ```
 
 ### Step 3: Check Service Logs
 ```bash
 # View startup logs
-docker logs ha-ingestor-data-api --tail 50
+docker logs homeiq-data-api --tail 50
 
 # Expected to see:
 # INFO:     Started server process [1]
@@ -155,10 +155,10 @@ curl http://localhost:8006/health
 **If health check fails:**
 ```bash
 # Check detailed logs
-docker logs ha-ingestor-data-api
+docker logs homeiq-data-api
 
 # Check InfluxDB connectivity
-docker exec ha-ingestor-data-api curl http://influxdb:8086/health
+docker exec homeiq-data-api curl http://influxdb:8086/health
 ```
 
 ### Step 5: Test All Endpoints
@@ -183,7 +183,7 @@ curl -I http://localhost:8006/docs
 ### Step 6: Test nginx Routing
 ```bash
 # From dashboard container
-docker exec ha-ingestor-health-dashboard curl http://ha-ingestor-data-api:8006/health
+docker exec homeiq-health-dashboard curl http://homeiq-data-api:8006/health
 
 # Expected: Same health response as Step 4
 # If "Connection refused" → Check Docker network, service name
@@ -214,7 +214,7 @@ open http://localhost:3000
 After deployment, verify all criteria:
 
 ### Service Status
-- [ ] `docker ps` shows `ha-ingestor-data-api` with status "Up"
+- [ ] `docker ps` shows `homeiq-data-api` with status "Up"
 - [ ] Service listening on port 8006
 - [ ] No restart loops (check "Up X seconds" doesn't reset)
 - [ ] Logs show "Application startup complete"
@@ -271,16 +271,16 @@ docker ps --filter "name=influxdb"
 curl http://localhost:8086/health
 
 # Check environment variables
-docker exec ha-ingestor-data-api env | grep INFLUX
+docker exec homeiq-data-api env | grep INFLUX
 ```
 
 ### Issue: Dashboard Shows 502 Errors
 ```bash
 # Check nginx can resolve service name
-docker exec ha-ingestor-health-dashboard nslookup ha-ingestor-data-api
+docker exec homeiq-health-dashboard nslookup homeiq-data-api
 
 # Check nginx error logs
-docker logs ha-ingestor-health-dashboard 2>&1 | grep error
+docker logs homeiq-health-dashboard 2>&1 | grep error
 
 # Restart nginx
 docker-compose restart health-dashboard
@@ -363,7 +363,7 @@ docker-compose stop data-api
 #    (Graceful degradation - admin-api still works)
 
 # 3. Investigate logs
-docker logs ha-ingestor-data-api > data-api-error.log
+docker logs homeiq-data-api > data-api-error.log
 
 # 4. Fix issues and redeploy
 docker-compose build data-api
@@ -381,9 +381,9 @@ If deployment fails after troubleshooting:
 
 1. Collect logs:
    ```bash
-   docker logs ha-ingestor-data-api > data-api.log
-   docker logs ha-ingestor-health-dashboard > dashboard.log
-   docker logs ha-ingestor-influxdb > influxdb.log
+   docker logs homeiq-data-api > data-api.log
+   docker logs homeiq-health-dashboard > dashboard.log
+   docker logs homeiq-influxdb > influxdb.log
    ```
 
 2. Check system resources:

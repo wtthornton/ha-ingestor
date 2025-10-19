@@ -13,7 +13,7 @@
 
 ```bash
 # 1. Reset database
-cd ~/ha-ingestor/services/ai-automation-service
+cd ~/homeiq/services/ai-automation-service
 python scripts/alpha_reset_database.py
 # Type: yes
 
@@ -22,7 +22,7 @@ python scripts/reprocess_patterns.py
 # Expected: 8 suggestions created with real OpenAI descriptions
 
 # 3. Restart service
-cd ~/ha-ingestor
+cd ~/homeiq
 docker-compose restart ai-automation-service
 
 # 4. Test API endpoints

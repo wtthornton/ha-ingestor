@@ -222,7 +222,7 @@ I've created three comprehensive documents for you:
 
 1. **Fix Critical Issue #1** (5 min)
    ```bash
-   cd ~/ha-ingestor
+   cd ~/homeiq
    cp docker-compose.yml docker-compose.prod.yml
    ```
 
@@ -251,13 +251,13 @@ I've created three comprehensive documents for you:
    docker-compose down --timeout 30
    
    # Remove containers
-   docker ps -a --filter "name=ha-ingestor" -q | xargs -r docker rm -f
+   docker ps -a --filter "name=homeiq" -q | xargs -r docker rm -f
    
    # Remove images
-   docker images --filter=reference='*ha-ingestor*' -q | xargs -r docker rmi -f
+   docker images --filter=reference='*homeiq*' -q | xargs -r docker rmi -f
    
    # Remove network
-   docker network rm ha-ingestor-network 2>/dev/null || true
+   docker network rm homeiq-network 2>/dev/null || true
    
    # Clean build cache
    docker builder prune -a -f

@@ -117,7 +117,7 @@ volumes:
 **Clear cache:**
 ```bash
 # Only if you need to re-download
-docker volume rm ha-ingestor_ai_automation_models
+docker volume rm homeiq_ai_automation_models
 ```
 
 ---

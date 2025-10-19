@@ -82,7 +82,7 @@ This document summarizes the Docker image optimizations applied to the HA-Ingest
 docker-compose -f docker-compose.prod.yml build
 
 # Or build individual services
-docker build -t ha-ingestor-websocket:optimized -f services/websocket-ingestion/Dockerfile .
+docker build -t homeiq-websocket:optimized -f services/websocket-ingestion/Dockerfile .
 ```
 
 ### Validation
@@ -149,7 +149,7 @@ docker stats
 ### Security Scanning
 ```bash
 # Install Trivy for security scanning
-trivy image ha-ingestor-websocket:optimized
+trivy image homeiq-websocket:optimized
 ```
 
 ## Future Enhancements

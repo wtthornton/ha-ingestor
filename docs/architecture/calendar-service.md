@@ -430,8 +430,8 @@ Confidence levels are assigned based on detected patterns:
 ### Container Specification
 ```yaml
 calendar:
-  image: ha-ingestor-calendar
-  container_name: ha-ingestor-calendar
+  image: homeiq-calendar
+  container_name: homeiq-calendar
   ports:
     - "8013:8013"
   environment:
@@ -442,7 +442,7 @@ calendar:
   depends_on:
     - influxdb
   networks:
-    - ha-ingestor-network
+    - homeiq-network
   resources:
     limits:
       memory: 128M

@@ -202,7 +202,7 @@ curl http://localhost:8086/health
 
 ```bash
 # Check if services are accessible from dashboard container
-docker exec -it ha-ingestor-dashboard sh
+docker exec -it homeiq-dashboard sh
 curl http://carbon-intensity:8010/health
 curl http://electricity-pricing:8011/health
 

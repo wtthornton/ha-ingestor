@@ -113,7 +113,7 @@ docker-compose build sports-data
 
 ✅ **Container Status:**
 ```
-Container: ha-ingestor-sports-data
+Container: homeiq-sports-data
 Status: Up and healthy
 Port: 8005
 Uptime: Running

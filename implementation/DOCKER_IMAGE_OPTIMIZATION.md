@@ -122,8 +122,8 @@ Check if these services need scipy:
 
 ```bash
 # For each service, check if scipy is used
-docker exec -it ha-ingestor-calendar pip list | grep scipy
-docker exec -it ha-ingestor-carbon-intensity pip list | grep scipy
+docker exec -it homeiq-calendar pip list | grep scipy
+docker exec -it homeiq-carbon-intensity pip list | grep scipy
 # etc.
 ```
 
@@ -188,7 +188,7 @@ torch  # Will install CPU-only from above index
 # Check each service
 for service in calendar carbon-intensity electricity-pricing air-quality smart-meter data-retention; do
   echo "=== $service ==="
-  docker exec -it ha-ingestor-$service pip list | grep -i "scipy\|pandas"
+  docker exec -it homeiq-$service pip list | grep -i "scipy\|pandas"
 done
 ```
 

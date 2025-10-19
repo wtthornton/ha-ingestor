@@ -6,8 +6,8 @@
 **Time**: 23:14 UTC  
 **Status**: ✅ **FULLY OPERATIONAL**  
 **Port**: 8020 (changed from 8010 due to port conflict)  
-**Container**: ha-ingestor-setup-service  
-**Image**: ha-ingestor-setup-service:latest  
+**Container**: homeiq-setup-service  
+**Image**: homeiq-setup-service:latest  
 
 ## Deployment Summary
 
@@ -29,7 +29,7 @@
 
 ### ✅ Container Deployment
 - **Container ID**: 4a7d478f21f5
-- **Network**: ha-ingestor_ha-ingestor-network
+- **Network**: homeiq_homeiq-network
 - **Port Mapping**: 8020:8020
 - **Volume**: ha-setup-data:/app/data
 - **Environment**: HA_TOKEN from infrastructure/.env.websocket
@@ -313,22 +313,22 @@ All endpoints tested and working with Context7-validated patterns:
 
 ### Start Service
 ```bash
-docker start ha-ingestor-setup-service
+docker start homeiq-setup-service
 ```
 
 ### Stop Service
 ```bash
-docker stop ha-ingestor-setup-service
+docker stop homeiq-setup-service
 ```
 
 ### View Logs
 ```bash
-docker logs -f ha-ingestor-setup-service
+docker logs -f homeiq-setup-service
 ```
 
 ### Restart Service
 ```bash
-docker restart ha-ingestor-setup-service
+docker restart homeiq-setup-service
 ```
 
 ### Check Status

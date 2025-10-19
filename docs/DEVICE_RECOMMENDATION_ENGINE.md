@@ -1144,7 +1144,7 @@ CREATE TABLE device_purchases (
 // On product pages, show "Recommended for you" based on customer's existing setup
 
 const recommendations = await fetch(
-  'https://api.ha-ingestor.com/api/recommendations/v1/user/customer123',
+  'https://api.homeiq.com/api/recommendations/v1/user/customer123',
   {
     headers: {'Authorization': 'Bearer API_KEY'}
   }
@@ -1188,7 +1188,7 @@ ha_ingestor_recommendations:
 
 **Dashboard Card:**
 ```yaml
-type: custom:ha-ingestor-recommendations
+type: custom:homeiq-recommendations
 entity: sensor.ha_ingestor_recommendations
 show_value: true
 show_automations: true

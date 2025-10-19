@@ -252,7 +252,7 @@ services:
 #### Multi-Service Setup for Our Project
 ```yaml
 services:
-  ha-ingestor:
+  homeiq:
     build: .
     environment:
       - HA_URL=ws://homeassistant.local:8123/api/websocket

@@ -96,7 +96,7 @@ docker-compose restart websocket-ingestion
 
 ```powershell
 # Watch logs for success message
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 ```
 
 **Look for these messages:**
@@ -111,9 +111,9 @@ Press `Ctrl+C` to stop watching logs.
 
 **DO NOT modify these lines in .env:**
 - `HOME_ASSISTANT_URL=http://192.168.1.86:8123` ✅ Keep this!
-- `INFLUXDB_TOKEN=ha-ingestor-token` ✅ Keep this!
+- `INFLUXDB_TOKEN=homeiq-token` ✅ Keep this!
 - `INFLUXDB_URL=http://influxdb:8086` ✅ Keep this!
-- `INFLUXDB_ORG=ha-ingestor` ✅ Keep this!
+- `INFLUXDB_ORG=homeiq` ✅ Keep this!
 - `INFLUXDB_BUCKET=home_assistant_events` ✅ Keep this!
 - Any `WEATHER_API_KEY` or other API keys ✅ Keep all of these!
 
@@ -125,7 +125,7 @@ Press `Ctrl+C` to stop watching logs.
 
 ### Check Connection Status:
 ```powershell
-docker logs --tail 20 ha-ingestor-websocket | Select-String "authenticated|Connected"
+docker logs --tail 20 homeiq-websocket | Select-String "authenticated|Connected"
 ```
 
 **Success looks like:**
@@ -142,9 +142,9 @@ docker logs --tail 20 ha-ingestor-websocket | Select-String "authenticated|Conne
 ### Check Events Are Flowing:
 ```powershell
 # Wait 30 seconds for events, then check InfluxDB
-docker exec ha-ingestor-influxdb influx query `
+docker exec homeiq-influxdb influx query `
   'from(bucket:"home_assistant_events") |> range(start: -2m) |> count()' `
-  --token ha-ingestor-token --org ha-ingestor
+  --token homeiq-token --org homeiq
 ```
 
 You should see increasing counts as events flow in.
@@ -181,7 +181,7 @@ docker-compose restart websocket-ingestion
 Test-NetConnection 192.168.1.86 -Port 8123
 
 # 2. Verify token was loaded
-docker exec ha-ingestor-websocket printenv HOME_ASSISTANT_TOKEN
+docker exec homeiq-websocket printenv HOME_ASSISTANT_TOKEN
 
 # 3. Force restart
 docker-compose down

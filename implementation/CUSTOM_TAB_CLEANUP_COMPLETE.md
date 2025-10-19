@@ -140,7 +140,7 @@ The cleanup removes stored Custom tab preferences:
 ### Container Status
 ```
 NAMES                   STATUS
-ha-ingestor-dashboard   Up 32 minutes (healthy)
+homeiq-dashboard   Up 32 minutes (healthy)
 ```
 ✅ Dashboard container running and healthy
 
@@ -162,11 +162,11 @@ cd services/health-dashboard
 npm run dev
 
 # Option B: Full rebuild
-docker-compose restart ha-ingestor-dashboard
+docker-compose restart homeiq-dashboard
 
 # Option C: Complete rebuild (recommended)
-docker-compose down ha-ingestor-dashboard
-docker-compose up -d ha-ingestor-dashboard
+docker-compose down homeiq-dashboard
+docker-compose up -d homeiq-dashboard
 ```
 
 ### 2. Verify in Browser

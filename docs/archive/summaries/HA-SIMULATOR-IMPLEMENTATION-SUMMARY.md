@@ -2,7 +2,7 @@
 
 ## Overview
 
-I have successfully created a comprehensive Home Assistant simulator for the ha-ingestor project using BMAD methodology. The simulator enables development and testing without requiring a local Home Assistant instance.
+I have successfully created a comprehensive Home Assistant simulator for the homeiq project using BMAD methodology. The simulator enables development and testing without requiring a local Home Assistant instance.
 
 ## What Was Delivered
 
@@ -118,7 +118,7 @@ The simulator generates events with:
    python test_simulator.py
    ```
 
-### Integration with ha-ingestor
+### Integration with homeiq
 
 1. **Update WebSocket service configuration:**
    ```yaml
@@ -216,12 +216,12 @@ The HA Simulator successfully addresses the original requirement to "create a si
 **Key Achievements:**
 - ✅ Complete WebSocket API compatibility
 - ✅ Realistic event generation based on real data
-- ✅ Seamless integration with existing ha-ingestor services
+- ✅ Seamless integration with existing homeiq services
 - ✅ Comprehensive BMAD documentation and planning
 - ✅ Production-ready implementation with testing
 - ✅ Docker integration for easy deployment
 
-The simulator enables independent development and testing while maintaining full compatibility with the existing ha-ingestor architecture. It provides a reliable, configurable, and realistic Home Assistant environment that significantly improves the development workflow.
+The simulator enables independent development and testing while maintaining full compatibility with the existing homeiq architecture. It provides a reliable, configurable, and realistic Home Assistant environment that significantly improves the development workflow.
 
 ## Next Steps
 
@@ -231,5 +231,5 @@ The simulator enables independent development and testing while maintaining full
 4. **Monitor performance** and adjust configuration as needed
 5. **Gather feedback** from development team for improvements
 
-The simulator is ready for immediate use and will significantly enhance the development experience for the ha-ingestor project.
+The simulator is ready for immediate use and will significantly enhance the development experience for the homeiq project.
 

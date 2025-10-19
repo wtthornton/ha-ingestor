@@ -110,7 +110,7 @@ Done! Home Assistant connection is configured.
 
 ### "Service won't restart"
 - Check Docker is running: `docker ps`
-- Check logs: `docker logs ha-ingestor-admin-dev`
+- Check logs: `docker logs homeiq-admin-dev`
 
 ### "Changes not applied"
 - Make sure you clicked "Restart Service"

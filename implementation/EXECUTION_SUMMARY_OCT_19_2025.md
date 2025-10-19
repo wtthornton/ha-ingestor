@@ -25,7 +25,7 @@
 - **Issue:** Health check used wrong port (8007 external vs 8001 internal)
 - **Fix:** Changed `docker-compose.yml` line 829
 - **Status:** ✅ HEALTHY
-- **Verification:** `docker exec ha-ingestor-weather-api curl http://localhost:8001/health`
+- **Verification:** `docker exec homeiq-weather-api curl http://localhost:8001/health`
 
 #### 2. Automation-Miner Health Check ✅
 - **Issue:** Python-based health check, curl not installed
@@ -150,27 +150,27 @@ class ResponseTimeTracker:
 ```
 ✅ HEALTHY: 19 services
   - automation-miner (FIXED TODAY)
-  - ha-ingestor-weather-api (FIXED TODAY)
+  - homeiq-weather-api (FIXED TODAY)
   - ai-automation-ui
-  - ha-ingestor-admin
-  - ha-ingestor-dashboard
-  - ha-ingestor-websocket
-  - ha-ingestor-enrichment
+  - homeiq-admin
+  - homeiq-dashboard
+  - homeiq-websocket
+  - homeiq-enrichment
   - ai-automation-service
-  - ha-ingestor-energy-correlator
-  - ha-ingestor-data-retention
-  - ha-ingestor-data-api
-  - ha-ingestor-smart-meter
-  - ha-ingestor-calendar
-  - ha-ingestor-air-quality
-  - ha-ingestor-carbon-intensity
-  - ha-ingestor-electricity-pricing
-  - ha-ingestor-log-aggregator
-  - ha-ingestor-sports-data
-  - ha-ingestor-influxdb
+  - homeiq-energy-correlator
+  - homeiq-data-retention
+  - homeiq-data-api
+  - homeiq-smart-meter
+  - homeiq-calendar
+  - homeiq-air-quality
+  - homeiq-carbon-intensity
+  - homeiq-electricity-pricing
+  - homeiq-log-aggregator
+  - homeiq-sports-data
+  - homeiq-influxdb
 
 ❌ UNHEALTHY: 1 service
-  - ha-ingestor-setup-service (separate docker-compose file)
+  - homeiq-setup-service (separate docker-compose file)
 ```
 
 **Improvement:** 85% → 95% healthy

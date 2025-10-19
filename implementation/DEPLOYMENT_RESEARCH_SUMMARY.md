@@ -345,7 +345,7 @@ HOME_ASSISTANT_URL=wss://ha.yourdomain.com/api/websocket
 HOME_ASSISTANT_URL=ws://192.168.1.100:8123/api/websocket
 HOME_ASSISTANT_TOKEN=your_long_lived_token_here
 INFLUXDB_TOKEN=generated_token
-INFLUXDB_ORG=ha-ingestor
+INFLUXDB_ORG=homeiq
 ```
 
 **Standard Configuration (+3 variables):**

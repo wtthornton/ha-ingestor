@@ -21,6 +21,8 @@ from .integration_checker import IntegrationHealthChecker
 from .monitoring_service import ContinuousHealthMonitor
 from .setup_wizard import Zigbee2MQTTSetupWizard, MQTTSetupWizard
 from .optimization_engine import PerformanceAnalysisEngine, RecommendationEngine
+from .zigbee_bridge_manager import ZigbeeBridgeManager
+from .zigbee_setup_wizard import Zigbee2MQTTSetupWizard as ZigbeeSetupWizard, SetupWizardRequest
 from .schemas import (
     EnvironmentHealthResponse,
     HealthCheckResponse,
@@ -80,6 +82,14 @@ async def lifespan(app: FastAPI):
     health_services["performance_analyzer"] = PerformanceAnalysisEngine()
     health_services["recommendation_engine"] = RecommendationEngine()
     print("✅ Optimization engine initialized")
+    
+    # Initialize bridge manager
+    health_services["bridge_manager"] = ZigbeeBridgeManager()
+    print("✅ Zigbee2MQTT bridge manager initialized")
+    
+    # Initialize enhanced setup wizard
+    health_services["zigbee_setup_wizard"] = ZigbeeSetupWizard()
+    print("✅ Enhanced Zigbee2MQTT setup wizard initialized")
     
     print("=" * 80)
     print("✨ HA Setup Service Ready")
@@ -463,6 +473,164 @@ async def get_optimization_recommendations():
         )
 
 
+# Zigbee2MQTT Bridge Management Endpoints
+
+@app.get("/api/zigbee2mqtt/bridge/status", tags=["Zigbee2MQTT Bridge"])
+async def get_bridge_status():
+    """Get comprehensive Zigbee2MQTT bridge health status"""
+    try:
+        bridge_manager = health_services["bridge_manager"]
+        health_status = await bridge_manager.get_bridge_health_status()
+        
+        return {
+            "bridge_state": health_status.bridge_state.value,
+            "is_connected": health_status.is_connected,
+            "health_score": health_status.health_score,
+            "device_count": health_status.metrics.device_count,
+            "response_time_ms": health_status.metrics.response_time_ms,
+            "signal_strength_avg": health_status.metrics.signal_strength_avg,
+            "network_health_score": health_status.metrics.network_health_score,
+            "consecutive_failures": health_status.consecutive_failures,
+            "recommendations": health_status.recommendations,
+            "last_check": health_status.last_check,
+            "recovery_attempts": [
+                {
+                    "timestamp": attempt.timestamp,
+                    "action": attempt.action.value,
+                    "success": attempt.success,
+                    "error_message": attempt.error_message,
+                    "duration_seconds": attempt.duration_seconds
+                } for attempt in health_status.recovery_attempts
+            ]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get bridge status: {str(e)}")
+
+
+@app.post("/api/zigbee2mqtt/bridge/recovery", tags=["Zigbee2MQTT Bridge"])
+async def attempt_bridge_recovery(force: bool = False):
+    """Attempt to recover Zigbee2MQTT bridge connectivity"""
+    try:
+        bridge_manager = health_services["bridge_manager"]
+        success, message = await bridge_manager.attempt_bridge_recovery(force=force)
+        
+        return {
+            "success": success,
+            "message": message,
+            "timestamp": datetime.now()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recovery failed: {str(e)}")
+
+
+@app.post("/api/zigbee2mqtt/bridge/restart", tags=["Zigbee2MQTT Bridge"])
+async def restart_bridge():
+    """Restart Zigbee2MQTT bridge (alias for recovery)"""
+    try:
+        bridge_manager = health_services["bridge_manager"]
+        success, message = await bridge_manager.attempt_bridge_recovery(force=True)
+        
+        return {
+            "success": success,
+            "message": message,
+            "timestamp": datetime.now()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bridge restart failed: {str(e)}")
+
+
+@app.get("/api/zigbee2mqtt/bridge/health", tags=["Zigbee2MQTT Bridge"])
+async def get_bridge_health():
+    """Simple health check endpoint for bridge status"""
+    try:
+        bridge_manager = health_services["bridge_manager"]
+        health_status = await bridge_manager.get_bridge_health_status()
+        
+        return {
+            "healthy": health_status.bridge_state.value == "online",
+            "state": health_status.bridge_state.value,
+            "health_score": health_status.health_score,
+            "device_count": health_status.metrics.device_count,
+            "last_check": health_status.last_check
+        }
+        
+    except Exception as e:
+        return {
+            "healthy": False,
+            "state": "error",
+            "health_score": 0,
+            "error": str(e),
+            "last_check": datetime.now()
+        }
+
+
+# Zigbee2MQTT Setup Wizard Endpoints
+
+@app.post("/api/zigbee2mqtt/setup/start", tags=["Zigbee2MQTT Setup"])
+async def start_zigbee_setup_wizard(request: SetupWizardRequest):
+    """Start a new Zigbee2MQTT setup wizard"""
+    try:
+        setup_wizard = health_services["zigbee_setup_wizard"]
+        response = await setup_wizard.start_setup_wizard(request)
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start setup wizard: {str(e)}")
+
+
+@app.post("/api/zigbee2mqtt/setup/{wizard_id}/continue", tags=["Zigbee2MQTT Setup"])
+async def continue_zigbee_setup_wizard(wizard_id: str):
+    """Continue the setup wizard to the next step"""
+    try:
+        setup_wizard = health_services["zigbee_setup_wizard"]
+        response = await setup_wizard.continue_wizard(wizard_id)
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to continue wizard: {str(e)}")
+
+
+@app.get("/api/zigbee2mqtt/setup/{wizard_id}/status", tags=["Zigbee2MQTT Setup"])
+async def get_zigbee_setup_wizard_status(wizard_id: str):
+    """Get current wizard status"""
+    try:
+        setup_wizard = health_services["zigbee_setup_wizard"]
+        response = await setup_wizard.get_wizard_status(wizard_id)
+        
+        if response is None:
+            raise HTTPException(status_code=404, detail="Wizard not found")
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get wizard status: {str(e)}")
+
+
+@app.delete("/api/zigbee2mqtt/setup/{wizard_id}", tags=["Zigbee2MQTT Setup"])
+async def cancel_zigbee_setup_wizard(wizard_id: str):
+    """Cancel an active setup wizard"""
+    try:
+        setup_wizard = health_services["zigbee_setup_wizard"]
+        success = await setup_wizard.cancel_wizard(wizard_id)
+        
+        if success:
+            return {"message": "Wizard cancelled successfully", "wizard_id": wizard_id}
+        else:
+            raise HTTPException(status_code=404, detail="Wizard not found")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel wizard: {str(e)}")
+
+
 # Root endpoint
 
 @app.get("/", tags=["info"])
@@ -487,6 +655,13 @@ async def root():
             "performance_analysis": "/api/optimization/analyze",
             "recommendations": "/api/optimization/recommendations",
             "start_wizard": "/api/setup/wizard/{integration_type}/start",
+            "bridge_status": "/api/zigbee2mqtt/bridge/status",
+            "bridge_recovery": "/api/zigbee2mqtt/bridge/recovery",
+            "bridge_restart": "/api/zigbee2mqtt/bridge/restart",
+            "bridge_health": "/api/zigbee2mqtt/bridge/health",
+            "setup_wizard_start": "/api/zigbee2mqtt/setup/start",
+            "setup_wizard_continue": "/api/zigbee2mqtt/setup/{wizard_id}/continue",
+            "setup_wizard_status": "/api/zigbee2mqtt/setup/{wizard_id}/status",
             "docs": "/docs",
             "openapi": "/openapi.json"
         }

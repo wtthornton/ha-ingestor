@@ -63,13 +63,13 @@ websocket-ingestion:
 **Check Logs:**
 ```bash
 # View recent logs
-docker logs ha-ingestor-websocket --tail 50
+docker logs homeiq-websocket --tail 50
 
 # Follow live logs
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 
 # Look for retry messages
-docker logs ha-ingestor-websocket | grep "Reconnection attempt"
+docker logs homeiq-websocket | grep "Reconnection attempt"
 ```
 
 **Check Health Status:**
@@ -123,7 +123,7 @@ Home Assistant @ 192.168.1.86:8123
 
 ```bash
 # Data API endpoint for device/entity storage
-DATA_API_URL=http://ha-ingestor-data-api:8006  # Container name (Docker network)
+DATA_API_URL=http://homeiq-data-api:8006  # Container name (Docker network)
 
 # Optional: Enable InfluxDB historical tracking (disabled by default)
 STORE_DEVICE_HISTORY_IN_INFLUXDB=false
@@ -144,7 +144,7 @@ HOME_ASSISTANT_TOKEN=your_long_lived_access_token
 WEBSOCKET_INGESTION_PORT=8001
 
 # Data API (for device/entity storage)
-DATA_API_URL=http://ha-ingestor-data-api:8006  # NEW
+DATA_API_URL=http://homeiq-data-api:8006  # NEW
 
 # Network Resilience (Optional - Defaults shown)
 WEBSOCKET_MAX_RETRIES=-1

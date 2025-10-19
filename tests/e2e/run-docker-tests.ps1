@@ -62,11 +62,11 @@ Write-Status "Docker Compose file found"
 # Check if required containers are running
 Write-Host "Checking Docker containers..." -ForegroundColor Cyan
 $RequiredContainers = @(
-    "ha-ingestor-influxdb",
-    "ha-ingestor-websocket",
-    "ha-ingestor-enrichment",
-    "ha-ingestor-admin",
-    "ha-ingestor-dashboard"
+    "homeiq-influxdb",
+    "homeiq-websocket",
+    "homeiq-enrichment",
+    "homeiq-admin",
+    "homeiq-dashboard"
 )
 
 foreach ($container in $RequiredContainers) {

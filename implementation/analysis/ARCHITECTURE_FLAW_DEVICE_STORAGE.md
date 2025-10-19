@@ -179,7 +179,7 @@ Discovery Service → Redis/RabbitMQ → Data-API Worker → SQLite
        # NEW: Post to data-api
        async with aiohttp.ClientSession() as session:
            await session.post(
-               "http://ha-ingestor-data-api:8006/internal/devices/bulk_upsert",
+               "http://homeiq-data-api:8006/internal/devices/bulk_upsert",
                json=devices
            )
    ```
@@ -259,10 +259,10 @@ Looking at the original code, discovery service was written before Epic 22:
 ### Step 3: Test (30 min)
 ```bash
 # Restart websocket-ingestion
-docker restart ha-ingestor-websocket
+docker restart homeiq-websocket
 
 # Watch logs - should see HTTP POST to data-api
-docker logs -f ha-ingestor-websocket
+docker logs -f homeiq-websocket
 
 # Check SQLite has 94 devices
 curl http://localhost:8006/api/devices | jq '.count'

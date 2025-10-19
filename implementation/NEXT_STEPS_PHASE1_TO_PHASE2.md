@@ -13,7 +13,7 @@ Before moving to Phase 2, let's verify Phase 1 is working:
 
 ### **1. Reset Database (3 minutes)**
 ```bash
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # Stop service
 docker-compose stop ai-automation-service
@@ -29,7 +29,7 @@ python scripts/alpha_reset_database.py
 # ✅ Schema validation passed
 
 # Restart service
-cd ~/ha-ingestor
+cd ~/homeiq
 docker-compose up -d ai-automation-service
 
 # Watch startup

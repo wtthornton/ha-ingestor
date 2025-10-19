@@ -11,13 +11,13 @@
 
 ### All Services Running:
 ```
-✅ ha-ingestor-sports-data     → Port 8005 (responding)
-✅ ha-ingestor-dashboard       → Port 3000 (healthy)
-✅ ha-ingestor-admin           → Port 8003 (healthy)
-✅ ha-ingestor-websocket       → Port 8001 (healthy)
-✅ ha-ingestor-enrichment      → Port 8002 (healthy)
-✅ ha-ingestor-data-retention  → Port 8080 (healthy)
-✅ ha-ingestor-influxdb        → Port 8086 (healthy)
+✅ homeiq-sports-data     → Port 8005 (responding)
+✅ homeiq-dashboard       → Port 3000 (healthy)
+✅ homeiq-admin           → Port 8003 (healthy)
+✅ homeiq-websocket       → Port 8001 (healthy)
+✅ homeiq-enrichment      → Port 8002 (healthy)
+✅ homeiq-data-retention  → Port 8080 (healthy)
+✅ homeiq-influxdb        → Port 8086 (healthy)
 ```
 
 **Total Services:** 7/7 ✅  
@@ -221,10 +221,10 @@ curl http://localhost:3000
 ### Logs:
 ```bash
 # View sports-data logs
-docker logs ha-ingestor-sports-data
+docker logs homeiq-sports-data
 
 # View dashboard logs
-docker logs ha-ingestor-dashboard
+docker logs homeiq-dashboard
 
 # View all logs
 docker-compose logs -f
@@ -376,8 +376,8 @@ docker-compose logs -f
 
 **Check Logs:**
 ```bash
-docker logs ha-ingestor-sports-data
-docker logs ha-ingestor-dashboard
+docker logs homeiq-sports-data
+docker logs homeiq-dashboard
 ```
 
 **Restart Services:**

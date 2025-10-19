@@ -198,13 +198,13 @@ reset_influxdb() {
     docker compose rm -f influxdb
     
     # Remove volumes
-    if docker volume ls | grep -q "ha-ingestor_influxdb_data"; then
-        docker volume rm ha-ingestor_influxdb_data
+    if docker volume ls | grep -q "homeiq_influxdb_data"; then
+        docker volume rm homeiq_influxdb_data
         print_success "Removed InfluxDB data volume"
     fi
     
-    if docker volume ls | grep -q "ha-ingestor_influxdb_config"; then
-        docker volume rm ha-ingestor_influxdb_config
+    if docker volume ls | grep -q "homeiq_influxdb_config"; then
+        docker volume rm homeiq_influxdb_config
         print_success "Removed InfluxDB config volume"
     fi
     

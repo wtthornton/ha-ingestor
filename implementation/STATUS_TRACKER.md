@@ -178,8 +178,8 @@ QA Documentation:
 **How to Execute:**
 ```bash
 # Check at 0hr, 4hr, 8hr, 24hr intervals:
-docker logs ha-ingestor-sports-data --tail 50
-docker stats ha-ingestor-sports-data
+docker logs homeiq-sports-data --tail 50
+docker stats homeiq-sports-data
 curl http://localhost:8005/api/v1/metrics/api-usage
 ```
 

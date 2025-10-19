@@ -199,20 +199,20 @@ external services (carbon, electricity, air-quality, etc.)
 #### Main Compose Network:
 ```yaml
 networks:
-  ha-ingestor-network:
+  homeiq-network:
     driver: bridge
 ```
 
 #### Production Compose Network:
 ```yaml
 networks:
-  ha-ingestor-network:
+  homeiq-network:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.0.0/16
     driver_opts:
-      com.docker.network.bridge.name: ha-ingestor-br
+      com.docker.network.bridge.name: homeiq-br
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
 ```
@@ -328,31 +328,31 @@ volumes:
 #### Step 1.1: Backup Current State
 ```bash
 # Create backup directory
-mkdir -p ~/ha-ingestor-backup-$(date +%Y%m%d)
-cd ~/ha-ingestor-backup-$(date +%Y%m%d)
+mkdir -p ~/homeiq-backup-$(date +%Y%m%d)
+cd ~/homeiq-backup-$(date +%Y%m%d)
 
 # Backup InfluxDB data
-docker exec ha-ingestor-influxdb influx backup /tmp/backup
-docker cp ha-ingestor-influxdb:/tmp/backup ./influxdb-backup
+docker exec homeiq-influxdb influx backup /tmp/backup
+docker cp homeiq-influxdb:/tmp/backup ./influxdb-backup
 
 # Backup SQLite database
-docker cp ha-ingestor-data-api:/app/data/metadata.db ./metadata.db.backup
+docker cp homeiq-data-api:/app/data/metadata.db ./metadata.db.backup
 
 # Backup environment files
-cp ~/ha-ingestor/.env ./env.backup
-cp ~/ha-ingestor/infrastructure/.env.* ./
+cp ~/homeiq/.env ./env.backup
+cp ~/homeiq/infrastructure/.env.* ./
 
 # Backup current docker-compose.yml
-cp ~/ha-ingestor/docker-compose.yml ./docker-compose.yml.backup
+cp ~/homeiq/docker-compose.yml ./docker-compose.yml.backup
 
 # Export current images list
-docker images | grep ha-ingestor > docker-images-list.txt
+docker images | grep homeiq > docker-images-list.txt
 
 # Export current volumes list
-docker volume ls | grep ha-ingestor > docker-volumes-list.txt
+docker volume ls | grep homeiq > docker-volumes-list.txt
 
 # Export container list and status
-docker ps -a | grep ha-ingestor > docker-containers-status.txt
+docker ps -a | grep homeiq > docker-containers-status.txt
 ```
 
 #### Step 1.2: Document Current State
@@ -365,14 +365,14 @@ curl http://localhost:8086/api/v2/buckets \
   -H "Authorization: Token ${INFLUXDB_TOKEN}" > influxdb-buckets.json
 
 # Check disk usage
-du -sh ~/ha-ingestor/* > disk-usage.txt
+du -sh ~/homeiq/* > disk-usage.txt
 ```
 
 #### Step 1.3: Fix Critical Issues
 
 **Fix 1: Update docker-compose.prod.yml**
 ```bash
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # Backup production compose
 cp docker-compose.prod.yml docker-compose.prod.yml.backup
@@ -489,42 +489,42 @@ EOF
 
 #### Step 2.1: Stop All Services
 ```bash
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # Stop all services gracefully (30-second timeout)
 docker-compose down --timeout 30
 
 # Verify all containers stopped
-docker ps | grep ha-ingestor
+docker ps | grep homeiq
 # Should show no results
 
 # Check for stuck containers
-docker ps -a | grep ha-ingestor
+docker ps -a | grep homeiq
 ```
 
 #### Step 2.2: Remove All Containers
 ```bash
 # Force remove any remaining containers
-docker ps -a --filter "name=ha-ingestor" -q | xargs -r docker rm -f
+docker ps -a --filter "name=homeiq" -q | xargs -r docker rm -f
 
 # Verify removal
-docker ps -a | grep ha-ingestor
+docker ps -a | grep homeiq
 # Should show no results
 ```
 
 #### Step 2.3: Remove All Images
 ```bash
-# List all ha-ingestor images
-docker images | grep ha-ingestor
+# List all homeiq images
+docker images | grep homeiq
 
-# Remove all ha-ingestor images (force)
-docker images --filter=reference='*ha-ingestor*' -q | xargs -r docker rmi -f
+# Remove all homeiq images (force)
+docker images --filter=reference='*homeiq*' -q | xargs -r docker rmi -f
 
 # Remove unused/dangling images
 docker image prune -f
 
 # Verify removal
-docker images | grep ha-ingestor
+docker images | grep homeiq
 # Should show no results
 ```
 
@@ -540,7 +540,7 @@ docker images | grep ha-ingestor
 # - data_retention_backups (backup data)
 
 # List volumes
-docker volume ls | grep ha-ingestor
+docker volume ls | grep homeiq
 
 # Do NOT remove volumes if you want to keep data
 ```
@@ -550,42 +550,42 @@ docker volume ls | grep ha-ingestor
 # ⚠️ WARNING: This deletes ALL data!
 # Only use if you want to start completely fresh
 
-# Remove all ha-ingestor volumes
-docker volume ls --filter name=ha-ingestor -q | xargs -r docker volume rm
+# Remove all homeiq volumes
+docker volume ls --filter name=homeiq -q | xargs -r docker volume rm
 
 # Verify removal
-docker volume ls | grep ha-ingestor
+docker volume ls | grep homeiq
 # Should show no results
 ```
 
 **Option C: Selective removal**
 ```bash
 # Remove only log volumes, keep data volumes
-docker volume rm ha-ingestor_ha_ingestor_logs
-docker volume rm ha-ingestor_websocket_logs
-docker volume rm ha-ingestor_enrichment_logs
+docker volume rm homeiq_ha_ingestor_logs
+docker volume rm homeiq_websocket_logs
+docker volume rm homeiq_enrichment_logs
 # etc...
 
 # Keep these volumes:
-# - ha-ingestor_influxdb_data
-# - ha-ingestor_influxdb_config
-# - ha-ingestor_sqlite-data
-# - ha-ingestor_data_retention_backups
+# - homeiq_influxdb_data
+# - homeiq_influxdb_config
+# - homeiq_sqlite-data
+# - homeiq_data_retention_backups
 ```
 
 #### Step 2.5: Remove Networks
 ```bash
-# Remove ha-ingestor network
-docker network rm ha-ingestor-network
+# Remove homeiq network
+docker network rm homeiq-network
 
 # Remove any dev networks
-docker network rm ha-ingestor-network-dev
+docker network rm homeiq-network-dev
 
 # Clean up unused networks
 docker network prune -f
 
 # Verify removal
-docker network ls | grep ha-ingestor
+docker network ls | grep homeiq
 # Should show no results
 ```
 
@@ -601,16 +601,16 @@ docker builder prune -a -f
 ```bash
 # Verify everything is removed
 echo "=== CONTAINERS ==="
-docker ps -a | grep ha-ingestor
+docker ps -a | grep homeiq
 
 echo "=== IMAGES ==="
-docker images | grep ha-ingestor
+docker images | grep homeiq
 
 echo "=== VOLUMES ==="
-docker volume ls | grep ha-ingestor
+docker volume ls | grep homeiq
 
 echo "=== NETWORKS ==="
-docker network ls | grep ha-ingestor
+docker network ls | grep homeiq
 
 # All should show no results (except volumes if preserving data)
 ```
@@ -621,7 +621,7 @@ docker network ls | grep ha-ingestor
 
 #### Step 3.1: Prepare Environment
 ```bash
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # Ensure we're on the latest code
 git status
@@ -659,22 +659,22 @@ docker-compose build --no-cache --parallel
 #### Step 3.4: Verify Build Success
 ```bash
 # List newly built images
-docker images | grep ha-ingestor
+docker images | grep homeiq
 
 # Expected images:
-# - ha-ingestor-websocket
-# - ha-ingestor-enrichment
-# - ha-ingestor-admin
-# - ha-ingestor-data-api
-# - ha-ingestor-data-retention
-# - ha-ingestor-dashboard
-# - ha-ingestor-sports-data
-# - ha-ingestor-log-aggregator
-# - ha-ingestor-carbon-intensity
-# - ha-ingestor-electricity-pricing
-# - ha-ingestor-air-quality
-# - ha-ingestor-calendar
-# - ha-ingestor-smart-meter
+# - homeiq-websocket
+# - homeiq-enrichment
+# - homeiq-admin
+# - homeiq-data-api
+# - homeiq-data-retention
+# - homeiq-dashboard
+# - homeiq-sports-data
+# - homeiq-log-aggregator
+# - homeiq-carbon-intensity
+# - homeiq-electricity-pricing
+# - homeiq-air-quality
+# - homeiq-calendar
+# - homeiq-smart-meter
 
 # Plus external images:
 # - influxdb:2.7
@@ -810,24 +810,24 @@ docker-compose logs websocket-ingestion | tail -50
 **InfluxDB:**
 ```bash
 # Check InfluxDB buckets
-docker exec ha-ingestor-influxdb influx bucket list
+docker exec homeiq-influxdb influx bucket list
 
 # Expected: home_assistant_events bucket exists
 
 # Check if data is being written (wait 1 minute for events)
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") |> range(start: -1m) |> limit(n:10)'
 ```
 
 **SQLite:**
 ```bash
 # Check SQLite database
-docker exec ha-ingestor-data-api ls -lh /app/data/metadata.db
+docker exec homeiq-data-api ls -lh /app/data/metadata.db
 
 # Should show database file with size > 0
 
 # Check devices table
-docker exec ha-ingestor-data-api sqlite3 /app/data/metadata.db \
+docker exec homeiq-data-api sqlite3 /app/data/metadata.db \
   "SELECT COUNT(*) FROM devices;"
 
 # Should show device count (might be 0 on fresh install)
@@ -880,31 +880,31 @@ python tests/test_system_integration.py
 #### Step 6.1: Restore InfluxDB Data
 ```bash
 # If you backed up InfluxDB in Phase 1
-cd ~/ha-ingestor-backup-$(date +%Y%m%d)
+cd ~/homeiq-backup-$(date +%Y%m%d)
 
 # Copy backup into container
-docker cp ./influxdb-backup ha-ingestor-influxdb:/tmp/backup
+docker cp ./influxdb-backup homeiq-influxdb:/tmp/backup
 
 # Restore from backup
-docker exec ha-ingestor-influxdb influx restore /tmp/backup
+docker exec homeiq-influxdb influx restore /tmp/backup
 
 # Verify restoration
-docker exec ha-ingestor-influxdb influx bucket list
+docker exec homeiq-influxdb influx bucket list
 ```
 
 #### Step 6.2: Restore SQLite Data
 ```bash
 # If you backed up SQLite in Phase 1
-cd ~/ha-ingestor-backup-$(date +%Y%m%d)
+cd ~/homeiq-backup-$(date +%Y%m%d)
 
 # Stop data-api service
 docker-compose stop data-api
 
 # Restore database
-docker cp ./metadata.db.backup ha-ingestor-data-api:/app/data/metadata.db
+docker cp ./metadata.db.backup homeiq-data-api:/app/data/metadata.db
 
 # Fix permissions
-docker exec ha-ingestor-data-api chown appuser:appgroup /app/data/metadata.db
+docker exec homeiq-data-api chown appuser:appgroup /app/data/metadata.db
 
 # Restart service
 docker-compose start data-api
@@ -969,10 +969,10 @@ docker-compose restart admin-api data-api
 crontab -e
 
 # Add backup job (daily at 2 AM):
-0 2 * * * /home/user/ha-ingestor/scripts/backup-influxdb.sh
+0 2 * * * /home/user/homeiq/scripts/backup-influxdb.sh
 
 # Add SQLite backup:
-0 2 * * * docker cp ha-ingestor-data-api:/app/data/metadata.db \
+0 2 * * * docker cp homeiq-data-api:/app/data/metadata.db \
           /backup/metadata-$(date +\%Y\%m\%d).db
 ```
 
@@ -985,8 +985,8 @@ After completing the rebuild, verify the following:
 ### Infrastructure Checks
 - [ ] All containers running: `docker-compose ps`
 - [ ] All services healthy: All show "Up (healthy)" status
-- [ ] Networks created: `docker network ls | grep ha-ingestor`
-- [ ] Volumes mounted: `docker volume ls | grep ha-ingestor`
+- [ ] Networks created: `docker network ls | grep homeiq`
+- [ ] Volumes mounted: `docker volume ls | grep homeiq`
 - [ ] No error logs: `docker-compose logs --tail=100`
 
 ### Service Health Checks
@@ -1052,7 +1052,7 @@ docker-compose logs <service-name>
 docker-compose ps
 
 # Inspect container
-docker inspect ha-ingestor-<service-name>
+docker inspect homeiq-<service-name>
 ```
 
 **Common Causes:**
@@ -1142,7 +1142,7 @@ curl http://localhost:8003/api/v1/health
    - Restart dashboard: `docker-compose restart health-dashboard`
 
 3. **Network issue**
-   - Check services on same network: `docker network inspect ha-ingestor-network`
+   - Check services on same network: `docker network inspect homeiq-network`
    - Verify admin-api hostname resolves: 
      `docker-compose exec health-dashboard ping admin-api`
 
@@ -1167,19 +1167,19 @@ docker-compose logs websocket-ingestion | grep -i influx
 docker-compose logs enrichment-pipeline | grep -i influx
 
 # Verify bucket exists
-docker exec ha-ingestor-influxdb influx bucket list
+docker exec homeiq-influxdb influx bucket list
 
 # Check for recent data
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") |> range(start: -1h) |> limit(n:1)'
 ```
 
 **Solutions:**
 1. **Wrong bucket name**
    - Check `INFLUXDB_BUCKET` in `.env`
-   - Verify bucket exists: `docker exec ha-ingestor-influxdb influx bucket list`
+   - Verify bucket exists: `docker exec homeiq-influxdb influx bucket list`
    - Create if missing: 
-     `docker exec ha-ingestor-influxdb influx bucket create -n home_assistant_events -o ha-ingestor`
+     `docker exec homeiq-influxdb influx bucket create -n home_assistant_events -o homeiq`
 
 2. **Invalid token**
    - Check `INFLUXDB_TOKEN` in `.env`
@@ -1207,7 +1207,7 @@ docker exec ha-ingestor-influxdb influx query \
 docker stats --no-stream
 
 # Check specific service
-docker stats ha-ingestor-influxdb --no-stream
+docker stats homeiq-influxdb --no-stream
 
 # Check container logs for OOM
 docker-compose logs | grep -i "out of memory"
@@ -1280,13 +1280,13 @@ docker stats --no-stream
    watch -n 2 'docker stats --no-stream'
    
    # Log resource usage
-   docker stats --no-stream >> ~/ha-ingestor-stats.log
+   docker stats --no-stream >> ~/homeiq-stats.log
    ```
 
 2. **Optimize InfluxDB**
    ```bash
    # Set up retention policies
-   docker exec ha-ingestor-influxdb influx task create \
+   docker exec homeiq-influxdb influx task create \
      --name "retention-policy" \
      --every 24h \
      --script "from(bucket:\"home_assistant_events\") |> range(start: -30d) |> drop()"
@@ -1298,10 +1298,10 @@ docker stats --no-stream
 3. **Optimize SQLite**
    ```bash
    # Run VACUUM periodically
-   docker exec ha-ingestor-data-api sqlite3 /app/data/metadata.db "VACUUM;"
+   docker exec homeiq-data-api sqlite3 /app/data/metadata.db "VACUUM;"
    
    # Rebuild indexes
-   docker exec ha-ingestor-data-api sqlite3 /app/data/metadata.db "REINDEX;"
+   docker exec homeiq-data-api sqlite3 /app/data/metadata.db "REINDEX;"
    ```
 
 4. **Set Up Monitoring**

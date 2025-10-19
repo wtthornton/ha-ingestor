@@ -307,8 +307,8 @@ EventStreamViewer: Polls every 3s, displays real-time events ✅
 
 ### Services Updated
 
-- ✅ `ha-ingestor-health-dashboard` - Rebuilt with EventStreamViewer
-- ✅ `ha-ingestor-data-api` - Rebuilt with deduplication fix
+- ✅ `homeiq-health-dashboard` - Rebuilt with EventStreamViewer
+- ✅ `homeiq-data-api` - Rebuilt with deduplication fix
 - ✅ All dependent services rebuilt and healthy
 
 ### Verification

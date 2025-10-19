@@ -1,5 +1,5 @@
 {
-  "name": "ha-ingestor-e2e-tests",
+  "name": "homeiq-e2e-tests",
   "version": "1.0.0",
   "description": "End-to-end tests for HA Ingestor system using Playwright",
   "scripts": {

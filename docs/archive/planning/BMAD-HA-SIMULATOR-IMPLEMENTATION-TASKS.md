@@ -674,7 +674,7 @@ services:
       - ./services/ha-simulator/data:/app/data
       - ./ha_events.log:/app/data/ha_events.log:ro
     networks:
-      - ha-ingestor-network
+      - homeiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/health"]
       interval: 30s
@@ -982,5 +982,5 @@ This implementation plan provides a comprehensive roadmap for developing the HA 
 4. **Dependency Management**: Clear task dependencies and sequencing
 5. **Quality Assurance**: Testing integrated throughout development
 
-The simulator will enable independent development and testing of the ha-ingestor services while maintaining compatibility with the existing Home Assistant WebSocket API.
+The simulator will enable independent development and testing of the homeiq services while maintaining compatibility with the existing Home Assistant WebSocket API.
 

@@ -71,7 +71,7 @@ admin-api:
 // vite.config.ts
 proxy: {
   '/api': {
-    target: 'http://ha-ingestor-admin-dev:8004',
+    target: 'http://homeiq-admin-dev:8004',
     changeOrigin: true,
     rewrite: (path) => path.replace(/^\/api/, '/api/v1')
   }

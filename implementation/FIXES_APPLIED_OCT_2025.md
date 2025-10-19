@@ -303,11 +303,11 @@ echo $?
 4. **Create Backup** (from rebuild plan Phase 1)
    ```bash
    # Backup InfluxDB
-   docker exec ha-ingestor-influxdb influx backup /tmp/backup
-   docker cp ha-ingestor-influxdb:/tmp/backup ~/backup-influxdb
+   docker exec homeiq-influxdb influx backup /tmp/backup
+   docker cp homeiq-influxdb:/tmp/backup ~/backup-influxdb
    
    # Backup SQLite
-   docker cp ha-ingestor-data-api:/app/data/metadata.db ~/backup-metadata.db
+   docker cp homeiq-data-api:/app/data/metadata.db ~/backup-metadata.db
    
    # Backup environment
    cp .env ~/backup-env
@@ -317,9 +317,9 @@ echo $?
    ```bash
    # Complete teardown
    docker-compose down --timeout 30
-   docker ps -a --filter "name=ha-ingestor" -q | xargs -r docker rm -f
-   docker images --filter=reference='*ha-ingestor*' -q | xargs -r docker rmi -f
-   docker network rm ha-ingestor-network 2>/dev/null || true
+   docker ps -a --filter "name=homeiq" -q | xargs -r docker rm -f
+   docker images --filter=reference='*homeiq*' -q | xargs -r docker rmi -f
+   docker network rm homeiq-network 2>/dev/null || true
    docker builder prune -a -f
    
    # Rebuild from scratch

@@ -1,6 +1,6 @@
 # System Rebuild - Quick Reference
 **Generated:** October 14, 2025  
-**For:** Complete ha-ingestor system rebuild
+**For:** Complete homeiq system rebuild
 
 ---
 
@@ -11,13 +11,13 @@
 # ⚠️ WARNING: This removes ALL containers and images
 # Preserves data volumes by default
 
-cd ~/ha-ingestor
+cd ~/homeiq
 
 # 1. Stop and remove everything
 docker-compose down --timeout 30
-docker ps -a --filter "name=ha-ingestor" -q | xargs -r docker rm -f
-docker images --filter=reference='*ha-ingestor*' -q | xargs -r docker rmi -f
-docker network rm ha-ingestor-network 2>/dev/null || true
+docker ps -a --filter "name=homeiq" -q | xargs -r docker rm -f
+docker images --filter=reference='*homeiq*' -q | xargs -r docker rmi -f
+docker network rm homeiq-network 2>/dev/null || true
 docker builder prune -a -f
 
 # 2. Build and deploy fresh
@@ -95,20 +95,20 @@ EOF
 ```bash
 $ docker-compose ps
 NAME                            STATUS                  PORTS
-ha-ingestor-admin               Up (healthy)            0.0.0.0:8003->8004/tcp
-ha-ingestor-air-quality         Up (healthy)            0.0.0.0:8012->8012/tcp
-ha-ingestor-calendar            Up (healthy)            0.0.0.0:8013->8013/tcp
-ha-ingestor-carbon-intensity    Up (healthy)            0.0.0.0:8010->8010/tcp
-ha-ingestor-dashboard           Up (healthy)            0.0.0.0:3000->80/tcp
-ha-ingestor-data-api            Up (healthy)            0.0.0.0:8006->8006/tcp
-ha-ingestor-data-retention      Up (healthy)            0.0.0.0:8080->8080/tcp
-ha-ingestor-electricity-pricing Up (healthy)            0.0.0.0:8011->8011/tcp
-ha-ingestor-enrichment          Up (healthy)            0.0.0.0:8002->8002/tcp
-ha-ingestor-influxdb            Up (healthy)            0.0.0.0:8086->8086/tcp
-ha-ingestor-log-aggregator      Up (healthy)            0.0.0.0:8015->8015/tcp
-ha-ingestor-smart-meter         Up (healthy)            0.0.0.0:8014->8014/tcp
-ha-ingestor-sports-data         Up (healthy)            0.0.0.0:8005->8005/tcp
-ha-ingestor-websocket           Up (healthy)            0.0.0.0:8001->8001/tcp
+homeiq-admin               Up (healthy)            0.0.0.0:8003->8004/tcp
+homeiq-air-quality         Up (healthy)            0.0.0.0:8012->8012/tcp
+homeiq-calendar            Up (healthy)            0.0.0.0:8013->8013/tcp
+homeiq-carbon-intensity    Up (healthy)            0.0.0.0:8010->8010/tcp
+homeiq-dashboard           Up (healthy)            0.0.0.0:3000->80/tcp
+homeiq-data-api            Up (healthy)            0.0.0.0:8006->8006/tcp
+homeiq-data-retention      Up (healthy)            0.0.0.0:8080->8080/tcp
+homeiq-electricity-pricing Up (healthy)            0.0.0.0:8011->8011/tcp
+homeiq-enrichment          Up (healthy)            0.0.0.0:8002->8002/tcp
+homeiq-influxdb            Up (healthy)            0.0.0.0:8086->8086/tcp
+homeiq-log-aggregator      Up (healthy)            0.0.0.0:8015->8015/tcp
+homeiq-smart-meter         Up (healthy)            0.0.0.0:8014->8014/tcp
+homeiq-sports-data         Up (healthy)            0.0.0.0:8005->8005/tcp
+homeiq-websocket           Up (healthy)            0.0.0.0:8001->8001/tcp
 ```
 
 ### Quick Health Check ✅
@@ -190,11 +190,11 @@ curl -H "Authorization: Bearer ${HOME_ASSISTANT_TOKEN}" \
 docker-compose logs enrichment-pipeline | grep -i error
 
 # Check bucket exists
-docker exec ha-ingestor-influxdb influx bucket list
+docker exec homeiq-influxdb influx bucket list
 
 # Trigger test event in HA (toggle light)
 # Check for data:
-docker exec ha-ingestor-influxdb influx query \
+docker exec homeiq-influxdb influx query \
   'from(bucket:"home_assistant_events") |> range(start: -5m) |> limit(n:10)'
 ```
 
@@ -266,18 +266,18 @@ docker-compose logs websocket-ingestion | grep -i "connected"
 docker-compose down
 
 # 2. Restore from backup
-cd ~/ha-ingestor-backup-YYYYMMDD
-cp docker-compose.yml.backup ~/ha-ingestor/docker-compose.yml
-cp env.backup ~/ha-ingestor/.env
+cd ~/homeiq-backup-YYYYMMDD
+cp docker-compose.yml.backup ~/homeiq/docker-compose.yml
+cp env.backup ~/homeiq/.env
 
 # 3. Restore InfluxDB data
 docker-compose up -d influxdb
-docker cp ./influxdb-backup ha-ingestor-influxdb:/tmp/backup
-docker exec ha-ingestor-influxdb influx restore /tmp/backup
+docker cp ./influxdb-backup homeiq-influxdb:/tmp/backup
+docker exec homeiq-influxdb influx restore /tmp/backup
 
 # 4. Restore SQLite
 docker-compose up -d data-api
-docker cp ./metadata.db.backup ha-ingestor-data-api:/app/data/metadata.db
+docker cp ./metadata.db.backup homeiq-data-api:/app/data/metadata.db
 
 # 5. Start all services
 docker-compose up -d

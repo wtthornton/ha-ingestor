@@ -86,18 +86,18 @@ class DockerService:
     def __init__(self):
         self.client = docker.from_env()
         self.container_mapping = {
-            'websocket-ingestion': 'ha-ingestor-websocket',
-            'enrichment-pipeline': 'ha-ingestor-enrichment', 
-            'admin-api': 'ha-ingestor-admin',
-            'health-dashboard': 'ha-ingestor-dashboard',
-            'influxdb': 'ha-ingestor-influxdb',
-            'weather-api': 'ha-ingestor-weather',
-            'carbon-intensity-service': 'ha-ingestor-carbon-intensity',
-            'electricity-pricing-service': 'ha-ingestor-electricity-pricing',
-            'air-quality-service': 'ha-ingestor-air-quality',
-            'calendar-service': 'ha-ingestor-calendar',
-            'smart-meter-service': 'ha-ingestor-smart-meter',
-            'data-retention': 'ha-ingestor-data-retention'
+            'websocket-ingestion': 'homeiq-websocket',
+            'enrichment-pipeline': 'homeiq-enrichment', 
+            'admin-api': 'homeiq-admin',
+            'health-dashboard': 'homeiq-dashboard',
+            'influxdb': 'homeiq-influxdb',
+            'weather-api': 'homeiq-weather',
+            'carbon-intensity-service': 'homeiq-carbon-intensity',
+            'electricity-pricing-service': 'homeiq-electricity-pricing',
+            'air-quality-service': 'homeiq-air-quality',
+            'calendar-service': 'homeiq-calendar',
+            'smart-meter-service': 'homeiq-smart-meter',
+            'data-retention': 'homeiq-data-retention'
         }
     
     async def list_containers(self) -> List[Dict]:
@@ -292,18 +292,18 @@ PRICING_API_KEY=your_key_here
 **Service to Container Name:**
 ```python
 CONTAINER_MAPPING = {
-    'websocket-ingestion': 'ha-ingestor-websocket',
-    'enrichment-pipeline': 'ha-ingestor-enrichment',
-    'admin-api': 'ha-ingestor-admin',
-    'health-dashboard': 'ha-ingestor-dashboard',
-    'influxdb': 'ha-ingestor-influxdb',
-    'weather-api': 'ha-ingestor-weather',
-    'carbon-intensity-service': 'ha-ingestor-carbon-intensity',
-    'electricity-pricing-service': 'ha-ingestor-electricity-pricing',
-    'air-quality-service': 'ha-ingestor-air-quality',
-    'calendar-service': 'ha-ingestor-calendar',
-    'smart-meter-service': 'ha-ingestor-smart-meter',
-    'data-retention': 'ha-ingestor-data-retention'
+    'websocket-ingestion': 'homeiq-websocket',
+    'enrichment-pipeline': 'homeiq-enrichment',
+    'admin-api': 'homeiq-admin',
+    'health-dashboard': 'homeiq-dashboard',
+    'influxdb': 'homeiq-influxdb',
+    'weather-api': 'homeiq-weather',
+    'carbon-intensity-service': 'homeiq-carbon-intensity',
+    'electricity-pricing-service': 'homeiq-electricity-pricing',
+    'air-quality-service': 'homeiq-air-quality',
+    'calendar-service': 'homeiq-calendar',
+    'smart-meter-service': 'homeiq-smart-meter',
+    'data-retention': 'homeiq-data-retention'
 }
 ```
 

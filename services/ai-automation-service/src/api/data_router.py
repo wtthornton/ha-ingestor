@@ -190,6 +190,53 @@ async def get_entities(
         )
 
 
+@router.get("/devices")
+async def get_devices(
+    manufacturer: Optional[str] = Query(default=None, description="Filter by manufacturer"),
+    model: Optional[str] = Query(default=None, description="Filter by model"),
+    area_id: Optional[str] = Query(default=None, description="Filter by area ID"),
+    limit: int = Query(default=1000, ge=1, le=10000, description="Maximum number of devices")
+) -> Dict[str, Any]:
+    """
+    Get devices from Home Assistant via Data API.
+    
+    Args:
+        manufacturer: Filter devices by manufacturer
+        model: Filter devices by model
+        area_id: Filter devices by area ID
+        limit: Maximum number of devices to return
+        
+    Returns:
+        Dictionary containing devices list and metadata
+    """
+    try:
+        devices = await data_api_client.fetch_devices(
+            manufacturer=manufacturer,
+            model=model,
+            area_id=area_id,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "devices": devices,
+            "count": len(devices),
+            "filters": {
+                "manufacturer": manufacturer,
+                "model": model,
+                "area_id": area_id,
+                "limit": limit
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch devices: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch devices: {str(e)}"
+        )
+
+
 @router.on_event("shutdown")
 async def shutdown_data_client():
     """Close Data API client on shutdown"""

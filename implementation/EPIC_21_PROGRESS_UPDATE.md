@@ -22,7 +22,7 @@
 **Verification:**
 ```bash
 $ docker ps | grep data-api
-ha-ingestor-data-api   Up 7 minutes (healthy)   0.0.0.0:8006->8006/tcp
+homeiq-data-api   Up 7 minutes (healthy)   0.0.0.0:8006->8006/tcp
 
 $ curl http://localhost:8006/health
 {"status":"healthy","service":"data-api","version":"1.0.0",...}

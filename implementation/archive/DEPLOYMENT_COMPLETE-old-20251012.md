@@ -229,10 +229,10 @@ docker-compose up -d sports-api
 curl http://localhost:8005/health
 
 # Check nginx routing
-docker exec ha-ingestor-dashboard cat /etc/nginx/conf.d/default.conf | grep "api/sports"
+docker exec homeiq-dashboard cat /etc/nginx/conf.d/default.conf | grep "api/sports"
 
 # View sports-data logs
-docker logs ha-ingestor-sports-data --tail 50
+docker logs homeiq-sports-data --tail 50
 
 # Restart sports-data
 docker-compose restart sports-data

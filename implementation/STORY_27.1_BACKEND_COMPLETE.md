@@ -179,7 +179,7 @@ GET /
 
 ### Docker Compose Entry
 - **Service Name**: ha-setup-service
-- **Container Name**: ha-ingestor-setup-service
+- **Container Name**: homeiq-setup-service
 - **Dependencies**: data-api, admin-api
 - **Memory Limits**: 256M limit, 128M reservation
 - **Volumes**: 

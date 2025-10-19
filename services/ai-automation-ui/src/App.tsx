@@ -8,7 +8,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CustomToaster } from './components/CustomToast';
 import { SelectionProvider } from './context/SelectionContext';
 import { Navigation } from './components/Navigation';
-import { Dashboard } from './pages/Dashboard';
+import { ConversationalDashboard } from './pages/ConversationalDashboard';  // Story AI1.23 - Conversational UI
+import { AskAI } from './pages/AskAI';  // Ask AI Tab - Natural Language Query Interface
 import { Patterns } from './pages/Patterns';
 import { Synergies } from './pages/Synergies';  // Epic AI-3, Story AI3.8
 import { Deployed } from './pages/Deployed';
@@ -36,7 +37,8 @@ export const App: React.FC = () => {
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<ConversationalDashboard />} />
+            <Route path="/ask-ai" element={<AskAI />} />
             <Route path="/patterns" element={<Patterns />} />
             <Route path="/synergies" element={<Synergies />} />
             <Route path="/deployed" element={<Deployed />} />

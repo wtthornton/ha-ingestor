@@ -10,7 +10,7 @@
 ### Step 1: Pre-flight Checks (5 min)
 ```powershell
 # Navigate to project
-cd c:\cursor\ha-ingestor
+cd c:\cursor\homeiq
 
 # Verify prerequisites
 docker --version  # Need 24+
@@ -232,8 +232,8 @@ docker-compose down
 git reset --hard HEAD
 
 # Remove SQLite volumes
-docker volume rm ha-ingestor_data_api_sqlite
-docker volume rm ha-ingestor_sports_data_sqlite
+docker volume rm homeiq_data_api_sqlite
+docker volume rm homeiq_sports_data_sqlite
 
 # Restart
 docker-compose up -d

@@ -119,8 +119,8 @@ services/health-dashboard/src/
 ### Docker Deployment
 ```bash
 # Backend
-docker build -t ha-ingestor-setup-service ./services/ha-setup-service
-docker run -d -p 8010:8010 ha-ingestor-setup-service
+docker build -t homeiq-setup-service ./services/ha-setup-service
+docker run -d -p 8010:8010 homeiq-setup-service
 
 # Frontend (integrated in health-dashboard)
 cd services/health-dashboard
@@ -133,8 +133,8 @@ npm run build
 HA_URL=http://192.168.1.86:8123
 HA_TOKEN=your_long_lived_access_token
 DATABASE_URL=sqlite+aiosqlite:///./data/ha-setup.db
-DATA_API_URL=http://ha-ingestor-data-api:8006
-ADMIN_API_URL=http://ha-ingestor-admin-api:8003
+DATA_API_URL=http://homeiq-data-api:8006
+ADMIN_API_URL=http://homeiq-admin-api:8003
 ```
 
 ## Performance Metrics

@@ -303,7 +303,7 @@ crontab -e
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # 2. Configure environment
 cp infrastructure/env.production .env

@@ -30,7 +30,7 @@ Successfully fixed the Data Sources dashboard issue where all external data sour
 
 **After**:
 ```python
-"carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010")
+"carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://homeiq-carbon-intensity:8010")
 ```
 
 **Result**: Services can now communicate via Docker network ✅
@@ -149,7 +149,7 @@ curl http://localhost:8003/api/v1/health/services
 - Services run in separate containers on the Docker network
 - Docker DNS resolves container names to correct IPs
 
-**Solution**: Use Docker container names (e.g., `ha-ingestor-carbon-intensity:8010`)
+**Solution**: Use Docker container names (e.g., `homeiq-carbon-intensity:8010`)
 - Docker's internal DNS automatically resolves container names
 - Services can communicate across the bridge network
 - Environment variables allow overrides for custom deployments
@@ -227,7 +227,7 @@ All changes successful, no issues detected, no rollback required.
 
 **Next Steps**:
 ```bash
-docker logs ha-ingestor-calendar --tail 50
+docker logs homeiq-calendar --tail 50
 # Check for:
 # - Missing environment variables
 # - API key issues

@@ -472,7 +472,7 @@ After cleanup, `docs/` should contain ONLY:
 ### After Restructuring
 
 ```
-ha-ingestor/
+homeiq/
 ├── .bmad-core/              ✅ No changes
 ├── .cursor/                 ✅ No changes
 ├── docs/                    ✅ ONLY reference documentation

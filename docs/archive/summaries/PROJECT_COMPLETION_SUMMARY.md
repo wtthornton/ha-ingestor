@@ -337,7 +337,7 @@
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd ha-ingestor
+cd homeiq
 
 # Copy environment configuration
 cp infrastructure/env.example .env
