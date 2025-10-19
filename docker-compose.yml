@@ -630,6 +630,8 @@ services:
       - SPORTS_API_PROVIDER=${SPORTS_API_PROVIDER:-espn}
       - PORT=8005
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
     networks:
       - ha-ingestor-network
     deploy:
