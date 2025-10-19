@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class TeamDatabase:
     """Async SQLite database for team persistence"""
     
-    def __init__(self, db_path: str = "sports_teams.db"):
+    def __init__(self, db_path: str = "data/sports_teams.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
     
