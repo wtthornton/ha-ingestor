@@ -116,13 +116,13 @@ test.describe('Dashboard Functionality Tests', () => {
     await expect(page.locator('[data-testid="chart-toolbar"]')).toBeVisible();
     await expect(page.locator('[data-testid="time-range-selector"]')).toBeVisible();
     
-    // Test time range selection
+    // ✅ Context7 Best Practice: Wait for chart update to complete
     const timeRangeSelect = page.locator('[data-testid="time-range-selector"]');
     await timeRangeSelect.selectOption('1h');
-    await page.waitForTimeout(2000);
+    await expect(chart).toBeVisible(); // Chart remains visible during update
     
     await timeRangeSelect.selectOption('24h');
-    await page.waitForTimeout(2000);
+    await expect(chart).toBeVisible(); // Chart remains visible after update
   });
 
   test('Events feed displays recent events', async ({ page }) => {
@@ -170,21 +170,16 @@ test.describe('Dashboard Functionality Tests', () => {
     await page.waitForSelector('[data-testid="theme-toggle"]');
     
     const themeToggle = page.locator('[data-testid="theme-toggle"]');
+    const body = page.locator('body');
     
+    // ✅ Context7 Best Practice: Use web-first assertions for theme changes
     // Toggle to dark theme
     await themeToggle.click();
-    await page.waitForTimeout(1000);
-    
-    // Verify dark theme is applied
-    const body = page.locator('body');
-    await expect(body).toHaveClass(/dark/);
+    await expect(body).toHaveClass(/dark/); // Wait for dark class to be applied
     
     // Toggle back to light theme
     await themeToggle.click();
-    await page.waitForTimeout(1000);
-    
-    // Verify light theme is applied
-    await expect(body).not.toHaveClass(/dark/);
+    await expect(body).not.toHaveClass(/dark/); // Wait for dark class to be removed
   });
 
   test('Notification system displays alerts correctly', async ({ page }) => {
