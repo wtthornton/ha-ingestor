@@ -138,7 +138,7 @@ async def main():
     print("Next steps:")
     print("1. Check Home Assistant: Settings → Devices & Services")
     print("2. Look for MQTT integration")
-    print("3. Restart HA Ingestor: docker restart ha-ingestor-websocket")
+    print("3. Restart HA Ingestor: docker restart homeiq-websocket")
 
 if __name__ == "__main__":
     asyncio.run(main())

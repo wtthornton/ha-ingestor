@@ -23,7 +23,7 @@ class LogAggregator:
     """Simple log aggregation service for collecting logs from all services"""
     
     def __init__(self):
-        self.log_directory = Path("/var/log/ha-ingestor")
+        self.log_directory = Path("/var/log/homeiq")
         self.log_directory.mkdir(exist_ok=True)
         self.aggregated_logs = []
         self.max_logs = 10000  # Keep last 10k log entries in memory

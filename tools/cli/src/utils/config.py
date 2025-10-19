@@ -62,9 +62,9 @@ def load_config(config_file: Optional[str] = None) -> CLIConfig:
     # Try to load from default locations
     else:
         default_paths = [
-            Path.home() / ".ha-ingestor" / "config.yaml",
-            Path.cwd() / "ha-ingestor.yaml",
-            Path.cwd() / ".ha-ingestor.yaml",
+            Path.home() / ".homeiq" / "config.yaml",
+            Path.cwd() / "homeiq.yaml",
+            Path.cwd() / ".homeiq.yaml",
         ]
         
         for config_path in default_paths:
@@ -92,4 +92,4 @@ def save_config(config: CLIConfig, config_file: str) -> None:
 
 def get_default_config_path() -> Path:
     """Get the default configuration file path."""
-    return Path.home() / ".ha-ingestor" / "config.yaml"
+    return Path.home() / ".homeiq" / "config.yaml"

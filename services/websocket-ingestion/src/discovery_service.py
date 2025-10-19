@@ -377,7 +377,7 @@ class DiscoveryService:
         
         try:
             # Primary storage: SQLite via data-api (simple HTTP POST)
-            data_api_url = os.getenv('DATA_API_URL', 'http://ha-ingestor-data-api:8006')
+            data_api_url = os.getenv('DATA_API_URL', 'http://homeiq-data-api:8006')
             
             # Create session with proper connector (disable SSL for internal HTTP)
             connector = aiohttp.TCPConnector(ssl=False)

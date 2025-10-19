@@ -19,10 +19,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:////app/data/ha-setup.db"  # Absolute path for Docker volume
     
     # Data API configuration
-    data_api_url: str = "http://ha-ingestor-data-api:8006"
+    data_api_url: str = "http://homeiq-data-api:8006"
     
     # Admin API configuration
-    admin_api_url: str = "http://ha-ingestor-admin-api:8003"
+    admin_api_url: str = "http://homeiq-admin-api:8003"
     
     # Health check intervals (seconds)
     health_check_interval: int = 60

@@ -76,22 +76,22 @@ class DockerService:
         
         # Container name mapping - maps service names to Docker container names
         self.container_mapping = {
-            'websocket-ingestion': 'ha-ingestor-websocket',
-            'enrichment-pipeline': 'ha-ingestor-enrichment', 
-            'admin-api': 'ha-ingestor-admin',
-            'health-dashboard': 'ha-ingestor-dashboard',
-            'influxdb': 'ha-ingestor-influxdb',
-            'weather-api': 'ha-ingestor-weather',
-            'carbon-intensity-service': 'ha-ingestor-carbon-intensity',
-            'electricity-pricing-service': 'ha-ingestor-electricity-pricing',
-            'air-quality-service': 'ha-ingestor-air-quality',
-            'calendar-service': 'ha-ingestor-calendar',
-            'smart-meter-service': 'ha-ingestor-smart-meter',
-            'data-retention': 'ha-ingestor-data-retention'
+            'websocket-ingestion': 'homeiq-websocket',
+            'enrichment-pipeline': 'homeiq-enrichment', 
+            'admin-api': 'homeiq-admin',
+            'health-dashboard': 'homeiq-dashboard',
+            'influxdb': 'homeiq-influxdb',
+            'weather-api': 'homeiq-weather',
+            'carbon-intensity-service': 'homeiq-carbon-intensity',
+            'electricity-pricing-service': 'homeiq-electricity-pricing',
+            'air-quality-service': 'homeiq-air-quality',
+            'calendar-service': 'homeiq-calendar',
+            'smart-meter-service': 'homeiq-smart-meter',
+            'data-retention': 'homeiq-data-retention'
         }
         
         # Project label for filtering containers
-        self.project_label = "com.docker.compose.project=ha-ingestor"
+        self.project_label = "com.docker.compose.project=homeiq"
     
     async def list_containers(self) -> List[ContainerInfo]:
         """
@@ -115,7 +115,7 @@ class DockerService:
                 labels = container.labels or {}
                 project_name = labels.get('com.docker.compose.project')
                 
-                if project_name == 'ha-ingestor':
+                if project_name == 'homeiq':
                     # Map container name to service name
                     service_name = self._get_service_name_from_container(container.name)
                     
@@ -423,10 +423,10 @@ class DockerService:
                 name=container_name,
                 service_name=service_name,
                 status=status,
-                image=f"ha-ingestor-{service_name}:latest",
+                image=f"homeiq-{service_name}:latest",
                 created="2024-01-01T00:00:00Z",
                 ports=ports,
-                labels={'com.docker.compose.project': 'ha-ingestor'},
+                labels={'com.docker.compose.project': 'homeiq'},
                 is_project_container=True
             )
             

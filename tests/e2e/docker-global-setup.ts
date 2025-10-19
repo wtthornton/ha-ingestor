@@ -18,11 +18,11 @@ async function globalSetup(config: FullConfig) {
   
   // Check if the HA Ingestor containers are running
   const requiredServices = [
-    'ha-ingestor-influxdb',
-    'ha-ingestor-websocket',
-    'ha-ingestor-enrichment',
-    'ha-ingestor-admin',
-    'ha-ingestor-dashboard'
+    'homeiq-influxdb',
+    'homeiq-websocket',
+    'homeiq-enrichment',
+    'homeiq-admin',
+    'homeiq-dashboard'
   ];
   
   for (const service of requiredServices) {

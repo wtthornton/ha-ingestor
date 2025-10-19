@@ -303,7 +303,7 @@ class TestDockerComposeOrchestration:
             # Create a test database
             result = subprocess.run([
                 "docker", "exec", influxdb_container,
-                "influx", "bucket", "create", "--name", "test_bucket", "--org", "ha-ingestor"
+                "influx", "bucket", "create", "--name", "test_bucket", "--org", "homeiq"
             ], capture_output=True, text=True)
             
             # Stop services
@@ -327,7 +327,7 @@ class TestDockerComposeOrchestration:
             if influxdb_container:
                 result = subprocess.run([
                     "docker", "exec", influxdb_container,
-                    "influx", "bucket", "list", "--org", "ha-ingestor"
+                    "influx", "bucket", "list", "--org", "homeiq"
                 ], capture_output=True, text=True)
                 
                 assert "test_bucket" in result.stdout, "Test data was not persisted"

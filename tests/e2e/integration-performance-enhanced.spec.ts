@@ -248,7 +248,7 @@ test.describe('Enhanced Integration and Performance Tests', () => {
         
         // Check memory usage periodically
         if (i % 20 === 0) {
-          const containerStats = DockerTestHelpers.getContainerStats('ha-ingestor-admin');
+          const containerStats = DockerTestHelpers.getContainerStats('homeiq-admin');
           if (containerStats) {
             console.log(`Memory usage at request ${i}: ${containerStats.memoryUsage}`);
           }
@@ -336,7 +336,7 @@ test.describe('Enhanced Integration and Performance Tests', () => {
       
       // Simulate service failure (stop admin API container)
       try {
-        DockerTestHelpers.stopContainer('ha-ingestor-admin');
+        DockerTestHelpers.stopContainer('homeiq-admin');
         console.log('Admin API container stopped');
         
         // Wait for service to be unavailable
@@ -347,7 +347,7 @@ test.describe('Enhanced Integration and Performance Tests', () => {
         expect(downResponse.status()).toBeGreaterThanOrEqual(500);
         
         // Restart service
-        DockerTestHelpers.startContainer('ha-ingestor-admin');
+        DockerTestHelpers.startContainer('homeiq-admin');
         console.log('Admin API container restarted');
         
         // Wait for service to recover

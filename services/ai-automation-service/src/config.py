@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     
     # InfluxDB (for direct event queries)
     influxdb_url: str = "http://influxdb:8086"
-    influxdb_token: str = "ha-ingestor-token"
-    influxdb_org: str = "ha-ingestor"
+    influxdb_token: str = "homeiq-token"
+    influxdb_org: str = "homeiq"
     influxdb_bucket: str = "home_assistant_events"
     
     # Home Assistant

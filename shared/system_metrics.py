@@ -327,8 +327,8 @@ class ContainerMetricsCollector:
         # This is a simplified implementation
         # In production, you'd parse Docker command line arguments properly
         for arg in cmdline:
-            if 'ha-ingestor' in str(arg):
-                return 'ha-ingestor-container'
+            if 'homeiq' in str(arg):
+                return 'homeiq-container'
         return None
     
     async def _collect_single_container_metrics(self, proc: psutil.Process, container_name: str):

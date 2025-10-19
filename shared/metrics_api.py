@@ -37,7 +37,7 @@ class MetricsResponse:
 class MetricsAPI:
     """API for querying metrics data from InfluxDB"""
     
-    def __init__(self, influxdb_client: InfluxDBClient, bucket: str = "ha-ingestor-metrics"):
+    def __init__(self, influxdb_client: InfluxDBClient, bucket: str = "homeiq-metrics"):
         self.influxdb_client = influxdb_client
         self.bucket = bucket
         self.query_api: QueryApi = influxdb_client.query_api()

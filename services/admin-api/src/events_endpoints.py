@@ -458,8 +458,8 @@ class EventsEndpoints:
             
             # Get InfluxDB configuration
             influxdb_url = os.getenv("INFLUXDB_URL", "http://localhost:8086")
-            influxdb_token = os.getenv("INFLUXDB_TOKEN", "ha-ingestor-token")
-            influxdb_org = os.getenv("INFLUXDB_ORG", "ha-ingestor")
+            influxdb_token = os.getenv("INFLUXDB_TOKEN", "homeiq-token")
+            influxdb_org = os.getenv("INFLUXDB_ORG", "homeiq")
             influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
             
             # Create InfluxDB client

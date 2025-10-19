@@ -163,7 +163,7 @@ def setup_logging(service_name: str, log_level: str = None, log_format: str = No
         logger.addHandler(console_handler)
     
     if output in ['file', 'both']:
-        log_file_path = os.getenv('LOG_FILE_PATH', '/var/log/ha-ingestor/')
+        log_file_path = os.getenv('LOG_FILE_PATH', '/var/log/homeiq/')
         os.makedirs(log_file_path, exist_ok=True)
         
         file_handler = logging.handlers.RotatingFileHandler(

@@ -203,5 +203,5 @@ class TestGetDefaultConfigPath:
         
         default_path = get_default_config_path()
         
-        expected_path = Path("/home/test/.ha-ingestor/config.yaml")
+        expected_path = Path("/home/test/.homeiq/config.yaml")
         assert default_path == expected_path

@@ -150,12 +150,12 @@ export class DockerTestHelpers {
    */
   static async simulateServiceFailure(page: Page, serviceName: string): Promise<void> {
     const containerMap: { [key: string]: string } = {
-      'influxdb': 'ha-ingestor-influxdb',
-      'websocket': 'ha-ingestor-websocket',
-      'enrichment': 'ha-ingestor-enrichment',
-      'admin': 'ha-ingestor-admin',
-      'dashboard': 'ha-ingestor-dashboard',
-      'retention': 'ha-ingestor-data-retention'
+      'influxdb': 'homeiq-influxdb',
+      'websocket': 'homeiq-websocket',
+      'enrichment': 'homeiq-enrichment',
+      'admin': 'homeiq-admin',
+      'dashboard': 'homeiq-dashboard',
+      'retention': 'homeiq-data-retention'
     };
     
     const containerName = containerMap[serviceName.toLowerCase()];
@@ -176,12 +176,12 @@ export class DockerTestHelpers {
    */
   static async restoreService(serviceName: string): Promise<void> {
     const containerMap: { [key: string]: string } = {
-      'influxdb': 'ha-ingestor-influxdb',
-      'websocket': 'ha-ingestor-websocket',
-      'enrichment': 'ha-ingestor-enrichment',
-      'admin': 'ha-ingestor-admin',
-      'dashboard': 'ha-ingestor-dashboard',
-      'retention': 'ha-ingestor-data-retention'
+      'influxdb': 'homeiq-influxdb',
+      'websocket': 'homeiq-websocket',
+      'enrichment': 'homeiq-enrichment',
+      'admin': 'homeiq-admin',
+      'dashboard': 'homeiq-dashboard',
+      'retention': 'homeiq-data-retention'
     };
     
     const containerName = containerMap[serviceName.toLowerCase()];

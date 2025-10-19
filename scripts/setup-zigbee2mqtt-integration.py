@@ -143,7 +143,7 @@ async def setup_zigbee2mqtt_integration():
         print("6. After integration is created:")
         print("   - Check Settings → Devices & Services → MQTT")
         print("   - Look for Zigbee2MQTT devices")
-        print("   - Restart HA Ingestor: docker restart ha-ingestor-websocket")
+        print("   - Restart HA Ingestor: docker restart homeiq-websocket")
         
         return False
 
@@ -156,7 +156,7 @@ async def main():
         print("Next steps:")
         print("1. Wait 2-3 minutes for device discovery")
         print("2. Check Settings → Devices & Services → MQTT")
-        print("3. Restart HA Ingestor: docker restart ha-ingestor-websocket")
+        print("3. Restart HA Ingestor: docker restart homeiq-websocket")
         print("4. Check your dashboard: http://localhost:3000/devices")
     else:
         print("\n⚠️  Manual setup required - see instructions above")

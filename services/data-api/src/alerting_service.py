@@ -180,7 +180,7 @@ class WebhookNotificationChannel(NotificationChannel):
             payload = {
                 "alert": alert.to_dict(),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "source": "ha-ingestor-monitoring"
+                "source": "homeiq-monitoring"
             }
             
             response = requests.post(

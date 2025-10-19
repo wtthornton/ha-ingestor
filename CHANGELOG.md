@@ -5,7 +5,47 @@ All notable changes to the HA-Ingestor project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-10-18
+## [Unreleased] - 2025-10-19
+
+### Added - Conversational UI & Description-First Flow (Story AI1.24)
+
+#### Conversational Automation System
+- **NEW**: Description-first suggestion generation (no YAML until user approves)
+- **NEW**: `generate_description_only()` method in OpenAI client for human-readable automation ideas
+- **NEW**: ConversationalDashboard as primary UI at http://localhost:3001/
+- **NEW**: Conversational refinement workflow (draft → refining → yaml_generated → deployed)
+- **NEW**: Description-only prompts for time-of-day, co-occurrence, and anomaly patterns
+- **NEW**: Comprehensive AI Automation UI README with conversational flow documentation
+- **NEW**: User Guide at `docs/CONVERSATIONAL_UI_USER_GUIDE.md`
+
+### Changed - Breaking Changes (Story AI1.24)
+- **BREAKING**: Daily analysis job now generates description-only suggestions (not YAML)
+- **BREAKING**: Suggestion status flow changed from `pending → approved → deployed` to `draft → refining → yaml_generated → deployed`
+- **BREAKING**: YAML only generated after user approval (was generated immediately)
+- **60% cost savings** on rejected suggestions (no YAML generation cost)
+- Updated API endpoints to reflect conversational refinement workflow
+- Backend README updated with description-first architecture
+
+### Removed - Legacy Components (Story AI1.24)
+- Deleted `Dashboard.tsx` component (replaced with ConversationalDashboard)
+- Deleted `App-complex.tsx` backup file with conflicting imports
+- Removed old YAML-first suggestion generation flow
+
+### Fixed - Build & Integration Issues
+- Frontend build error from orphaned Dashboard imports
+- Status schema mismatch between backend (draft) and frontend (pending)
+
+### Documentation - Story AI1.24
+- Created `services/ai-automation-ui/README.md` - Complete UI documentation
+- Updated `services/ai-automation-service/README.md` - Conversational flow architecture
+- Updated root `README.md` - AI Automation UI description
+- Created `implementation/PHASE_2_BACKEND_CLEANUP_COMPLETE.md` - Implementation details
+- Created `docs/stories/story-ai1-24-conversational-ui-cleanup.md` - Story documentation
+- Created `docs/CONVERSATIONAL_UI_USER_GUIDE.md` - End-user documentation
+
+---
+
+## [2025-10-18] - Statistics API & System Enhancements
 
 ### Added - Statistics API & System Enhancements
 

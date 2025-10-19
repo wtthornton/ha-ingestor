@@ -43,7 +43,7 @@ export default defineConfig(({ command, mode }) => {
       proxy: {
         // WebSocket proxy
         '/ws': {
-          target: 'ws://ha-ingestor-admin-dev:8004',
+          target: 'ws://homeiq-admin-dev:8004',
           ws: true,
           changeOrigin: true,
           secure: false,
@@ -57,7 +57,7 @@ export default defineConfig(({ command, mode }) => {
         },
         // General API proxy
         '/api': {
-          target: 'http://ha-ingestor-admin-dev:8004',
+          target: 'http://homeiq-admin-dev:8004',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),

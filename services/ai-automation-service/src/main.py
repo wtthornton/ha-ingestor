@@ -55,8 +55,8 @@ app.add_middleware(
         "http://127.0.0.1:3002",
         "http://ai-automation-ui",  # Container network
         "http://ai-automation-ui:80",
-        "http://ha-ingestor-dashboard",  # Health dashboard container
-        "http://ha-ingestor-dashboard:80"
+        "http://homeiq-dashboard",  # Health dashboard container
+        "http://homeiq-dashboard:80"
     ],
     allow_credentials=True,
     allow_methods=["*"],

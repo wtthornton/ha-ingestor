@@ -46,7 +46,7 @@ class TestAPIClient:
         headers = client._get_headers()
         
         assert headers["Content-Type"] == "application/json"
-        assert headers["User-Agent"] == "ha-ingestor-cli/1.0.0"
+        assert headers["User-Agent"] == "homeiq-cli/1.0.0"
         assert headers["Authorization"] == "Bearer test-token"
     
     def test_get_headers_no_token(self):
@@ -57,7 +57,7 @@ class TestAPIClient:
         headers = client._get_headers()
         
         assert headers["Content-Type"] == "application/json"
-        assert headers["User-Agent"] == "ha-ingestor-cli/1.0.0"
+        assert headers["User-Agent"] == "homeiq-cli/1.0.0"
         assert "Authorization" not in headers
     
     @pytest.mark.asyncio

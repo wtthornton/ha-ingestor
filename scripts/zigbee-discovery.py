@@ -134,7 +134,7 @@ async def main():
     print("✅ ZIGBEE DISCOVERY COMPLETE")
     print("=" * 80)
     print("If devices were found, restart HA Ingestor:")
-    print("docker restart ha-ingestor-websocket")
+    print("docker restart homeiq-websocket")
 
 if __name__ == "__main__":
     asyncio.run(main())

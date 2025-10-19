@@ -161,7 +161,7 @@ class LogAggregator:
         formatter = logging.Formatter('%(message)s')
         
         # File handler with rotation
-        log_file = self.log_dir / "ha-ingestor.log"
+        log_file = self.log_dir / "homeiq.log"
         file_handler = RotatingFileHandler(
             log_file,
             maxBytes=self.max_file_size,
@@ -172,7 +172,7 @@ class LogAggregator:
         
         # Time-based rotation handler
         time_handler = TimedRotatingFileHandler(
-            self.log_dir / "ha-ingestor-time.log",
+            self.log_dir / "homeiq-time.log",
             when=self.rotation_interval,
             interval=1,
             backupCount=self.backup_count

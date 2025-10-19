@@ -139,7 +139,7 @@ def init_config(
         save_config(config, str(save_path))
         
         formatter.print_success(f"Configuration initialized at {save_path}")
-        formatter.print_info("You can now use 'ha-ingestor-cli config show' to view the configuration")
+        formatter.print_info("You can now use 'homeiq-cli config show' to view the configuration")
         
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")

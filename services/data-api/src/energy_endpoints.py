@@ -73,8 +73,8 @@ router = APIRouter(prefix="/energy", tags=["energy"])
 def get_influxdb_client():
     """Get InfluxDB client instance"""
     influxdb_url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
-    influxdb_token = os.getenv("INFLUXDB_TOKEN", "ha-ingestor-token")
-    influxdb_org = os.getenv("INFLUXDB_ORG", "ha-ingestor")
+    influxdb_token = os.getenv("INFLUXDB_TOKEN", "homeiq-token")
+    influxdb_org = os.getenv("INFLUXDB_ORG", "homeiq")
     
     return InfluxDBClient(
         url=influxdb_url,
@@ -124,7 +124,7 @@ async def get_energy_correlations(
           |> limit(n: {limit})
         '''
         
-        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         correlations = []
         for table in tables:
@@ -170,7 +170,7 @@ async def get_current_power():
           |> last()
         '''
         
-        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         power_w = 0.0
         daily_kwh = 0.0
@@ -225,7 +225,7 @@ async def get_circuit_power(
           |> last()
         '''
         
-        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         circuits = []
         for table in tables:
@@ -302,9 +302,9 @@ async def get_device_energy_impact(
         '''
         
         # Execute queries
-        on_tables = query_api.query(flux_on, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
-        off_tables = query_api.query(flux_off, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
-        count_tables = query_api.query(flux_count, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        on_tables = query_api.query(flux_on, org=os.getenv("INFLUXDB_ORG", "homeiq"))
+        off_tables = query_api.query(flux_off, org=os.getenv("INFLUXDB_ORG", "homeiq"))
+        count_tables = query_api.query(flux_count, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         avg_power_on = 0.0
         avg_power_off = 0.0
@@ -407,10 +407,10 @@ async def get_energy_statistics(
         '''
         
         # Execute queries
-        current_tables = query_api.query(flux_current, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
-        peak_tables = query_api.query(flux_peak, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
-        avg_tables = query_api.query(flux_avg, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
-        corr_tables = query_api.query(flux_correlations, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        current_tables = query_api.query(flux_current, org=os.getenv("INFLUXDB_ORG", "homeiq"))
+        peak_tables = query_api.query(flux_peak, org=os.getenv("INFLUXDB_ORG", "homeiq"))
+        avg_tables = query_api.query(flux_avg, org=os.getenv("INFLUXDB_ORG", "homeiq"))
+        corr_tables = query_api.query(flux_correlations, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         current_power = 0.0
         daily_kwh = 0.0
@@ -494,7 +494,7 @@ async def get_top_energy_consumers(
           |> limit(n: {limit})
         '''
         
-        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "ha-ingestor"))
+        tables = query_api.query(flux_query, org=os.getenv("INFLUXDB_ORG", "homeiq"))
         
         devices = []
         for table in tables:

@@ -42,8 +42,8 @@ class EnrichmentPipelineService:
     def __init__(self):
         # Configuration
         self.influxdb_url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
-        self.influxdb_token = os.getenv("INFLUXDB_TOKEN", "ha-ingestor-token")
-        self.influxdb_org = os.getenv("INFLUXDB_ORG", "ha-ingestor")
+        self.influxdb_token = os.getenv("INFLUXDB_TOKEN", "homeiq-token")
+        self.influxdb_org = os.getenv("INFLUXDB_ORG", "homeiq")
         self.influxdb_bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
         
         # Historical event counter for persistent totals

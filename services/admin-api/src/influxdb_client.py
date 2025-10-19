@@ -26,7 +26,7 @@ class AdminAPIInfluxDBClient:
         """Initialize InfluxDB client configuration"""
         self.url = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
         self.token = os.getenv("INFLUXDB_TOKEN")
-        self.org = os.getenv("INFLUXDB_ORG", "ha-ingestor")
+        self.org = os.getenv("INFLUXDB_ORG", "homeiq")
         self.bucket = os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
         
         self.client: Optional[InfluxDBClient] = None

@@ -173,7 +173,7 @@ class ServiceController:
             "success": False,
             "service": service,
             "message": f"Service restart not available from within container",
-            "instruction": f"To restart {service}, run: docker restart ha-ingestor-{service.replace('-', '')}",
+            "instruction": f"To restart {service}, run: docker restart homeiq-{service.replace('-', '')}",
             "timestamp": datetime.now().isoformat()
         }
     

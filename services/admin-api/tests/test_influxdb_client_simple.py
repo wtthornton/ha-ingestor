@@ -21,7 +21,7 @@ async def test_influxdb_client_initialization():
     
     assert client is not None
     assert client.url == os.getenv("INFLUXDB_URL", "http://influxdb:8086")
-    assert client.org == os.getenv("INFLUXDB_ORG", "ha-ingestor")
+    assert client.org == os.getenv("INFLUXDB_ORG", "homeiq")
     assert client.bucket == os.getenv("INFLUXDB_BUCKET", "home_assistant_events")
     assert client.is_connected is False
     assert client.query_count == 0

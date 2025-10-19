@@ -64,7 +64,7 @@ class DiscourseClient:
             transport=self._transport,
             timeout=self._timeout,
             limits=self._limits,
-            headers={"User-Agent": "ha-ingestor-miner/1.0"}
+            headers={"User-Agent": "homeiq-miner/1.0"}
         )
         return self
     

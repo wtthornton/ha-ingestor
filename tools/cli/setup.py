@@ -20,14 +20,14 @@ def read_requirements():
     return []
 
 setup(
-    name="ha-ingestor-cli",
+    name="homeiq-cli",
     version="1.0.0",
     description="CLI tools for managing the Home Assistant Ingestor system",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     author="HA Ingestor Team",
-    author_email="team@ha-ingestor.dev",
-    url="https://github.com/ha-ingestor/cli-tools",
+    author_email="team@homeiq.dev",
+    url="https://github.com/homeiq/cli-tools",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
@@ -50,7 +50,7 @@ setup(
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
-            "ha-ingestor-cli=main:app",
+            "homeiq-cli=main:app",
         ],
     },
     classifiers=[
@@ -71,8 +71,8 @@ setup(
     ],
     keywords="home-assistant, monitoring, cli, tools, data-ingestion",
     project_urls={
-        "Bug Reports": "https://github.com/ha-ingestor/cli-tools/issues",
-        "Source": "https://github.com/ha-ingestor/cli-tools",
-        "Documentation": "https://github.com/ha-ingestor/cli-tools/docs",
+        "Bug Reports": "https://github.com/homeiq/cli-tools/issues",
+        "Source": "https://github.com/homeiq/cli-tools",
+        "Documentation": "https://github.com/homeiq/cli-tools/docs",
     },
 )

@@ -27,7 +27,7 @@ from utils.api_client import APIClient
 
 # Initialize Typer app
 app = typer.Typer(
-    name="ha-ingestor",
+    name="homeiq",
     help="Home Assistant Ingestor CLI Tools",
     add_completion=False,
     rich_markup_mode="rich",

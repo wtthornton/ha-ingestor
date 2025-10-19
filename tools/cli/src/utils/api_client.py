@@ -35,7 +35,7 @@ class APIClient:
         """Get HTTP headers for API requests."""
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "ha-ingestor-cli/1.0.0"
+            "User-Agent": "homeiq-cli/1.0.0"
         }
         
         if self.config.api_token:

@@ -50,20 +50,20 @@ class StatsEndpoints:
         
         # Keep service URLs for fallback - use Docker service names for internal communication
         self.service_urls = {
-            "admin-api": os.getenv("ADMIN_API_URL", "http://ha-ingestor-admin:8004"),
-            "data-api": os.getenv("DATA_API_URL", "http://ha-ingestor-data-api:8006"),
-            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://ha-ingestor-websocket:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://ha-ingestor-enrichment:8002"),
-            "sports-data": os.getenv("SPORTS_DATA_URL", "http://ha-ingestor-sports-data:8005"),
-            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://ha-ingestor-air-quality:8012"),
-            "calendar-service": os.getenv("CALENDAR_URL", "http://ha-ingestor-calendar:8013"),
-            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://ha-ingestor-carbon-intensity:8010"),
-            "data-retention": os.getenv("DATA_RETENTION_URL", "http://ha-ingestor-data-retention:8080"),
-            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://ha-ingestor-electricity-pricing:8011"),
-            "energy-correlator": os.getenv("ENERGY_CORRELATOR_URL", "http://ha-ingestor-energy-correlator:8017"),
-            "smart-meter-service": os.getenv("SMART_METER_URL", "http://ha-ingestor-smart-meter:8014"),
-            "log-aggregator": os.getenv("LOG_AGGREGATOR_URL", "http://ha-ingestor-log-aggregator:8015"),
-            "weather-api": os.getenv("WEATHER_API_URL", "http://ha-ingestor-weather-api:8001")
+            "admin-api": os.getenv("ADMIN_API_URL", "http://homeiq-admin:8004"),
+            "data-api": os.getenv("DATA_API_URL", "http://homeiq-data-api:8006"),
+            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://homeiq-websocket:8001"),
+            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://homeiq-enrichment:8002"),
+            "sports-data": os.getenv("SPORTS_DATA_URL", "http://homeiq-sports-data:8005"),
+            "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://homeiq-air-quality:8012"),
+            "calendar-service": os.getenv("CALENDAR_URL", "http://homeiq-calendar:8013"),
+            "carbon-intensity-service": os.getenv("CARBON_INTENSITY_URL", "http://homeiq-carbon-intensity:8010"),
+            "data-retention": os.getenv("DATA_RETENTION_URL", "http://homeiq-data-retention:8080"),
+            "electricity-pricing-service": os.getenv("ELECTRICITY_PRICING_URL", "http://homeiq-electricity-pricing:8011"),
+            "energy-correlator": os.getenv("ENERGY_CORRELATOR_URL", "http://homeiq-energy-correlator:8017"),
+            "smart-meter-service": os.getenv("SMART_METER_URL", "http://homeiq-smart-meter:8014"),
+            "log-aggregator": os.getenv("LOG_AGGREGATOR_URL", "http://homeiq-log-aggregator:8015"),
+            "weather-api": os.getenv("WEATHER_API_URL", "http://homeiq-weather-api:8001")
         }
         
         self._add_routes()
@@ -922,7 +922,7 @@ class StatsEndpoints:
                         if service_name == "weather-api":
                             # Get weather API request metrics from websocket-ingestion service
                             try:
-                                websocket_url = self.service_urls.get("websocket-ingestion", "http://ha-ingestor-websocket:8001")
+                                websocket_url = self.service_urls.get("websocket-ingestion", "http://homeiq-websocket:8001")
                                 async with aiohttp.ClientSession() as ws_session:
                                     async with ws_session.get(f"{websocket_url}/health", timeout=timeout) as ws_resp:
                                         if ws_resp.status == 200:

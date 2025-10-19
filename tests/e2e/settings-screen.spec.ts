@@ -97,7 +97,7 @@ test.describe('Settings Screen Tests', () => {
     await influxUrlInput.fill('http://localhost:8086');
     
     const influxOrgInput = page.locator('[data-testid="influx-org-input"]');
-    await influxOrgInput.fill('ha-ingestor');
+    await influxOrgInput.fill('homeiq');
     
     const influxBucketInput = page.locator('[data-testid="influx-bucket-input"]');
     await influxBucketInput.fill('home_assistant_events');
