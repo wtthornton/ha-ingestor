@@ -846,11 +846,13 @@ services:
     restart: unless-stopped
     ports:
       - "8019:8019"
+    env_file:
+      - infrastructure/env.automation-miner
     environment:
-      - ENABLE_AUTOMATION_MINER=${ENABLE_AUTOMATION_MINER:-false}
+      - ENABLE_AUTOMATION_MINER=true  # Epic AI-4: Enable weekly refresh
       - MINER_DB_PATH=data/automation_miner.db
       - DISCOURSE_BASE_URL=https://community.home-assistant.io
-      - DISCOURSE_MIN_LIKES=${DISCOURSE_MIN_LIKES:-500}
+      - DISCOURSE_MIN_LIKES=${DISCOURSE_MIN_LIKES:-300}
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
@@ -866,15 +868,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M  # Increased for crawler
         reservations:
-          memory: 128M
+          memory: 256M
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-        labels: "service=automation-miner,environment=production"
+        labels: "service=automation-miner,environment=production,epic=ai-4"
 
 volumes:
   influxdb_data:

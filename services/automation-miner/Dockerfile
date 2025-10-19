@@ -9,15 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY requirements.txt .
+COPY services/automation-miner/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY src/ ./src/
-COPY alembic/ ./alembic/
-COPY alembic.ini .
+COPY services/automation-miner/src/ ./src/
+COPY services/automation-miner/alembic/ ./alembic/
+COPY services/automation-miner/alembic.ini .
 
 # Create data directory
 RUN mkdir -p /app/data

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     
     # Feature Flags
     enable_automation_miner: bool = False
+    enable_startup_initialization: bool = True  # Run refresh on startup if corpus empty/stale
     
     # Database
     miner_db_path: str = "data/automation_miner.db"

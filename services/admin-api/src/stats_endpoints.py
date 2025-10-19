@@ -709,10 +709,8 @@ class StatsEndpoints:
         inactive_apis = 0
         error_apis = 0
         
-        # List of all running API services with priority levels
+        # List of data-feeding API services (removed admin-api and data-api)
         api_services = [
-            {"name": "admin-api", "priority": "high", "timeout": 3},
-            {"name": "data-api", "priority": "high", "timeout": 5},
             {"name": "enrichment-pipeline", "priority": "high", "timeout": 5},
             {"name": "websocket-ingestion", "priority": "high", "timeout": 3},
             {"name": "sports-data", "priority": "medium", "timeout": 5},
@@ -797,11 +795,38 @@ class StatsEndpoints:
                 async with session.get(health_url, timeout=5) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        # Extract basic health info and set default metrics
+                        
+                        # Extract events_per_hour from health response
+                        events_per_hour = 0.0
+                        if "events_per_hour" in data:
+                            events_per_hour = data["events_per_hour"]
+                        elif "event_rate_per_minute" in data:
+                            # Convert event_rate_per_minute to events_per_hour
+                            events_per_hour = data["event_rate_per_minute"] * 60
+                        elif "subscription" in data and "event_rate_per_minute" in data["subscription"]:
+                            # For websocket service that has nested subscription stats
+                            events_per_hour = data["subscription"]["event_rate_per_minute"] * 60
+                        
+                        # Extract uptime
+                        uptime_seconds = 0.0
+                        if "uptime_seconds" in data:
+                            uptime_seconds = data["uptime_seconds"]
+                        elif "uptime" in data:
+                            # Parse uptime string like "1:25:24.575842" to seconds
+                            uptime_str = data["uptime"]
+                            try:
+                                parts = uptime_str.split(":")
+                                if len(parts) == 3:
+                                    hours, minutes, seconds = parts
+                                    uptime_seconds = float(hours) * 3600 + float(minutes) * 60 + float(seconds)
+                            except (ValueError, AttributeError):
+                                pass
+                        
+                        # Extract basic health info and set metrics
                         return {
                             "service": service_name,
-                            "events_per_hour": 0.0,    # Default for services without event-rate
-                            "uptime_seconds": 0.0,     # Default for services without event-rate
+                            "events_per_hour": events_per_hour,
+                            "uptime_seconds": uptime_seconds,
                             "status": "active",
                             "response_time_ms": 0,
                             "last_success": datetime.now().isoformat(),
@@ -879,10 +904,103 @@ class StatsEndpoints:
                 async with session.get(health_url, timeout=timeout) as resp:
                     if resp.status == 200:
                         data = await resp.json()
+                        
+                        # Extract events_per_hour from health response
+                        events_per_hour = 0.0
+                        if "events_per_hour" in data:
+                            events_per_hour = data["events_per_hour"]
+                        elif "event_rate_per_minute" in data:
+                            # Convert event_rate_per_minute to events_per_hour
+                            events_per_hour = data["event_rate_per_minute"] * 60
+                        elif "subscription" in data and "event_rate_per_minute" in data["subscription"]:
+                            # For websocket service that has nested subscription stats
+                            events_per_hour = data["subscription"]["event_rate_per_minute"] * 60
+                        
+                        # Special handling for specific services to extract real metrics
+                        if service_name == "weather-api":
+                            # Get weather API request metrics from websocket-ingestion service
+                            try:
+                                websocket_url = self.service_urls.get("websocket-ingestion", "http://ha-ingestor-websocket:8001")
+                                async with aiohttp.ClientSession() as ws_session:
+                                    async with ws_session.get(f"{websocket_url}/health", timeout=timeout) as ws_resp:
+                                        if ws_resp.status == 200:
+                                            ws_data = await ws_resp.json()
+                                            if "weather_enrichment" in ws_data and "weather_client_stats" in ws_data["weather_enrichment"]:
+                                                weather_stats = ws_data["weather_enrichment"]["weather_client_stats"]
+                                                total_requests = weather_stats.get("total_requests", 0)
+                                                
+                                                # Calculate hourly rate based on uptime
+                                                uptime_str = ws_data.get("uptime", "0:0:0")
+                                                try:
+                                                    parts = uptime_str.split(":")
+                                                    if len(parts) == 3:
+                                                        hours, minutes, seconds = parts
+                                                        uptime_hours = float(hours) + float(minutes)/60 + float(seconds)/3600
+                                                        if uptime_hours > 0:
+                                                            events_per_hour = total_requests / uptime_hours
+                                                except (ValueError, AttributeError):
+                                                    # Fallback: assume 1 hour if parsing fails
+                                                    events_per_hour = total_requests
+                            except Exception as e:
+                                logger.warning(f"Could not get weather API stats from websocket-ingestion: {e}")
+                                events_per_hour = 0.0
+                        
+                        elif service_name == "enrichment-pipeline":
+                            # Extract processing metrics from enrichment-pipeline
+                            try:
+                                if "normalization" in data:
+                                    norm_stats = data["normalization"]
+                                    total_processed = norm_stats.get("total_events_processed", 0)
+                                    
+                                    # Calculate hourly rate based on uptime
+                                    uptime_str = data.get("uptime", "0:0:0")
+                                    try:
+                                        parts = uptime_str.split(":")
+                                        if len(parts) == 3:
+                                            hours, minutes, seconds = parts
+                                            uptime_hours = float(hours) + float(minutes)/60 + float(seconds)/3600
+                                            if uptime_hours > 0:
+                                                events_per_hour = total_processed / uptime_hours
+                                    except (ValueError, AttributeError):
+                                        # Fallback: assume 1 hour if parsing fails
+                                        events_per_hour = total_processed
+                            except Exception as e:
+                                logger.warning(f"Could not extract enrichment-pipeline metrics: {e}")
+                                events_per_hour = 0.0
+                        
+                        elif service_name in ["sports-data", "air-quality-service", "calendar-service", "carbon-intensity-service", 
+                                            "electricity-pricing-service", "energy-correlator", "smart-meter-service"]:
+                            # These services typically don't process events but provide data
+                            # Set to 0 as they are data providers, not event processors
+                            events_per_hour = 0.0
+                        
+                        elif service_name == "data-retention":
+                            # Data retention service manages data cleanup, not event processing
+                            events_per_hour = 0.0
+                        
+                        elif service_name == "log-aggregator":
+                            # Log aggregator processes logs, not HA events
+                            events_per_hour = 0.0
+                        
+                        # Extract uptime
+                        uptime_seconds = 0.0
+                        if "uptime_seconds" in data:
+                            uptime_seconds = data["uptime_seconds"]
+                        elif "uptime" in data:
+                            # Parse uptime string like "1:25:24.575842" to seconds
+                            uptime_str = data["uptime"]
+                            try:
+                                parts = uptime_str.split(":")
+                                if len(parts) == 3:
+                                    hours, minutes, seconds = parts
+                                    uptime_seconds = float(hours) * 3600 + float(minutes) * 60 + float(seconds)
+                            except (ValueError, AttributeError):
+                                pass
+                        
                         return {
                             "service": service_name,
-                            "events_per_hour": data.get("events_per_hour", 0.0),
-                            "uptime_seconds": data.get("uptime_seconds", 0.0),
+                            "events_per_hour": events_per_hour,
+                            "uptime_seconds": uptime_seconds,
                             "status": "active",
                             "response_time_ms": 0,  # Could be calculated if needed
                             "last_success": datetime.now().isoformat()
