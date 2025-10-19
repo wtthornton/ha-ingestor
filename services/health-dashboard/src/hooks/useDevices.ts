@@ -45,8 +45,9 @@ export function useDevices() {
       setError(null);
       
       // Epic 13 Story 13.2: Use dataApi.getDevices()
+      // Increased limit to ensure we fetch all devices (currently 99)
       const response = await dataApi.getDevices({
-        limit: 100,
+        limit: 1000,
         manufacturer: filters?.manufacturer,
         model: filters?.model,
         area_id: filters?.area_id
@@ -65,8 +66,10 @@ export function useDevices() {
   const fetchEntities = useCallback(async (filters?: Record<string, string>) => {
     try {
       // Epic 13 Story 13.2: Use dataApi.getEntities()
+      // Increased limit from 100 to 10000 to accommodate all entities
+      // (99 devices × avg 10-15 entities = ~1000-1500 entities needed)
       const response = await dataApi.getEntities({
-        limit: 100,
+        limit: 10000,
         domain: filters?.domain,
         platform: filters?.platform,
         device_id: filters?.device_id
