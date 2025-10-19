@@ -479,24 +479,24 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Clean Slim Header */}
-      <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className={`text-xl font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-3`}>
-              <span className="text-lg">🏗️</span>
+            <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
+              <span className="text-base">🏗️</span>
               Architecture Overview
             </h2>
-            <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Real-time data flow from Home Assistant through processing to storage
             </p>
           </div>
           
           {/* Clean Live Metrics */}
           {realTimeData && (
-            <div className={`px-6 py-4 rounded-lg border ${darkMode ? 'bg-gray-750 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-              <div className="flex items-center gap-6">
+            <div className={`px-4 py-3 rounded-lg border ${darkMode ? 'bg-gray-750 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-4">
                 <div className="text-center">
                   <div className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-green-300' : 'text-green-600'}`}>
                     {(realTimeData.eventsPerHour || 0).toFixed(0)}
