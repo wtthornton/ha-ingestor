@@ -1,12 +1,17 @@
 """
 Home Assistant API Client
 Deploy and manage automations in Home Assistant
-Story AI1.11: Home Assistant Integration
+
+Stories:
+- AI1.11: Home Assistant Integration
+- AI4.1: HA Client Foundation
 """
 
 import aiohttp
+import asyncio
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
+from datetime import datetime, timezone
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -17,15 +22,26 @@ class HomeAssistantClient:
     Client for interacting with Home Assistant REST API.
     
     Handles deployment and management of automations.
+    Story AI4.1: Enhanced with connection health checks, retry logic, and version detection.
     """
     
-    def __init__(self, ha_url: str, access_token: str):
+    def __init__(
+        self, 
+        ha_url: str, 
+        access_token: str,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        timeout: int = 10
+    ):
         """
         Initialize HA client.
         
         Args:
             ha_url: Home Assistant URL (e.g., "http://homeassistant:8123")
             access_token: Long-lived access token from HA
+            max_retries: Maximum number of retry attempts for failed requests
+            retry_delay: Initial delay between retries (exponential backoff applied)
+            timeout: Request timeout in seconds
         """
         self.ha_url = ha_url.rstrip('/')
         self.access_token = access_token
@@ -33,35 +49,218 @@ class HomeAssistantClient:
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.timeout = timeout
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._version_info: Optional[Dict[str, Any]] = None
+        self._last_health_check: Optional[datetime] = None
+    
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """
+        Get or create a reusable client session with connection pooling.
+        
+        Story AI4.1: Implements efficient connection pooling per Context7 best practices.
+        
+        Returns:
+            Configured ClientSession instance
+        """
+        if self._session is None or self._session.closed:
+            # Configure connection pooling per Context7 docs
+            connector = aiohttp.TCPConnector(
+                limit=20,  # Total connection pool size (Context7 default)
+                limit_per_host=5,  # Connections per host
+                keepalive_timeout=30,  # Keep connections alive for reuse
+                force_close=False  # Enable connection reuse
+            )
+            
+            timeout = aiohttp.ClientTimeout(
+                total=self.timeout,
+                connect=5,  # Socket connect timeout
+                sock_connect=5,  # SSL handshake timeout
+                sock_read=self.timeout  # Read timeout
+            )
+            
+            self._session = aiohttp.ClientSession(
+                connector=connector,
+                headers=self.headers,
+                timeout=timeout,
+                raise_for_status=False  # Manual status checking
+            )
+            logger.debug("✅ Created new ClientSession with connection pooling")
+        
+        return self._session
+    
+    async def close(self) -> None:
+        """
+        Close the client session and cleanup connections.
+        
+        Story AI4.1: Proper resource cleanup per Context7 best practices.
+        """
+        if self._session and not self._session.closed:
+            await self._session.close()
+            # Grace period for SSL connections to close (Context7 recommendation)
+            await asyncio.sleep(0.250)
+            logger.debug("✅ Closed ClientSession and cleaned up connections")
+    
+    async def _retry_request(
+        self,
+        method: str,
+        endpoint: str,
+        return_json: bool = False,
+        **kwargs
+    ) -> Optional[Any]:
+        """
+        Make HTTP request with exponential backoff retry logic.
+        
+        Story AI4.1: Implements retry pattern based on Context7 aiohttp_retry best practices.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            endpoint: API endpoint path
+            return_json: If True, return parsed JSON instead of response object
+            **kwargs: Additional request parameters
+        
+        Returns:
+            Response data (JSON dict or status code) or None on failure
+        """
+        session = await self._get_session()
+        url = f"{self.ha_url}{endpoint}"
+        
+        for attempt in range(self.max_retries):
+            try:
+                async with session.request(method, url, **kwargs) as response:
+                    # Read response data before exiting context
+                    if return_json and response.status == 200:
+                        data = await response.json()
+                        return data
+                    
+                    # Handle different status codes
+                    if response.status < 500:  # Success or client error
+                        return {'status': response.status, 'data': await response.json() if response.status == 200 else None}
+                    
+                    # Server error - retry with backoff
+                    if attempt + 1 < self.max_retries:
+                        # Exponential backoff: delay * 2^attempt
+                        delay = self.retry_delay * (2 ** attempt)
+                        logger.warning(
+                            f"⚠️ Server error {response.status} on {endpoint}, "
+                            f"retrying in {delay:.1f}s (attempt {attempt + 1}/{self.max_retries})"
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.error(
+                            f"❌ Max retries reached for {endpoint}, status: {response.status}"
+                        )
+                        return {'status': response.status, 'data': None}
+                        
+            except (aiohttp.ClientConnectionError, aiohttp.ClientSSLError) as e:
+                if attempt + 1 < self.max_retries:
+                    delay = self.retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"⚠️ Connection error on {endpoint}: {type(e).__name__}, "
+                        f"retrying in {delay:.1f}s (attempt {attempt + 1}/{self.max_retries})"
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"❌ Max retries reached for {endpoint}, error: {e}"
+                    )
+                    return None
+                    
+            except asyncio.TimeoutError:
+                if attempt + 1 < self.max_retries:
+                    delay = self.retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"⚠️ Timeout on {endpoint}, "
+                        f"retrying in {delay:.1f}s (attempt {attempt + 1}/{self.max_retries})"
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(f"❌ Max retries reached for {endpoint}, timeout")
+                    return None
+        
+        return None
+    
+    async def get_version(self) -> Optional[Dict[str, Any]]:
+        """
+        Get Home Assistant version and configuration information.
+        
+        Story AI4.1 AC2: Detect HA version for compatibility checking.
+        
+        Returns:
+            Dict with version info or None on failure
+        """
+        if self._version_info is not None:
+            return self._version_info
+        
+        try:
+            result = await self._retry_request('GET', '/api/config', return_json=True)
+            if result:
+                self._version_info = result
+                version = self._version_info.get('version', 'unknown')
+                logger.info(f"📋 Home Assistant version: {version}")
+                return self._version_info
+            else:
+                logger.error("❌ Failed to get HA version: No response")
+                return None
+        except Exception as e:
+            logger.error(f"❌ Error getting HA version: {e}")
+            return None
     
     async def test_connection(self) -> bool:
         """
-        Test connection to Home Assistant.
+        Test connection to Home Assistant with health check.
+        
+        Story AI4.1 AC2: Enhanced health checking with version detection.
         
         Returns:
             True if connection successful
         """
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.ha_url}/api/",
-                    headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(total=10)
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        logger.info(f"✅ Connected to Home Assistant: {data.get('message', 'OK')}")
-                        return True
-                    else:
-                        logger.error(f"❌ HA connection failed: {response.status}")
-                        return False
+            result = await self._retry_request('GET', '/api/', return_json=True)
+            if result:
+                logger.info(f"✅ Connected to Home Assistant: {result.get('message', 'OK')}")
+                
+                # Get version info
+                await self.get_version()
+                
+                # Update last health check timestamp
+                self._last_health_check = datetime.now(timezone.utc)
+                
+                return True
+            else:
+                logger.error("❌ HA connection failed: No response")
+                return False
         except Exception as e:
             logger.error(f"❌ Failed to connect to HA: {e}")
             return False
     
+    async def health_check(self) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Comprehensive health check with detailed status information.
+        
+        Story AI4.1 AC2: Returns connection status and HA version.
+        
+        Returns:
+            Tuple of (is_healthy, status_info)
+        """
+        is_healthy = await self.test_connection()
+        
+        status_info = {
+            'connected': is_healthy,
+            'url': self.ha_url,
+            'last_check': self._last_health_check.isoformat() if self._last_health_check else None,
+            'version_info': self._version_info
+        }
+        
+        return is_healthy, status_info
+    
     async def get_automation(self, automation_id: str) -> Optional[Dict]:
         """
         Get a specific automation by ID.
+        
+        Story AI4.1: Uses retry logic for reliability.
         
         Args:
             automation_id: Automation entity ID (e.g., "automation.morning_lights")
@@ -70,19 +269,8 @@ class HomeAssistantClient:
             Automation data or None if not found
         """
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.ha_url}/api/states/{automation_id}",
-                    headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(total=10)
-                ) as response:
-                    if response.status == 200:
-                        return await response.json()
-                    elif response.status == 404:
-                        return None
-                    else:
-                        logger.error(f"Failed to get automation {automation_id}: {response.status}")
-                        return None
+            result = await self._retry_request('GET', f"/api/states/{automation_id}", return_json=True)
+            return result
         except Exception as e:
             logger.error(f"Error getting automation {automation_id}: {e}")
             return None
@@ -91,25 +279,34 @@ class HomeAssistantClient:
         """
         Get automation configurations from Home Assistant.
         
-        Story AI3.3: Unconnected Relationship Analysis
+        Stories:
+        - AI3.3: Unconnected Relationship Analysis
+        - AI4.1: Enhanced with retry logic
+        - AI4.4: Handle different response formats
         
         Returns:
             List of automation configurations with trigger/action details
         """
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.ha_url}/api/config/automation/config",
-                    headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(total=30)
-                ) as response:
-                    if response.status == 200:
-                        configs = await response.json()
-                        logger.info(f"✅ Retrieved {len(configs)} automation configurations")
-                        return configs
-                    else:
-                        logger.warning(f"Failed to get automation configs: {response.status}")
-                        return []
+            result = await self._retry_request('GET', '/api/config/automation/config', return_json=True)
+            
+            # Handle different response formats
+            if isinstance(result, dict):
+                # Response wrapped in {status, data} format
+                if 'data' in result:
+                    configs = result['data']
+                elif 'status' in result and result['status'] == 200:
+                    configs = result.get('data', [])
+                else:
+                    # Treat as a single config wrapped in dict
+                    configs = [result] if result else []
+            elif isinstance(result, list):
+                configs = result
+            else:
+                configs = []
+            
+            logger.info(f"✅ Retrieved {len(configs)} automation configurations")
+            return configs
         except Exception as e:
             logger.error(f"Error fetching automation configs: {e}")
             return []
@@ -118,27 +315,23 @@ class HomeAssistantClient:
         """
         List all automations in Home Assistant.
         
+        Story AI4.1: Enhanced with retry logic.
+        
         Returns:
             List of automation entities
         """
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.ha_url}/api/states",
-                    headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(total=10)
-                ) as response:
-                    if response.status == 200:
-                        all_states = await response.json()
-                        automations = [
-                            s for s in all_states 
-                            if s.get('entity_id', '').startswith('automation.')
-                        ]
-                        logger.info(f"📋 Found {len(automations)} automations in HA")
-                        return automations
-                    else:
-                        logger.error(f"Failed to list automations: {response.status}")
-                        return []
+            all_states = await self._retry_request('GET', '/api/states', return_json=True)
+            if all_states:
+                automations = [
+                    s for s in all_states 
+                    if s.get('entity_id', '').startswith('automation.')
+                ]
+                logger.info(f"📋 Found {len(automations)} automations in HA")
+                return automations
+            else:
+                logger.error("Failed to list automations: No response")
+                return []
         except Exception as e:
             logger.error(f"Error listing automations: {e}")
             return []

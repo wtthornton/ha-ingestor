@@ -317,11 +317,22 @@ class DailyAnalysisScheduler:
             try:
                 from ..synergy_detection import DeviceSynergyDetector
                 from ..database.crud import store_synergy_opportunities
+                from ..clients.ha_client import HomeAssistantClient
                 logger.info("   → Imported synergy detection modules successfully")
+                
+                # Story AI4.3: Initialize HA client for automation checking
+                ha_client = HomeAssistantClient(
+                    ha_url=settings.ha_url,
+                    access_token=settings.ha_token,
+                    max_retries=settings.ha_max_retries,
+                    retry_delay=settings.ha_retry_delay,
+                    timeout=settings.ha_timeout
+                )
+                logger.info("   → HA client initialized for automation filtering")
                 
                 synergy_detector = DeviceSynergyDetector(
                     data_api_client=data_client,
-                    ha_client=None,  # TODO: Add HA client for automation checking (Story AI3.3)
+                    ha_client=ha_client,  # Story AI4.3: Enable automation filtering!
                     influxdb_client=data_client.influxdb_client,  # Enable advanced scoring (Story AI3.2)
                     min_confidence=0.5,  # Lowered from 0.7 to be less restrictive
                     same_area_required=False  # Relaxed requirement to find more opportunities
@@ -384,6 +395,14 @@ class DailyAnalysisScheduler:
                 synergies = []
                 job_result['synergies_detected'] = 0
                 job_result['synergies_stored'] = 0
+            finally:
+                # Story AI4.3: Clean up HA client resources
+                if 'ha_client' in locals() and ha_client:
+                    try:
+                        await ha_client.close()
+                        logger.debug("   → HA client connection closed")
+                    except Exception as e:
+                        logger.debug(f"   → Failed to close HA client: {e}")
             
             # ================================================================
             # Phase 4: Feature Analysis (Epic AI-2)

@@ -4,9 +4,16 @@
 **Document Version**: 2.4 (Epic 22 Update)  
 **Created**: 2025-10-13  
 **Last Updated**: 2025-01-14 (Epic 22: Hybrid database architecture)  
+**Last Validated**: October 19, 2025 ✅  
 **Previous Updates**: v2.3 - Code verification; v2.2 - Epic 13 notes; v2.1 - Epic 12 & 13  
 **Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system  
-**Verification Status**: ✅ Verified against actual code implementation
+
+**Validation Status (Oct 19, 2025):**
+- ✅ Batch size confirmed: 100 events (BATCH_SIZE env var)
+- ✅ Batch timeout confirmed: 5.0 seconds (BATCH_TIMEOUT env var)
+- ✅ SQLite database path verified: data/metadata.db
+- ✅ WAL mode and foreign keys enabled
+- ✅ All function calls and logic flow validated
 
 > **Epic 22 Update**: **Hybrid Database Architecture** implemented
 > - **InfluxDB**: Time-series event data (home_assistant_events)

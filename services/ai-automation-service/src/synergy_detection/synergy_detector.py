@@ -325,7 +325,9 @@ class DeviceSynergyDetector:
         """
         Filter out pairs that already have automations.
         
-        Story AI3.3: Unconnected Relationship Analysis
+        Stories:
+        - AI3.3: Unconnected Relationship Analysis
+        - AI4.3: Relationship Checker (Enhanced with automation parser)
         
         Args:
             compatible_pairs: List of compatible device pairs
@@ -339,32 +341,63 @@ class DeviceSynergyDetector:
             return compatible_pairs
         
         try:
-            from .relationship_analyzer import HomeAssistantAutomationChecker
+            # Story AI4.3: Use new automation parser for efficient filtering
+            from ..clients.automation_parser import AutomationParser
             
-            # Initialize automation checker
-            checker = HomeAssistantAutomationChecker(self.ha_client)
+            # Get and parse automations
+            logger.info("   → Fetching automation configurations from HA...")
+            automations = await self.ha_client.get_automations()
             
-            # Get connected entity pairs
-            connected_pairs = await checker.get_connected_entity_pairs()
+            if not automations:
+                logger.info("   → No existing automations found, all pairs are new")
+                return compatible_pairs
             
-            # Filter out pairs that already have automations
+            # Parse automations and build relationship index
+            parser = AutomationParser()
+            count = parser.parse_automations(automations)
+            logger.info(f"   → Parsed {count} automations, indexed {parser.get_entity_pair_count()} entity pairs")
+            
+            # Filter out pairs that already have automations (O(1) lookup per pair!)
+            # Story AI4.3: Efficient filtering using hash-based lookup (Context7 best practice)
             new_pairs = []
+            filtered_pairs = []
+            
             for pair in compatible_pairs:
                 trigger_entity = pair.get('trigger_entity')
                 action_entity = pair.get('action_entity')
                 
-                if await checker.is_connected(trigger_entity, action_entity):
-                    logger.debug(f"Filtering out: {trigger_entity} → {action_entity} (automation exists)")
+                # O(1) hash table lookup (Context7: sets provide O(1) membership testing)
+                if parser.has_relationship(trigger_entity, action_entity):
+                    # Get automation details for logging
+                    relationships = parser.get_relationships_for_pair(trigger_entity, action_entity)
+                    automation_names = [rel.automation_alias for rel in relationships]
+                    logger.debug(
+                        f"   ⏭️  Filtering: {trigger_entity} → {action_entity} "
+                        f"(already automated by: {', '.join(automation_names)})"
+                    )
+                    filtered_pairs.append({
+                        'trigger': trigger_entity,
+                        'action': action_entity,
+                        'existing_automations': automation_names
+                    })
                 else:
                     new_pairs.append(pair)
             
-            filtered_count = len(compatible_pairs) - len(new_pairs)
-            logger.info(f"Filtered {filtered_count} pairs with existing automations")
+            filtered_count = len(filtered_pairs)
+            logger.info(
+                f"✅ Filtered {filtered_count} pairs with existing automations, "
+                f"{len(new_pairs)} new opportunities remain"
+            )
+            
+            if filtered_pairs and len(filtered_pairs) <= 5:
+                filtered_pair_names = [f"{p['trigger']} → {p['action']}" for p in filtered_pairs]
+                logger.info(f"   → Filtered pairs: {filtered_pair_names}")
             
             return new_pairs
             
         except Exception as e:
-            logger.warning(f"Automation checking failed: {e}, returning all pairs")
+            logger.warning(f"⚠️ Automation checking failed: {e}, returning all pairs")
+            logger.debug(f"   → Error details: {e}", exc_info=True)
             return compatible_pairs
     
     def _rank_opportunities(self, synergies: List[Dict]) -> List[Dict]:

@@ -16,9 +16,12 @@ class Settings(BaseSettings):
     influxdb_org: str = "homeiq"
     influxdb_bucket: str = "home_assistant_events"
     
-    # Home Assistant
+    # Home Assistant (Story AI4.1: Enhanced configuration)
     ha_url: str
     ha_token: str
+    ha_max_retries: int = 3  # Maximum retry attempts for HA API calls
+    ha_retry_delay: float = 1.0  # Initial retry delay in seconds
+    ha_timeout: int = 10  # Request timeout in seconds
     
     # MQTT
     mqtt_broker: str

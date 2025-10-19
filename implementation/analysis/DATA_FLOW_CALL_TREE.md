@@ -1,5 +1,8 @@
 # 🔄 **Complete Data Flow Call Tree: Home Assistant → GUI**
 
+**Last Validated:** October 19, 2025 ✅  
+**Document Type:** HISTORICAL REFERENCE ONLY
+
 > **⚠️ HISTORICAL DOCUMENT**: This document captured a specific authentication troubleshooting session and is **NOT** current architecture.
 > 
 > **For current architecture**, see:
