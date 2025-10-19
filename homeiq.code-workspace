@@ -1,0 +1,17 @@
+{
+    "folders": [
+		{
+			"path": ".",
+			"name": "HomeIQ"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/__pycache__": true,
+			"**/*.pyc": true,
+			"**/node_modules": true,
+			"**/.pytest_cache": true
+		}
+	}
+}
+

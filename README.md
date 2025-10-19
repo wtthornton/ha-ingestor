@@ -1,8 +1,8 @@
-# Home Assistant Data Ingestor & API Hub
+# HomeIQ - Smart Home Intelligence Platform
 
-**Enterprise-grade data ingestion platform and API hub for single-home automation systems**
+**Enterprise-grade Home Assistant intelligence platform with AI-powered automation and analytics**
 
-A comprehensive Home Assistant data ingestion system that captures, normalizes, and stores Home Assistant events with multi-source data enrichment. Uses **hybrid database architecture** (InfluxDB for time-series, SQLite for metadata) delivering 5-10x faster queries. Provides RESTful APIs and event-driven webhooks for Home Assistant automations, external integrations, and cloud analytics platforms.
+HomeIQ is a comprehensive smart home intelligence system that captures, analyzes, and enriches Home Assistant events with AI-powered pattern detection and multi-source data enrichment. Uses **hybrid database architecture** (InfluxDB for time-series, SQLite for metadata) delivering 5-10x faster queries. Provides RESTful APIs, conversational AI automation, and event-driven webhooks for Home Assistant automations, external integrations, and cloud analytics platforms.
 
 ## 🏗️ **System Architecture**
 

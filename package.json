@@ -1,7 +1,7 @@
 {
-  "name": "ha-ingestor",
+  "name": "homeiq",
   "version": "1.0.0",
-  "description": "A comprehensive Home Assistant data ingestion system that captures, normalizes, and stores Home Assistant events in InfluxDB with weather data enrichment.",
+  "description": "HomeIQ - Enterprise-grade Home Assistant intelligence platform with AI-powered automation, pattern detection, and comprehensive data analytics.",
   "main": "validate-deployment.js",
   "directories": {
     "doc": "docs",
@@ -12,16 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wtthornton/ha-ingestor.git"
+    "url": "git+https://github.com/wtthornton/HomeIQ.git"
   },
-  "keywords": [],
+  "keywords": ["home-assistant", "home-automation", "ai", "smart-home", "iot", "pattern-detection"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/wtthornton/ha-ingestor/issues"
+    "url": "https://github.com/wtthornton/HomeIQ/issues"
   },
-  "homepage": "https://github.com/wtthornton/ha-ingestor#readme",
+  "homepage": "https://github.com/wtthornton/HomeIQ#readme",
   "dependencies": {
     "@playwright/test": "^1.56.0",
     "puppeteer": "^24.25.0"
