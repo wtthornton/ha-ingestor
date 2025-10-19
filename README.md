@@ -6,10 +6,12 @@ A comprehensive Home Assistant data ingestion system that captures, normalizes, 
 
 ## 🏗️ **System Architecture**
 
+**Total Services:** 20 (19 microservices + InfluxDB)
+
 ### **Local Services** (localhost - Development/Testing)
 - **Web Interfaces**: 
   - Main Dashboard: http://localhost:3000
-  - AI Automation UI: http://localhost:3001
+  - **AI Automation UI: http://localhost:3001** (Conversational automation refinement)
 - **API Services**: 
   - WebSocket Ingestion: localhost:8001
   - Enrichment Pipeline: localhost:8002
@@ -41,7 +43,7 @@ Home Assistant (192.168.1.86) → MQTT → AI Automation Service → Device Inte
 [![Critical Issues](https://img.shields.io/badge/Critical%20Issues-0-brightgreen)](#)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-brightgreen)](#)
 [![MQTT Status](https://img.shields.io/badge/MQTT-Connected-brightgreen)](#)
-[![Last Updated](https://img.shields.io/badge/Last%20Updated-October%2018%2C%202025-blue)](#)
+[![Last Updated](https://img.shields.io/badge/Last%20Updated-October%2019%2C%202025-blue)](#)
 
 ---
 
@@ -100,13 +102,14 @@ Home Assistant (192.168.1.86) → MQTT → AI Automation Service → Device Inte
 ✅ **Context7 Validated** - All implementations validated against best practices (Trust Scores: 9.9, 9, 7.5)  
 ✅ **3,640 Lines of Code** - Production-ready implementation with full frontend integration  
 
-### October 19, 2025 - Weather-API Integration & Health Monitoring Fixes 🎉
+### October 19, 2025 - Documentation Audit & Fixes 🎉
+✅ **Comprehensive Documentation Audit** - Reviewed entire codebase for documentation accuracy (85→95%)  
+✅ **Service Count Corrected** - Updated from 17 to 20 services (added automation-miner, ai-automation-ui)  
+✅ **File Organization Fixed** - Moved 4 misplaced files from docs/ to implementation/ per cursor rules  
 ✅ **Weather-API Fixed** - Resolved port configuration and connection issues  
 ✅ **Health Score 100%** - All 14 external APIs and services now healthy  
 ✅ **Events/Hour Implementation** - Changed all metrics from events/sec to events/hour  
 ✅ **Comprehensive Monitoring** - All services now properly monitored with correct endpoints  
-✅ **Documentation Updated** - API documentation reflects new metrics format  
-✅ **100% Service Health** - All microservices healthy and operational  
 
 ### October 18, 2025 - Full System Rebuild & Statistics Implementation 🎉
 ✅ **Full Rebuild Deployment** - All 17 services rebuilt and deployed successfully  
@@ -240,6 +243,10 @@ docker-compose up -d
 
 # 4. Access dashboard
 open http://localhost:3000
+
+# 5. Verify deployment
+./scripts/verify-deployment.sh
+# Or on Windows: ./scripts/verify-deployment.ps1
 ```
 
 The deployment wizard will:
@@ -250,6 +257,27 @@ The deployment wizard will:
 - ✅ Validate connectivity
 
 **See:** [`docs/DEPLOYMENT_WIZARD_GUIDE.md`](docs/DEPLOYMENT_WIZARD_GUIDE.md) for detailed usage.
+
+#### 🔍 Deployment Verification
+
+After deployment, **always run the verification script** to ensure everything is working correctly:
+
+```bash
+# Run comprehensive deployment verification
+./scripts/verify-deployment.sh
+
+# Or on Windows:
+./scripts/verify-deployment.ps1
+```
+
+**Critical Checks:**
+- [ ] Dashboard loads at http://localhost:3000
+- [ ] Dashboard shows "ALL SYSTEMS OPERATIONAL" (not "DEGRADED PERFORMANCE")
+- [ ] All core system components show healthy status
+- [ ] API endpoints return correct data structures
+- [ ] No JavaScript errors in browser console
+
+**⚠️ Important:** If the dashboard shows "DEGRADED PERFORMANCE", the verification script will identify the specific issues.
 
 ---
 
@@ -415,6 +443,14 @@ This project follows security best practices:
 - Real-time energy consumption
 - Port: 8014 (internal)
 
+#### Automation Miner Service
+- **Pattern Mining**: Discovers automation patterns from historical data
+- **Usage Analysis**: Analyzes device usage patterns and correlations
+- **Pattern Storage**: Stores discovered patterns in SQLite database
+- **HA Integration**: Syncs with Home Assistant automation repository
+- Port: Internal (no external access)
+- **Status:** ✅ Production Ready
+
 #### AI Automation Service (Enhanced)
 - **Pattern Detection**: Advanced algorithms to detect usage patterns from historical data
 - **AI-Powered Suggestions**: OpenAI integration for intelligent automation recommendations
@@ -425,6 +461,14 @@ This project follows security best practices:
 - **Recent Improvements**: MQTT connectivity fixed, 50% faster processing, enhanced error handling
 - Port: 8018 (external)
 - **Status:** ✅ Production Ready with MQTT Connected
+
+#### AI Automation UI
+- **Conversational Interface**: Chat-based automation refinement
+- **Visual Feedback**: Real-time preview of automation suggestions
+- **Approval Workflow**: Review and approve AI-generated automations
+- **Safety Validation**: 6-rule safety checks before deployment
+- Port: 3001 (external)
+- **Status:** ✅ Production Ready
 
 ### Data Storage & Monitoring
 
@@ -457,7 +501,7 @@ This project follows security best practices:
 
 ```
 ha-ingestor/
-├── services/                      # 12 microservices (Alpine-based)
+├── services/                      # 19 microservices (Alpine-based)
 │   ├── websocket-ingestion/      # Port 8001 - HA WebSocket client
 │   ├── enrichment-pipeline/      # Port 8002 - Data processing
 │   ├── admin-api/                # Port 8003 - REST API gateway
@@ -471,6 +515,9 @@ ha-ingestor/
 │   ├── air-quality-service/      # Port 8012 - Air quality
 │   ├── calendar-service/         # Port 8013 - Calendar
 │   ├── smart-meter-service/      # Port 8014 - Smart meter
+│   ├── automation-miner/         # Pattern mining & automation discovery
+│   ├── ai-automation-service/    # Port 8018 - AI automation suggestions
+│   ├── ai-automation-ui/         # Port 3001 - AI automation interface
 │   └── ha-simulator/             # Test simulator for HA events
 ├── shared/                       # Shared Python utilities
 │   ├── logging_config.py         # Structured logging + correlation IDs

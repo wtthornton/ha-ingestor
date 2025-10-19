@@ -3,7 +3,7 @@
 This document defines the complete source tree structure for the Home Assistant Ingestor project, following BMAD framework standards and microservices architecture patterns.
 
 **Status**: ✅ **FULLY OPERATIONAL** - All services healthy, MQTT connected, 100% success rate  
-**Last Updated**: October 17, 2025
+**Last Updated**: October 19, 2025
 
 ## Root Directory Structure
 
@@ -27,7 +27,7 @@ ha-ingestor/
 │   ├── analysis/                  # Technical analysis and diagnosis
 │   ├── verification/              # Test and verification results
 │   └── archive/                   # Old/superseded implementation notes
-├── services/                      # 16 Microservices (Alpine-based)
+├── services/                      # 19 Microservices (Alpine-based)
 │   ├── admin-api/                 # System monitoring & control API (Port 8003 external → 8004 internal) [Epic 13]
 │   ├── data-api/                  # Feature data hub API (Port 8006) [Epic 13]
 │   ├── ha-setup-service/          # HA Setup & Recommendation Service (Port 8020) [Epic 27-30] ✨ NEW
@@ -310,7 +310,7 @@ infrastructure/
 ## Current System Status (October 17, 2025)
 
 ### ✅ **FULLY OPERATIONAL**
-- **All Services**: 17/17 healthy and running
+- **All Services**: 20/20 healthy and running
 - **Web Interfaces**: localhost:3000 (Dashboard), localhost:3001 (AI UI)
 - **API Services**: All ports 8001-8018 responding correctly
 - **MQTT Integration**: Connected to 192.168.1.86:1883
@@ -319,6 +319,7 @@ infrastructure/
 - **AI Automation**: Daily 3 AM job running (~$0.50/year cost) [📖 Docs](../../implementation/analysis/AI_AUTOMATION_CALL_TREE_INDEX.md)
 
 ### **Recent Major Fixes**
+- **Documentation Audit** (Oct 19): Comprehensive review, corrected service count (17→20), moved 4 misplaced files
 - **MQTT Connection**: Fixed IP configuration (was 172.18.0.1, now 192.168.1.86)
 - **Health Checks**: Corrected all service health check endpoints
 - **Data API**: Fixed health check to use localhost:8006
