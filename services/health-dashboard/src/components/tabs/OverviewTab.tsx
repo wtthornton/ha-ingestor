@@ -142,9 +142,8 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
     // Check if any core dependencies are unhealthy
     const influxdb = enhancedHealth?.dependencies?.find(d => d.name === 'InfluxDB');
     const websocket = enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion');
-    const enrichment = enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline');
     
-    const unhealthyDeps = [influxdb, websocket, enrichment].filter(d => d?.status !== 'healthy').length;
+    const unhealthyDeps = [influxdb, websocket].filter(d => d?.status !== 'healthy').length;
     
     if (unhealthyDeps > 0) return 'degraded';
     if (health?.status !== 'healthy') return 'degraded';
@@ -308,10 +307,9 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
         <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           📊 Core System Components
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6" role="group" aria-label="Core system components">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="group" aria-label="Core system components">
           {healthLoading || enhancedHealthLoading ? (
             <>
-              <SkeletonCard variant="service" />
               <SkeletonCard variant="service" />
               <SkeletonCard variant="service" />
             </>
@@ -329,9 +327,9 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                 }
                 metrics={{
                   primary: {
-                    label: 'Events per Minute',
+                    label: 'Events per Hour',
                     value: websocketMetrics?.events_per_minute || 0,
-                    unit: 'evt/min'
+                    unit: 'evt/h'
                   },
                   secondary: {
                     label: 'Total Events',
@@ -351,47 +349,6 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                     { label: 'Total Events Received', value: websocketMetrics?.total_events_received || 0, unit: 'events' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.status || 'unknown' },
                     { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
-                    { label: 'Uptime', value: enhancedHealth?.metrics?.uptime_human || 'N/A' }
-                  ]
-                })}
-              />
-
-              {/* Processing Card - Phase 2: Clickable for details */}
-              <CoreSystemCard
-                title="PROCESSING"
-                icon="⚙️"
-                service="Enrichment Pipeline"
-                status={
-                  enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.status === 'healthy'
-                    ? 'healthy'
-                    : enrichmentMetrics?.events_per_minute === 0
-                      ? 'paused'
-                      : 'unhealthy'
-                }
-                metrics={{
-                  primary: {
-                    label: 'Processed per Minute',
-                    value: enrichmentMetrics?.events_per_minute || 0,
-                    unit: 'proc/min'
-                  },
-                  secondary: {
-                    label: 'Total Processed',
-                    value: enrichmentMetrics?.total_events_received || 0,
-                    unit: 'events'
-                  }
-                }}
-                uptime={enhancedHealth?.metrics?.uptime_human || 'N/A'}
-                darkMode={darkMode}
-                onExpand={() => setSelectedService({
-                  title: 'PROCESSING',
-                  icon: '⚙️',
-                  service: 'Enrichment Pipeline',
-                  status: enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.status === 'healthy' ? 'healthy' : enrichmentMetrics?.events_per_minute === 0 ? 'paused' : 'unhealthy',
-                  details: [
-                    { label: 'Processed per Minute', value: enrichmentMetrics?.events_per_minute || 0, unit: 'proc/min' },
-                    { label: 'Total Processed', value: enrichmentMetrics?.total_events_received || 0, unit: 'events' },
-                    { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.status || 'unknown' },
-                    { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },
                     { label: 'Uptime', value: enhancedHealth?.metrics?.uptime_human || 'N/A' }
                   ]
                 })}

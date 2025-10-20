@@ -790,6 +790,7 @@ class StatsEndpoints:
     
     async def _get_api_metrics(self, service_name: str, service_url: str) -> Dict[str, Any]:
         """Get metrics from a specific API service"""
+        start_time = datetime.now()
         try:
             async with aiohttp.ClientSession() as session:
                 # Try /health endpoint first, then fall back to /api/v1/event-rate
@@ -899,6 +900,7 @@ class StatsEndpoints:
     
     async def _get_api_metrics_with_timeout(self, service_name: str, service_url: str, timeout: int) -> Dict[str, Any]:
         """Get metrics from a specific API service with individual timeout"""
+        start_time = datetime.now()
         try:
             async with aiohttp.ClientSession() as session:
                 # Use /health endpoint for all services
