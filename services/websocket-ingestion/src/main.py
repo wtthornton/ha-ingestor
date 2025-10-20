@@ -90,8 +90,9 @@ class WebSocketIngestionService:
         # DEPRECATED (Epic 31): Weather enrichment disabled
         self.weather_enrichment_enabled = False  # Force disabled - use weather-api service
         
-        # Enrichment service configuration
-        self.enrichment_service_url = os.getenv('ENRICHMENT_SERVICE_URL', 'http://enrichment-pipeline:8002')
+        # DEPRECATED (Epic 31): Enrichment service removed
+        # Events now go directly to InfluxDB, external services consume from there
+        self.enrichment_service_url = None
         
         # InfluxDB configuration for device/entity registry storage
         self.influxdb_url = os.getenv('INFLUXDB_URL', 'http://influxdb:8086')
@@ -407,24 +408,15 @@ class WebSocketIngestionService:
                     batch_size=batch_size
                 )
             
-            # Send batch to enrichment service via HTTP
-            if self.http_client:
-                for event in batch:
-                    success = await self.http_client.send_event(event)
-                    if not success:
-                        log_with_context(
-                            logger, "ERROR", "Failed to send event to enrichment service",
-                            operation="http_send",
-                            correlation_id=corr_id,
-                            event_type=event.get('event_type', 'unknown')
-                        )
-                
-                log_with_context(
-                    logger, "DEBUG", "Batch sent to enrichment service",
-                    operation="http_batch_send",
-                    correlation_id=corr_id,
-                    batch_size=batch_size
-                )
+            # DEPRECATED (Epic 31): Enrichment service removed
+            # Events are now stored directly in InfluxDB
+            # External services (weather-api, etc.) consume from InfluxDB
+            log_with_context(
+                logger, "DEBUG", "Batch processed - events stored in InfluxDB",
+                operation="influxdb_storage",
+                correlation_id=corr_id,
+                batch_size=batch_size
+            )
                 
         except Exception as e:
             log_error_with_context(
@@ -636,38 +628,38 @@ async def main():
     """Main entry point"""
     logger.info("Starting WebSocket Ingestion Service...")
     
-    # Initialize HTTP client for enrichment service
-    enrichment_url = os.getenv("ENRICHMENT_SERVICE_URL", "http://enrichment-pipeline:8002")
+    # DEPRECATED (Epic 31): Enrichment service removed
+    # Events go directly to InfluxDB, no HTTP client needed
+    http_client = None
     
-    async with SimpleHTTPClient(enrichment_url) as http_client:
-        # Create web application
-        app = await create_app()
-        service = app['service']
-        
-        # Set the HTTP client in the service
-        service.http_client = http_client
-        
-        # Start web server
-        runner = web.AppRunner(app)
-        await runner.setup()
-        
-        port = int(os.getenv('WEBSOCKET_INGESTION_PORT', '8000'))
-        site = web.TCPSite(runner, '0.0.0.0', port)
-        await site.start()
-        
-        logger.info(f"WebSocket Ingestion Service started on port {port}")
-        
-        # Start the service
-        await service.start()
-        
-        # Keep the service running
-        try:
-            await asyncio.Future()  # Run forever
-        except KeyboardInterrupt:
-            logger.info("Shutting down WebSocket Ingestion Service...")
-        finally:
-            await service.stop()
-            await runner.cleanup()
+    # Create web application
+    app = await create_app()
+    service = app['service']
+    
+    # DEPRECATED (Epic 31): No HTTP client needed
+    service.http_client = None
+    
+    # Start web server
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    port = int(os.getenv('WEBSOCKET_INGESTION_PORT', '8000'))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    logger.info(f"WebSocket Ingestion Service started on port {port}")
+    
+    # Start the service
+    await service.start()
+    
+    # Keep the service running
+    try:
+        await asyncio.Future()  # Run forever
+    except KeyboardInterrupt:
+        logger.info("Shutting down WebSocket Ingestion Service...")
+    finally:
+        await service.stop()
+        await runner.cleanup()
 
 
 if __name__ == "__main__":

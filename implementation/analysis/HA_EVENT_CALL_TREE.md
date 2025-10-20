@@ -1,12 +1,17 @@
 # Home Assistant Event Call Tree Analysis
 ## Complete Data Flow: HA → Database → Dashboard
 
-**Document Version**: 2.4 (Epic 22 Update)  
+**Document Version**: 2.5 (Epic 31 Update - Enrichment Pipeline Deprecated)  
 **Created**: 2025-10-13  
-**Last Updated**: 2025-01-14 (Epic 22: Hybrid database architecture)  
-**Last Validated**: October 19, 2025 ✅  
-**Previous Updates**: v2.3 - Code verification; v2.2 - Epic 13 notes; v2.1 - Epic 12 & 13  
-**Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system  
+**Last Updated**: 2025-10-20 (Epic 31: Direct InfluxDB writes, enrichment-pipeline deprecated)  
+**Last Validated**: October 20, 2025 ✅  
+**Previous Updates**: v2.4 - Epic 22; v2.3 - Code verification; v2.2 - Epic 13; v2.1 - Epic 12 & 13  
+**Purpose**: Detailed call tree showing complete event flow from Home Assistant through the entire system
+
+**🔴 ARCHITECTURE CHANGE (Epic 31):**
+- ❌ **enrichment-pipeline service DEPRECATED** - No longer in use
+- ✅ **websocket-ingestion writes DIRECTLY to InfluxDB**
+- ✅ **External services (weather-api, etc.) consume FROM InfluxDB**  
 
 **Validation Status (Oct 19, 2025):**
 - ✅ Batch size confirmed: 100 events (BATCH_SIZE env var)
@@ -66,11 +71,20 @@
 
 **Epic 13 Update**: admin-api separated into data-api (43 feature endpoints) + admin-api (22 system endpoints)
 
+**Epic 31 Update**: enrichment-pipeline service deprecated - websocket-ingestion writes directly to InfluxDB
+
 ---
 
 ## 📊 Overview
 
-This document traces the complete journey of a Home Assistant event from its origin through processing, storage, and display on the dashboard. The flow involves multiple services working together in a microservices architecture.
+This document traces the complete journey of a Home Assistant event from its origin through processing, storage, and display on the dashboard. 
+
+**CURRENT ARCHITECTURE (Epic 31):**
+```
+Home Assistant → websocket-ingestion → InfluxDB (DIRECT) → data-api → Dashboard
+```
+
+**KEY CHANGE**: The enrichment-pipeline service has been **DEPRECATED** (Epic 31). All normalization now happens inline within websocket-ingestion, and events are written directly to InfluxDB.
 
 ### Architecture Flow Diagram
 
@@ -86,26 +100,15 @@ This document traces the complete journey of a Home Assistant event from its ori
 │ - Connection Management                        │
 │ - Event Subscription                           │
 │ - Initial Processing                           │
-│ - Weather Enrichment (inline)                  │
+│ - Inline Normalization (Epic 31)               │
 │ - Async Queue Management                       │
 │ - Batch Processing                             │
-└────────┬───────────────────┬───────────────────┘
-         │                   │
-         │ Path A (Always)   │ Path B (Optional)
-         │ Direct Write      │ HTTP POST
-         │                   │
-         ▼                   ▼
-         │         ┌─────────────────────────┐
-         │         │ Enrichment Pipeline     │
-         │         │ (Port 8002) [OPTIONAL]  │
-         │         │ - Data Normalization    │
-         │         │ - Data Validation       │
-         │         │ - Quality Metrics       │
-         │         └──────────┬──────────────┘
-         │                    │
-         └────────────────────┴─► Both paths write to InfluxDB
-                              │
-                              ▼
+│ - DIRECT InfluxDB Writes (Epic 31)             │
+└────────┬───────────────────────────────────────┘
+         │
+         │ Direct InfluxDB Write (Epic 31: No enrichment-pipeline)
+         │
+         ▼
 ┌────────────────────────────────────────────────┐
 │ InfluxDB (Port 8086) - Time-Series Data      │
 │ - Measurements: home_assistant_events          │
@@ -604,68 +607,45 @@ InfluxDBBatchWriter.write_batch(events)
 
 ---
 
-### Phase 4: Optional Enrichment Pipeline
+### Phase 4: ~~Enrichment Pipeline~~ (❌ DEPRECATED - Epic 31)
 
-**Why Optional?** The Enrichment Pipeline is a separate microservice that provides additional data normalization and validation. However, events are **already written to InfluxDB directly** by the websocket-ingestion service (via batch processor). The enrichment pipeline adds:
-- Data validation and quality checks
-- Unit normalization (e.g., °C → celsius)
-- Data quality metrics and alerts
-- Additional normalization beyond basic processing
+**🔴 STATUS: DEPRECATED (Epic 31, Story 31.4)**
 
-**Enabled/Disabled via**:
-- Environment variable: `ENRICHMENT_SERVICE_URL`
-- HTTP client initialization in websocket-ingestion service
-- Can be completely removed from Docker Compose without breaking the system
+The enrichment-pipeline service has been **REMOVED** from the architecture as of Epic 31. All normalization and processing now happens **inline** within websocket-ingestion before writing directly to InfluxDB.
 
-**Configuration** (in `services/websocket-ingestion/src/main.py`):
+**What Changed:**
+- ❌ **Removed**: Separate enrichment-pipeline service (Port 8002)
+- ❌ **Removed**: HTTP POST to enrichment-pipeline
+- ✅ **Added**: Inline normalization in websocket-ingestion
+- ✅ **Added**: Direct InfluxDB writes from websocket-ingestion
+
+**Why Deprecated:**
+- Eliminated unnecessary service hop (reduced latency)
+- Simplified architecture (fewer failure points)
+- Normalization moved inline (same processing, less overhead)
+- External services (weather-api, etc.) now standalone, consume from InfluxDB
+
+**Current Processing (in websocket-ingestion):**
 ```python
-# Line 338: Only sends if HTTP client is configured
-if self.http_client:
-    for event in batch:
-        success = await self.http_client.send_event(event)
+# File: services/websocket-ingestion/src/main.py:411-420
+# DEPRECATED (Epic 31): Enrichment service removed
+# Events are now stored directly in InfluxDB
+# External services (weather-api, etc.) consume from InfluxDB
+log_with_context(
+    logger, "DEBUG", "Batch processed - events stored in InfluxDB",
+    operation="influxdb_storage"
+)
 ```
 
-#### 4.1 Enrichment Service Processing
+**Migration Notes:**
+- All normalization logic preserved, moved inline
+- Data quality unchanged
+- Performance improved (one less hop)
+- External APIs (weather, etc.) became independent services
 
-**File**: `services/enrichment-pipeline/src/main.py`
-
-```python
-EnrichmentPipelineService.process_event(event_data)
-├─► DataNormalizer.normalize_event(event_data)
-│   ├─► DataValidator.validate_event(event_data)
-│   │   ├─► Check required fields
-│   │   ├─► Validate data types
-│   │   ├─► Check value ranges
-│   │   └─► Return ValidationResult(is_valid, errors, warnings)
-│   │
-│   ├─► normalized = event_data.copy()
-│   │
-│   ├─► _normalize_timestamps(normalized)
-│   │   ├─► Convert to ISO 8601 format
-│   │   ├─► Ensure UTC timezone
-│   │   └─► Add "_normalized" metadata
-│   │
-│   ├─► _normalize_state_values(normalized)
-│   │   ├─► Boolean states: "on" → True, "off" → False
-│   │   ├─► Numeric states: "21.5" → 21.5 (float)
-│   │   └─► String states: trim whitespace
-│   │
-│   ├─► _normalize_units(normalized)
-│   │   ├─► Temperature: °C → celsius, °F → fahrenheit
-│   │   ├─► Pressure: hPa → hectopascal
-│   │   └─► Standardize unit names
-│   │
-│   └─► return normalized event
-│
-└─► InfluxDBClientWrapper.write_normalized_event(normalized)
-    └─► (Similar to Phase 3 write process)
-```
-
-**Normalization Benefits**:
-- **Consistent Data Types**: String → Numeric/Boolean where applicable
-- **Standardized Units**: Unified unit naming conventions
-- **Validation**: Early detection of data quality issues
-- **Metadata**: Tracking of normalization version and timestamp
+**See Also:**
+- Weather API Service: Standalone, reads from InfluxDB for weather domain entities
+- External API Call Trees: [EXTERNAL_API_CALL_TREES.md](EXTERNAL_API_CALL_TREES.md)
 
 ---
 
@@ -1269,37 +1249,56 @@ This call tree demonstrates the complete journey of a Home Assistant event:
 
 1. **WebSocket Reception** (~1ms): Event arrives from HA via WebSocket
 2. **Validation & Extraction** (~0.1ms): Event data validated and structured
-3. **Weather Enrichment** (~50ms, optional): Inline weather data added to events
+3. **Device/Area Enrichment** (~2-5ms): Inline device_id, area_id lookup (Epic 23.2)
 4. **Async Queue** (~0.01ms): Event added to processing queue
 5. **Batch Accumulation** (~5s): Events accumulated into batches of 100 (or 5s timeout)
-6. **Database Write** (~50ms): Batch written to InfluxDB time-series database
-   - **Path A (Always)**: Direct write from websocket-ingestion service
-   - **Path B (Optional)**: Via enrichment-pipeline service for additional normalization
+6. **Database Write** (~50ms): Batch written DIRECTLY to InfluxDB (Epic 31)
 7. **API Query** (~20ms): Dashboard queries events via data-api REST API
 8. **Frontend Render** (~16ms): React components display events with 60 FPS
 
 **Total End-to-End Latency**: ~5-6 seconds (dominated by batching strategy)
 **Real-time Updates**: <100ms via WebSocket streaming
 
-### Key Architectural Notes
+### Key Architectural Notes (Epic 31 Update)
 
-1. **Dual Write Paths**: Events are written to InfluxDB via two parallel paths:
-   - **Primary Path**: websocket-ingestion → InfluxDB (always active)
-   - **Enhancement Path**: websocket-ingestion → enrichment-pipeline → InfluxDB (optional, configurable)
+1. **Direct InfluxDB Writes** (Epic 31):
+   - **Single Write Path**: websocket-ingestion → InfluxDB (direct, always active)
+   - **No Intermediate Services**: enrichment-pipeline deprecated and removed
+   - **Inline Processing**: All normalization happens in websocket-ingestion
 
-2. **Enrichment Pipeline is Optional** because:
-   - Events are already persisted to InfluxDB by websocket-ingestion
-   - It provides **additional** processing (normalization, validation, quality metrics)
-   - Can be disabled or removed without breaking core functionality
-   - Useful for data quality monitoring and standardization
+2. **External Services Are Independent**:
+   - weather-api: Standalone service, reads weather domain from InfluxDB
+   - sports-data: Writes scores directly to InfluxDB
+   - All external APIs: Consume from InfluxDB, not from websocket-ingestion
 
-3. **Weather Enrichment** (OpenWeatherMap API) happens inline in websocket-ingestion service and is separate from the enrichment-pipeline service
+3. **Epic 23 Enhancements Preserved**:
+   - Context tracking (context_id, context_parent_id)
+   - Spatial analytics (device_id, area_id)
+   - Duration tracking (duration_in_state)
+   - Device metadata (manufacturer, model, sw_version)
 
-The system is designed for high throughput (10,000+ events/sec) with low resource usage through batching, async processing, and efficient data structures.
+The system is designed for high throughput (10,000+ events/sec) with low latency through direct writes, batching, async processing, and efficient data structures.
 
 ---
 
 ## 📝 Change Log
+
+### Version 2.5 (2025-10-20)
+**Epic 31 Architecture Update**:
+- ✅ Updated for Epic 31: enrichment-pipeline service deprecated
+- ✅ Documented direct InfluxDB writes from websocket-ingestion
+- ✅ Removed dual write path architecture (only single path remains)
+- ✅ Updated Phase 4 to show deprecation status
+- ✅ Updated architecture diagrams to remove enrichment-pipeline
+- ✅ Clarified that external services (weather-api) are now standalone
+- ✅ Updated summary to reflect simplified architecture
+- ✅ Removed references to "optional" enrichment (now N/A)
+
+### Version 2.4 (2025-01-14)
+**Epic 22 Hybrid Database Update**:
+- ✅ Documented hybrid database architecture (InfluxDB + SQLite)
+- ✅ Updated device/entity storage to use SQLite
+- ✅ Added performance improvements (5-10x faster queries)
 
 ### Version 2.3 (2025-10-14)
 **Code Verification Update**:
@@ -1322,9 +1321,9 @@ The system is designed for high throughput (10,000+ events/sec) with low resourc
 - Updated document version from 1.0 to 1.1
 
 **Clarifications**:
-- Emphasized dual write paths (Primary + Enhancement)
-- Clarified enrichment-pipeline is optional
-- Distinguished inline weather enrichment from enrichment-pipeline service
+- ~~Emphasized dual write paths (Primary + Enhancement)~~ - **Epic 31: Single path only**
+- ~~Clarified enrichment-pipeline is optional~~ - **Epic 31: Service deprecated**
+- ~~Distinguished inline weather enrichment from enrichment-pipeline service~~ - **Epic 31: weather-api is standalone**
 - Added anchor links in Quick Reference table
 
 ### Version 1.0 (2025-10-13)
