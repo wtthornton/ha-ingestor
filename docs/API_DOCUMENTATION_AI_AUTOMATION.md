@@ -1,3 +1,13 @@
+# ⛔ SUPERSEDED - See API_REFERENCE.md
+
+> **This document has been SUPERSEDED by [api/API_REFERENCE.md](api/API_REFERENCE.md#ai-automation-service)**  
+> **Last Updated:** October 20, 2025  
+> **Status:** Historical reference only - will be archived in next cleanup
+> 
+> **Please use:** [api/API_REFERENCE.md#ai-automation-service](api/API_REFERENCE.md#ai-automation-service) - AI Automation section in consolidated API reference
+
+---
+
 # AI Automation Service API Documentation
 
 ## Overview

@@ -1,168 +1,302 @@
-# Documentation Index - Home Assistant Data Ingestor
+# 📚 Documentation Index
 
-**Last Updated**: October 17, 2025  
-**System Status**: ✅ **FULLY OPERATIONAL** - 100% Success Rate
+**Last Updated:** October 20, 2025  
+**Status:** ✅ Recently Cleaned & Organized
 
----
-
-## 📚 **Quick Reference**
-
-### **System Status**
-- [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status and health
-- [System Status Update](implementation/SYSTEM_STATUS_UPDATE.md) - Recent fixes and improvements
-
-### **Architecture & Design**
-- [Architecture Overview](architecture.md) - Main architecture documentation
-- [Tech Stack](architecture/tech-stack.md) - Complete technology stack
-- [Source Tree](architecture/source-tree.md) - Project structure and organization
-
-### **Getting Started**
-- [README](README.md) - Project overview and quick start
-- [Quick Start Guide](QUICK_START.md) - Step-by-step setup instructions
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Comprehensive deployment instructions
+> **🎉 Documentation Cleanup Complete!** (October 20, 2025)  
+> - API docs consolidated (5 files → 1)
+> - Historical docs archived (~51 files)
+> - Agent rules updated for clarity
+> - See [Cleanup Report](../implementation/DOCUMENTATION_CLEANUP_EXECUTIVE_SUMMARY.md)
 
 ---
 
-## 🏗️ **Architecture Documentation**
+## 🚀 Quick Start
 
-### **Core Architecture**
-- [Architecture Overview](architecture.md) - System design and components
-- [Tech Stack](architecture/tech-stack.md) - Technology choices and rationale
-- [Source Tree](architecture/source-tree.md) - Project structure and file organization
-- [Database Schema](architecture/database-schema.md) - Database design and relationships
+### For Developers
+- **API Reference** → [api/API_REFERENCE.md](api/API_REFERENCE.md)
+- **Architecture** → [architecture/](architecture/)
+- **Deployment** → [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- **Quick Start** → [QUICK_START.md](QUICK_START.md)
 
-### **Service Documentation**
-- [Services Overview](SERVICES_OVERVIEW.md) - All microservices documentation
-- [API Reference](API_DOCUMENTATION.md) - Complete API documentation
-- [API Endpoints](API_ENDPOINTS_REFERENCE.md) - Detailed endpoint reference
-
-### **Integration Guides**
-- [Home Assistant Integration](HOME_ASSISTANT_DEPLOYMENT_PLAN.md) - HA setup and configuration
-- [MQTT Setup Guide](stories/MQTT_SETUP_GUIDE.md) - MQTT broker configuration
-- [Context7 Integration](CONTEXT7_INTEGRATION.md) - AI automation integration
+### For AI Agents
+- **Priority:** Focus on docs/, ignore archive/
+- **API Docs:** Use [api/API_REFERENCE.md](api/API_REFERENCE.md) only
+- **Archive:** IGNORE docs/archive/ unless researching history
 
 ---
 
-## 🚀 **Deployment & Operations**
+## 📖 Documentation Structure
 
-### **Deployment**
-- [Deployment Status](DEPLOYMENT_STATUS.md) - Current deployment status
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Step-by-step deployment
-- [Production Deployment](PRODUCTION_DEPLOYMENT.md) - Production setup
-- [Docker Structure Guide](DOCKER_STRUCTURE_GUIDE.md) - Container architecture
+### Active Reference Documentation
 
-### **Configuration**
-- [Environment Setup](development-environment-setup.md) - Development environment
-- [Security Configuration](SECURITY_CONFIGURATION.md) - Security settings
-- [GitHub Secrets Setup](GITHUB_SECRETS_SETUP.md) - CI/CD configuration
+#### 1. API Documentation
+**Location:** `docs/api/`  
+**Status:** ✅ Consolidated (October 2025)
 
-### **Monitoring & Maintenance**
-- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - Common issues and solutions
-- [Quick Fix Guide](QUICK_FIX_GUIDE.md) - Quick troubleshooting
-- [E2E Testing Guide](E2E_TESTING_GUIDE.md) - End-to-end testing
+- **[API_REFERENCE.md](api/API_REFERENCE.md)** - **SINGLE SOURCE OF TRUTH**
+  - All 65 API endpoints documented
+  - Admin API, Data API, Sports, AI Automation, Statistics
+  - Request/response examples
+  - Integration patterns
 
----
-
-## 📖 **User Guides**
-
-### **End User Documentation**
-- [User Manual](USER_MANUAL.md) - Complete user guide
-- [Quick Start Integration](QUICK_START_INTEGRATION_MANAGEMENT.md) - Integration setup
-- [Simple Integration Management](SIMPLE_INTEGRATION_MANAGEMENT.md) - Basic integration
-
-### **Developer Documentation**
-- [CLI Reference](CLI_REFERENCE.md) - Command-line interface
-- [Development Workflow](architecture/development-workflow.md) - Development process
-- [Coding Standards](architecture/coding-standards.md) - Code quality guidelines
+**Superseded Files:** (marked with ⛔ redirect notices)
+- API_DOCUMENTATION.md → Use API_REFERENCE.md
+- API_COMPREHENSIVE_REFERENCE.md → Use API_REFERENCE.md
+- API_ENDPOINTS_REFERENCE.md → Use API_REFERENCE.md
+- API_DOCUMENTATION_AI_AUTOMATION.md → Use API_REFERENCE.md
+- API_STATISTICS_ENDPOINTS.md → Use API_REFERENCE.md
 
 ---
 
-## 🔧 **Technical Documentation**
+#### 2. Architecture Documentation
+**Location:** `docs/architecture/`  
+**Status:** ✅ Current (sharded structure)
 
-### **Data & Storage**
-- [Data Backend Implementation](DATA_BACKEND_IMPLEMENTATION_GUIDE.md) - Database implementation
-- [Data Enhancement Guide](DATA_ENHANCEMENT_QUICK_REFERENCE.md) - Data processing
-- [Data Enrichment Architecture](DATA_ENRICHMENT_ARCHITECTURE.md) - Data enrichment design
-- [Hybrid Database Architecture](HYBRID_DATABASE_ARCHITECTURE.md) - Database architecture
-
-### **API Documentation**
-- [API Comprehensive Reference](API_COMPREHENSIVE_REFERENCE.md) - Complete API docs
-- [API Enhancements Epic 23](API_ENHANCEMENTS_EPIC_23.md) - Recent API improvements
-- [Data Sources Enhancement](DATA_SOURCES_AND_STRUCTURES_ENHANCEMENT.md) - Data source docs
-
-### **Testing & Quality**
-- [E2E Test Results](E2E_TEST_RESULTS.md) - Test execution results
-- [Smoke Tests](SMOKE_TESTS.md) - Basic functionality tests
-- [Ready for QA](READY_FOR_QA.md) - QA readiness checklist
-
----
-
-## 📋 **Project Management**
-
-### **Requirements & Planning**
-- [PRD](prd.md) - Product Requirements Document
-- [Requirements](REQUIREMENTS.md) - System requirements
-- [Brief](brief.md) - Project brief
-- [What's Next Roadmap](WHATS_NEXT_ROADMAP.md) - Future development plans
-
-### **Stories & Epics**
-- [Stories Directory](stories/) - All user stories and epics
-- [QA Directory](qa/) - Quality assurance documentation
-- [Architecture Directory](architecture/) - Architecture documentation
+- **[index.md](architecture/index.md)** - Architecture overview
+- **[tech-stack.md](architecture/tech-stack.md)** - Technology stack
+- **[source-tree.md](architecture/source-tree.md)** - Source tree structure
+- **[coding-standards.md](architecture/coding-standards.md)** - Code quality standards
+- **[data-models.md](architecture/data-models.md)** - Data model definitions
+- **[database-schema.md](architecture/database-schema.md)** - Database schemas
+- **[deployment-architecture.md](architecture/deployment-architecture.md)** - Deployment patterns
+- **[testing-strategy.md](architecture/testing-strategy.md)** - Testing approach
+- **[monitoring-and-observability.md](architecture/monitoring-and-observability.md)** - Monitoring
+- **[security-and-performance.md](architecture/security-and-performance.md)** - Security
+- **[core-workflows.md](architecture/core-workflows.md)** - Core workflows
+- [+ 16 more architecture docs]
 
 ---
 
-## 🔍 **Troubleshooting & Support**
+#### 3. Product Requirements (PRD)
+**Location:** `docs/prd/`  
+**Status:** ✅ Current (sharded structure)
 
-### **Common Issues**
-- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - General troubleshooting
-- [Quick Fix Guide](QUICK_FIX_GUIDE.md) - Quick solutions
-- [Weather API Fix Guide](WEATHER_API_FIX_GUIDE.md) - Weather integration issues
-- [WebSocket Troubleshooting](WEBSOCKET_TROUBLESHOOTING.md) - WebSocket issues
-
-### **System Analysis**
-- [AI Automation Call Tree](AI_AUTOMATION_CALL_TREE.md) - AI automation flow
-- [HA WebSocket Call Tree](HA_WEBSOCKET_CALL_TREE.md) - WebSocket flow analysis
-- [Calendar Service Documentation](CALENDAR_SERVICE_DOCUMENTATION_INDEX.md) - Calendar integration
+- **[index.md](prd/index.md)** - PRD overview
+- **[requirements.md](prd/requirements.md)** - Functional & non-functional requirements
+- **[epic-list.md](prd/epic-list.md)** - All epics
+- **[epic-1-foundation-core-infrastructure.md](prd/epic-1-foundation-core-infrastructure.md)**
+- **[epic-2-data-capture-normalization.md](prd/epic-2-data-capture-normalization.md)**
+- [+ 50 more PRD shards including epic-34]
 
 ---
 
-## 📊 **Status & Reports**
+#### 4. User Stories
+**Location:** `docs/stories/`  
+**Status:** ✅ Current (222 stories)
 
-### **Current Status**
-- [Deployment Status](DEPLOYMENT_STATUS.md) - ✅ **CURRENT** - System fully operational
-- [System Status Update](implementation/SYSTEM_STATUS_UPDATE.md) - Recent fixes and improvements
-- [Documentation Updates](DOCUMENTATION_UPDATES_OCTOBER_2025.md) - Recent documentation changes
-
-### **Historical Reports**
-- [Deployment Success Report](DEPLOYMENT_SUCCESS_REPORT.md) - Previous deployment success
-- [Documentation Complete](../implementation/DOCUMENTATION_COMPLETE.md) - Documentation completion status
-- [Changelog](CHANGELOG.md) - Version history and changes
+- **Epic 1-34 Stories** - All development stories
+- **Format:** `{epic}.{story}-{slug}.md`
+- **Example:** `31.1-weather-api-service-foundation.md`
 
 ---
 
-## 🎯 **Quick Access**
+#### 5. Quality Assurance
+**Location:** `docs/qa/`  
+**Status:** ✅ Current
 
-### **Most Important Documents**
-1. [README](README.md) - Start here for project overview
-2. [Deployment Status](DEPLOYMENT_STATUS.md) - Current system status
-3. [Architecture Overview](architecture.md) - System design
-4. [User Manual](USER_MANUAL.md) - How to use the system
-5. [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - When things go wrong
-
-### **For Developers**
-- [Source Tree](architecture/source-tree.md) - Project structure
-- [Tech Stack](architecture/tech-stack.md) - Technology choices
-- [API Documentation](API_DOCUMENTATION.md) - API reference
-- [Coding Standards](architecture/coding-standards.md) - Code guidelines
-
-### **For Users**
-- [User Manual](USER_MANUAL.md) - Complete user guide
-- [Quick Start](QUICK_START.md) - Get started quickly
-- [Troubleshooting Guide](TROUBLESHOOTING_GUIDE.md) - Solve problems
+- **assessments/** - Risk assessments and test designs (19 files)
+- **gates/** - Quality gates (32 files)
+- **Format:** `{epic}.{story}-{type}-{YYYYMMDD}.md`
 
 ---
 
-**System Status**: ✅ **FULLY OPERATIONAL** - All 17 services healthy, MQTT connected, 100% success rate  
-**Last Updated**: October 17, 2025  
-**Next Review**: As needed for system changes
+#### 6. Knowledge Base
+**Location:** `docs/kb/`  
+**Status:** ✅ Current (Context7 cache)
+
+- **context7-cache/** - Cached library documentation (101 files)
+- **index.json** - Knowledge base index
+- **Purpose:** Fast lookup for library docs (87% hit rate)
+
+---
+
+#### 7. Research
+**Location:** `docs/research/`  
+**Status:** ✅ Current (5 files)
+
+- Technical research documents
+- Technology evaluations
+- Decision rationale
+
+---
+
+### Guides & Manuals (Root docs/)
+
+#### Deployment & Operations
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Deployment checklist
+- **[QUICK_START.md](QUICK_START.md)** - Quick start guide
+
+#### User Guides
+- **[USER_MANUAL.md](USER_MANUAL.md)** - User manual
+- **[TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)** - Troubleshooting
+
+#### Technical Guides
+- **[DOCKER_STRUCTURE_GUIDE.md](DOCKER_STRUCTURE_GUIDE.md)** - Docker organization
+- **[SECURITY_CONFIGURATION.md](SECURITY_CONFIGURATION.md)** - Security setup
+- **[CLI_REFERENCE.md](CLI_REFERENCE.md)** - CLI tools
+
+#### Specific Features
+- **[EPIC_23_USER_GUIDE.md](EPIC_23_USER_GUIDE.md)** - Epic 23 features
+- **[CONVERSATIONAL_UI_USER_GUIDE.md](CONVERSATIONAL_UI_USER_GUIDE.md)** - AI UI
+- **[AI_AUTOMATION_COMPREHENSIVE_GUIDE.md](AI_AUTOMATION_COMPREHENSIVE_GUIDE.md)** - AI automation
+- **[CALENDAR_SERVICE_DOCUMENTATION_INDEX.md](CALENDAR_SERVICE_DOCUMENTATION_INDEX.md)** - Calendar service
+
+---
+
+### Historical Documentation (Archive)
+
+#### Archive Structure
+**Location:** `docs/archive/`  
+**Agent Rule:** **IGNORE THIS DIRECTORY**
+
+```
+docs/archive/
+├── README.md             # Archive guide
+├── 2024/                 # 2024 artifacts (~11 files)
+│   └── planning/         # Early project planning
+├── 2025-q1/              # Jan-Mar 2025 (~3 files)
+│   ├── DEPLOYMENT_STATUS_JANUARY_2025.md
+│   ├── FUTURE_ENHANCEMENTS.md
+│   └── RECENT_FIXES_JANUARY_2025.md
+├── 2025-q2/              # Apr-Jun 2025 (empty)
+├── 2025-q3/              # Jul-Sep 2025 (~21 files)
+│   ├── summaries/        # Epic completion summaries (20 files)
+│   └── CHANGELOG_EPIC_23.md
+└── 2025-q4/              # Oct-Dec 2025 (~15 files)
+    ├── DEPLOYMENT_READY.md
+    ├── DEPLOYMENT_SUCCESS_REPORT.md
+    ├── E2E_TEST_RESULTS.md
+    └── [12 more status/completion files]
+```
+
+**Purpose:**
+- Preserve historical context
+- Document project evolution
+- Support historical research
+
+**Usage:**
+- Rarely referenced (agents ignore)
+- Only for historical investigation
+- Organized by quarter for easy cleanup
+
+---
+
+## 🔍 Finding Documentation
+
+### By Topic
+
+| Topic | Location | Files |
+|-------|----------|-------|
+| **APIs** | [api/API_REFERENCE.md](api/API_REFERENCE.md) | 1 |
+| **Architecture** | [architecture/](architecture/) | 27 |
+| **Deployment** | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | 1 |
+| **Quick Start** | [QUICK_START.md](QUICK_START.md) | 1 |
+| **User Manual** | [USER_MANUAL.md](USER_MANUAL.md) | 1 |
+| **Troubleshooting** | [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md) | 1 |
+| **PRD** | [prd/](prd/) | 52 |
+| **Stories** | [stories/](stories/) | 222 |
+| **QA** | [qa/](qa/) | 51 |
+
+### By Use Case
+
+| Use Case | Start Here |
+|----------|------------|
+| **Integrating with APIs** | [api/API_REFERENCE.md](api/API_REFERENCE.md) |
+| **Deploying the system** | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) |
+| **Understanding architecture** | [architecture/index.md](architecture/index.md) |
+| **Building new features** | [prd/](prd/) + [stories/](stories/) |
+| **Setting up development** | [development-environment-setup.md](development-environment-setup.md) |
+| **Troubleshooting issues** | [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md) |
+| **Historical research** | [archive/](archive/) |
+
+---
+
+## 🎯 Documentation Standards
+
+### Creating New Documentation
+
+**Reference Documentation:**
+- Add to appropriate docs/ subdirectory
+- Use clear, descriptive filenames
+- Include table of contents for long docs
+- Add to this index
+
+**Implementation Notes:**
+- Add to implementation/ directory
+- Will be archived quarterly
+- Follow BMAD project-structure rules
+
+**Never Create:**
+- Duplicate API documentation (update API_REFERENCE.md instead)
+- Status reports in docs/ (use implementation/)
+- Files in docs/ root without clear purpose
+
+---
+
+## 📊 Documentation Statistics
+
+### Current Active Documentation
+- **Total Files:** ~560 markdown files
+- **API Docs:** 2 files (1 reference + 1 navigation)
+- **Architecture:** 27 files
+- **PRD:** 52 files (sharded)
+- **Stories:** 222 files
+- **QA:** 51 files
+- **KB Cache:** 101 files
+- **Research:** 5 files
+- **Guides:** ~60 files
+
+### Archived Documentation
+- **Total Files:** ~51 markdown files
+- **2024:** ~11 files (planning)
+- **2025-Q1:** ~3 files (Jan status)
+- **2025-Q2:** 0 files
+- **2025-Q3:** ~21 files (summaries)
+- **2025-Q4:** ~15 files (recent status)
+
+### Quality Metrics
+- **API Duplication:** 0% (was 60%)
+- **Status Reports in docs/:** 0 (was 15+)
+- **Navigation Clarity:** High (READMEs in key dirs)
+- **Agent Confusion Risk:** Low (was High)
+
+---
+
+## 🔄 Maintenance Schedule
+
+### Monthly
+- Review new documentation for proper placement
+- Ensure no duplicate API docs created
+
+### Quarterly (Jan, Apr, Jul, Oct)
+- Move completed status reports to archive/{quarter}/
+- Update this index with file counts
+- Review archive retention policy
+
+### Annually (January)
+- Evaluate 2-year-old content for deletion
+- Consolidate very old quarterly folders
+- Update documentation standards
+
+---
+
+## ❓ Need Help?
+
+### Documentation Questions
+- **Can't find a doc?** Check this index or docs/current/README.md
+- **Found duplicate docs?** Report for cleanup
+- **Need to archive?** See docs/archive/README.md for guidelines
+
+### Technical Questions
+- **API integration?** See [api/API_REFERENCE.md](api/API_REFERENCE.md)
+- **Deployment issues?** See [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)
+- **Architecture questions?** See [architecture/](architecture/)
+
+---
+
+**Last Major Update:** October 20, 2025 (Documentation Cleanup Project)  
+**Next Review:** January 2026 (Q1 Quarterly Maintenance)  
+**Maintained By:** HA Ingestor Team

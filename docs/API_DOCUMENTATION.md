@@ -1,3 +1,13 @@
+# ⛔ SUPERSEDED - See API_REFERENCE.md
+
+> **This document has been SUPERSEDED by [api/API_REFERENCE.md](api/API_REFERENCE.md)**  
+> **Last Updated:** October 20, 2025  
+> **Status:** Historical reference only - will be archived in next cleanup
+> 
+> **Please use:** [api/API_REFERENCE.md](api/API_REFERENCE.md) - Single source of truth for all API documentation
+
+---
+
 # 📚 Home Assistant Ingestor - API Documentation
 
 ## 🎯 **System Purpose**

@@ -57,8 +57,18 @@ Use `@agent-name` to activate specific BMAD agents:
 
 ### Directory Purpose and Usage
 
+#### `docs/current/` - Active Reference Documentation (AGENT PRIORITY)
+- **Purpose**: Current, active documentation that agents and developers should reference
+- **Agent Rule**: Focus primarily on this directory for documentation lookups
+- **Status**: All documentation here is current and maintained
+
+#### `docs/archive/` - Historical Reference (AGENTS IGNORE)
+- **Purpose**: Completed, superseded, or historical documentation
+- **Agent Rule**: IGNORE this directory unless explicitly researching history
+- **Status**: Archived by quarter (2024/, 2025-q1/, 2025-q2/, 2025-q3/, 2025-q4/)
+
 #### `docs/` - Reference Documentation ONLY
-- **Purpose**: Permanent, reusable documentation for the project
+- **Purpose**: Permanent, reusable documentation for the project (being migrated to docs/current/)
 - **Allowed**:
   - Architecture documentation (`docs/architecture/`)
   - PRD and epics (`docs/prd/`)
@@ -150,14 +160,22 @@ When creating ANY of these file types, you MUST place them in the correct locati
 ```
 Creating a new .md file?
 ├─ Is it README.md? → Root (ONLY exception)
-├─ Is it a status/completion report? → implementation/
+├─ Is it a status/completion report? → implementation/ (will archive quarterly)
 ├─ Is it a session summary? → implementation/
 ├─ Is it a fix/enhancement report? → implementation/
 ├─ Is it analysis/diagnosis? → implementation/analysis/
 ├─ Is it verification results? → implementation/verification/
 ├─ Is it an implementation plan? → implementation/
-├─ Is it a reference guide/manual? → docs/
+├─ Is it a reference guide/manual? → docs/ (active) or docs/current/ (migrated)
 └─ When in doubt → Ask user or default to implementation/
+
+Archiving completed work?
+├─ Completed in 2024? → docs/archive/2024/
+├─ Completed Q1 2025 (Jan-Mar)? → docs/archive/2025-q1/
+├─ Completed Q2 2025 (Apr-Jun)? → docs/archive/2025-q2/
+├─ Completed Q3 2025 (Jul-Sep)? → docs/archive/2025-q3/
+├─ Completed Q4 2025 (Oct-Dec)? → docs/archive/2025-q4/
+└─ Superseded documentation? → docs/archive/{quarter}/
 ```
 
 ## Enforcement

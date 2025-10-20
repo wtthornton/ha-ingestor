@@ -18,6 +18,9 @@ homeiq/
 ├── .cursor/                       # Cursor IDE rules and configuration
 │   └── rules/                     # AI agent rules
 ├── docs/                          # Project documentation (REFERENCE ONLY)
+│   ├── current/                   # Active documentation (AGENT PRIORITY) ✨ NEW
+│   ├── archive/                   # Historical docs by quarter (AGENTS IGNORE) ✨ NEW
+│   ├── api/                       # API documentation (consolidated) ✨ NEW
 │   ├── architecture/              # Architecture documentation
 │   ├── prd/                       # Product Requirements (sharded)
 │   ├── stories/                   # Development stories
@@ -362,6 +365,42 @@ implementation/
 ```
 
 ## Documentation Directory Structure
+
+**NEW (October 2025):** Documentation reorganized for clarity and reduced agent confusion.
+
+### Active Documentation (`docs/current/`)
+```
+current/
+└── README.md                     # Navigation guide (agents focus here first)
+```
+**Purpose:** Future home for migrated active documentation  
+**Agent Priority:** HIGH - Check here first for current docs
+
+### Historical Archive (`docs/archive/`)
+```
+archive/
+├── README.md                     # Archive guide and retention policy
+├── 2024/                         # 2024 historical artifacts (~11 files)
+│   └── planning/                 # Early planning documents
+├── 2025-q1/                      # Q1 2025 (Jan-Mar) (~3 files)
+├── 2025-q2/                      # Q2 2025 (Apr-Jun) (0 files)
+├── 2025-q3/                      # Q3 2025 (Jul-Sep) (~21 files)
+│   └── summaries/                # Epic completion summaries
+└── 2025-q4/                      # Q4 2025 (Oct-Dec) (~15 files)
+    └── [status reports, completion docs]
+```
+**Purpose:** Completed, superseded, or historical documentation  
+**Agent Priority:** LOW - IGNORE unless researching history
+
+### API Documentation (`docs/api/`)
+```
+api/
+├── API_REFERENCE.md              # SINGLE SOURCE OF TRUTH for all APIs (687 lines)
+└── README.md                     # Navigation guide
+```
+**Purpose:** Consolidated API documentation (October 2025)  
+**Supersedes:** 5 previous API documentation files  
+**Agent Priority:** HIGH - Use ONLY API_REFERENCE.md
 
 ### Architecture Documentation (`docs/architecture/`)
 ```

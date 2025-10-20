@@ -1,3 +1,13 @@
+# ⛔ SUPERSEDED - See API_REFERENCE.md
+
+> **This document has been SUPERSEDED by [api/API_REFERENCE.md](api/API_REFERENCE.md#statistics-api)**  
+> **Last Updated:** October 20, 2025  
+> **Status:** Historical reference only - will be archived in next cleanup
+> 
+> **Please use:** [api/API_REFERENCE.md#statistics-api](api/API_REFERENCE.md#statistics-api) - Statistics section in consolidated API reference
+
+---
+
 # Statistics API Endpoints Reference
 
 **Service:** Admin API  

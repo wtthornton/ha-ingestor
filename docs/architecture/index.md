@@ -9,7 +9,7 @@ This directory contains the comprehensive architectural documentation for the Ho
 **Technology Stack**: Python 3.11, React 18.2, FastAPI, aiohttp, InfluxDB 2.7, SQLite 3.45+, Docker  
 **Database**: Hybrid architecture (InfluxDB for time-series, SQLite for metadata - Epic 22)  
 **Deployment**: Single-tenant Docker Compose with optimized Alpine images  
-**Architecture Style**: Microservices with event-driven processing and API-first design
+**Architecture Style**: Microservices with event-driven processing, API-first design, and external service integration
 
 ---
 
@@ -88,6 +88,12 @@ This directory contains the comprehensive architectural documentation for the Ho
    - Historical queries more important than real-time dashboard
    - API performance > dashboard UX
    - Long-term retention for analytics
+
+5. **External Service Integration (NEW - October 2025)**
+   - InfluxDB as central data hub
+   - External services consume data from InfluxDB
+   - Clean microservices pattern (no monolithic enrichment)
+   - Weather, energy, and other data via dedicated services
 
 ### **What This System Is NOT**
 
@@ -254,9 +260,10 @@ Dashboard → nginx → admin-api (system monitoring)
 - **[Troubleshooting Guide](../TROUBLESHOOTING_GUIDE.md)** - Common issues and solutions
 
 ### Developer Documentation
-- **[API Documentation](../API_DOCUMENTATION.md)** - Complete API reference
+- **[API Documentation](../api/API_REFERENCE.md)** - Complete API reference (consolidated Oct 2025) ✨ UPDATED
 - **[CLI Reference](../CLI_REFERENCE.md)** - Command-line tools
 - **[User Manual](../USER_MANUAL.md)** - End-user documentation
+- **[Documentation Index](../DOCUMENTATION_INDEX.md)** - Master navigation guide ✨ NEW
 
 ### Integration Documentation
 - **[Context7 Integration](../CONTEXT7_INTEGRATION.md)** - Context7 MCP integration guide
