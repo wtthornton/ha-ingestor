@@ -1,18 +1,25 @@
 # WebSocket Ingestion Service
 
-The WebSocket Ingestion Service connects to Home Assistant's WebSocket API to capture real-time state change events and store them in InfluxDB with optional weather enrichment.
+The WebSocket Ingestion Service connects to Home Assistant's WebSocket API to capture real-time state change events and store them **DIRECTLY in InfluxDB** (Epic 31).
+
+**🔴 EPIC 31 ARCHITECTURE UPDATE:**
+- ✅ Events are written **DIRECTLY to InfluxDB** (no intermediate services)
+- ❌ enrichment-pipeline service **DEPRECATED** (no longer used)
+- ✅ All normalization happens **inline** in this service
+- ✅ External services (weather-api, etc.) consume **FROM InfluxDB**
 
 ## Features
 
 - 🔌 **WebSocket Connection** - Real-time connection to Home Assistant API
 - 🔄 **Infinite Retry** - Never gives up on reconnection (NEW - October 2025)
 - 🔐 **Secure Authentication** - Token-based authentication with validation
-- 🌤️ **Weather Enrichment** - Automatic weather data enrichment for events
 - 📊 **Event Processing** - Captures and normalizes state_changed events
-- 🔍 **Device Discovery** - Automatic discovery of devices and entities (NEW - stores directly to SQLite)
+- 🔍 **Device Discovery** - Automatic discovery of devices and entities (stores to SQLite via data-api)
 - 📈 **Health Monitoring** - Comprehensive health checks and metrics
 - 🔁 **Automatic Reconnection** - Smart exponential backoff on connection failures
-- 💾 **Direct SQLite Storage** - Devices/entities stored directly to SQLite via data-api (October 2025)
+- 💾 **Direct InfluxDB Writes** - Events written directly to InfluxDB (Epic 31)
+- 🎯 **Epic 23 Enhancements** - Context tracking, spatial analytics, duration tracking
+- ⚡ **High Performance** - 10,000+ events/second throughput
 
 ## Network Resilience (NEW)
 
@@ -250,7 +257,7 @@ pytest tests/ --cov=src --cov-report=html
 1. Subscription status in health endpoint
 2. Home Assistant is generating state_changed events
 3. Token has proper permissions
-4. Check enrichment pipeline is running
+4. Check InfluxDB connection is healthy
 
 ### High Memory Usage
 
@@ -258,13 +265,13 @@ pytest tests/ --cov=src --cov-report=html
 
 **Solution:**
 1. Check batch processor configuration
-2. Review weather enrichment cache size
-3. Monitor event rate and processing
-4. Consider reducing cache TTL
+2. Monitor event rate and processing
+3. Check InfluxDB batch write performance
+4. Review memory limits (MAX_MEMORY_MB env var)
 
 ## Architecture
 
-### Data Flow Diagram
+### Data Flow Diagram (Epic 31 Architecture)
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -277,29 +284,33 @@ pytest tests/ --cov=src --cov-report=html
            │ WebSocket Connection (with infinite retry)
            │
 ┌──────────▼──────────────────────────────────┐
-│  WebSocket Ingestion Service                │
+│  WebSocket Ingestion Service (Port 8001)    │
 │                                              │
 │  ┌──────────────┐    ┌──────────────┐      │
 │  │ Event Stream │    │ Discovery    │      │
 │  │ (real-time)  │    │ (on connect) │      │
 │  └──────┬───────┘    └──────┬───────┘      │
 │         │                   │               │
+│  Inline Normalization       │               │
+│  Direct InfluxDB Writes ✅  │               │
 └─────────┼───────────────────┼───────────────┘
           │                   │
           │ Events            │ Devices/Entities
           ↓                   ↓
 ┌──────────────────┐  ┌──────────────────────┐
-│  Enrichment      │  │  Data API            │
-│  Pipeline        │  │  (Port 8006)         │
-│  (Port 8002)     │  │                      │
-└────────┬─────────┘  │  POST /internal/     │
-         │            │  devices/bulk_upsert │
-         ↓            └──────────┬───────────┘
-┌──────────────────┐             │
-│  InfluxDB        │◄────────────┘
-│  (Time-Series)   │  SQLite
-│  (Port 8086)     │  (Metadata) ✅ PRIMARY
-└──────────────────┘  └──────────────────────┘
+│  InfluxDB        │  │  Data API (8006)     │
+│  (Time-Series)   │  │  POST /internal/     │
+│  (Port 8086)     │  │  devices/bulk_upsert │
+│  ✅ DIRECT WRITE │  └──────────┬───────────┘
+└──────────────────┘             │
+                                 ↓
+                        ┌──────────────────┐
+                        │  SQLite          │
+                        │  (Metadata)      │
+                        │  devices.db      │
+                        └──────────────────┘
+
+Note: enrichment-pipeline (Port 8002) DEPRECATED in Epic 31
 ```
 
 ### Storage Strategy (Updated October 2025)

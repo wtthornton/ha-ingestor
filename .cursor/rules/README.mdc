@@ -28,6 +28,7 @@ This project includes comprehensive Cursor rules to enhance development workflow
 - **development-environment.mdc** - Development environment setup and configuration
 - **documentation-standards.mdc** - Documentation standards and formatting guidelines
 - **security-best-practices.mdc** - Security best practices and guidelines
+- **epic-31-architecture.mdc** - Current architecture patterns (Epic 31 - enrichment-pipeline deprecated)
 
 ## How to Use
 
@@ -72,6 +73,7 @@ When referencing files in rules, use the format:
 ### Always Apply Rules
 Rules with `alwaysApply: true` are automatically applied to every request:
 - **project-structure.mdc** - Project structure guidance
+- **epic-31-architecture.mdc** - Current architecture (Epic 31 - critical for accuracy)
 - **README.mdc** - This overview
 
 ### File-Specific Rules
@@ -93,6 +95,7 @@ Rules with `description` can be manually invoked:
 4. **Document Everything**: Keep documentation up-to-date
 5. **Test Thoroughly**: Write tests for all new functionality
 6. **Leverage Context7 KB**: Use Context7 KB cache for up-to-date library documentation with intelligent caching
+7. **Know the Architecture**: Understand Epic 31 changes (enrichment-pipeline deprecated, direct InfluxDB writes)
 
 ## Getting Help
 

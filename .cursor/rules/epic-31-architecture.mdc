@@ -1,0 +1,162 @@
+---
+description: Epic 31 Architecture - Current Event Flow Pattern
+globs:
+  - "services/websocket-ingestion/**"
+  - "services/enrichment-pipeline/**"
+  - "services/weather-api/**"
+  - "services/sports-data/**"
+  - "implementation/analysis/*CALL_TREE*"
+  - "docs/architecture/**"
+alwaysApply: true
+---
+
+# Epic 31 Architecture Pattern
+
+**Last Updated:** October 20, 2025  
+**Status:** Current Production Architecture
+
+## Critical Architecture Facts
+
+### ❌ DEPRECATED Services (Do NOT Reference)
+
+**enrichment-pipeline (Port 8002):**
+- **Status**: DEPRECATED in Epic 31 (Story 31.4)
+- **Why**: Simplified architecture, reduced latency, fewer failure points
+- **Replacement**: Inline normalization in websocket-ingestion
+- **Code Evidence**: See `services/websocket-ingestion/src/main.py:411-420`
+
+**DO NOT:**
+- ❌ Reference enrichment-pipeline in new documentation
+- ❌ Suggest HTTP POST to enrichment-pipeline
+- ❌ Mention "dual write paths" (obsolete concept)
+- ❌ Suggest enrichment-pipeline for normalization
+
+### ✅ CURRENT Architecture (Epic 31)
+
+**Event Flow:**
+```
+Home Assistant WebSocket (192.168.1.86:8123)
+        ↓
+websocket-ingestion (Port 8001)
+  - Event validation
+  - Inline normalization
+  - Device/area lookups (Epic 23.2)
+  - Duration calculation (Epic 23.3)
+  - DIRECT InfluxDB writes
+        ↓
+InfluxDB (Port 8086)
+  bucket: home_assistant_events
+        ↓
+data-api (Port 8006)
+  - Query endpoint for events
+        ↓
+health-dashboard (Port 3000)
+```
+
+**Key Points:**
+- Single write path (websocket-ingestion → InfluxDB)
+- No intermediate services
+- All normalization inline
+- External services are standalone
+
+## External Services Pattern
+
+**ALL external services follow this pattern:**
+
+1. **Fetch** from external API (ESPN, OpenWeatherMap, etc.)
+2. **Write** directly to InfluxDB
+3. **Query** via data-api
+4. **Display** on dashboard
+
+**Examples:**
+- `weather-api` (Port 8009) - Standalone, reads weather domain from InfluxDB
+- `sports-data` (Port 8005) - Writes scores to InfluxDB
+- `carbon-intensity` (Port 8010) - Writes carbon data to InfluxDB
+
+**DO NOT:**
+- ❌ Make services HTTP POST to websocket-ingestion
+- ❌ Create service-to-service dependencies
+- ✅ Write directly to InfluxDB
+- ✅ Query via data-api
+
+## Database Architecture (Epic 22)
+
+**Hybrid Pattern:**
+- **InfluxDB**: Time-series data (events, metrics, sports scores)
+- **SQLite**: Relational metadata (devices, entities, webhooks)
+
+**Query Patterns:**
+- Events: Query InfluxDB via data-api
+- Devices/Entities: Query SQLite via data-api
+- Sports: Query InfluxDB via data-api
+
+## Code Patterns to Follow
+
+### When Writing Event Processing Code
+
+```python
+# ✅ CORRECT (Epic 31)
+async def process_batch(self, batch):
+    # Process events
+    for event in batch:
+        await self.async_event_processor.process_event(event)
+    
+    # Events are already in InfluxDB (via batch processor)
+    logger.debug("Batch processed - events stored in InfluxDB")
+
+# ❌ INCORRECT (Pre-Epic 31)
+async def process_batch(self, batch):
+    # Send to enrichment-pipeline
+    if self.http_client:
+        for event in batch:
+            await self.http_client.send_event(event)
+```
+
+### When Writing Documentation
+
+```markdown
+# ✅ CORRECT (Epic 31)
+Events flow: HA → websocket-ingestion → InfluxDB (direct)
+
+# ❌ INCORRECT (Pre-Epic 31)
+Events flow: HA → websocket-ingestion → enrichment-pipeline → InfluxDB
+```
+
+### When Analyzing Performance
+
+**Current Bottlenecks (Epic 31):**
+- Batch timeout: 5.0 seconds (configurable via BATCH_TIMEOUT)
+- InfluxDB write latency: 10-30ms per batch
+- Device lookup: 2-5ms (in-memory dictionary)
+
+**NOT Bottlenecks:**
+- ~~HTTP POST to enrichment~~ (removed)
+- ~~Enrichment processing time~~ (service deprecated)
+
+## Epic Timeline Reference
+
+**Epic 22** (January 2025):
+- Hybrid database architecture (InfluxDB + SQLite)
+- 5-10x faster device/entity queries
+
+**Epic 23** (March 2025):
+- Context tracking (context_id, context_parent_id)
+- Spatial analytics (device_id, area_id)
+- Duration tracking (duration_in_state)
+- Device metadata (manufacturer, model)
+
+**Epic 31** (October 2025):
+- Deprecated enrichment-pipeline
+- Direct InfluxDB writes
+- Standalone external services
+- Simplified architecture
+
+## When to Update This Rule
+
+Update when:
+- Major architecture changes
+- Services deprecated/added
+- Data flow patterns change
+- Epic milestones reached
+
+**Current as of:** Epic 31 (October 2025)
