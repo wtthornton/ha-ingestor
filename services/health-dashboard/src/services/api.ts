@@ -145,9 +145,9 @@ class AdminApiClient extends BaseApiClient {
           const serviceData = servicesData[backendName];
           result[frontendName as keyof typeof result] = {
             status: serviceData.status === 'healthy' ? 'healthy' : 
-                   serviceData.status === 'pass' ? 'healthy' :
-                   serviceData.status === 'degraded' ? 'degraded' :
-                   serviceData.status === 'unhealthy' ? 'error' : 'unknown',
+              serviceData.status === 'pass' ? 'healthy' :
+                serviceData.status === 'degraded' ? 'degraded' :
+                  serviceData.status === 'unhealthy' ? 'error' : 'unknown',
             service: serviceData.name,
             uptime_seconds: 0, // Not provided by admin-api health check
             last_successful_fetch: null, // Not provided by admin-api health check
@@ -273,7 +273,7 @@ class DataApiClient extends BaseApiClient {
     if (params.start_time) queryParams.append('start_time', params.start_time);
     if (params.end_time) queryParams.append('end_time', params.end_time);
 
-    const url = `${this.baseUrl}/v1/events${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/v1/events${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling<any[]>(url);
   }
 
@@ -343,7 +343,7 @@ class DataApiClient extends BaseApiClient {
     if (params.model) queryParams.append('model', params.model);
     if (params.area_id) queryParams.append('area_id', params.area_id);
 
-    const url = `${this.baseUrl}/devices${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/devices${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling<any>(url);
   }
 
@@ -363,7 +363,7 @@ class DataApiClient extends BaseApiClient {
     if (params.platform) queryParams.append('platform', params.platform);
     if (params.device_id) queryParams.append('device_id', params.device_id);
 
-    const url = `${this.baseUrl}/entities${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/entities${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling<any>(url);
   }
 
@@ -381,7 +381,7 @@ class DataApiClient extends BaseApiClient {
     if (teamIds) queryParams.append('team_ids', teamIds);
     if (league) queryParams.append('league', league);
     
-    const url = `${this.baseUrl}/v1/sports/games/live${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/v1/sports/games/live${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling<any>(url);
   }
 
@@ -461,7 +461,7 @@ class AIAutomationApiClient {
     if (status) queryParams.append('status', status);
     if (limit) queryParams.append('limit', limit.toString());
     
-    const url = `${this.baseUrl}/suggestions/list${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/suggestions/list${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling(url);
   }
 
@@ -475,7 +475,7 @@ class AIAutomationApiClient {
     if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
     if (params?.max_suggestions) queryParams.append('max_suggestions', params.max_suggestions.toString());
     
-    const url = `${this.baseUrl}/suggestions/generate${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/suggestions/generate${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling(url, { method: 'POST' });
   }
 
@@ -502,7 +502,7 @@ class AIAutomationApiClient {
     if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     
-    const url = `${this.baseUrl}/patterns/list${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/patterns/list${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling(url);
   }
 
@@ -520,7 +520,7 @@ class AIAutomationApiClient {
     if (params?.min_occurrences) queryParams.append('min_occurrences', params.min_occurrences.toString());
     if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
     
-    const url = `${this.baseUrl}/patterns/detect/time-of-day${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/patterns/detect/time-of-day${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling(url, { method: 'POST' });
   }
 
@@ -536,7 +536,7 @@ class AIAutomationApiClient {
     if (params?.min_support) queryParams.append('min_support', params.min_support.toString());
     if (params?.min_confidence) queryParams.append('min_confidence', params.min_confidence.toString());
     
-    const url = `${this.baseUrl}/patterns/detect/co-occurrence${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${this.baseUrl}/patterns/detect/co-occurrence${queryParams.toString() ? `?${  queryParams.toString()}` : ''}`;
     return this.fetchWithErrorHandling(url, { method: 'POST' });
   }
 }

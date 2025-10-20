@@ -178,8 +178,8 @@ export const Dashboard: React.FC = () => {
                         ? 'bg-blue-600 text-white'
                         : 'bg-blue-100 text-blue-700'
                       : darkMode
-                      ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
                   <span className="hidden sm:inline">{tab.label}</span>

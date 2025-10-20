@@ -18,7 +18,7 @@ export const DevicesTab: React.FC<TabProps> = ({ darkMode }) => {
       setSelectedPlatform(integrationParam);
       // Clear URL param after setting filter
       urlParams.delete('integration');
-      const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+      const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${  urlParams.toString()}` : ''}`;
       window.history.replaceState({}, '', newUrl);
     }
   }, []);

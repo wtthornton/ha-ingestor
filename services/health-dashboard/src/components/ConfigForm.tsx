@@ -111,7 +111,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({ service, onSave }) => {
 
   const maskValue = (value: string) => {
     if (!value) return '';
-    return '••••••••' + value.slice(-4);
+    return `••••••••${  value.slice(-4)}`;
   };
 
   const renderField = (key: string, field: ConfigField) => {

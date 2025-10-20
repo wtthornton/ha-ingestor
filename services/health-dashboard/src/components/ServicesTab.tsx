@@ -200,133 +200,133 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({ darkMode }) => {
       )}
 
       <div className="space-y-8">
-      {/* Header with Controls */}
-      <div className={`rounded-lg shadow-md p-6 ${
-        darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-      }`}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        {/* Header with Controls */}
+        <div className={`rounded-lg shadow-md p-6 ${
+          darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+        }`}>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div>
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               🔧 Service Management
-            </h2>
-            <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              </h2>
+              <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Monitoring {services.length} system services
-            </p>
-          </div>
+              </p>
+            </div>
           
-          <div className="flex items-center space-x-4">
-            {/* Auto-refresh Toggle */}
-            <button
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
-                autoRefresh
-                  ? darkMode
-                    ? 'bg-green-700 hover:bg-green-600 text-white'
-                    : 'bg-green-100 hover:bg-green-200 text-green-700'
-                  : darkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <span>{autoRefresh ? '🔄' : '⏸️'}</span>
-              <span>{autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}</span>
-            </button>
+            <div className="flex items-center space-x-4">
+              {/* Auto-refresh Toggle */}
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
+                  autoRefresh
+                    ? darkMode
+                      ? 'bg-green-700 hover:bg-green-600 text-white'
+                      : 'bg-green-100 hover:bg-green-200 text-green-700'
+                    : darkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                <span>{autoRefresh ? '🔄' : '⏸️'}</span>
+                <span>{autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}</span>
+              </button>
             
-            {/* Manual Refresh */}
-            <button
-              onClick={loadServices}
-              className={`px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
-                darkMode
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-            >
+              {/* Manual Refresh */}
+              <button
+                onClick={loadServices}
+                className={`px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
+                  darkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
               🔄 Refresh Now
-            </button>
+              </button>
+            </div>
           </div>
-        </div>
         
-        {/* Last Update Time */}
-        <div className={`text-xs mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {/* Last Update Time */}
+          <div className={`text-xs mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Last updated: {lastUpdate.toLocaleTimeString('en-US', {
-            hour12: true,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          })}
+              hour12: true,
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Core Services */}
-      <div>
-        <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        {/* Core Services */}
+        <div>
+          <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           🏗️ Core Services ({coreServices.length})
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
-          {coreServices.map((service, index) => (
-            <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
-              <ServiceCard
-                key={service.service}
-                service={service}
-                icon={service.def.icon}
-                darkMode={darkMode}
-                onViewDetails={() => {
-                  setSelectedService({ service, icon: service.def.icon });
-                }}
-                onConfigure={() => {
-                  alert(`Configure ${service.service} - Use Configuration tab for now!`);
-                }}
-                onStart={() => handleContainerOperation(service.service, 'start')}
-                onStop={() => handleContainerOperation(service.service, 'stop')}
-                onRestart={() => handleContainerOperation(service.service, 'restart')}
-                containerStatus={getContainerStatus(service.service)}
-                isOperating={operatingServices.has(service.service)}
-              />
-            </div>
-          ))}
-        </div>
-        {coreServices.length === 0 && (
-          <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
+            {coreServices.map((service, index) => (
+              <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
+                <ServiceCard
+                  key={service.service}
+                  service={service}
+                  icon={service.def.icon}
+                  darkMode={darkMode}
+                  onViewDetails={() => {
+                    setSelectedService({ service, icon: service.def.icon });
+                  }}
+                  onConfigure={() => {
+                    alert(`Configure ${service.service} - Use Configuration tab for now!`);
+                  }}
+                  onStart={() => handleContainerOperation(service.service, 'start')}
+                  onStop={() => handleContainerOperation(service.service, 'stop')}
+                  onRestart={() => handleContainerOperation(service.service, 'restart')}
+                  containerStatus={getContainerStatus(service.service)}
+                  isOperating={operatingServices.has(service.service)}
+                />
+              </div>
+            ))}
+          </div>
+          {coreServices.length === 0 && (
+            <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             No core services found
-          </div>
-        )}
-      </div>
-
-      {/* External Data Services */}
-      <div>
-        <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          🌐 External Data Services ({externalServices.length})
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
-          {externalServices.map((service, index) => (
-            <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
-              <ServiceCard
-                key={service.service}
-                service={service}
-                icon={service.def.icon}
-                darkMode={darkMode}
-                onViewDetails={() => {
-                  setSelectedService({ service, icon: service.def.icon });
-                }}
-                onConfigure={() => {
-                  alert(`Configure ${service.service} - Use Configuration tab for now!`);
-                }}
-                onStart={() => handleContainerOperation(service.service, 'start')}
-                onStop={() => handleContainerOperation(service.service, 'stop')}
-                onRestart={() => handleContainerOperation(service.service, 'restart')}
-                containerStatus={getContainerStatus(service.service)}
-                isOperating={operatingServices.has(service.service)}
-              />
             </div>
-          ))}
+          )}
         </div>
-        {externalServices.length === 0 && (
-          <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No external services found
+
+        {/* External Data Services */}
+        <div>
+          <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          🌐 External Data Services ({externalServices.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-in-list">
+            {externalServices.map((service, index) => (
+              <div key={service.service} style={{ animationDelay: `${index * 0.05}s` }}>
+                <ServiceCard
+                  key={service.service}
+                  service={service}
+                  icon={service.def.icon}
+                  darkMode={darkMode}
+                  onViewDetails={() => {
+                    setSelectedService({ service, icon: service.def.icon });
+                  }}
+                  onConfigure={() => {
+                    alert(`Configure ${service.service} - Use Configuration tab for now!`);
+                  }}
+                  onStart={() => handleContainerOperation(service.service, 'start')}
+                  onStop={() => handleContainerOperation(service.service, 'stop')}
+                  onRestart={() => handleContainerOperation(service.service, 'restart')}
+                  containerStatus={getContainerStatus(service.service)}
+                  isOperating={operatingServices.has(service.service)}
+                />
+              </div>
+            ))}
           </div>
-        )}
+          {externalServices.length === 0 && (
+            <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No external services found
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 };

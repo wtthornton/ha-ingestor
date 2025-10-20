@@ -365,8 +365,8 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   enhancedHealth?.dependencies?.find(d => d.name === 'Enrichment Pipeline')?.status === 'healthy'
                     ? 'healthy'
                     : enrichmentMetrics?.events_per_minute === 0
-                    ? 'paused'
-                    : 'unhealthy'
+                      ? 'paused'
+                      : 'unhealthy'
                 }
                 metrics={{
                   primary: {
@@ -467,12 +467,12 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   {value?.status_detail === 'credentials_missing' || value?.credentials_configured === false 
                     ? '🔑' 
                     : value?.status === 'healthy' 
-                    ? '✅' 
-                    : value?.status === 'error' 
-                    ? '❌' 
-                    : value?.status === 'degraded' 
-                    ? '⚠️' 
-                    : '⏸️'}
+                      ? '✅' 
+                      : value?.status === 'error' 
+                        ? '❌' 
+                        : value?.status === 'degraded' 
+                          ? '⚠️' 
+                          : '⏸️'}
                 </span>
               </button>
             ))}
@@ -577,12 +577,12 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                     </p>
                     <p className="text-3xl font-bold mt-1">
                       {overallStatus === 'operational' ? '100' : 
-                       overallStatus === 'degraded' ? '75' : '25'}%
+                        overallStatus === 'degraded' ? '75' : '25'}%
                     </p>
                   </div>
                   <div className="text-4xl">
                     {overallStatus === 'operational' ? '✅' : 
-                     overallStatus === 'degraded' ? '⚠️' : '❌'}
+                      overallStatus === 'degraded' ? '⚠️' : '❌'}
                   </div>
                 </div>
               </div>

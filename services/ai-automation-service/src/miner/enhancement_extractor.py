@@ -6,7 +6,7 @@ Extracts actionable enhancements from community automations.
 Epic AI-4, Story AI4.2
 """
 import logging
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional
 from collections import Counter
 
 from pydantic import BaseModel

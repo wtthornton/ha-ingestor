@@ -150,8 +150,8 @@ export const RecentGamesList: React.FC<RecentGamesListProps> = ({
                         won
                           ? 'bg-green-500 text-white'
                           : tied
-                          ? 'bg-gray-500 text-white'
-                          : 'bg-red-500 text-white'
+                            ? 'bg-gray-500 text-white'
+                            : 'bg-red-500 text-white'
                       }`}
                     >
                       {won ? 'W' : tied ? 'T' : 'L'}

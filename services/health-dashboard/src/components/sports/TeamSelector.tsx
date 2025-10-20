@@ -77,9 +77,9 @@ export const TeamSelector: React.FC<TeamSelectorProps> = ({
               className={`
                 relative p-4 rounded-lg border-2 transition-all duration-200
                 ${isSelected 
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 scale-105' 
-                  : `${borderColor} ${bgPrimary} hover:border-blue-300`
-                }
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 scale-105' 
+              : `${borderColor} ${bgPrimary} hover:border-blue-300`
+            }
                 hover:shadow-lg active:scale-95
                 min-h-[120px] flex flex-col items-center justify-center
               `}

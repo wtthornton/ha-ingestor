@@ -184,8 +184,8 @@ export const TeamStatisticsCard: React.FC<TeamStatisticsCardProps> = ({
                       game.result === 'W'
                         ? 'bg-green-500 text-white'
                         : game.result === 'L'
-                        ? 'bg-red-500 text-white'
-                        : 'bg-gray-500 text-white'
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-500 text-white'
                     }`}
                   >
                     {game.result}

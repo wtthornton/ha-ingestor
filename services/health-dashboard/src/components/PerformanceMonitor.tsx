@@ -70,7 +70,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     const sizes = ['B', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 B';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`;
   };
 
   const latestMetrics = currentMetrics || metrics[metrics.length - 1];

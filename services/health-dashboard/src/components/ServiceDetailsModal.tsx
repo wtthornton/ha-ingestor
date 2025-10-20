@@ -176,7 +176,7 @@ export const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
               {details.map((detail, index) => (
                 <div 
                   key={index} 
-                  className={`flex justify-between items-center stagger-item`}
+                  className={'flex justify-between items-center stagger-item'}
                   role="listitem"
                 >
                   <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -186,10 +186,10 @@ export const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
                     detail.status === 'good'
                       ? 'text-green-600 dark:text-green-400'
                       : detail.status === 'warning'
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : detail.status === 'error'
-                      ? 'text-red-600 dark:text-red-400'
-                      : darkMode ? 'text-white' : 'text-gray-900'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : detail.status === 'error'
+                          ? 'text-red-600 dark:text-red-400'
+                          : darkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {detail.value} {detail.unit && <span className="text-sm font-normal">{detail.unit}</span>}
                   </span>

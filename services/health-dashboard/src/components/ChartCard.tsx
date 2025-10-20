@@ -78,7 +78,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     if (type === 'line' || type === 'area') {
       // Draw area under line
       if (type === 'area') {
-        ctx.fillStyle = color + '20';
+        ctx.fillStyle = `${color  }20`;
         ctx.beginPath();
         ctx.moveTo(padding, padding + chartHeight);
         

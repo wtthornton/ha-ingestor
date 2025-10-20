@@ -22,8 +22,8 @@ interface MiniChartProps {
 export const MiniChart: React.FC<MiniChartProps> = ({ 
   data, 
   color, 
-  className = "w-full h-24",
-  ariaLabel = "Time series chart"
+  className = 'w-full h-24',
+  ariaLabel = 'Time series chart'
 }) => {
   if (!data || data.length === 0) {
     return (

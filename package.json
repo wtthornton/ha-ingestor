@@ -14,7 +14,14 @@
     "type": "git",
     "url": "git+https://github.com/wtthornton/HomeIQ.git"
   },
-  "keywords": ["home-assistant", "home-automation", "ai", "smart-home", "iot", "pattern-detection"],
+  "keywords": [
+    "home-assistant",
+    "home-automation",
+    "ai",
+    "smart-home",
+    "iot",
+    "pattern-detection"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -23,7 +30,9 @@
   },
   "homepage": "https://github.com/wtthornton/HomeIQ#readme",
   "dependencies": {
-    "@playwright/test": "^1.56.0",
     "puppeteer": "^24.25.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
   }
 }

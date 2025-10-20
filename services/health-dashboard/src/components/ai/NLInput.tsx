@@ -18,10 +18,10 @@ export const NLInput: React.FC<Props> = ({ darkMode, onSuccess }) => {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | '' }>({ text: '', type: '' });
 
   const examples = [
-    "Turn on kitchen light at 7 AM on weekdays",
-    "Turn off heater when window opens for 10 minutes",
-    "Send notification when front door left open 5 minutes",
-    "Close blinds at sunset"
+    'Turn on kitchen light at 7 AM on weekdays',
+    'Turn off heater when window opens for 10 minutes',
+    'Send notification when front door left open 5 minutes',
+    'Close blinds at sunset'
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

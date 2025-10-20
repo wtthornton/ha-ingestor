@@ -147,7 +147,7 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <div className={`card-base p-4`}>
+      <div className={'card-base p-4'}>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <h2 className={`text-h2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             📜 Live Log Viewer
@@ -240,7 +240,7 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
       </div>
       
       {/* Log List */}
-      <div className={`card-base p-3 max-h-[600px] overflow-y-auto font-mono text-xs`}>
+      <div className={'card-base p-3 max-h-[600px] overflow-y-auto font-mono text-xs'}>
         {filteredLogs.length === 0 ? (
           <div className="text-center py-12">
             <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -253,7 +253,7 @@ export const LogTailViewer: React.FC<LogTailViewerProps> = ({ darkMode }) => {
               <div
                 key={log.id}
                 style={{ animationDelay: `${Math.min(index * 0.01, 0.5)}s` }}
-                className={`flex items-start gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors content-fade-in`}
+                className={'flex items-start gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors content-fade-in'}
                 onClick={() => copyLog(log)}
                 title="Click to copy"
               >

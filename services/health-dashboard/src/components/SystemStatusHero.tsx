@@ -167,8 +167,8 @@ export const SystemStatusHero: React.FC<SystemStatusHeroProps> = ({
                     (latency ?? 0) < 50 
                       ? 'text-green-600 dark:text-green-400'
                       : (latency ?? 0) < 100
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : 'text-red-600 dark:text-red-400'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-red-600 dark:text-red-400'
                   }`}>
                     {(latency ?? 0).toFixed(1)} <span className="text-sm font-normal">ms avg</span>
                   </span>
@@ -192,8 +192,8 @@ export const SystemStatusHero: React.FC<SystemStatusHeroProps> = ({
                   (errorRate ?? 0) < 1
                     ? 'text-green-600 dark:text-green-400'
                     : (errorRate ?? 0) < 5
-                    ? 'text-yellow-600 dark:text-yellow-400'
-                    : 'text-red-600 dark:text-red-400'
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-red-600 dark:text-red-400'
                 }`}>
                   {(errorRate ?? 0).toFixed(2)} <span className="text-sm font-normal">%</span>
                 </span>

@@ -322,7 +322,7 @@ export const IntegrationDetailsModal: React.FC<IntegrationDetailsModalProps> = (
                     }`}>
                       <div className="text-2xl font-bold mb-1">
                         {performance.device_discovery_status === 'active' ? '✅' : 
-                         performance.device_discovery_status === 'paused' ? '⏸️' : '❓'}
+                          performance.device_discovery_status === 'paused' ? '⏸️' : '❓'}
                       </div>
                       <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                         Discovery

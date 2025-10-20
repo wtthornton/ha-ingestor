@@ -143,12 +143,12 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
               containerStatus === 'running' 
                 ? 'text-green-600 dark:text-green-400' 
                 : containerStatus === 'stopped'
-                ? 'text-red-600 dark:text-red-400'
-                : 'text-gray-600 dark:text-gray-400'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-gray-600 dark:text-gray-400'
             }`}>
               {containerStatus === 'running' ? '🟢 Running' : 
-               containerStatus === 'stopped' ? '🔴 Stopped' : 
-               '⚪ Unknown'}
+                containerStatus === 'stopped' ? '🔴 Stopped' : 
+                  '⚪ Unknown'}
             </span>
           </div>
         </div>
@@ -208,7 +208,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         {onViewDetails && (
           <button
             onClick={onViewDetails}
-            className={`btn-primary flex-1 btn-press`}
+            className={'btn-primary flex-1 btn-press'}
           >
             👁️ View Details
           </button>
@@ -216,7 +216,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         {onConfigure && (
           <button
             onClick={onConfigure}
-            className={`btn-secondary flex-1 btn-press`}
+            className={'btn-secondary flex-1 btn-press'}
           >
             ⚙️ Configure
           </button>

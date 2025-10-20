@@ -101,7 +101,7 @@ export const ThresholdConfig: React.FC<ThresholdConfigProps> = ({ darkMode, onSa
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={`card-base p-6`}>
+      <div className={'card-base p-6'}>
         <h2 className={`text-h2 ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
           ⚙️ Preferences & Thresholds
         </h2>
@@ -111,7 +111,7 @@ export const ThresholdConfig: React.FC<ThresholdConfigProps> = ({ darkMode, onSa
       </div>
 
       {/* Metric Thresholds */}
-      <div className={`card-base p-6`}>
+      <div className={'card-base p-6'}>
         <h3 className={`text-h3 ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
           📊 Metric Thresholds
         </h3>
@@ -165,7 +165,7 @@ export const ThresholdConfig: React.FC<ThresholdConfigProps> = ({ darkMode, onSa
       </div>
 
       {/* Notification Preferences */}
-      <div className={`card-base p-6`}>
+      <div className={'card-base p-6'}>
         <h3 className={`text-h3 ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
           🔔 Notification Preferences
         </h3>
@@ -210,7 +210,7 @@ export const ThresholdConfig: React.FC<ThresholdConfigProps> = ({ darkMode, onSa
       </div>
 
       {/* General Preferences */}
-      <div className={`card-base p-6`}>
+      <div className={'card-base p-6'}>
         <h3 className={`text-h3 ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
           🎨 General Preferences
         </h3>

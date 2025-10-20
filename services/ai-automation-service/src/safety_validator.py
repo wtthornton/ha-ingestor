@@ -177,7 +177,66 @@ class SafetyValidator:
         return issues
     
     def _check_bulk_device_off(self, automation: Dict) -> List[SafetyIssue]:
-        """Rule 2: No bulk device shutoffs without explicit confirmation"""
+        """
+        Rule 2: No bulk device shutoffs without explicit confirmation
+        
+        Prevents automations from turning off multiple devices or all devices in an area
+        without explicit user confirmation or specific targeting. This is a critical safety
+        rule to avoid scenarios like accidentally turning off all home devices.
+        
+        Dangerous patterns detected:
+        - target.area_id = 'all' (turns off everything in all areas)
+        - 'all' keyword in target or entity_id
+        - Multiple devices specified in single turn_off action
+        - domain.turn_off without entity_id (affects all entities in domain)
+        
+        The function validates:
+        1. Service calls containing 'turn_off'
+        2. Target specifications (area_id, entity_id)
+        3. Number of devices affected by the action
+        4. Presence of domain-wide shutoffs
+        
+        Args:
+            automation (Dict): Home Assistant automation configuration containing:
+                - action (list): List of action blocks
+                - service (str): Service being called (e.g., 'light.turn_off')
+                - data/service_data (dict): Action parameters
+                - target (dict): Target entities/areas
+                - entity_id (str/list): Specific entities to target
+        
+        Returns:
+            List[SafetyIssue]: List of critical/high severity safety issues found.
+                Empty list if no bulk shutoff patterns detected.
+        
+        Examples of Violations:
+            >>> # BAD: Turns off all lights
+            >>> automation = {
+            ...     'action': [{
+            ...         'service': 'light.turn_off',
+            ...         'target': {'area_id': 'all'}
+            ...     }]
+            ... }
+            
+            >>> # BAD: Multiple devices without confirmation
+            >>> automation = {
+            ...     'action': [{
+            ...         'service': 'switch.turn_off',
+            ...         'target': {'entity_id': ['switch.1', 'switch.2', 'switch.3', 'switch.4']}
+            ...     }]
+            ... }
+            
+            >>> # GOOD: Specific single device
+            >>> automation = {
+            ...     'action': [{
+            ...         'service': 'light.turn_off',
+            ...         'target': {'entity_id': 'light.living_room'}
+            ...     }]
+            ... }
+        
+        Complexity: C (12) - Multiple pattern checks for bulk operations
+        Note: High criticality but clear logic flow. Document edge cases if adding
+              new bulk operation patterns.
+        """
         issues = []
         
         actions = automation.get('action', [])
@@ -259,7 +318,44 @@ class SafetyValidator:
         return issues
     
     def _check_time_constraints(self, automation: Dict) -> List[SafetyIssue]:
-        """Rule 4: Require time/condition constraints for destructive actions"""
+        """
+        Rule 4: Require time/condition constraints for destructive actions
+        
+        Validates that automations performing destructive actions (turn_off, close, lock, etc.)
+        include appropriate time-based or state-based conditions to prevent unintended execution.
+        
+        This check helps prevent scenarios like:
+        - Turning off all lights without checking if anyone is home
+        - Locking doors without verifying occupancy
+        - Changing HVAC settings at inappropriate times
+        
+        The function examines both the conditions and actions in an automation:
+        1. Identifies if time or state conditions are present
+        2. Detects destructive actions in the action list
+        3. Raises a warning if destructive actions lack protective conditions
+        
+        Args:
+            automation (Dict): Home Assistant automation configuration containing:
+                - condition (list): List of condition blocks (time, state, etc.)
+                - action (list): List of actions to perform
+                - service (str): Service being called in actions
+        
+        Returns:
+            List[SafetyIssue]: List of safety issues found. Empty if no issues detected.
+                Each issue includes level, message, and rule information.
+        
+        Example Issues:
+            >>> automation = {
+            ...     'action': [{'service': 'light.turn_off'}]
+            ... }
+            >>> issues = validator._check_time_constraints(automation)
+            >>> issues[0].message
+            'Destructive action without time/condition constraints'
+        
+        Complexity: C (13) - Multiple nested conditions checking destructive patterns
+        Note: Consider extracting destructive action detection to separate helper method
+              if this function needs expansion.
+        """
         issues = []
         
         has_time_condition = False

@@ -635,18 +635,18 @@ export const AnimatedDependencyGraph: React.FC<AnimatedDependencyGraphProps> = (
                         metric.status === 'active' 
                           ? (darkMode ? 'bg-green-900/30 text-green-300 border border-green-700/50' : 'bg-green-50 text-green-700 border border-green-200')
                           : metric.status === 'inactive'
-                          ? (darkMode ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
-                          : metric.status === 'timeout'
-                          ? (darkMode ? 'bg-orange-900/30 text-orange-300 border border-orange-700/50' : 'bg-orange-50 text-orange-700 border border-orange-200')
-                          : metric.status === 'not_configured'
-                          ? (darkMode ? 'bg-gray-900/30 text-gray-300 border border-gray-700/50' : 'bg-gray-50 text-gray-700 border border-gray-200')
-                          : (darkMode ? 'bg-red-900/30 text-red-300 border border-red-700/50' : 'bg-red-50 text-red-700 border border-red-200')
+                            ? (darkMode ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
+                            : metric.status === 'timeout'
+                              ? (darkMode ? 'bg-orange-900/30 text-orange-300 border border-orange-700/50' : 'bg-orange-50 text-orange-700 border border-orange-200')
+                              : metric.status === 'not_configured'
+                                ? (darkMode ? 'bg-gray-900/30 text-gray-300 border border-gray-700/50' : 'bg-gray-50 text-gray-700 border border-gray-200')
+                                : (darkMode ? 'bg-red-900/30 text-red-300 border border-red-700/50' : 'bg-red-50 text-red-700 border border-red-200')
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                           metric.status === 'active' ? 'bg-green-400' : 
-                          metric.status === 'inactive' ? 'bg-yellow-400' :
-                          metric.status === 'timeout' ? 'bg-orange-400' :
-                          metric.status === 'not_configured' ? 'bg-gray-400' : 'bg-red-400'
+                            metric.status === 'inactive' ? 'bg-yellow-400' :
+                              metric.status === 'timeout' ? 'bg-orange-400' :
+                                metric.status === 'not_configured' ? 'bg-gray-400' : 'bg-red-400'
                         }`}></span>
                         {metric.status}
                       </span>

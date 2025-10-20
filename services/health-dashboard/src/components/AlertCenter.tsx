@@ -117,8 +117,8 @@ export const AlertCenter: React.FC<AlertCenterProps> = ({
                     ? 'bg-blue-600 text-white'
                     : 'bg-blue-100 text-blue-700'
                   : darkMode
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {filterType === 'all' ? 'All' : filterType.charAt(0).toUpperCase() + filterType.slice(1)}

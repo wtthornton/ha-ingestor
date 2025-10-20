@@ -123,8 +123,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           <p className={textSecondary}>
             Step {currentStep} of 3: {
               currentStep === 1 ? 'Select NFL Teams' :
-              currentStep === 2 ? 'Select NHL Teams (Optional)' :
-              'Review & Confirm'
+                currentStep === 2 ? 'Select NHL Teams (Optional)' :
+                  'Review & Confirm'
             }
           </p>
           

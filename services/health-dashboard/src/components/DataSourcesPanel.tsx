@@ -226,118 +226,118 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
                 </div>
               </div>
 
-            {/* Current Weather (Epic 31, Story 31.5) */}
-            {sourceDef.id === 'weather' && currentWeather && (
-              <div className="mb-4">
-                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+              {/* Current Weather (Epic 31, Story 31.5) */}
+              {sourceDef.id === 'weather' && currentWeather && (
+                <div className="mb-4">
+                  <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                   Current Conditions
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {currentWeather.temperature?.toFixed(1)}°C
-                  </span>
-                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {currentWeather.condition}
-                  </span>
-                </div>
-                <div className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  Humidity: {currentWeather.humidity}% • {currentWeather.location}
-                </div>
-              </div>
-            )}
-
-            {/* API Usage */}
-            {source.api_usage && (
-              <div className="mb-4">
-                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  API Usage Today
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {source.api_usage.calls_today}
-                  </span>
-                  {source.api_usage.quota_limit && (
-                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      / {source.api_usage.quota_limit}
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {currentWeather.temperature?.toFixed(1)}°C
                     </span>
+                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {currentWeather.condition}
+                    </span>
+                  </div>
+                  <div className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Humidity: {currentWeather.humidity}% • {currentWeather.location}
+                  </div>
+                </div>
+              )}
+
+              {/* API Usage */}
+              {source.api_usage && (
+                <div className="mb-4">
+                  <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  API Usage Today
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {source.api_usage.calls_today}
+                    </span>
+                    {source.api_usage.quota_limit && (
+                      <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      / {source.api_usage.quota_limit}
+                      </span>
+                    )}
+                  </div>
+                  {source.api_usage.quota_percentage !== undefined && source.api_usage.quota_percentage > 0 && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            source.api_usage.quota_percentage > 80
+                              ? 'bg-red-500'
+                              : source.api_usage.quota_percentage > 60
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                          }`}
+                          style={{ width: `${source.api_usage.quota_percentage}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {source.api_usage.quota_percentage}% of quota used
+                      </span>
+                    </div>
                   )}
                 </div>
-                {source.api_usage.quota_percentage !== undefined && source.api_usage.quota_percentage > 0 && (
-                  <div className="mt-2">
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          source.api_usage.quota_percentage > 80
-                            ? 'bg-red-500'
-                            : source.api_usage.quota_percentage > 60
-                            ? 'bg-yellow-500'
-                            : 'bg-green-500'
-                        }`}
-                        style={{ width: `${source.api_usage.quota_percentage}%` }}
-                      />
-                    </div>
-                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {source.api_usage.quota_percentage}% of quota used
+              )}
+
+              {/* Performance Metrics */}
+              <div className="mb-4 space-y-2">
+                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Performance
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Status:</span>
+                    <span className={`font-medium capitalize ${getStatusColor(status)}`}>
+                      {status}
                     </span>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Performance Metrics */}
-            <div className="mb-4 space-y-2">
-              <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Performance
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Status:</span>
-                  <span className={`font-medium capitalize ${getStatusColor(status)}`}>
-                    {status}
-                  </span>
-                </div>
-                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Service:</span>
-                  <span className="font-medium">{source?.service || 'N/A'}</span>
-                </div>
-                <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <span>Last Check:</span>
-                  <span className="font-medium">{formatTimestamp(source?.timestamp)}</span>
-                </div>
-                {source?.uptime_seconds !== undefined && source.uptime_seconds > 0 && (
                   <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>Uptime:</span>
-                    <span className="font-medium">{formatTimestamp(source.uptime_seconds)}</span>
+                    <span>Service:</span>
+                    <span className="font-medium">{source?.service || 'N/A'}</span>
                   </div>
-                )}
+                  <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>Last Check:</span>
+                    <span className="font-medium">{formatTimestamp(source?.timestamp)}</span>
+                  </div>
+                  {source?.uptime_seconds !== undefined && source.uptime_seconds > 0 && (
+                    <div className={`flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <span>Uptime:</span>
+                      <span className="font-medium">{formatTimestamp(source.uptime_seconds)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+              {/* Actions */}
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                <button
+                  onClick={() => {/* TODO: Implement configure */}}
+                  className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                    darkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                  }`}
+                >
+                Configure
+                </button>
+                <button
+                  onClick={() => {/* TODO: Implement test */}}
+                  className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                    darkMode
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+                >
+                Test
+                </button>
               </div>
             </div>
-
-
-            {/* Actions */}
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-              <button
-                onClick={() => {/* TODO: Implement configure */}}
-                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
-                  darkMode
-                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-                }`}
-              >
-                Configure
-              </button>
-              <button
-                onClick={() => {/* TODO: Implement test */}}
-                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
-                  darkMode
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
-                }`}
-              >
-                Test
-              </button>
-            </div>
-          </div>
           );
         })}
       </div>

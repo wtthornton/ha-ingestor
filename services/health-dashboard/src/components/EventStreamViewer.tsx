@@ -186,7 +186,7 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
       )}
 
       {/* Controls */}
-      <div className={`card-base p-4`}>
+      <div className={'card-base p-4'}>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <h2 className={`text-h2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             📡 Live Event Stream
@@ -287,7 +287,7 @@ export const EventStreamViewer: React.FC<EventStreamViewerProps> = ({ darkMode }
       {/* Event List */}
       <div 
         ref={containerRef}
-        className={`card-base p-4 max-h-[600px] overflow-y-auto`}
+        className={'card-base p-4 max-h-[600px] overflow-y-auto'}
       >
         {loading && events.length === 0 ? (
           <div className="text-center py-12">

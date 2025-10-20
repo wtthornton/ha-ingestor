@@ -67,7 +67,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
     } else if (diffHours < 24) {
       return `${diffHours} hours ago`;
     } else {
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      return `${date.toLocaleDateString()  } ${  date.toLocaleTimeString()}`;
     }
   };
 

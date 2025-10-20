@@ -128,7 +128,7 @@ export const EnvironmentHealthCard: React.FC = () => {
           <div
             className={`h-2.5 rounded-full transition-all duration-500 ${
               health.health_score >= 80 ? 'bg-green-600' :
-              health.health_score >= 50 ? 'bg-yellow-600' : 'bg-red-600'
+                health.health_score >= 50 ? 'bg-yellow-600' : 'bg-red-600'
             }`}
             style={{ width: `${health.health_score}%` }}
           ></div>
@@ -164,9 +164,9 @@ export const EnvironmentHealthCard: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className={`h-2 w-2 rounded-full ${
                   integration.status === IntegrationStatus.HEALTHY ? 'bg-green-500' :
-                  integration.status === IntegrationStatus.WARNING ? 'bg-yellow-500' :
-                  integration.status === IntegrationStatus.ERROR ? 'bg-red-500' :
-                  'bg-gray-400'
+                    integration.status === IntegrationStatus.WARNING ? 'bg-yellow-500' :
+                      integration.status === IntegrationStatus.ERROR ? 'bg-red-500' :
+                        'bg-gray-400'
                 }`}></div>
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
