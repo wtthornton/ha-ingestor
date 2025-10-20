@@ -20,7 +20,10 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:chromium": "playwright test --project=chromium"
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "analyze:duplication": "jscpd src/ --config .jscpd.json",
+    "analyze:complexity": "eslint src/ --format json --output-file reports/complexity.json",
+    "analyze:all": "npm run lint && npm run type-check && npm run analyze:duplication"
   },
   "dependencies": {
     "chart.js": "^4.5.0",

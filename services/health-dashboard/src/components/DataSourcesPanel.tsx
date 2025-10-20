@@ -27,10 +27,29 @@ const DATA_SOURCE_DEFINITIONS = [
 export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) => {
   const { dataSources, loading, error, refetch } = useDataSources(30000);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [currentWeather, setCurrentWeather] = useState<any>(null);
 
   useEffect(() => {
     setLastUpdate(new Date());
   }, [dataSources]);
+
+  // Simple weather fetch (Epic 31, Story 31.5)
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch('http://localhost:8009/current-weather');
+        if (res.ok) {
+          setCurrentWeather(await res.json());
+        }
+      } catch (e) {
+        console.log('Weather API unavailable');
+      }
+    };
+
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 15 * 60 * 1000); // 15 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -206,6 +225,26 @@ export const DataSourcesPanel: React.FC<DataSourcesPanelProps> = ({ darkMode }) 
                   </div>
                 </div>
               </div>
+
+            {/* Current Weather (Epic 31, Story 31.5) */}
+            {sourceDef.id === 'weather' && currentWeather && (
+              <div className="mb-4">
+                <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Current Conditions
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {currentWeather.temperature?.toFixed(1)}°C
+                  </span>
+                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {currentWeather.condition}
+                  </span>
+                </div>
+                <div className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Humidity: {currentWeather.humidity}% • {currentWeather.location}
+                </div>
+              </div>
+            )}
 
             {/* API Usage */}
             {source.api_usage && (

@@ -1,0 +1,28 @@
+{
+  "threshold": 3,
+  "reporters": ["html", "console", "json"],
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.config.js",
+    "**/*.config.ts"
+  ],
+  "format": ["typescript", "tsx", "javascript", "jsx"],
+  "minLines": 5,
+  "minTokens": 50,
+  "output": "./reports/duplication",
+  "formatsExts": {
+    "typescript": [".ts"],
+    "tsx": [".tsx"],
+    "javascript": [".js"],
+    "jsx": [".jsx"]
+  },
+  "absolute": true,
+  "gitignore": true
+}
+

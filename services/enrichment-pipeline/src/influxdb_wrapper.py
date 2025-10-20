@@ -278,36 +278,18 @@ class InfluxDBClientWrapper:
                 if device_metadata.get("sw_version"):
                     point.field("sw_version", str(device_metadata["sw_version"]))
             
-            # Weather enrichment: Extract weather data added by websocket-ingestion
-            # Weather data is attached to events by WeatherEnrichmentService in websocket-ingestion
-            weather = event_data.get("weather", {})
-            logger.warning(f"[WEATHER_EXTRACT] Weather data present: {weather is not None and len(weather) > 0}, Keys: {list(weather.keys()) if weather else 'None'}, Sample: {str(weather)[:200]}")
-            if weather:
-                # Add weather temperature
-                if weather.get("temperature") is not None:
-                    point.field("weather_temp", float(weather["temperature"]))
-                
-                # Add weather humidity
-                if weather.get("humidity") is not None:
-                    point.field("weather_humidity", int(weather["humidity"]))
-                
-                # Add weather pressure
-                if weather.get("pressure") is not None:
-                    point.field("weather_pressure", float(weather["pressure"]))
-                
-                # Add wind speed
-                if weather.get("wind_speed") is not None:
-                    point.field("wind_speed", float(weather["wind_speed"]))
-                
-                # Add weather description
-                if weather.get("weather_description"):
-                    point.field("weather_description", str(weather["weather_description"]))
-                
-                # Add weather condition as tag for efficient filtering
-                if weather.get("weather_condition"):
-                    point.tag("weather_condition", str(weather["weather_condition"]))
-                
-                logger.debug(f"Added weather enrichment fields: temp={weather.get('temperature')}, humidity={weather.get('humidity')}")
+            # DEPRECATED (Epic 31, Story 31.4): Weather enrichment removed
+            # Weather data now fetched independently by weather-api service (Port 8009)
+            # Historical events may still have weather dict but new events will not
+            # For weather correlation, query weather-api or use time-window JOINs with weather_data measurement
+            # 
+            # OLD CODE (removed to prevent writing unused fields):
+            # weather = event_data.get("weather", {})
+            # if weather:
+            #     point.field("weather_temp", float(weather["temperature"]))
+            #     point.field("weather_humidity", int(weather["humidity"]))
+            #     point.field("weather_pressure", float(weather["pressure"]))
+            #     point.tag("weather_condition", str(weather["weather_condition"]))
             
             return point
             

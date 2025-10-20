@@ -44,8 +44,8 @@ This system uses a **hybrid database architecture** optimizing for different dat
 **Temporal Tags:**
 - `time_of_day` - Time period (morning: 5am-12pm, afternoon: 12pm-5pm, evening: 5pm-9pm, night: 9pm-5am) ✅ **NEW: Oct 2025**
 
-**Weather Tags:**
-- `weather_condition` - Current weather condition (Clear, Clouds, Rain, Snow, etc.) ✅ **NEW: Oct 2025**
+**Weather Tags** (DEPRECATED - Epic 31):
+- `weather_condition` - **DEPRECATED** (Oct 2025) - Historical events only. Use weather-api service (Port 8009) for new weather data.
 
 **Planned Tags** (designed but not currently implemented):
 - `area` - Room/area name (human-readable) - ⚠️ Have `area_id`, need name resolution
@@ -94,7 +94,7 @@ Each Home Assistant attribute is stored as `attr_{attribute_name}`:
 **Weather Tags**:
 - `weather_condition` - Weather condition (Clear, Clouds, Rain, etc.) ✅ **NEW: Oct 2025**
 
-**Note**: Weather enrichment is now fully operational. All events include current weather context fetched from OpenWeatherMap API (Las Vegas, NV location). Weather cache cleared Oct 18, 2025 to resolve stale data issue.
+**Note (UPDATED Oct 2025 - Epic 31)**: Weather enrichment has been **migrated to standalone weather-api service** (Port 8009). Historical events retain embedded weather fields for backward compatibility. New events do NOT include weather fields - use time-window JOINs with weather_data measurement for weather correlation queries.
 
 ---
 
@@ -258,7 +258,9 @@ END
 
 #### Weather Data Bucket: `weather_data`
 - **Retention:** 180 days ✅
-- **Purpose:** Weather enrichment data
+- **Purpose:** Weather data from weather-api service (Port 8009) ✅ **Epic 31**
+- **Measurement:** `weather` (location, condition, temperature, humidity, pressure, wind_speed)
+- **Source:** OpenWeatherMap API via standalone weather-api microservice
 
 #### System Metrics Bucket: `system_metrics`
 - **Retention:** 30 days ✅

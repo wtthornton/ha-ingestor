@@ -29,7 +29,9 @@ from async_event_processor import AsyncEventProcessor
 from event_queue import EventQueue
 from batch_processor import BatchProcessor
 from memory_manager import MemoryManager
-from weather_enrichment import WeatherEnrichmentService
+# DEPRECATED (Epic 31, Story 31.4): Weather enrichment removed
+# Weather data now available via weather-api service (Port 8009)
+# from weather_enrichment import WeatherEnrichmentService
 from http_client import SimpleHTTPClient
 from influxdb_wrapper import InfluxDBConnectionManager
 from historical_event_counter import HistoricalEventCounter
@@ -57,8 +59,9 @@ class WebSocketIngestionService:
         self.batch_processor: Optional[BatchProcessor] = None
         self.memory_manager: Optional[MemoryManager] = None
         
-        # Weather enrichment components
-        self.weather_enrichment: Optional[WeatherEnrichmentService] = None
+        # DEPRECATED (Epic 31, Story 31.4): Weather enrichment removed
+        # Use weather-api service on Port 8009 for weather data
+        # self.weather_enrichment: Optional[WeatherEnrichmentService] = None
         
         # HTTP client for enrichment service
         self.http_client: Optional[SimpleHTTPClient] = None
@@ -84,7 +87,8 @@ class WebSocketIngestionService:
         # Weather enrichment configuration
         self.weather_api_key = os.getenv('WEATHER_API_KEY')
         self.weather_default_location = os.getenv('WEATHER_DEFAULT_LOCATION', 'London,UK')
-        self.weather_enrichment_enabled = os.getenv('WEATHER_ENRICHMENT_ENABLED', 'true').lower() == 'true'
+        # DEPRECATED (Epic 31): Weather enrichment disabled
+        self.weather_enrichment_enabled = False  # Force disabled - use weather-api service
         
         # Enrichment service configuration
         self.enrichment_service_url = os.getenv('ENRICHMENT_SERVICE_URL', 'http://enrichment-pipeline:8002')
@@ -268,8 +272,9 @@ class WebSocketIngestionService:
             await self.memory_manager.stop()
         
         # Stop weather enrichment service
-        if self.weather_enrichment:
-            await self.weather_enrichment.stop()
+        # DEPRECATED (Epic 31, Story 31.4): Weather enrichment removed
+        # if self.weather_enrichment:
+        #     await self.weather_enrichment.stop()
         
         # Stop InfluxDB manager
         if self.influxdb_manager:

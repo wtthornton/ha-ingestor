@@ -437,6 +437,49 @@ services:
       retries: 3
       start_period: 30s
 
+  weather-api:
+    build:
+      context: .
+      dockerfile: services/weather-api/Dockerfile
+    container_name: homeiq-weather-api
+    restart: unless-stopped
+    ports:
+      - "8009:8009"
+    environment:
+      - SERVICE_PORT=8009
+      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
+      - WEATHER_LOCATION=${WEATHER_LOCATION:-Las Vegas}
+      - CACHE_TTL_SECONDS=900
+      - FETCH_INTERVAL_SECONDS=300
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-ha-ingestor-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
+      - INFLUXDB_BUCKET=weather_data
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - homeiq-network
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 96M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=weather-api,environment=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   calendar:
     build:
       context: .
@@ -801,47 +844,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-
-  weather-api:
-    build:
-      context: .
-      dockerfile: services/weather-api/Dockerfile
-    container_name: homeiq-weather-api
-    restart: unless-stopped
-    ports:
-      - "8007:8001"
-    env_file:
-      - infrastructure/.env.weather
-    environment:
-      - WEATHER_API_KEY=${WEATHER_API_KEY}
-      - WEATHER_API_URL=${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5}
-      - WEATHER_LAT=${WEATHER_LAT:-36.1699}
-      - WEATHER_LON=${WEATHER_LON:--115.1398}
-      - WEATHER_UNITS=${WEATHER_UNITS:-metric}
-      - WEATHER_CACHE_SECONDS=${WEATHER_CACHE_SECONDS:-300}
-      - WEATHER_PROVIDER=${WEATHER_PROVIDER:-openweathermap}
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=${INFLUXDB_ORG}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    depends_on:
-      influxdb:
-        condition: service_healthy
-    networks:
-      - homeiq-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=weather-api,environment=production"
 
   automation-miner:
     build:
