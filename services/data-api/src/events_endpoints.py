@@ -522,7 +522,62 @@ class EventsEndpoints:
         return stream_data
     
     async def _get_events_from_influxdb(self, event_filter: EventFilter, limit: int, offset: int) -> List[EventData]:
-        """Get events directly from InfluxDB"""
+        """
+        Retrieve and transform events from InfluxDB using Flux query language.
+        
+        Builds optimized Flux queries with tag-based filtering for efficient event retrieval.
+        Handles schema transformation from InfluxDB time-series format to EventData objects.
+        
+        Complexity: C (20) - High complexity due to query building and data transformation
+        
+        Args:
+            event_filter (EventFilter): Filter criteria including:
+                - entity_id: Filter by specific Home Assistant entity
+                - event_type: Filter by event type (state_changed, etc.)
+                - domain: Filter by domain (light, switch, etc.)
+                - device_id: Filter by device ID (Epic 23.2)
+                - area_id: Filter by area ID (Epic 23.2)
+            limit (int): Maximum number of events to return
+            offset (int): Number of events to skip (pagination)
+            
+        Returns:
+            List[EventData]: List of transformed event objects with:
+                - id: Event identifier
+                - timestamp: ISO format timestamp
+                - event_type: Type of event
+                - entity_id: Home Assistant entity
+                - state_value: Current state
+                - attributes: Event metadata
+                - domain, device_id, area_id, integration (if available)
+        
+        Query Strategy:
+            1. Filter to single _field (context_id) to avoid duplicates
+            2. Use tag-based filtering for efficiency (entity_id, event_type, domain)
+            3. Apply time range (-24h default)
+            4. Limit and offset for pagination
+            5. Sort by _time descending (newest first)
+        
+        Example:
+            >>> filter = EventFilter(entity_id="light.living_room", event_type="state_changed")
+            >>> events = await endpoints._get_events_from_influxdb(filter, limit=10, offset=0)
+            >>> print(f"Found {len(events)} events")
+            >>> for event in events:
+            ...     print(f"{event.timestamp}: {event.entity_id} = {event.state_value}")
+        
+        Note:
+            High complexity arises from:
+            - Dynamic Flux query construction based on filters
+            - Multiple optional filter conditions
+            - Schema transformation (InfluxDB record → EventData)
+            - Null handling for optional fields
+            - Pagination logic
+            - Error handling for network/query failures
+            
+        Performance:
+            - Tag-based filters are indexed (fast)
+            - Field filter reduces duplicate records
+            - Limit/offset support for large result sets
+        """
         try:
             # Import InfluxDB client
             from influxdb_client import InfluxDBClient

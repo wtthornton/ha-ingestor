@@ -1,429 +1,237 @@
 /**
- * AnalyticsPanel Component
+ * AnalyticsPanel Component (REFACTORED)
  * 
  * System performance analytics with charts and trends
  * Epic 13.2: System Performance Analytics
+ * 
+ * REFACTORING: Story 32.1
+ * - Extracted data fetching to useAnalyticsData hook
+ * - Extracted helper functions to analyticsHelpers
+ * - Created sub-components for loading, error, filters
+ * - Reduced complexity from 54 to <15
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MiniChart } from './charts/MiniChart';
-import type { AnalyticsData } from '../mocks/analyticsMock';
-import { SkeletonCard } from './skeletons';
+import { useAnalyticsData, type TimeRange } from '../hooks/useAnalyticsData';
+import { getTrendIcon, getTrendColor } from '../utils/analyticsHelpers';
+import { AnalyticsLoadingState } from './analytics/AnalyticsLoadingState';
+import { AnalyticsErrorState } from './analytics/AnalyticsErrorState';
+import { AnalyticsFilters } from './analytics/AnalyticsFilters';
 
 interface AnalyticsPanelProps {
   darkMode: boolean;
 }
 
-// Re-export AnalyticsData interface from mock for internal use
-interface AnalyticsDataInternal {
-  eventsPerMinute: {
-    current: number;
-    peak: number;
-    average: number;
-    min: number;
-    trend: 'up' | 'down' | 'stable';
-    data: TimeSeriesData[];
-  };
-  apiResponseTime: {
-    current: number;
-    peak: number;
-    average: number;
-    min: number;
-    trend: 'up' | 'down' | 'stable';
-    data: TimeSeriesData[];
-  };
-  databaseLatency: {
-    current: number;
-    peak: number;
-    average: number;
-    min: number;
-    trend: 'up' | 'down' | 'stable';
-    data: TimeSeriesData[];
-  };
-  errorRate: {
-    current: number;
-    peak: number;
-    average: number;
-    min: number;
-    trend: 'up' | 'down' | 'stable';
-    data: TimeSeriesData[];
-  };
-  summary: {
-    totalEvents: number;
-    successRate: number;
-    avgLatency: number;
-    uptime: number;
-  };
-}
+export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ darkMode }): JSX.Element | null => {
+  const [timeRange, setTimeRange] = useState<TimeRange>('1h');
+  
+  // Use custom hook for data fetching
+  const { data: analytics, loading, error, lastUpdate, refetch } = useAnalyticsData(timeRange);
 
-export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ darkMode }) => {
-  const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('1h');
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-
-  const fetchAnalytics = async () => {
-    try {
-      // Fetch real analytics data from data-api
-      const response = await fetch(`/api/v1/analytics?range=${timeRange}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      setAnalytics(data);
-      setError(null);
-      setLastUpdate(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch analytics');
-      setLoading(false);
-      console.error('Error fetching analytics:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnalytics();
-    const interval = setInterval(fetchAnalytics, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, [timeRange]);
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return '📈';
-      case 'down':
-        return '📉';
-      default:
-        return '➡️';
-    }
-  };
-
-  const getTrendColor = (trend: string, inverted: boolean = false) => {
-    const isGood = inverted ? trend === 'down' : trend === 'up';
-    if (trend === 'stable') return darkMode ? 'text-gray-400' : 'text-gray-600';
-    return isGood 
-      ? (darkMode ? 'text-green-400' : 'text-green-600')
-      : (darkMode ? 'text-yellow-400' : 'text-yellow-600');
-  };
-
-
+  // Handle loading state
   if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Key Metrics Skeletons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonCard key={`metric-${i}`} variant="chart" />
-          ))}
-        </div>
-        {/* Summary Stats Skeletons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <SkeletonCard key={`stat-${i}`} variant="default" />
-          ))}
-        </div>
-      </div>
-    );
+    return <AnalyticsLoadingState />;
   }
 
+  // Handle error state
   if (error) {
     return (
-      <div className={`rounded-lg shadow-md p-6 ${
-        darkMode ? 'bg-red-900/20 border border-red-500/30' : 'bg-red-50 border border-red-200'
-      }`}>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">⚠️</span>
-          <div className="flex-1">
-            <h3 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
-              Error Loading Analytics
-            </h3>
-            <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
-              {error}
-            </p>
-          </div>
-          <button
-            onClick={fetchAnalytics}
-            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
+      <AnalyticsErrorState
+        message={error}
+        onRetry={refetch}
+        darkMode={darkMode}
+      />
     );
   }
 
-  if (!analytics) return null;
+  // Handle no data
+  if (!analytics) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-2`}>
-              <span>📈</span>
-              System Performance Analytics
-            </h2>
-            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Detailed metrics, trends, and performance analysis
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              <p className="text-sm">Last updated</p>
-              <p className="text-sm font-medium">{lastUpdate.toLocaleTimeString()}</p>
-            </div>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
-              aria-label="Select time range for analytics"
-              className={`px-4 py-2 rounded-lg border ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } transition-colors`}
-            >
-              <option value="1h">Last Hour</option>
-              <option value="6h">Last 6 Hours</option>
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      {/* Filters */}
+      <AnalyticsFilters
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        lastUpdate={lastUpdate}
+        darkMode={darkMode}
+      />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-            Total Events
-          </div>
-          <div className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            {analytics.summary.totalEvents.toLocaleString()}
-          </div>
-          <div className={`text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            events processed
-          </div>
-        </div>
-
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-            Success Rate
-          </div>
-          <div className={`text-3xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-            {analytics.summary.successRate}%
-          </div>
-          <div className={`text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            of all events
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Events */}
+        <div className={`rounded-lg shadow-md p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Events</p>
+              <p className={`text-2xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {analytics.summary.totalEvents.toLocaleString()}
+              </p>
+            </div>
+            <div className="text-3xl">📊</div>
           </div>
         </div>
 
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-            Avg Latency
-          </div>
-          <div className={`text-3xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-            {analytics.summary.avgLatency}ms
-          </div>
-          <div className={`text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            end-to-end
+        {/* Success Rate */}
+        <div className={`rounded-lg shadow-md p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Success Rate</p>
+              <p className={`text-2xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {analytics.summary.successRate.toFixed(2)}%
+              </p>
+            </div>
+            <div className="text-3xl">✅</div>
           </div>
         </div>
 
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-            System Uptime
+        {/* Avg Latency */}
+        <div className={`rounded-lg shadow-md p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Avg Latency</p>
+              <p className={`text-2xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {analytics.summary.avgLatency.toFixed(0)}ms
+              </p>
+            </div>
+            <div className="text-3xl">⚡</div>
           </div>
-          <div className={`text-3xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-            {analytics.summary.uptime}%
-          </div>
-          <div className={`text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            availability
+        </div>
+
+        {/* Uptime */}
+        <div className={`rounded-lg shadow-md p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Uptime</p>
+              <p className={`text-2xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {analytics.summary.uptime.toFixed(2)}%
+              </p>
+            </div>
+            <div className="text-3xl">🔄</div>
           </div>
         </div>
       </div>
 
-      {/* Performance Charts */}
+      {/* Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Events Per Minute */}
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Events Processing Rate
-              </h3>
-              <span className={`text-sm ${getTrendColor(analytics.eventsPerMinute.trend)}`}>
-                {getTrendIcon(analytics.eventsPerMinute.trend)} {analytics.eventsPerMinute.trend}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {(analytics.eventsPerMinute.current ?? 0).toFixed(1)}
-              </span>
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                events/min
-              </span>
-            </div>
-          </div>
-          <MiniChart 
-            data={analytics.eventsPerMinute.data} 
-            color="#3B82F6"
-            ariaLabel="Events per minute over time" 
-          />
-          <div className={`mt-4 grid grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div>
-              <div>Peak</div>
-              <div className="font-medium">{(analytics.eventsPerMinute.peak ?? 0).toFixed(1)}</div>
-            </div>
-            <div>
-              <div>Avg</div>
-              <div className="font-medium">{(analytics.eventsPerMinute.average ?? 0).toFixed(1)}</div>
-            </div>
-            <div>
-              <div>Min</div>
-              <div className="font-medium">{(analytics.eventsPerMinute.min ?? 0).toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Events Per Minute"
+          metric={analytics.eventsPerMinute}
+          darkMode={darkMode}
+          icon="📨"
+        />
 
         {/* API Response Time */}
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                API Response Time
-              </h3>
-              <span className={`text-sm ${getTrendColor(analytics.apiResponseTime.trend, true)}`}>
-                {getTrendIcon(analytics.apiResponseTime.trend)} {analytics.apiResponseTime.trend}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {analytics.apiResponseTime.current.toFixed(0)}
-              </span>
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                ms
-              </span>
-            </div>
-          </div>
-          <MiniChart 
-            data={analytics.apiResponseTime.data} 
-            color="#10B981"
-            ariaLabel="API response time over time" 
-          />
-          <div className={`mt-4 grid grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div>
-              <div>Peak</div>
-              <div className="font-medium">{analytics.apiResponseTime.peak.toFixed(0)}ms</div>
-            </div>
-            <div>
-              <div>Avg</div>
-              <div className="font-medium">{analytics.apiResponseTime.average.toFixed(0)}ms</div>
-            </div>
-            <div>
-              <div>Min</div>
-              <div className="font-medium">{analytics.apiResponseTime.min.toFixed(0)}ms</div>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="API Response Time"
+          metric={analytics.apiResponseTime}
+          darkMode={darkMode}
+          icon="⏱️"
+          unit="ms"
+        />
 
         {/* Database Latency */}
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Database Write Latency
-              </h3>
-              <span className={`text-sm ${getTrendColor(analytics.databaseLatency.trend, true)}`}>
-                {getTrendIcon(analytics.databaseLatency.trend)} {analytics.databaseLatency.trend}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {analytics.databaseLatency.current.toFixed(0)}
-              </span>
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                ms
-              </span>
-            </div>
-          </div>
-          <MiniChart 
-            data={analytics.databaseLatency.data} 
-            color="#8B5CF6"
-            ariaLabel="Database latency over time" 
-          />
-          <div className={`mt-4 grid grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div>
-              <div>Peak</div>
-              <div className="font-medium">{analytics.databaseLatency.peak.toFixed(0)}ms</div>
-            </div>
-            <div>
-              <div>Avg</div>
-              <div className="font-medium">{analytics.databaseLatency.average.toFixed(0)}ms</div>
-            </div>
-            <div>
-              <div>Min</div>
-              <div className="font-medium">{analytics.databaseLatency.min.toFixed(0)}ms</div>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Database Latency"
+          metric={analytics.databaseLatency}
+          darkMode={darkMode}
+          icon="💾"
+          unit="ms"
+        />
 
         {/* Error Rate */}
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Error Rate
-              </h3>
-              <span className={`text-sm ${getTrendColor(analytics.errorRate.trend, true)}`}>
-                {getTrendIcon(analytics.errorRate.trend)} {analytics.errorRate.trend}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {analytics.errorRate.current.toFixed(1)}
-              </span>
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                %
-              </span>
-            </div>
-          </div>
-          <MiniChart 
-            data={analytics.errorRate.data} 
-            color="#EF4444"
-            ariaLabel="Error rate percentage over time" 
-          />
-          <div className={`mt-4 grid grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div>
-              <div>Peak</div>
-              <div className="font-medium">{analytics.errorRate.peak.toFixed(1)}%</div>
-            </div>
-            <div>
-              <div>Avg</div>
-              <div className="font-medium">{analytics.errorRate.average.toFixed(1)}%</div>
-            </div>
-            <div>
-              <div>Min</div>
-              <div className="font-medium">{analytics.errorRate.min.toFixed(1)}%</div>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Error Rate"
+          metric={analytics.errorRate}
+          darkMode={darkMode}
+          icon="⚠️"
+          unit="%"
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * MetricCard Component
+ * 
+ * Displays a single metric with chart and statistics
+ * Extracted to reduce complexity of main component
+ */
+interface MetricCardProps {
+  title: string;
+  metric: {
+    current: number;
+    peak: number;
+    average: number;
+    min: number;
+    trend: 'up' | 'down' | 'stable';
+    data: Array<{ timestamp: string; value: number }>;
+  };
+  darkMode: boolean;
+  icon: string;
+  unit?: string;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  metric,
+  darkMode,
+  icon,
+  unit = ''
+}): JSX.Element => {
+  const trendIcon = getTrendIcon(metric.trend);
+  const trendColor = getTrendColor(metric.trend, darkMode);
+
+  return (
+    <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {icon} {title}
+        </h3>
+        <span className={`text-sm ${trendColor}`}>
+          {trendIcon} {metric.trend}
+        </span>
       </div>
 
-      {/* Tip */}
-      <div className={`rounded-lg p-4 ${darkMode ? 'bg-blue-900/20 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'}`}>
-        <div className="flex items-start gap-3">
-          <span className="text-xl">💡</span>
-          <div className={darkMode ? 'text-blue-200' : 'text-blue-800'}>
-            <p className="font-medium">Performance Tip</p>
-            <p className="text-sm mt-1">
-              View real-time metrics in the Overview tab. Use different time ranges to identify patterns and trends.
-            </p>
-          </div>
+      {/* Current Value */}
+      <div className={`text-3xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        {metric.current.toFixed(2)}{unit}
+      </div>
+
+      {/* Chart */}
+      <div className="mb-4" style={{ height: '120px' }}>
+        <MiniChart
+          data={metric.data}
+          darkMode={darkMode}
+          trend={metric.trend}
+        />
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-700">
+        <div>
+          <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Peak</p>
+          <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {metric.peak.toFixed(2)}{unit}
+          </p>
+        </div>
+        <div>
+          <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Avg</p>
+          <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {metric.average.toFixed(2)}{unit}
+          </p>
+        </div>
+        <div>
+          <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Min</p>
+          <p className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {metric.min.toFixed(2)}{unit}
+          </p>
         </div>
       </div>
     </div>

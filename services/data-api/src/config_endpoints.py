@@ -398,7 +398,43 @@ class ConfigEndpoints:
             return True  # Unknown type, assume valid
     
     def _validate_rules(self, value: Any, rules: Dict[str, Any]) -> Dict[str, List[str]]:
-        """Validate value against custom rules"""
+        """
+        Validate a configuration value against custom validation rules.
+        
+        Performs multiple validation types including range checks, string length validation,
+        and regex pattern matching. Returns categorized errors and warnings.
+        
+        Complexity: C (15) - Moderate-high complexity due to multiple validation types
+        
+        Args:
+            value (Any): Configuration value to validate (can be string, int, float, dict, etc.)
+            rules (Dict[str, Any]): Validation rules dictionary containing optional keys:
+                - 'min': Minimum numeric value
+                - 'max': Maximum numeric value  
+                - 'min_length': Minimum string length
+                - 'max_length': Maximum string length
+                - 'pattern': Regex pattern for string matching
+                
+        Returns:
+            Dict[str, List[str]]: Validation result containing:
+                - 'errors' (List[str]): Validation failures
+                - 'warnings' (List[str]): Non-critical issues
+                
+        Example:
+            >>> rules = {'min': 0, 'max': 100, 'pattern': r'^\d+$'}
+            >>> result = endpoints._validate_rules(50, rules)
+            >>> if result['errors']:
+            ...     print(f"Invalid: {result['errors']}")
+            >>> else:
+            ...     print("Valid")
+        
+        Note:
+            Complexity arises from:
+            - Multiple rule types (min/max, length, pattern)
+            - Type-specific validation (string vs numeric)
+            - Regex compilation and matching
+            - Error message formatting
+        """
         errors = []
         warnings = []
         

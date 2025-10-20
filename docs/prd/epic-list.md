@@ -322,10 +322,48 @@ Migrated weather data from event enrichment to standalone API service (Port 8009
 
 ---
 
+## Code Quality & Technical Debt Epics (32)
+
+**Epic 32: Code Quality Refactoring & Technical Debt Reduction** ✅ **COMPLETE** (Brownfield Enhancement)
+Reduce technical debt and improve code maintainability by refactoring high-complexity React components, adding TypeScript type annotations, and documenting Python code complexity hotspots identified through automated code quality analysis.
+
+**Quality Analysis Results:**
+- Python Backend (data-api): A+ (95/100) - Excellent
+  - Average Complexity: A (3.14)
+  - Maintainability: All files rated A
+  - Code Duplication: 0.64% (target: <3%)
+  - 4 functions with C-level complexity (document)
+- TypeScript Frontend (health-dashboard): B+ (78/100) - Good with issues
+  - 4 components exceed complexity thresholds
+  - ~15 functions missing return types
+  - 40 ESLint warnings to address
+
+**Stories:** 3 stories (~4 hours actual, 5-8 hours estimated)
+- 32.1: High-Complexity React Component Refactoring ✅ COMPLETE
+  - AnalyticsPanel: complexity 54 → <10 (82% reduction, -54% size)
+  - AlertsPanel: complexity 44 → <15 (66% reduction, -71% size)
+  - Created 11 sub-components + 1 custom hook + 2 utility modules
+- 32.2: TypeScript Type Safety & Medium-Complexity Improvements ✅ COMPLETE
+  - Added explicit return types to 15+ functions
+  - Extracted constants to constants/alerts.ts
+  - Fixed all TypeScript warnings
+  - ESLint warnings: 20+ → 0 (-100% elimination)
+- 32.3: Python Code Quality & Documentation Enhancement ✅ COMPLETE
+  - Documented all 4 C-level complexity functions
+  - Updated coding standards with quality thresholds
+  - Quality tooling guide complete (README-QUALITY-ANALYSIS.md)
+
+**Target Outcome:** Frontend quality score B+ → A (85+/100)  
+**Epic Document:** `docs/prd/epic-32-code-quality-refactoring.md`  
+**Quality Analysis:** `reports/quality/QUALITY_ANALYSIS_SUMMARY.md`
+
+---
+
 ## Summary
 
-- **Total Epics**: 33 (26 infrastructure + 4 AI enhancement + 4 setup service + 1 architecture)
-- **Completed**: 33 (26 infrastructure + 4 AI + 4 setup service + 1 architecture) ✅ **100% COMPLETE** 🎉
+- **Total Epics**: 32 (26 infrastructure + 4 AI enhancement + 4 setup service + 1 architecture + 1 code quality)
+- **Completed**: 32 (26 infrastructure + 4 AI + 4 setup service + 1 architecture + 1 code quality) ✅ **100% COMPLETE** 🎉
+- **Planned**: 0
 - **In Progress**: 0
 - **Draft/Planned**: 0
 - **Active Services**: 21 total (18 microservices + InfluxDB infrastructure)

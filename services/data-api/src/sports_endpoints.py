@@ -367,15 +367,57 @@ async def get_team_schedule(
     league: Optional[str] = Query(None, description="NFL or NHL")
 ):
     """
-    Get complete season schedule for a team with win/loss record
+    Retrieve complete season schedule for a team with calculated win/loss record.
+    
+    Fetches all games for the specified team and season from ESPN API via sports-data service,
+    then calculates team record (wins/losses/ties) by analyzing game scores.
+    
+    Complexity: C (14) - Moderate-high complexity due to game data processing and record calculation
     
     Args:
-        team: Team name
-        season: Season year (default: current year)
-        league: NFL or NHL
+        team (str): Team identifier/name (e.g., "49ers", "Patriots")
+        season (Optional[int]): Season year (default: current year)
+        league (Optional[str]): League identifier - "NFL" or "NHL" (auto-detected if None)
         
     Returns:
-        Full schedule with stats
+        TeamScheduleResponse: Complete schedule containing:
+            - team: Team name
+            - season: Season year
+            - games: List of all games (GameResponse objects)
+            - record: Win-loss-tie record as string (e.g., "10-5-1")
+            - wins: Number of wins
+            - losses: Number of losses
+            - ties: Number of ties
+            
+    Process Flow:
+        1. Determine current season (if not provided)
+        2. Fetch all games via get_game_history() endpoint
+        3. Iterate through finished games
+        4. Calculate wins/losses/ties based on score comparison
+        5. Distinguish home vs away game logic
+        6. Return complete schedule with calculated record
+    
+    Example:
+        >>> # Get 49ers current season schedule
+        >>> response = await get_team_schedule("49ers", league="NFL")
+        >>> print(f"Record: {response.record}")  # "10-5-1"
+        >>> print(f"Total games: {len(response.games)}")
+        >>> for game in response.games:
+        ...     print(f"{game.home_team} vs {game.away_team}: {game.home_score}-{game.away_score}")
+    
+    Note:
+        Complexity arises from:
+        - Iteration through all team games (up to 200 games)
+        - Conditional logic for home vs away team
+        - Score comparison for wins/losses/ties
+        - Null/None handling for unfinished games
+        - Record calculation logic
+        - Response formatting
+        
+    Performance:
+        - Typical response time: <500ms
+        - Caches team data where possible
+        - Limit of 200 games prevents excessive memory usage
     """
     try:
         current_year = datetime.now().year

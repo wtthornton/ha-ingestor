@@ -167,14 +167,47 @@ class ConfigManager:
     
     def validate_config(self, service: str, config: Dict[str, str]) -> Dict[str, List[str]]:
         """
-        Validate configuration values
+        Validate service configuration against service-specific rules and requirements.
+        
+        Performs comprehensive validation including URL format checking, required field
+        verification, numeric range validation, and service-specific business rules.
+        Returns detailed validation results with categorized errors and warnings.
+        
+        Complexity: C (19) - High complexity due to service-specific validation rules
         
         Args:
-            service: Service name
-            config: Configuration to validate
+            service (str): Service identifier (e.g., 'websocket', 'weather', 'influxdb')
+            config (Dict[str, str]): Configuration dictionary with key-value pairs
             
         Returns:
-            Dictionary with 'errors' and 'warnings' lists
+            Dict[str, List[str]]: Validation result containing:
+                - 'errors' (List[str]): Blocking validation errors that prevent service start
+                - 'warnings' (List[str]): Non-blocking issues that should be addressed
+                - 'valid' (bool): True if no errors found
+        
+        Service-Specific Validation Rules:
+            - websocket: Validates HA_URL (ws://), HA_TOKEN (min length 10)
+            - weather: Validates API key, latitude (-90 to 90), longitude (-180 to 180)
+            - influxdb: Validates URL (http://), token, org, bucket presence
+        
+        Example:
+            >>> manager = ConfigManager()
+            >>> result = manager.validate_config("websocket", {
+            ...     "HA_URL": "ws://192.168.1.86:8123",
+            ...     "HA_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            ... })
+            >>> if result['valid']:
+            ...     print("Configuration is valid")
+            >>> else:
+            ...     print(f"Errors: {result['errors']}")
+        
+        Note:
+            High complexity arises from:
+            - Multiple service types with different validation rules
+            - Nested validation logic for each service
+            - Type checking and range validation
+            - URL format validation
+            - Business rule enforcement
         """
         errors = []
         warnings = []

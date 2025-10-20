@@ -1,6 +1,6 @@
 import { Dashboard } from './components/Dashboard';
 
-function App() {
+function App(): JSX.Element {
   return <Dashboard />;
 }
 
