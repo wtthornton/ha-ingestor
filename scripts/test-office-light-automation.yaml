@@ -1,0 +1,55 @@
+# Test Automation for Office Light Door Trigger
+# Based on the prompt: "Activated when the front door opens. → Strobe red for 2 seconds, then gradually fade to soft white over 3 seconds for a welcoming effect."
+# Updated with ACTUAL entities found in Home Assistant
+
+alias: "Test Office Light Door Trigger"
+description: "Test automation for office light when front door opens - strobe red then fade to white"
+trigger:
+  - platform: state
+    entity_id: automation.test_hallway_lights_flash_on_front_door_open  # Using existing door-related automation as trigger
+    from: "off"
+    to: "on"
+condition: []
+action:
+  # Step 1: Turn office light red at full brightness
+  - service: light.turn_on
+    target:
+      entity_id: light.hue_color_downlight_1_7  # Office Front Right (actual entity)
+    data:
+      color_name: red
+      brightness_pct: 100
+      flash: short  # Add strobe effect
+  
+  # Step 2: Wait 2 seconds
+  - delay: "00:00:02"
+  
+  # Step 3: Fade to soft white over 3 seconds
+  - service: light.turn_on
+    target:
+      entity_id: light.hue_color_downlight_1_7  # Office Front Right (actual entity)
+    data:
+      color_name: white
+      brightness_pct: 50  # Soft white (50% brightness)
+      transition: 3  # 3 second fade transition
+
+mode: single
+id: test_office_light_door_trigger
+
+# Alternative simpler version (if the above doesn't work):
+# alias: "Simple Test Office Light"
+# trigger:
+#   - platform: state
+#     entity_id: binary_sensor.front_door
+#     to: "on"
+# action:
+#   - service: light.turn_on
+#     target:
+#       entity_id: light.office_light
+#     data:
+#       color_name: red
+#   - delay: "00:00:02"
+#   - service: light.turn_on
+#     target:
+#       entity_id: light.office_light
+#     data:
+#       color_name: white

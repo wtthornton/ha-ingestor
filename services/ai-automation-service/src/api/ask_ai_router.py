@@ -105,6 +105,7 @@ async def generate_automation_yaml(suggestion: Dict[str, Any], original_query: s
     Generate Home Assistant automation YAML from a suggestion.
     
     Uses OpenAI to convert the natural language suggestion into valid HA YAML.
+    Now includes entity validation to prevent "Entity not found" errors.
     
     Args:
         suggestion: Suggestion dictionary with description, trigger_summary, action_summary, devices_involved
@@ -116,7 +117,40 @@ async def generate_automation_yaml(suggestion: Dict[str, Any], original_query: s
     if not openai_client:
         raise ValueError("OpenAI client not initialized - cannot generate YAML")
     
+    # NEW: Validate entities before generating YAML
+    from ..services.entity_validator import EntityValidator
+    from ..clients.data_api_client import DataAPIClient
+    
+    try:
+        # Initialize entity validator with data API client
+        data_api_client = DataAPIClient()
+        entity_validator = EntityValidator(data_api_client)
+        
+        # Map query devices to real entities
+        devices_involved = suggestion.get('devices_involved', [])
+        if devices_involved:
+            entity_mapping = await entity_validator.map_query_to_entities(original_query, devices_involved)
+            logger.info(f"Entity mapping: {entity_mapping}")
+            
+            # Update suggestion with validated entities
+            if entity_mapping:
+                suggestion['validated_entities'] = entity_mapping
+            else:
+                logger.warning("No valid entities found for devices in suggestion")
+    except Exception as e:
+        logger.error(f"Error validating entities: {e}")
+        # Continue without validation if there's an error
+    
     # Construct prompt for OpenAI to generate creative YAML
+    validated_entities_text = ""
+    if 'validated_entities' in suggestion:
+        validated_entities_text = f"""
+VALIDATED ENTITIES (use these exact entity IDs):
+{chr(10).join([f"- {term}: {entity_id}" for term, entity_id in suggestion['validated_entities'].items()])}
+
+CRITICAL: Use ONLY the entity IDs listed above. Do NOT create new entity IDs.
+"""
+    
     prompt = f"""
 You are a Home Assistant automation YAML generator expert with deep knowledge of advanced HA features.
 
@@ -128,12 +162,14 @@ Automation suggestion:
 - Action: {suggestion.get('action_summary', '')}
 - Devices: {', '.join(suggestion.get('devices_involved', []))}
 
+{validated_entities_text}
+
 Generate a sophisticated Home Assistant automation YAML configuration that brings this creative suggestion to life.
 
 Requirements:
 1. Use YAML format (not JSON)
 2. Include: id, alias, trigger, action
-3. Use realistic entity IDs based on device names (format: domain.name_with_underscores)
+3. CRITICAL: Use ONLY the validated entity IDs provided above - do NOT create new entity IDs
 4. Add appropriate conditions if needed
 5. Include mode: single or restart
 6. Add description field
