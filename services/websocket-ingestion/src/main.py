@@ -61,7 +61,7 @@ class WebSocketIngestionService:
         
         # DEPRECATED (Epic 31, Story 31.4): Weather enrichment removed
         # Use weather-api service on Port 8009 for weather data
-        # self.weather_enrichment: Optional[WeatherEnrichmentService] = None
+        self.weather_enrichment: Optional = None  # Set to None to prevent AttributeError
         
         # HTTP client for enrichment service
         self.http_client: Optional[SimpleHTTPClient] = None
@@ -356,16 +356,10 @@ class WebSocketIngestionService:
         )
         
         try:
-            # Enrich with weather data if available
-            if self.weather_enrichment:
-                processed_event = await self.weather_enrichment.enrich_event(processed_event)
-                log_with_context(
-                    logger, "DEBUG", "Event enriched with weather data",
-                    operation="weather_enrichment",
-                    correlation_id=corr_id,
-                    event_type=event_type,
-                    entity_id=entity_id
-                )
+            # DEPRECATED (Epic 31): Weather enrichment removed
+            # Weather data now available via weather-api service (Port 8009)
+            # Enrichment happens downstream if needed
+            # Original code removed to prevent AttributeError
             
             # Add to batch processor for high-volume processing
             if self.batch_processor:

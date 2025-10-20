@@ -377,6 +377,11 @@ async def webhook_event_detector():
         try:
             await asyncio.sleep(15)  # Check every 15 seconds
             
+            # Safety check: Ensure InfluxDB client is connected
+            if not influxdb_client or not hasattr(influxdb_client, '_query_api') or influxdb_client._query_api is None:
+                logger.debug("InfluxDB client not ready, skipping webhook detection cycle")
+                continue
+            
             # Query all active games
             query = '''
                 from(bucket: "sports_data")

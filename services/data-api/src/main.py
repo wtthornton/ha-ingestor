@@ -123,17 +123,19 @@ class DataAPIService:
         await alerting_service.start()
         await metrics_service.start()
         
-        # Start webhook event detector (Story 13.4)
-        start_webhook_detector()
-        
-        # Connect to InfluxDB
+        # Connect to InfluxDB FIRST (before webhook detector)
         try:
             logger.info("Connecting to InfluxDB...")
             connected = await self.influxdb_client.connect()
             if connected:
                 logger.info("InfluxDB connection established successfully")
+                
+                # Start webhook event detector AFTER InfluxDB connection (Story 13.4)
+                # This ensures InfluxDB client is ready before detector queries it
+                start_webhook_detector()
+                logger.info("Webhook event detector started (InfluxDB ready)")
             else:
-                logger.warning("InfluxDB connection failed - service will start but queries may fail")
+                logger.warning("InfluxDB connection failed - webhook detector disabled")
         except Exception as e:
             logger.error(f"Error connecting to InfluxDB: {e}")
             logger.warning("Service will start without InfluxDB connection")
