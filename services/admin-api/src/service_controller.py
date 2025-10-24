@@ -20,7 +20,6 @@ class ServiceController:
         """
         self.service_ports = {
             "websocket-ingestion": 8001,
-            "enrichment-pipeline": 8002,
             "admin-api": 8004,  # Internal port
             "data-retention": 8080,
             "health-dashboard": 80,  # Internal port
@@ -51,8 +50,6 @@ class ServiceController:
             url = "http://health-dashboard:80"
         elif service == "websocket-ingestion":
             url = "http://websocket-ingestion:8001/health"
-        elif service == "enrichment-pipeline":
-            url = "http://enrichment-pipeline:8002/health"
         elif service == "data-retention":
             url = "http://data-retention:8080/health"
         elif service == "influxdb":
@@ -145,8 +142,7 @@ class ServiceController:
         """
         # Only check core services that are expected to be running
         core_services = [
-            "websocket-ingestion",
-            "enrichment-pipeline", 
+            "websocket-ingestion", 
             "data-retention",
             "admin-api",
             "health-dashboard",

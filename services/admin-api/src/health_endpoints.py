@@ -62,7 +62,6 @@ class HealthEndpoints:
         self.alert_manager = get_alert_manager("admin-api")
         self.service_urls = {
             "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://homeiq-websocket:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://homeiq-enrichment:8002"),
             "influxdb": os.getenv("INFLUXDB_URL", "http://homeiq-influxdb:8086"),
             "weather-api": "https://api.openweathermap.org/data/2.5",
             # Data source services - Fixed to use Docker container names
@@ -106,17 +105,6 @@ class HealthEndpoints:
                     timeout=2.0
                 )
                 dependencies.append(websocket_dep)
-                
-                # Check Enrichment Pipeline service
-                enrichment_dep = await check_dependency_health(
-                    name="Enrichment Pipeline",
-                    dependency_type=DependencyType.API,
-                    check_func=lambda: self._check_service_health(
-                        self.service_urls["enrichment-pipeline"] + "/health"
-                    ),
-                    timeout=2.0
-                )
-                dependencies.append(enrichment_dep)
                 
                 # Determine overall status
                 overall_status = determine_overall_status(dependencies)

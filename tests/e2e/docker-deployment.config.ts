@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  * This configuration is specifically designed to test against the local Docker deployment
  */
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './',
   
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -21,9 +21,9 @@ export default defineConfig({
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { outputFolder: 'test-results/html-report' }],
-    ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/results.xml' }],
+    ['html', { outputFolder: '../../test-results/e2e-html-report' }],
+    ['json', { outputFile: '../../test-results/e2e-results.json' }],
+    ['junit', { outputFile: '../../test-results/e2e-results.xml' }],
     ['list'],
     ['github']
   ],

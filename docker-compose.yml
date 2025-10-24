@@ -55,7 +55,6 @@ services:
       - HA_HTTP_URL=${HA_HTTP_URL:-}
       - HA_WS_URL=${HA_WS_URL:-}
       - HA_TOKEN=${HA_TOKEN:-}
-      - ENRICHMENT_SERVICE_URL=http://enrichment-pipeline:8002
       - DATA_API_URL=http://homeiq-data-api:8006
       - WEBSOCKET_INGESTION_PORT=8001
       - ENABLE_HOME_ASSISTANT=true
@@ -86,8 +85,6 @@ services:
     volumes:
       - homeiq_logs:/var/log/ha-ingestor
     depends_on:
-      enrichment-pipeline:
-        condition: service_healthy
       data-api:
         condition: service_healthy
     networks:
@@ -100,49 +97,6 @@ services:
           memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  enrichment-pipeline:
-    build:
-      context: .
-      dockerfile: services/enrichment-pipeline/Dockerfile
-    container_name: homeiq-enrichment
-    restart: unless-stopped
-    ports:
-      - "8002:8002"
-    env_file:
-      - infrastructure/.env.influxdb
-      - infrastructure/.env.weather
-    environment:
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-homeiq-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-ha-ingestor}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home_assistant_events}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FILE_PATH=${LOG_FILE_PATH:-/app/logs}
-      - LOG_FORMAT=json
-    depends_on:
-      influxdb:
-        condition: service_healthy
-    networks:
-      - homeiq-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=enrichment-pipeline,environment=production"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -181,13 +135,10 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-adminpass}
       - WEBSOCKET_INGESTION_URL=http://websocket-ingestion:8001
-      - ENRICHMENT_PIPELINE_URL=http://enrichment-pipeline:8002
     depends_on:
       influxdb:
         condition: service_healthy
       websocket-ingestion:
-        condition: service_healthy
-      enrichment-pipeline:
         condition: service_healthy
       data-api:
         condition: service_healthy

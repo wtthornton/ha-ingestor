@@ -50,8 +50,7 @@ class EventsEndpoints:
         """Initialize events endpoints"""
         self.router = APIRouter()
         self.service_urls = {
-            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://localhost:8002")
+            "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://localhost:8001")
         }
         
         self._add_routes()

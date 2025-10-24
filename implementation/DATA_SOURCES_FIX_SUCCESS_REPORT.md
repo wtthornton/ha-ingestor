@@ -42,7 +42,7 @@ Successfully fixed the Data Sources dashboard issue where all external data sour
 **File**: `services/health-dashboard/src/services/api.ts` (line 116)
 
 **Changes**:
-- Fixed API path from `/api/v1/health/services` to `/health/services`
+- Fixed API path from `/health/services` to `/api/v1/health/services`
 - Corrected routing to match FastAPI router configuration
 
 **Before**:
@@ -52,7 +52,7 @@ const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
 
 **After**:
 ```typescript
-const response = await fetch(`${this.baseUrl}/health/services`);
+const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
 ```
 
 **Result**: Frontend can now fetch service status without 404 errors ✅

@@ -113,7 +113,7 @@ class AdminApiClient extends BaseApiClient {
     smartMeter: DataSourceHealth | null;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/health/services`);
+      const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

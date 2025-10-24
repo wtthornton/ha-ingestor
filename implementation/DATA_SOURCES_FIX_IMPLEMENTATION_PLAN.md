@@ -53,7 +53,7 @@ const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
 
 To:
 ```typescript
-const response = await fetch(`${this.baseUrl}/health/services`);
+const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
 ```
 
 **Action**: Rebuild and restart dashboard
@@ -88,7 +88,7 @@ onClick={refetch}
 #### A. Test API Directly
 ```bash
 # Should show healthy services
-curl http://localhost:8003/health/services | jq
+curl http://localhost:8003/api/v1/health/services | jq
 ```
 
 Expected: Carbon Intensity, Electricity Pricing, Air Quality, Smart Meter show "healthy" status.

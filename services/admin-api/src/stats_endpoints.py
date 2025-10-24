@@ -53,7 +53,6 @@ class StatsEndpoints:
             "admin-api": os.getenv("ADMIN_API_URL", "http://homeiq-admin:8004"),
             "data-api": os.getenv("DATA_API_URL", "http://homeiq-data-api:8006"),
             "websocket-ingestion": os.getenv("WEBSOCKET_INGESTION_URL", "http://homeiq-websocket:8001"),
-            "enrichment-pipeline": os.getenv("ENRICHMENT_PIPELINE_URL", "http://homeiq-enrichment:8002"),
             "sports-data": os.getenv("SPORTS_DATA_URL", "http://homeiq-sports-data:8005"),
             "air-quality-service": os.getenv("AIR_QUALITY_URL", "http://homeiq-air-quality:8012"),
             "calendar-service": os.getenv("CALENDAR_URL", "http://homeiq-calendar:8013"),
@@ -63,7 +62,7 @@ class StatsEndpoints:
             "energy-correlator": os.getenv("ENERGY_CORRELATOR_URL", "http://homeiq-energy-correlator:8017"),
             "smart-meter-service": os.getenv("SMART_METER_URL", "http://homeiq-smart-meter:8014"),
             "log-aggregator": os.getenv("LOG_AGGREGATOR_URL", "http://homeiq-log-aggregator:8015"),
-            "weather-api": os.getenv("WEATHER_API_URL", "http://homeiq-weather-api:8001")
+            "weather-api": os.getenv("WEATHER_API_URL", "http://homeiq-weather-api:8009")
         }
         
         self._add_routes()
@@ -387,9 +386,7 @@ class StatsEndpoints:
                         
                         # Transform service data to stats format
                         if service_name == "websocket-ingestion":
-                            return self._transform_websocket_health_to_stats(data, period)
-                        elif service_name == "enrichment-pipeline":
-                            return self._transform_enrichment_stats_to_stats(data, period)
+                            return await self._transform_websocket_health_to_stats(data, period)
                         else:
                             # For other services, create basic stats from health data
                             return self._transform_health_to_stats(data, service_name, period)
@@ -460,67 +457,6 @@ class StatsEndpoints:
                 "timestamp": health_data.get("timestamp", "")
             }
     
-    async def _transform_enrichment_stats_to_stats(self, stats_data: Dict[str, Any], period: str) -> Dict[str, Any]:
-        """Transform enrichment-pipeline stats data to admin-api stats format"""
-        try:
-            # Get response time from tracker
-            tracker = get_tracker()
-            enrichment_stats = await tracker.get_stats("enrichment-pipeline")
-            
-            metrics = {
-                "events_per_minute": 0,
-                "error_rate": 0,
-                "response_time_ms": round(enrichment_stats.get('avg', 0), 2),
-                "connection_attempts": 0,
-                "total_events_received": 0
-            }
-            
-            # Extract metrics from enrichment-pipeline data (actual API structure)
-            normalization = stats_data.get("normalization", {})
-            influxdb_stats = stats_data.get("influxdb", {})
-            validation_stats = stats_data.get("validation_stats", {})
-            
-            # Calculate events per minute from uptime and normalized events
-            uptime_seconds = stats_data.get("uptime", 0)
-            normalized_events = normalization.get("normalized_events", 0)
-            if uptime_seconds > 0 and normalized_events > 0:
-                # Convert uptime to minutes and calculate rate
-                uptime_minutes = uptime_seconds / 60
-                metrics["events_per_minute"] = round(normalized_events / uptime_minutes, 2)
-            
-            # Calculate error rate from normalization errors
-            normalization_errors = normalization.get("normalization_errors", 0)
-            if normalized_events > 0:
-                metrics["error_rate"] = round((normalization_errors / normalized_events) * 100, 2)
-            
-            # Connection attempts = points written to InfluxDB
-            metrics["connection_attempts"] = influxdb_stats.get("points_written", 0)
-            
-            # Total events = normalized events
-            metrics["total_events_received"] = normalized_events
-            
-            # Story 24.1: Response time not currently measured
-            # Removed placeholder value - metric calculation requires timing middleware
-            # Future enhancement: Add timing middleware to measure actual response times
-            # metrics["response_time_ms"] = 0  # REMOVED - was placeholder
-            
-            return {
-                "metrics": metrics,
-                "trends": {
-                    "events_per_minute": [{"timestamp": stats_data.get("timestamp"), "value": metrics["events_per_minute"]}],
-                    "error_rate": [{"timestamp": stats_data.get("timestamp"), "value": metrics["error_rate"]}]
-                },
-                "alerts": []
-            }
-            
-        except Exception as e:
-            logger.error(f"Error transforming enrichment stats: {e}")
-            return {
-                "service": "enrichment-pipeline",
-                "status": "error",
-                "error": str(e),
-                "timestamp": stats_data.get("timestamp", "")
-            }
     
     async def _get_metrics(self, metric_name: Optional[str], service: Optional[str], limit: int) -> List[MetricData]:
         """Get specific metrics"""
@@ -713,7 +649,6 @@ class StatsEndpoints:
         
         # List of data-feeding API services (removed admin-api and data-api)
         api_services = [
-            {"name": "enrichment-pipeline", "priority": "high", "timeout": 5},
             {"name": "websocket-ingestion", "priority": "high", "timeout": 3},
             {"name": "sports-data", "priority": "medium", "timeout": 5},
             {"name": "air-quality-service", "priority": "medium", "timeout": 5},
@@ -947,29 +882,6 @@ class StatsEndpoints:
                                                     events_per_hour = total_requests
                             except Exception as e:
                                 logger.warning(f"Could not get weather API stats from websocket-ingestion: {e}")
-                                events_per_hour = 0.0
-                        
-                        elif service_name == "enrichment-pipeline":
-                            # Extract processing metrics from enrichment-pipeline
-                            try:
-                                if "normalization" in data:
-                                    norm_stats = data["normalization"]
-                                    total_processed = norm_stats.get("total_events_processed", 0)
-                                    
-                                    # Calculate hourly rate based on uptime
-                                    uptime_str = data.get("uptime", "0:0:0")
-                                    try:
-                                        parts = uptime_str.split(":")
-                                        if len(parts) == 3:
-                                            hours, minutes, seconds = parts
-                                            uptime_hours = float(hours) + float(minutes)/60 + float(seconds)/3600
-                                            if uptime_hours > 0:
-                                                events_per_hour = total_processed / uptime_hours
-                                    except (ValueError, AttributeError):
-                                        # Fallback: assume 1 hour if parsing fails
-                                        events_per_hour = total_processed
-                            except Exception as e:
-                                logger.warning(f"Could not extract enrichment-pipeline metrics: {e}")
                                 events_per_hour = 0.0
                         
                         elif service_name in ["sports-data", "air-quality-service", "calendar-service", "carbon-intensity-service", 

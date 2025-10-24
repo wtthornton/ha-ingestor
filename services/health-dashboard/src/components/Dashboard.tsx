@@ -82,14 +82,14 @@ export const Dashboard: React.FC = () => {
   const TabComponent = TAB_COMPONENTS[selectedTab] || Tabs.OverviewTab;
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
+    <div data-testid="dashboard-root" className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
       {/* Header - Mobile Optimized */}
-      <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b transition-colors duration-300`}>
+      <div data-testid="dashboard-header" className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Mobile: Stacked Layout, Desktop: Side by Side */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
             <div className="w-full sm:w-auto">
-              <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h1 data-testid="dashboard-title" className={`text-xl sm:text-2xl lg:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                 🏠 HA Ingestor Dashboard
               </h1>
               <p className={`text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} hidden sm:block`}>
@@ -104,6 +104,7 @@ export const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2 sm:gap-3">
               {/* Theme Toggle */}
               <button
+                data-testid="theme-toggle"
                 onClick={() => setDarkMode(!darkMode)}
                 className={`p-2.5 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors duration-200`}
                 title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -114,6 +115,7 @@ export const Dashboard: React.FC = () => {
               
               {/* Auto Refresh Toggle */}
               <button
+                data-testid="auto-refresh-toggle"
                 onClick={() => setAutoRefresh(!autoRefresh)}
                 className={`p-2.5 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center ${autoRefresh ? (darkMode ? 'bg-green-700 hover:bg-green-600' : 'bg-green-100 hover:bg-green-200') : (darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200')} transition-colors duration-200`}
                 title={autoRefresh ? 'Auto Refresh: ON' : 'Auto Refresh: OFF'}
@@ -124,6 +126,7 @@ export const Dashboard: React.FC = () => {
               
               {/* Time Range Selector */}
               <select
+                data-testid="time-range-selector"
                 value={selectedTimeRange}
                 onChange={(e) => setSelectedTimeRange(e.target.value)}
                 className={`px-2 sm:px-3 py-2 rounded-lg border text-sm min-h-[44px] ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} transition-colors duration-200`}
@@ -166,11 +169,12 @@ export const Dashboard: React.FC = () => {
           </div>
           
           {/* Navigation Tabs - Mobile Optimized */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div data-testid="tab-navigation" className="border-t border-gray-200 dark:border-gray-700 pt-4 -mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="flex space-x-2 sm:space-x-4 overflow-x-auto pb-2 scrollbar-hide">
               {TAB_CONFIG.map((tab) => (
                 <button
                   key={tab.id}
+                  data-testid={`tab-${tab.id}`}
                   onClick={() => setSelectedTab(tab.id)}
                   className={`flex-shrink-0 px-3 sm:px-4 py-2.5 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base min-h-[44px] ${
                     selectedTab === tab.id
@@ -192,7 +196,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main data-testid="dashboard-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Alert Banner (Epic 17.4) */}
         <AlertBanner darkMode={darkMode} />
         

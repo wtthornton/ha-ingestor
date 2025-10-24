@@ -201,13 +201,13 @@ class EnrichmentPipelineService:
         )
         
         try:
-            logger.warning(f"[PROCESS_EVENT] Starting - Type: {event_type}, Entity: {entity_id}")
-            logger.warning(f"[PROCESS_EVENT] Event keys: {list(event_data.keys())}")
+            logger.debug(f"[PROCESS_EVENT] Starting - Type: {event_type}, Entity: {entity_id}")
+            logger.debug(f"[PROCESS_EVENT] Event keys: {list(event_data.keys())}")
             
             # Validate event data
-            logger.warning(f"[PROCESS_EVENT] Calling validator.validate_event")
+            logger.debug(f"[PROCESS_EVENT] Calling validator.validate_event")
             validation_results = self.data_validator.validate_event(event_data)
-            logger.warning(f"[PROCESS_EVENT] Validation result - Valid: {validation_results.is_valid}, "
+            logger.debug(f"[PROCESS_EVENT] Validation result - Valid: {validation_results.is_valid}, "
                           f"Errors: {validation_results.errors}, Warnings: {validation_results.warnings}")
             
             # Check if event is valid and log detailed validation results
@@ -224,10 +224,10 @@ class EnrichmentPipelineService:
                 #  Continue processing despite validation errors (for now)
                 # TODO: Re-enable strict validation after confirming all events are properly structured
             else:
-                logger.warning(f"[PROCESS_EVENT] Validation passed!")
+                logger.debug(f"[PROCESS_EVENT] Validation passed!")
             
             # Normalize event data
-            logger.warning(f"[PROCESS_EVENT] Calling normalizer.normalize_event")
+            logger.debug(f"[PROCESS_EVENT] Calling normalizer.normalize_event")
             log_with_context(
                 logger, "DEBUG", "Starting event normalization",
                 operation="event_normalization_start",
@@ -236,10 +236,10 @@ class EnrichmentPipelineService:
                 entity_id=entity_id
             )
             normalized_event = self.data_normalizer.normalize_event(event_data)
-            logger.warning(f"[PROCESS_EVENT] Normalization result: {type(normalized_event)}, Is None: {normalized_event is None}")
+            logger.debug(f"[PROCESS_EVENT] Normalization result: {type(normalized_event)}, Is None: {normalized_event is None}")
             
             if not normalized_event:
-                logger.warning(f"[PROCESS_EVENT] Normalization returned None/False - FAILING")
+                logger.debug(f"[PROCESS_EVENT] Normalization returned None/False - FAILING")
                 log_with_context(
                     logger, "WARNING", "Event normalization failed",
                     operation="event_normalization",

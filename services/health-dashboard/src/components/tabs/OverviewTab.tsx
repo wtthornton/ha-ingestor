@@ -328,7 +328,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                 metrics={{
                   primary: {
                     label: 'Events per Hour',
-                    value: websocketMetrics?.events_per_minute || 0,
+                    value: (websocketMetrics?.events_per_minute || 0) * 60,
                     unit: 'evt/h'
                   },
                   secondary: {
@@ -346,6 +346,7 @@ export const OverviewTab: React.FC<TabProps> = ({ darkMode }) => {
                   status: enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.status === 'healthy' ? 'healthy' : 'unhealthy',
                   details: [
                     { label: 'Events per Minute', value: websocketMetrics?.events_per_minute || 0, unit: 'evt/min' },
+                    { label: 'Events per Hour', value: (websocketMetrics?.events_per_minute || 0) * 60, unit: 'evt/h' },
                     { label: 'Total Events Received', value: websocketMetrics?.total_events_received || 0, unit: 'events' },
                     { label: 'Connection Status', value: enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.status || 'unknown' },
                     { label: 'Response Time', value: (enhancedHealth?.dependencies?.find(d => d.name === 'WebSocket Ingestion')?.response_time_ms ?? 0).toFixed(1), unit: 'ms' },

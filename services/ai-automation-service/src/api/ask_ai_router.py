@@ -114,6 +114,9 @@ async def generate_automation_yaml(suggestion: Dict[str, Any], original_query: s
     Returns:
         YAML string for the automation
     """
+    logger.info(f"🚀 GENERATE_YAML CALLED - Query: {original_query[:50]}...")
+    logger.info(f"🚀 Suggestion: {suggestion}")
+    
     if not openai_client:
         raise ValueError("OpenAI client not initialized - cannot generate YAML")
     
@@ -122,33 +125,49 @@ async def generate_automation_yaml(suggestion: Dict[str, Any], original_query: s
     from ..clients.data_api_client import DataAPIClient
     
     try:
+        logger.info("🔍 Starting entity validation...")
         # Initialize entity validator with data API client
         data_api_client = DataAPIClient()
         entity_validator = EntityValidator(data_api_client)
+        logger.info("✅ Entity validator initialized")
         
         # Map query devices to real entities
         devices_involved = suggestion.get('devices_involved', [])
-        if devices_involved:
-            entity_mapping = await entity_validator.map_query_to_entities(original_query, devices_involved)
-            logger.info(f"Entity mapping: {entity_mapping}")
-            
-            # Update suggestion with validated entities
-            if entity_mapping:
-                suggestion['validated_entities'] = entity_mapping
-            else:
-                logger.warning("No valid entities found for devices in suggestion")
+        logger.info(f"🔍 DEVICES INVOLVED: {devices_involved}")
+        logger.info(f"🔍 ORIGINAL QUERY: {original_query}")
+        
+        # Always try to map entities from the query, even if devices_involved is empty
+        entity_mapping = await entity_validator.map_query_to_entities(original_query, devices_involved)
+        logger.info(f"🔍 ENTITY MAPPING RESULT: {entity_mapping}")
+        logger.info(f"🔍 ENTITY MAPPING TYPE: {type(entity_mapping)}")
+        logger.info(f"🔍 ENTITY MAPPING BOOL: {bool(entity_mapping)}")
+        
+        # Update suggestion with validated entities
+        if entity_mapping:
+            suggestion['validated_entities'] = entity_mapping
+            logger.info(f"✅ VALIDATED ENTITIES ADDED TO SUGGESTION: {suggestion.get('validated_entities')}")
+        else:
+            logger.warning(f"⚠️ No valid entities found - mapping was: {entity_mapping}")
     except Exception as e:
-        logger.error(f"Error validating entities: {e}")
+        logger.error(f"❌ Error validating entities: {e}", exc_info=True)
         # Continue without validation if there's an error
     
     # Construct prompt for OpenAI to generate creative YAML
     validated_entities_text = ""
-    if 'validated_entities' in suggestion:
+    if 'validated_entities' in suggestion and suggestion['validated_entities']:
         validated_entities_text = f"""
 VALIDATED ENTITIES (use these exact entity IDs):
 {chr(10).join([f"- {term}: {entity_id}" for term, entity_id in suggestion['validated_entities'].items()])}
 
 CRITICAL: Use ONLY the entity IDs listed above. Do NOT create new entity IDs.
+If you need multiple lights, use the same entity ID multiple times or use the entity_id provided for 'lights'.
+"""
+    else:
+        validated_entities_text = """
+CRITICAL: No validated entities found. Use generic placeholder entity IDs that clearly indicate they are placeholders:
+- Use 'light.office_light_placeholder' for office lights
+- Use 'binary_sensor.door_placeholder' for door sensors
+- Add a comment in the YAML explaining these are placeholders
 """
     
     prompt = f"""
@@ -713,9 +732,12 @@ async def test_suggestion_from_query(
     3. Trigger the automation immediately
     4. Return results (automation stays in HA as disabled for review)
     """
+    print(f"🧪 TEST ENDPOINT CALLED - suggestion_id: {suggestion_id}, query_id: {query_id}")
     logger.info(f"🧪 Testing suggestion {suggestion_id} from query {query_id}")
     
     try:
+        print("🔍 TEST: Starting test endpoint execution")
+        logger.info("🔍 TEST: Starting test endpoint execution")
         # Get the query from database
         query = await db.get(AskAIQueryModel, query_id)
         if not query:
@@ -731,8 +753,14 @@ async def test_suggestion_from_query(
         if not suggestion:
             raise HTTPException(status_code=404, detail=f"Suggestion {suggestion_id} not found")
         
+        logger.info("🔍 TEST: About to call generate_automation_yaml")
+        logger.info(f"🔍 TEST: Suggestion data: {suggestion}")
+        logger.info(f"🔍 TEST: Original query: {query.original_query}")
+        
         # Generate YAML for the suggestion
         automation_yaml = await generate_automation_yaml(suggestion, query.original_query)
+        
+        logger.info("🔍 TEST: generate_automation_yaml completed")
         
         # Validate the YAML first
         if not ha_client:

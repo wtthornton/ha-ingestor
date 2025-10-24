@@ -80,7 +80,7 @@ self.service_urls = {
 const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
 ```
 
-The frontend is calling `/api/v1/health/services`, but the actual endpoint is `/health/services` (no `/api/v1` prefix from the admin-api perspective).
+The frontend is calling `/api/v1/health/services`, which is the correct endpoint.
 
 #### B. Data Structure Mismatch
 **Location**: `services/health-dashboard/src/components/DataSourcesPanel.tsx` (line 199)
@@ -156,7 +156,7 @@ self.service_urls = {
 async getAllDataSources(): Promise<{...}> {
   try {
     // FIX: Remove /api/v1 prefix - it's not part of the admin-api router
-    const response = await fetch(`${this.baseUrl}/health/services`);
+    const response = await fetch(`${this.baseUrl}/api/v1/health/services`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -225,7 +225,7 @@ docker exec homeiq-admin curl http://homeiq-carbon-intensity:8010/health
 ### 2. Verify API Response
 ```bash
 # Should return healthy status for running services
-curl http://localhost:8003/health/services | jq
+curl http://localhost:8003/api/v1/health/services | jq
 ```
 
 ### 3. Verify Frontend Display

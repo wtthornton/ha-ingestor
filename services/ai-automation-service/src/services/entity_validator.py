@@ -59,7 +59,7 @@ class EntityValidator:
         """Get all available entities from data-api"""
         try:
             if self.data_api_client:
-                entities = await self.data_api_client.get_all_entities()
+                entities = await self.data_api_client.fetch_entities()
                 return entities
             else:
                 logger.warning("Data API client not available, using empty entity list")
@@ -165,12 +165,65 @@ class EntityValidator:
         # Get available entities
         available_entities = await self._get_available_entities()
         
-        for entity in entities:
-            # Try to find best match
-            best_match = self._find_best_match(entity, available_entities)
-            if best_match:
-                mapping[entity] = best_match['entity_id']
+        # If entities list is empty, try to extract from query directly
+        if not entities:
+            print(f"🔍 No entities provided, extracting from query directly: {query}")
+            logger.info("No entities provided, extracting from query directly")
+            # Extract potential entities from query
+            query_lower = query.lower()
+            print(f"🔍 Query lower: {query_lower}")
+            
+            # Look for office-related entities
+            if 'office' in query_lower:
+                print(f"🔍 Found 'office' in query, looking for office entities...")
+                office_entities = [e for e in available_entities if 'office' in e.get('entity_id', '').lower()]
+                print(f"🔍 Office entities found: {[e.get('entity_id') for e in office_entities[:5]]}")
+                if office_entities:
+                    # Prefer lights for office
+                    office_lights = [e for e in office_entities if e.get('domain') == 'light']
+                    print(f"🔍 Office lights found: {[e.get('entity_id') for e in office_lights[:3]]}")
+                    if office_lights:
+                        mapping['office'] = office_lights[0]['entity_id']
+                        print(f"🔍 Mapped 'office' to {office_lights[0]['entity_id']}")
+                        logger.info(f"Mapped 'office' to {office_lights[0]['entity_id']}")
+            
+            # Look for door-related entities
+            if 'door' in query_lower or 'front' in query_lower:
+                door_entities = [e for e in available_entities if 'door' in e.get('entity_id', '').lower()]
+                if door_entities:
+                    # Prefer binary sensors for doors
+                    door_sensors = [e for e in door_entities if e.get('domain') == 'binary_sensor']
+                    if door_sensors:
+                        mapping['door'] = door_sensors[0]['entity_id']
+                        logger.info(f"Mapped 'door' to {door_sensors[0]['entity_id']}")
+                    else:
+                        # Fallback to any door entity
+                        mapping['door'] = door_entities[0]['entity_id']
+                        logger.info(f"Mapped 'door' to {door_entities[0]['entity_id']}")
+            
+            # Look for light-related entities
+            if 'light' in query_lower or 'flash' in query_lower:
+                light_entities = [e for e in available_entities if e.get('domain') == 'light']
+                if light_entities:
+                    # Prefer office lights if available
+                    office_lights = [e for e in light_entities if 'office' in e.get('entity_id', '').lower()]
+                    if office_lights:
+                        mapping['lights'] = office_lights[0]['entity_id']
+                        logger.info(f"Mapped 'lights' to {office_lights[0]['entity_id']}")
+                    else:
+                        # Use any light
+                        mapping['lights'] = light_entities[0]['entity_id']
+                        logger.info(f"Mapped 'lights' to {light_entities[0]['entity_id']}")
+        else:
+            # Use the provided entities list
+            for entity in entities:
+                # Try to find best match
+                best_match = self._find_best_match(entity, available_entities)
+                if best_match:
+                    mapping[entity] = best_match['entity_id']
+                    logger.info(f"Mapped '{entity}' to {best_match['entity_id']}")
         
+        logger.info(f"Final entity mapping: {mapping}")
         return mapping
     
     def _find_best_match(self, query_term: str, available_entities: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:

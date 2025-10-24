@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete event flow from Home Assistant through the HA-Ingestor system, including data transformations at each stage.
+This document describes the complete event flow from Home Assistant through the HA-Ingestor system. **Updated October 2025**: The enrichment pipeline has been removed in favor of external service integration pattern.
 
 ## Event Flow Diagram
 
@@ -28,30 +28,6 @@ This document describes the complete event flow from Home Assistant through the 
          │ (entity_id at top level)
          ↓
 ┌─────────────────────────┐
-│  HTTP Client            │
-│  POST /events           │
-└────────┬────────────────┘
-         │ Flattened Event
-         ↓
-┌─────────────────────────┐
-│  Enrichment Pipeline    │
-│  events_handler()       │
-└────────┬────────────────┘
-         │ Flattened Event
-         ↓
-┌─────────────────────────┐
-│  DataValidationEngine   │
-│  validate_event()       │
-└────────┬────────────────┘
-         │ Validated Event
-         ↓
-┌─────────────────────────┐
-│  DataNormalizer         │
-│  normalize_event()      │
-└────────┬────────────────┘
-         │ Normalized Event
-         ↓
-┌─────────────────────────┐
 │  InfluxDB Writer        │
 │  write_event()          │
 └────────┬────────────────┘
@@ -60,8 +36,26 @@ This document describes the complete event flow from Home Assistant through the 
 ┌─────────────────────────┐
 │  InfluxDB               │
 │  (Time Series Storage)  │
+└────────┬────────────────┘
+         │ Data Available
+         ↓
+┌─────────────────────────┐
+│  External Services       │
+│  (Weather, Energy, etc.) │
+│  Consume from InfluxDB   │
 └─────────────────────────┘
 ```
+
+## Architecture Change (October 2025)
+
+**Previous Architecture (Deprecated):**
+- Events → WebSocket Ingestion → Enrichment Pipeline → InfluxDB
+- Monolithic processing with internal weather enrichment
+
+**Current Architecture (Active):**
+- Events → WebSocket Ingestion → InfluxDB → External Services
+- Clean microservices with external weather integration
+- External services consume data from InfluxDB as needed
 
 ## Data Transformation Stages
 

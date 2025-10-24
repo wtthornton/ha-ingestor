@@ -810,7 +810,7 @@ class ApiService {
   }
   
   async getServicesHealth(): Promise<{ [key: string]: any }> {
-    └─► fetch(`${baseURL}/health/services`)
+    └─► fetch(`${baseURL}/api/v1/health/services`)
         └─► return health status for all services
   }
   
