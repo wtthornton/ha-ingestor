@@ -1,4 +1,4 @@
-# Quick Reference - HA Ingestor
+# Quick Reference - HomeIQ
 
 **For AI Agents:** Fast lookup guide for common tasks
 
@@ -8,6 +8,7 @@
 
 | What | Where | Why |
 |------|-------|-----|
+| **Performance Guide** | `CLAUDE.md` | Read for performance patterns |
 | **Docker Rules** | `docs/DOCKER_STRUCTURE_GUIDE.md` | Read BEFORE modifying Dockerfiles |
 | **Shared Logging** | `shared/logging_config.py` | Use for ALL Python services |
 | **Code Standards** | `docs/architecture/coding-standards.md` | Naming & patterns |
@@ -15,18 +16,34 @@
 
 ---
 
-## 📋 Service Quick Reference
+## 📋 Service Quick Reference (Epic 31 - October 2025)
 
+### Core Services
 | Service | Port | Tech | Entry Point |
 |---------|------|------|-------------|
 | **websocket-ingestion** | 8001 | Python/aiohttp | `src/main.py` |
-| **enrichment-pipeline** | 8002 | Python/FastAPI | `src/main.py` |
-| **admin-api** | 8003→8004 | Python/FastAPI | `src/main.py` |
+| **admin-api** | 8003 | Python/FastAPI | `src/main.py` |
+| **data-api** | 8006 | Python/FastAPI | `src/main.py` |
 | **sports-data** | 8005 | Python/FastAPI | `src/main.py` |
 | **data-retention** | 8080 | Python/FastAPI | `src/main.py` |
 | **health-dashboard** | 3000 | React/nginx | `src/main.tsx` |
+| **ai-automation-ui** | 3001 | React/nginx | `src/main.tsx` |
 | **log-aggregator** | 8015 | Python | `src/main.py` |
 | **influxdb** | 8086 | InfluxDB 2.7 | N/A |
+
+### AI Services (Phase 1)
+| Service | Port | Tech | Purpose |
+|---------|------|------|---------|
+| **ai-core-service** | 8018 | Python/FastAPI | AI orchestration |
+| **ner-service** | 8019 | Python/Transformers | Named entity recognition |
+| **openai-service** | 8020 | Python/OpenAI | GPT-4o-mini client |
+| **ml-service** | 8025 | Python/scikit-learn | Clustering, anomaly detection |
+| **openvino-service** | 8026 | Python/OpenVINO | Embeddings, re-ranking |
+| **device-intelligence** | 8028 | Python/FastAPI | Device capabilities |
+
+### ❌ DEPRECATED Services (Epic 31)
+- **enrichment-pipeline** (8002) - Removed, direct writes to InfluxDB
+- **calendar-service** (8013) - Removed
 
 ---
 

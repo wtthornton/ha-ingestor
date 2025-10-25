@@ -1,7 +1,7 @@
 # CLAUDE.md - Essential Performance Guide for HomeIQ
 
-**Last Updated:** October 24, 2025  
-**Version:** 4.0.0  
+**Last Updated:** October 25, 2025
+**Version:** 4.1.0 (Phase 1 AI + Epic 31)
 **Purpose:** Essential performance patterns for AI assistants working on HomeIQ
 
 ---
@@ -15,6 +15,31 @@
 5. **Fail Fast, Recover Gracefully** - Use timeouts, retries, circuit breakers
 6. **Memory Over CPU** - Use in-memory caching and data structures
 7. **Profile Production Reality** - Test with real HA event volumes
+8. **Direct Writes** - Integration services write directly to InfluxDB (Epic 31)
+
+## Critical Architecture Updates (Epic 31 - October 2025)
+
+### ❌ DEPRECATED: enrichment-pipeline (port 8002)
+- **Status**: Removed in Epic 31
+- **Why**: Simplified architecture, direct InfluxDB writes
+- **Migration**: WebSocket ingestion writes directly to InfluxDB
+
+### ✅ CURRENT: Direct Write Pattern
+```
+Home Assistant → websocket-ingestion → InfluxDB (DIRECT)
+                                    ↓
+Integration Services → InfluxDB (DIRECT)
+```
+
+**DO NOT:**
+- Reference enrichment-pipeline in code or docs
+- Create service-to-service HTTP dependencies
+- Use intermediate processing services
+
+**DO:**
+- Write directly to InfluxDB from source services
+- Use inline normalization
+- Keep services independent
 
 ## Critical Performance Patterns
 
@@ -190,6 +215,32 @@ For comprehensive performance guidance, see:
 
 **Document Metadata:**
 - **Created:** October 23, 2025
-- **Last Updated:** October 24, 2025
-- **Version:** 4.0.0 (Essential patterns only)
+- **Last Updated:** October 25, 2025
+- **Version:** 4.1.0 (Epic 31 + Phase 1 AI)
 - **Next Review:** Quarterly or after major architectural changes
+
+## AI Services Performance (Phase 1)
+
+### Model Loading Times
+- **OpenVINO Service** (8026): 60-90 seconds (model optimization)
+- **NER Service** (8019): 30-60 seconds (BERT model loading)
+- **ML Service** (8025): 5-10 seconds (scikit-learn)
+- **OpenAI Service** (8020): <1 second (API client only)
+
+### Memory Requirements
+- **OpenVINO**: 512MB-1GB (optimized models)
+- **NER**: 256MB-512MB (BERT-base)
+- **ML Service**: 128MB-256MB
+- **AI Core**: 128MB-256MB (orchestration)
+
+### Response Time Targets
+- **Embeddings** (OpenVINO): <100ms for 512 tokens
+- **NER** (BERT): <200ms for typical automation text
+- **Clustering** (ML): <500ms for 1000 data points
+- **GPT-4o-mini** (OpenAI): 1-3s (external API)
+
+**Optimization Tips:**
+1. Cache model outputs when possible
+2. Batch AI requests when feasible
+3. Use async calls for all AI services
+4. Monitor memory usage during inference
