@@ -13,12 +13,12 @@ from .detectors import (
     CoOccurrenceDetector,
     SequenceDetector,
     ContextualDetector,
-    SessionDetector,
     DurationDetector,
     DayTypeDetector,
     RoomBasedDetector,
     SeasonalDetector,
-    AnomalyDetector
+    AnomalyDetector,
+    FrequencyDetector
 )
 
 __all__ = [
@@ -29,10 +29,10 @@ __all__ = [
     'CoOccurrenceDetector',
     'SequenceDetector',
     'ContextualDetector',
-    'SessionDetector',
     'DurationDetector',
     'DayTypeDetector',
     'RoomBasedDetector',
     'SeasonalDetector',
-    'AnomalyDetector'
+    'AnomalyDetector',
+    'FrequencyDetector'
 ]
