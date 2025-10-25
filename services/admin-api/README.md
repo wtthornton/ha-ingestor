@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Admin API Service is a FastAPI-based REST API that provides comprehensive administration, monitoring, and configuration management for the HA Ingestor system.
+The Admin API Service is a FastAPI-based REST API that provides comprehensive administration, monitoring, and configuration management for the HomeIQ system.
 
 **Port:** 8003  
 **Technology:** Python 3.11, FastAPI, Pydantic  
@@ -56,9 +56,10 @@ Get comprehensive system health
   "services": {
     "influxdb": "healthy",
     "websocket": "healthy",
-    "enrichment": "healthy"
+    "data-api": "healthy",
+    "ai-automation": "healthy"
   },
-  "timestamp": "2025-10-11T12:00:00Z"
+  "timestamp": "2025-10-25T12:00:00Z"
 }
 ```
 
@@ -147,7 +148,7 @@ Response:
       "uptime": "2h 34m"
     },
     {
-      "name": "enrichment-pipeline",
+      "name": "data-api",
       "status": "running",
       "health": "healthy",
       "uptime": "2h 34m"

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Health Dashboard is a modern React-based web interface that provides real-time monitoring, configuration management, and system administration for the HA Ingestor system.
+The Health Dashboard is a modern React-based web interface that provides real-time monitoring, configuration management, and system administration for the HomeIQ system.
 
 **Port:** 3000  
 **Technology:** React 18.2, TypeScript 5.2, Vite 5.0, Tailwind CSS 3.4  

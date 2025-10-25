@@ -1,5 +1,17 @@
 # Sports API Service
 
+> **⚠️ DEPRECATED - September 2025 (Epic 11)**
+>
+> This service has been replaced by **sports-data** service (port 8005). The code remains for reference but is **not deployed in production**.
+>
+> - **Status:** ❌ Not Active (replaced in Epic 11)
+> - **Reason:** Replaced with ESPN free API (no API key required)
+> - **Replacement:** `services/sports-data` (port 8005)
+> - **Migration:** Epic 11 - ESPN API integration with webhooks
+> - **Old Port:** 8015 (now used by log-aggregator)
+
+---
+
 Real-time NFL and NHL data integration service for the Home Assistant Ingestor ecosystem.
 
 ## Overview

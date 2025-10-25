@@ -1,5 +1,16 @@
 # Calendar Service - Home Assistant Integration
 
+> **⚠️ DEPRECATED - October 2025**
+>
+> This service has been deprecated due to low usage and maintenance complexity. The code remains for reference but is **not deployed in production**.
+>
+> - **Status:** ❌ Not Active (commented out in docker-compose.yml)
+> - **Reason:** Low usage, maintenance overhead
+> - **Alternative:** Use Home Assistant calendar automations directly
+> - **Port:** 8013 (not in use)
+
+---
+
 Home Assistant calendar integration for occupancy prediction and smart home preparation.
 
 ## Purpose

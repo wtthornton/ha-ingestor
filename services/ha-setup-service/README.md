@@ -2,7 +2,7 @@
 
 ## Overview
 
-The HA Setup & Recommendation Service provides automated health monitoring, setup assistance, and performance optimization for Home Assistant environments integrated with HA Ingestor.
+The HA Setup & Recommendation Service provides automated health monitoring, setup assistance, and performance optimization for Home Assistant environments integrated with HomeIQ.
 
 ## Features
 
@@ -18,7 +18,7 @@ The HA Setup & Recommendation Service provides automated health monitoring, setu
 - **MQTT**: Broker connectivity and discovery status
 - **Zigbee2MQTT**: Addon status and device monitoring
 - **Device Discovery**: Registry sync verification
-- **HA Ingestor Services**: Data API and Admin API health
+- **HomeIQ Services**: Data API and Admin API health
 
 ### ⏳ Coming Soon
 - Automated setup wizards (Epic 29)
@@ -210,7 +210,7 @@ function MyComponent() {
 | **HA Authentication** | Token validity, permissions, HA version |
 | **MQTT** | Integration config, broker connectivity, discovery |
 | **Zigbee2MQTT** | Addon status, bridge state, device count |
-| **Device Discovery** | Registry access, HA Ingestor sync verification |
+| **Device Discovery** | Registry access, HomeIQ sync verification |
 | **Data API** | Service health, connectivity |
 | **Admin API** | Service health, connectivity |
 
@@ -347,7 +347,7 @@ For issues or questions:
 
 ---
 
-**Note**: This service is part of the HA Ingestor ecosystem and requires:
+**Note**: This service is part of the HomeIQ ecosystem and requires:
 - Home Assistant running at 192.168.1.86:8123
 - HA_TOKEN configured in `infrastructure/.env.websocket` ✅
 - Data API service (port 8006)

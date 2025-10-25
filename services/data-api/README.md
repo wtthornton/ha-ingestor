@@ -175,7 +175,7 @@ pytest services/data-api/tests/test_main.py -v
 
 ### Service Separation
 
-The HA Ingestor system uses two API services:
+The HomeIQ system uses two API services:
 
 **admin-api** (port 8003): System monitoring & control
 - Health checks
