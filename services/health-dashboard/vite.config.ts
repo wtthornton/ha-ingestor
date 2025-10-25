@@ -57,10 +57,10 @@ export default defineConfig(({ command, mode }) => {
         },
         // General API proxy
         '/api': {
-          target: 'http://ha-ingestor-admin-dev:8004',
+          target: 'http://localhost:8003',
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
+          rewrite: (path) => path.replace(/^\/api/, '/api'),
         },
       },
     },
